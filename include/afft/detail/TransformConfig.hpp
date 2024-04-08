@@ -1,15 +1,15 @@
 #ifndef AFFT_DETAIL_TRANSFORM_CONFIG_HPP
 #define AFFT_DETAIL_TRANSFORM_CONFIG_HPP
 
-#include "common.hpp"
-#include "error.hpp"
-#include "utils.hpp"
-
 #include <algorithm>
 #include <bitset>
 #include <cstddef>
 #include <variant>
 #include <span>
+
+#include "common.hpp"
+#include "error.hpp"
+#include "utils.hpp"
 
 namespace afft::detail
 {
@@ -168,7 +168,7 @@ namespace afft::detail
        * @return Transform configuration.
        */
       template<TransformType transformType>
-      [[nodiscard]] constexpr auto getConfig() const noexcept
+      [[nodiscard]] constexpr const auto& getConfig() const noexcept
       {
         if constexpr (transformType == TransformType::dft)
         {
