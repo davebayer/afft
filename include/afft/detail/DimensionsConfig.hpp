@@ -36,13 +36,16 @@ namespace afft::detail
           return elem;
         };
 
+        // Ensure rank is within bounds
         if (mRank > maxDimCount)
         {
           throw makeException<std::runtime_error>("Too many dimensions");
         }
 
+        // Copy shape and ensure all dimensions are non-zero
         std::transform(dims.shape.begin(), dims.shape.end(), mShape.begin(), assertNotZero);
 
+        // Copy source strides if provided, otherwise leave initialized to 0
         if (dims.srcStride.size() == mRank)
         {
           std::copy(dims.srcStride.begin(), dims.srcStride.end(), mSrcStride.begin());
@@ -52,6 +55,7 @@ namespace afft::detail
           throw makeException<std::runtime_error>("Invalid source stride size");
         }
 
+        // Copy destination strides if provided, otherwise leave initialized to 0
         if (dims.dstStride.size() == mRank)
         {
           std::copy(dims.dstStride.begin(), dims.dstStride.end(), mDstStride.begin());
@@ -142,7 +146,7 @@ namespace afft::detail
        * @param rhs Right-hand side.
        * @return True if equal, false otherwise.
        */
-      [[nodiscard]] friend constexpr bool operator==(const DimensionsConfig& lhs, const DimensionsConfig& rhs)
+      [[nodiscard]] friend constexpr bool operator==(const DimensionsConfig& lhs, const DimensionsConfig& rhs) noexcept
       {
         if (lhs.mRank != rhs.mRank)
         {
@@ -176,7 +180,7 @@ namespace afft::detail
        * @param rhs Right-hand side.
        * @return True if not equal, false otherwise.
        */
-      [[nodiscard]] friend constexpr bool operator!=(const DimensionsConfig& lhs, const DimensionsConfig& rhs)
+      [[nodiscard]] friend constexpr bool operator!=(const DimensionsConfig& lhs, const DimensionsConfig& rhs) noexcept
       {
         return !(lhs == rhs);
       }
