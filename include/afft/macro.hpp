@@ -3,6 +3,9 @@
 
 #include "detail/macro.hpp"
 
+/// @brief Macro for identity function
+#define AFFT_IDENTITY(...) __VA_ARGS__
+
 /// @brief Macro for emty delimiter
 #define AFFT_DELIM_EMPTY  AFFT_DETAIL_EMPTY
 /// @brief Macro for comma delimiter
