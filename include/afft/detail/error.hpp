@@ -1,0 +1,102 @@
+#ifndef AFFT_DETAIL_ERROR_HPP
+#define AFFT_DETAIL_ERROR_HPP
+
+#include <concepts>
+#include <string>
+#include <version>
+
+#ifdef __cpp_lib_source_location
+# include <source_location>
+#endif
+
+#include "utils.hpp"
+
+namespace afft::detail
+{
+#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
+  /**
+   * @brief Creates an exception with source location information. Only available in debug mode when C++20
+   *        source_location is supported.
+   * @tparam E Exception type.
+   * @param msg Message.
+   * @param loc Source location.
+   * @return Exception.
+   */
+  template<std::derived_from<std::exception> E>
+  [[nodiscard]] E makeException(std::string&& msg, std::source_location loc = std::source_location::current())
+  {
+    return E{format("{}:{}({}): {}", loc.file_name(), loc.line(), loc.function_name(), std::move(msg))};
+  }
+#else
+  /**
+   * @brief Creates an exception.
+   * @tparam E Exception type.
+   * @param msg Message.
+   * @return Exception.
+   */
+  template<std::derived_from<std::exception> E>
+  [[nodiscard]] E makeException(std::string&& msg)
+  {
+    return E{std::move(msg)};
+  }
+#endif
+
+  /**
+   * @struct Error
+   * @brief Class for return value error checking.
+   */
+  struct Error
+  {
+# if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
+    /**
+     * @brief Checks the return value and throws an exception if it is not OK. Only available in debug mode when C++20
+     *        source_location is supported.
+     * @tparam R Checked return type.
+     * @param result Return value.
+     * @param loc Source location.
+     */
+    template<typename R>
+    static void check(R result, std::source_location loc = std::source_location::current())
+    {
+      if (!isOk(result))
+      {
+        throw makeException<std::runtime_error>(makeErrorMessage(result), loc);
+      }
+    }
+# else
+    /**
+     * @brief Checks the return value and throws an exception if it is not OK.
+     * @tparam R Checked return type.
+     * @param result Return value.
+     */
+    template<typename R>
+    static void check(R result)
+    {
+      if (!isOk(result))
+      {
+        throw makeException<std::runtime_error>(makeErrorMessage(result));
+      }
+    }
+# endif
+
+    /**
+     * @brief Checks the return value. Should be implemented by each backend.
+     * @tparam R Checked return type.
+     * @param result Return value.
+     * @return true if the return value is OK, false otherwise.
+     */
+    template<typename R>
+    [[nodiscard]] static constexpr bool isOk(R result);
+
+    /**
+     * @brief Creates an error message. Should be implemented by each backend.
+     * @tparam R Checked return type.
+     * @param result Return value.
+     * @return Error message.
+     */
+    template<typename R>
+    [[nodiscard]] static std::string makeErrorMessage(R result);
+  };
+} // namespace afft::detail
+
+#endif /* AFFT_DETAIL_ERROR_HPP */
