@@ -3,6 +3,7 @@
 
 #include <concepts>
 #include <string>
+#include <string_view>
 #include <version>
 
 #ifdef __cpp_lib_source_location
@@ -23,7 +24,7 @@ namespace afft::detail
    * @return Exception.
    */
   template<std::derived_from<std::exception> E>
-  [[nodiscard]] E makeException(std::string&& msg, std::source_location loc = std::source_location::current())
+  [[nodiscard]] E makeException(std::string_view msg, std::source_location loc = std::source_location::current())
   {
     return E{format("{}:{}({}): {}", loc.file_name(), loc.line(), loc.function_name(), std::move(msg))};
   }
@@ -35,7 +36,7 @@ namespace afft::detail
    * @return Exception.
    */
   template<std::derived_from<std::exception> E>
-  [[nodiscard]] E makeException(std::string&& msg)
+  [[nodiscard]] E makeException(std::string_view msg)
   {
     return E{std::move(msg)};
   }
