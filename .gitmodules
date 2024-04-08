@@ -1,0 +1,9 @@
+[submodule "3rdparty/mdspan"]
+	path = 3rdparty/mdspan
+	url = https://github.com/kokkos/mdspan.git
+[submodule "3rdparty/pocketfft"]
+	path = 3rdparty/pocketfft
+	url = https://github.com/mreineck/pocketfft.git
+[submodule "3rdparty/VkFFT"]
+	path = 3rdparty/VkFFT
+	url = https://github.com/DTolm/VkFFT.git
