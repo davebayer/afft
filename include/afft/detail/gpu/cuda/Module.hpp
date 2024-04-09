@@ -112,11 +112,44 @@ namespace afft::detail::gpu::cuda
       }
 
       /**
+       * @brief Gets a global variable from the module.
+       * @param name The name of the global variable.
+       * @return A tuple containing the device pointer and the size of the global variable.
+       */
+      [[nodiscard]] std::tuple<CUdeviceptr, std::size_t> getGlobal(const rtc::CppLoweredSymbolName& name) const
+      {
+        requireValid();
+
+        CUdeviceptr ptr{};
+        std::size_t size{};
+
+        Error::check(cuModuleGetGlobal(&ptr, &size, mModule.get(), name.data()));
+
+        return std::make_tuple(ptr, size);
+      }
+
+      /**
        * @brief Gets a function from the module.
        * @param name The name of the function.
        * @return The function.
        */
       [[nodiscard]] CUfunction getFunction(const rtc::CSymbolName& name) const
+      {
+        requireValid();
+
+        CUfunction function{};
+
+        Error::check(cuModuleGetFunction(&function, mModule.get(), name.data()));
+
+        return function;
+      }
+
+      /**
+       * @brief Gets a function from the module.
+       * @param name The name of the function.
+       * @return The function.
+       */
+      [[nodiscard]] CUfunction getFunction(const rtc::CppLoweredSymbolName& name) const
       {
         requireValid();
 
