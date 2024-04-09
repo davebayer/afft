@@ -61,24 +61,24 @@ namespace afft::detail::cpu::pocketfft
        */
       PlanImpl(const Config& config) noexcept
       : Parent(checkConfig(config)),
-        mShape(mConfig.getShape().begin(), mConfig.getShape().end()),
-        mSrcStride(mConfig.getShapeRank()),
-        mDstStride(mConfig.getShapeRank())
+        mShape(getConfig().dimsConfig.getShape().begin(), getConfig().dimsConfig.getShape().end()),
+        mSrcStride(mShape.size()),
+        mDstStride(mShape.size())
       {
-        std::transform(mConfig.getSrcStrides().begin(),
-                       mConfig.getSrcStrides().end(),
+        std::transform(getConfig().dimsConfig.getSrcStrides().begin(),
+                       getConfig().dimsConfig.getSrcStrides().end(),
                        mSrcStride.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * mConfig.getSrcElemSize());
+          return safeIntCast<std::ptrdiff_t>(stride * getConfig().transformConfig.getSrcElemSizeOf());
         });
 
-        std::transform(mConfig.getDstStrides().begin(),
-                       mConfig.getDstStrides().end(),
+        std::transform(getConfig().dimsConfig.getDstStrides().begin(),
+                       getConfig().dimsConfig.getDstStrides().end(),
                        mDstStride.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * mConfig.getDstElemSize());
+          return safeIntCast<std::ptrdiff_t>(stride * getConfig().transformConfig.getDstElemSizeOf());
         });
       }
 
@@ -97,7 +97,7 @@ namespace afft::detail::cpu::pocketfft
           throw std::runtime_error("pocketfft does not support planar complex format");
         }
 
-        switch (mConfig.getTransformType())
+        switch (getConfig().transformConfig.getType())
         {
         case TransformType::dft: execDft(std::get<void*>(src), std::get<void*>(dst)); break;
         case TransformType::dtt: execDtt(std::get<void*>(src), std::get<void*>(dst)); break;
@@ -228,6 +228,16 @@ namespace afft::detail::cpu::pocketfft
       }
 
       /**
+       * @brief Get the direction of the transform
+       * @return The direction
+       */
+      [[nodiscard]] constexpr auto getDirection() const noexcept
+      {
+        return (getConfig().transformConfig.getDirection() == Direction::forward)
+                 ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
+      }
+
+      /**
        * @brief Execute the C2C transform
        * @tparam prec The precision of the data
        * @param src The source buffer
@@ -236,15 +246,10 @@ namespace afft::detail::cpu::pocketfft
       template<Precision prec>
       void c2c(void* src, void* dst)
       {
-        auto getDirection = [this]()
-        {
-          return (mConfig.getDirection() == Direction::forward) ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
-        };
-
         if constexpr (hasPrecision<prec>())
         {
-          const auto normalize = mConfig.getCommonParameters().normalize;
-          const auto nthreads  = mConfig.getTargetConfig<Target::cpu>().threadLimit;
+          const auto normalize = getConfig().commonParams.normalize;
+          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
 
           safeCall([this, &]
           {
@@ -255,7 +260,7 @@ namespace afft::detail::cpu::pocketfft
                              getDirection(),
                              reinterpret_cast<InterleavedComplex<prec>*>(src),
                              reinterpret_cast<InterleavedComplex<prec>*>(dst),
-                             mConfig.getNormFactor<prec>(),
+                             getConfig().transformConfig.getNormFactor<prec>(),
                              static_cast<std::size_t>(nthreads));
           });          
         }
@@ -274,27 +279,22 @@ namespace afft::detail::cpu::pocketfft
       template<Precision prec>
       void r2c(void* src, void* dst)
       {
-        auto getDirection = [this]()
-        {
-          return (mConfig.getDirection() == Direction::forward) ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
-        };
-
         if constexpr (hasPrecision<prec>())
         {
-          const auto normalize = mConfig.getCommonParameters().normalize;
-          const auto nthreads  = mConfig.getTargetConfig<Target::cpu>().threadLimit;
+          const auto normalize = getConfig().commonParams.normalize;
+          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
 
           safeCall([this, &]
           {
             ::pocketfft::r2c(mShape,
-                            mSrcStride,
-                            mDstStride,
-                            mAxes,
-                            getDirection(),
-                            reinterpret_cast<Real<prec>*>(src),
-                            reinterpret_cast<InterleavedComplex<prec>*>(dst),
-                            mConfig.getNormFactor<prec>(),
-                            static_cast<std::size_t>(nthreads));
+                             mSrcStride,
+                             mDstStride,
+                             mAxes,
+                             getDirection(),
+                             reinterpret_cast<Real<prec>*>(src),
+                             reinterpret_cast<InterleavedComplex<prec>*>(dst),
+                             getConfig().transformConfig.getNormFactor<prec>(),
+                             static_cast<std::size_t>(nthreads));
           });
         }
         else
@@ -312,15 +312,10 @@ namespace afft::detail::cpu::pocketfft
       template<Precision prec>
       void c2r(void* src, void* dst)
       {
-        auto getDirection = [this]()
-        {
-          return (mConfig.getDirection() == Direction::forward) ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
-        };
-
         if constexpr (hasPrecision<prec>())
         {
-          const auto normalize = mConfig.getCommonParameters().normalize;
-          const auto nthreads  = mConfig.getTargetConfig<Target::cpu>().threadLimit;
+          const auto normalize = getConfig().commonParams.normalize;
+          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
 
           safeCall([this, &]
           {
@@ -331,7 +326,7 @@ namespace afft::detail::cpu::pocketfft
                             getDirection(),
                             reinterpret_cast<InterleavedComplex<prec>*>(src),
                             reinterpret_cast<Real<prec>*>(dst),
-                            mConfig.getNormFactor<prec>(),
+                            getConfig().transformConfig.getNormFactor<prec>(),
                             static_cast<std::size_t>(nthreads));
           });
         }
@@ -351,20 +346,20 @@ namespace afft::detail::cpu::pocketfft
         static constexpr std::array dttTypes = {dtt::Type::dct1, dtt::Type::dct2, dtt::Type::dct3, dtt::Type::dct4,
                                                 dtt::Type::dst1, dtt::Type::dst2, dtt::Type::dst3, dtt::Type::dst4};
 
-        const auto& precision = mConfig.getPrecision();
-        const auto& dttConfig = mConfig.getTransformConfig<TransformType::dtt>();
+        const auto& precision = getConfig().commonParams.normalize;
+        const auto& dttConfig = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
 
         ::pocketfft::shape_t axes{};
-        axes.reserve(mConfig.getTransformAxes().size());
+        axes.reserve(getConfig().transformConfig.getRank());
         bool normalize = true;
 
         for (const auto dttType : dttTypes)
         {
-          for (std::size_t i{}; i < mConfig.getTransformRank(); ++i)
+          for (std::size_t i{}; i < getConfig().transformConfig.getRank(); ++i)
           {
             if (dttConfig.axisTypes[i] == dttType)
             {
-              axes.push_back(mConfig.getTransformAxes()[i]);
+              axes.push_back(getConfig().transformConfig.getAxes()[i]);
             }
           }
 
@@ -422,12 +417,14 @@ namespace afft::detail::cpu::pocketfft
       {
         auto getType = [this, dctType]() -> int
         {
+          const bool isForward = (getConfig().transformConfig.getDirection() == Direction::forward);
+
           switch (dctType)
           {
-          case dtt::Type::dct1: return (mConfig.getDirection() == Direction::forward) ? 1 : 4;
-          case dtt::Type::dct2: return (mConfig.getDirection() == Direction::forward) ? 2 : 3;
-          case dtt::Type::dct3: return (mConfig.getDirection() == Direction::forward) ? 3 : 2;
-          case dtt::Type::dct4: return (mConfig.getDirection() == Direction::forward) ? 4 : 1;
+          case dtt::Type::dct1: return (isForward) ? 1 : 4;
+          case dtt::Type::dct2: return (isForward) ? 2 : 3;
+          case dtt::Type::dct3: return (isForward) ? 3 : 2;
+          case dtt::Type::dct4: return (isForward) ? 4 : 1;
           default:
             throw makeException<std::runtime_error>("Invalid dct type");
           }
@@ -435,7 +432,7 @@ namespace afft::detail::cpu::pocketfft
 
         if constexpr (hasPrecision<prec>())
         {
-          const auto nthreads = mConfig.getTargetConfig<Target::cpu>().threadLimit;
+          const auto nthreads = getConfig().targetConfig.getConfig<Target::cpu>().threadLimit;
 
           safeCall([this, &]
           {
@@ -446,8 +443,8 @@ namespace afft::detail::cpu::pocketfft
                              getType(),
                              reinterpret_cast<Real<prec>*>(src),
                              reinterpret_cast<Real<prec>*>(dst),
-                             (normalize) ? mConfig.getNormFactor<prec>() : Real<prec>(1.0),
-                             (mConfig.getCommonParameters().normalize == Normalize::orthogonal),
+                             (normalize) ? getConfig().transformConfig.getNormFactor<prec>() : Real<prec>(1.0),
+                             (getConfig().commonParams.normalize == Normalize::orthogonal),
                              static_cast<std::size_t>(nthreads));
           });
         }
@@ -471,20 +468,22 @@ namespace afft::detail::cpu::pocketfft
       {
         auto getType = [this, dstType]() -> int
         {
+          const bool isForward = (getConfig().transformConfig.getDirection() == Direction::forward);
+
           switch (dstType)
           {
-          case dtt::Type::dst1: return (mConfig.getDirection() == Direction::forward) ? 1 : 4;
-          case dtt::Type::dst2: return (mConfig.getDirection() == Direction::forward) ? 2 : 3;
-          case dtt::Type::dst3: return (mConfig.getDirection() == Direction::forward) ? 3 : 2;
-          case dtt::Type::dst4: return (mConfig.getDirection() == Direction::forward) ? 4 : 1;
+          case dtt::Type::dst1: return (isForward) ? 1 : 4;
+          case dtt::Type::dst2: return (isForward) ? 2 : 3;
+          case dtt::Type::dst3: return (isForward) ? 3 : 2;
+          case dtt::Type::dst4: return (isForward) ? 4 : 1;
           default:
             throw makeException<std::runtime_error>("Invalid dst type");
           }
         };
         
         if constexpr (hasPrecision<prec>())
-        {          
-          const auto nthreads = mConfig.getTargetConfig<Target::cpu>().threadLimit;
+        {
+          const auto nthreads = getConfig().targetConfig.getConfig<Target::cpu>().threadLimit;
 
           safeCall([this, &]
           {
@@ -495,8 +494,8 @@ namespace afft::detail::cpu::pocketfft
                              getType(),
                              reinterpret_cast<Real<prec>*>(src),
                              reinterpret_cast<Real<prec>*>(dst),
-                             (normalize) ? mConfig.getNormFactor<prec>() : Real<prec>(1.0),
-                             (mConfig.getCommonParameters().normalize == Normalize::orthogonal),
+                             (normalize) ? getConfig().transformConfig.getNormFactor<prec>() : Real<prec>(1.0),
+                             (getConfig().commonParams.normalize == Normalize::orthogonal),
                              static_cast<std::size_t>(nthreads));
           });
         }
