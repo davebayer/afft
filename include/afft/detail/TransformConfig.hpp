@@ -203,6 +203,67 @@ namespace afft::detail
           return std::get<DttConfig>(mVariant);
         }
       }
+
+      template<Precision prec>
+      [[nodiscard]] constexpr auto getNormFactor(std::span<const std::size_t> shape) const
+      {
+        auto forEachAxisSize = [mAxes, shape](std::invocable<std::size_t, std::size_t> auto&& func)
+        {
+          for (std::size_t i{}; i < mRank; ++i)
+          {
+            func(i, shape[mAxes[i]]);
+          }
+        };
+
+        if constexpr (hasPrecision<prec>())
+        {
+          using PrecT = Float<prec>;
+
+          std::size_t n{1};
+
+          switch (getTransformType())
+          {
+          case TransformType::dft:
+          {
+            forEachAxisSize([&n](std::size_t, std::size_t axisSize) { n *= axisSize; });
+          }
+          case TransformType::dtt:
+          {
+            const auto& dttParams = getTransformConfig<TransformType::dtt>();
+
+            forEachAxisSize([&n, dttParams = getTransformConfig<TransformType::dtt>()]
+                            (std::size_t axisIdx, std::size_t axisSize)
+            {
+              switch (dttParams.axisTypes[i])
+              {
+                using enum dtt::Type;
+              case dct1:                       n *= 2 * (axisSize - 1); break;
+              case dst1:                       n *= 2 * (axisSize + 1); break;
+              case dct2: case dct3: case dct4:
+              case dst2: case dst3: case dst4: n *= 2 * axisSize;       break;
+              default:
+                throw std::runtime_error("Invalid axis type");
+              }
+            });
+          }
+          default:
+            throw std::runtime_error("Invalid transform type");
+          }
+
+          switch (mCommonParams.normalize)
+          {
+          case Normalize::none:       return PrecT{1.0};
+          case Normalize::orthogonal: return PrecT{1.0} / std::sqrt(static_cast<PrecT>(n));
+          case Normalize::unitary:    return PrecT{1.0} / static_cast<PrecT>(n);
+          default:
+            throw std::runtime_error("Invalid normalization");
+          }
+        }
+        else
+        {
+          throw std::runtime_error("Invalid precision");
+        }
+      }
       
       /**
        * @brief Equality operator.
