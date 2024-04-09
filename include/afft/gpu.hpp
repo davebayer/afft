@@ -27,6 +27,9 @@
 
 #include "macro.hpp"
 
+/// @brief Macro for checking if GPU backend is enabled
+#define AFFT_GPU_ENABLED           (AFFT_GPU_BACKEND != 0)
+
 /// @brief Macro for CUDA GPU backend
 #define AFFT_GPU_BACKEND_CUDA      (1)
 /// @brief Macro for HIP GPU backend
@@ -47,7 +50,7 @@
 # define AFFT_GPU_BACKEND          (0)
 #else
   // Check if GPU backend is valid
-# if !(AFFT_GPU_BACKEND_IS_CUDA || AFFT_GPU_BACKEND_IS_HIP || AFFT_GPU_BACKEND_IS_OPENCL)
+# if AFFT_GPU_ENABLED && !(AFFT_GPU_BACKEND_IS_CUDA || AFFT_GPU_BACKEND_IS_HIP || AFFT_GPU_BACKEND_IS_OPENCL)
 #   error "Unsupported GPU backend"
 # endif
 #endif
