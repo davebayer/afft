@@ -304,7 +304,8 @@ namespace afft::detail::gpu::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      bool compile(std::span<const char*> options = {})
+      [[nodiscard("Always check the compilation result")]] bool
+      compile(std::span<const char*> options = {})
       {
         if (std::exchange(mIsCompiled, true))
         {
@@ -330,7 +331,8 @@ namespace afft::detail::gpu::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      [[nodiscard]] auto compileForDevice(int device, std::span<const char*> options = {})
+      [[nodiscard("Always check the compilation result")]] auto
+      compileForDevice(int device, std::span<const char*> options = {})
       {
         if (!cuda::isValidDevice(device))
         {
