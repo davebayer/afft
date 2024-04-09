@@ -435,6 +435,23 @@ namespace afft::detail::gpu::cuda::rtc
       bool                                                 mIsCompiled{};     ///< Program is compiled.
       std::string                                          mCompilationLog{}; ///< The compilation log.
   };
+
+  /**
+   * @brief Get the supported architectures.
+   * @return The supported architectures.
+   */
+  [[nodiscard]] inline std::vector<int> getSupportedArchs()
+  {
+    int size{};
+
+    Error::check(nvrtcGetNumSupportedArchs(&size));
+
+    std::vector<int> archs(size);
+
+    Error::check(nvrtcGetSupportedArchs(archs.data()));
+
+    return archs;
+  }
 } // namespace afft::detail::gpu::cuda::rtc
 
 #endif /* AFFT_DETAIL_GPU_CUDA_RTC_RTC_HPP */
