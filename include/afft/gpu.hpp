@@ -98,7 +98,7 @@
 /**
  * @brief Macro for checking if the transform backend is allowed
  * @param backendName Name of the backend
- * @return Non zero if the backend is allowed, zero otherwise
+ * @return Non zero if the transform backend is allowed, zero otherwise
  */
 #define AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(backendName) \
   (AFFT_GPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_GPU_TRANSFORM_BACKEND_MASK)
