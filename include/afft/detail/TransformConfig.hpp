@@ -72,6 +72,8 @@ namespace afft::detail
        */
       [[nodiscard]] static constexpr TransformConfig make(const dft::Parameters& dftParams)
       {
+        checkDirection(dftParams.direction);
+        checkPrecision(dftParams.precision);
         checkAxes(dftParams.axes, dftParams.dimensions.shape.size());
 
         bool formatsOk = true;
@@ -100,7 +102,10 @@ namespace afft::detail
           throw makeException<std::invalid_argument>("Invalid dft transform formats combination");
         }
 
-        return TransformConfig{dftParams.axes, DftConfig{dftParams.srcFormat, dftParams.dstFormat}};
+        return TransformConfig{dftParams.direction,
+                               dftParams.precision,
+                               dftParams.axes,
+                               DftConfig{dftParams.srcFormat, dftParams.dstFormat}};
       }
 
       /**
@@ -125,6 +130,8 @@ namespace afft::detail
 
         DttConfig dttConfig{};
 
+        checkDirection(dttParams.direction);
+        checkPrecision(dttParams.precision);
         checkAxes(dttParams.axes, dttParams.dimensions.shape.size());
 
         if (dttParams.types.size() == 1)
@@ -142,7 +149,7 @@ namespace afft::detail
           throw makeException<std::invalid_argument>("Invalid dtt transform types");
         }
 
-        return TransformConfig{dttParams.axes, std::move(dttConfig)};
+        return TransformConfig{dttParams.direction, dttParams.precision, dttParams.axes, std::move(dttConfig)};
       }
 
       /// @brief Default constructor not allowed.
@@ -158,6 +165,24 @@ namespace afft::detail
       constexpr TransformConfig& operator=(const TransformConfig&) noexcept = default;
       /// @brief Move assignment operator.
       constexpr TransformConfig& operator=(TransformConfig&&) noexcept = default;
+
+      /**
+       * @brief Get the transform direction.
+       * @return Transform direction.
+       */
+      [[nodiscard]] constexpr Direction getDirection() const noexcept
+      {
+        return mDirection;
+      }
+
+      /**
+       * @brief Get the transform precision.
+       * @return Transform precision.
+       */
+      [[nodiscard]] constexpr PrecisionTriad getPrecision() const noexcept
+      {
+        return mPrec;
+      }
 
       /**
        * @brief Get the transform rank.
@@ -204,6 +229,12 @@ namespace afft::detail
         }
       }
 
+      /**
+       * @brief Get the normalization factor.
+       * @tparam prec Precision.
+       * @param shape Shape.
+       * @return Normalization factor.
+       */
       template<Precision prec>
       [[nodiscard]] constexpr auto getNormFactor(std::span<const std::size_t> shape) const
       {
@@ -264,6 +295,60 @@ namespace afft::detail
           throw std::runtime_error("Invalid precision");
         }
       }
+
+      /**
+       * @brief Get the size of the source element.
+       * @return Size of the source element.
+       */
+      [[nodiscard]] constexpr std::size_t getSrcElemSizeOf() const
+      {
+        std::size_t srcElemSizeOf = sizeOf(mPrec.source);
+
+        if (getType() == TransformType::dft)
+        {
+          const auto& dftParams = getConfig<TransformType::dft>();
+
+          switch (dftParams.srcFormat)
+          {
+            using enum dft::Format;
+          case complexInterleaved:
+          case hermitianComplexInterleaved:
+            srcElemSizeOf *= 2;
+            break;
+          default:
+            break;
+          }
+        }
+
+        return srcElemSizeOf;
+      }
+
+      /**
+       * @brief Get the size of the destination element.
+       * @return Size of the destination element.
+       */
+      [[nodiscard]] constexpr std::size_t getDstElemSizeOf() const
+      {
+        std::size_t dstElemSizeOf = sizeOf(mPrec.destination);
+
+        if (getType() == TransformType::dft)
+        {
+          const auto& dftParams = getConfig<TransformType::dft>();
+
+          switch (dftParams.dstFormat)
+          {
+            using enum dft::Format;
+          case complexInterleaved:
+          case hermitianComplexInterleaved:
+            dstElemSizeOf *= 2;
+            break;
+          default:
+            break;
+          }
+        }
+
+        return dstElemSizeOf;
+      }
       
       /**
        * @brief Equality operator.
@@ -302,12 +387,38 @@ namespace afft::detail
     protected:
     private:
       using ConfigVariant = std::variant<DftConfig,      // same index as TransformType::dft
-                                                  DttConfig>;     // same index as TransformType::dtt
+                                         DttConfig>;     // same index as TransformType::dtt
 
       static_assert(variant_alternative_index<ConfigVariant, DftConfig>()
                       == to_underlying(TransformType::dft));
       static_assert(variant_alternative_index<ConfigVariant, DttConfig>()
                       == to_underlying(TransformType::dtt));
+
+      /**
+       * @brief Check transform direction validity.
+       * @param dir Transform direction.
+       */
+      static void checkDirection(Direction dir)
+      {
+        switch (dir)
+        {
+        case Direction::forward: case Direction::inverse: break;
+        default:
+          throw makeException<std::invalid_argument>("Invalid transform direction");
+        }
+      }
+
+      /**
+       * @brief Check transform precision validity.
+       * @param prec Transform precision.
+       */
+      static void checkPrecision(PrecisionTriad prec)
+      {
+        if (!hasPrecision(prec.execution) || !hasPrecision(prec.source) || !hasPrecision(prec.destination))
+        {
+          throw makeException<std::invalid_argument>("Invalid transform precision");
+        }
+      }
 
       /**
        * @brief Check transform axes.
@@ -351,15 +462,23 @@ namespace afft::detail
        * @param axes Transform axes.
        * @param variant Transform variant.
        */
-      constexpr TransformConfig(std::span<const std::size_t> axes, auto&& variant) noexcept
-      : mRank{axes.size()}, mVariant{std::forward<decltype(variant)>(variant)}
+      constexpr TransformConfig(Direction                    dir,
+                                PrecisionTriad               prec,
+                                std::span<const std::size_t> axes,
+                                auto&&                       variant) noexcept
+      : mDirection{dir},
+        mPrec{prec},
+        mRank{axes.size()},
+        mVariant{std::forward<decltype(variant)>(variant)}
       {
         std::copy(axes.begin(), axes.end(), mAxes.begin());
       }
 
-      std::size_t              mRank{};    ///< Transform rank.
-      MaxDimArray<std::size_t> mAxes{};    ///< Transform axes.
-      ConfigVariant            mVariant{}; ///< Transform variant.
+      Direction                mDirection{}; ///< Transform direction.
+      PrecisionTriad           mPrec{};      ///< Transform precision.
+      std::size_t              mRank{};      ///< Transform rank.
+      MaxDimArray<std::size_t> mAxes{};      ///< Transform axes.
+      ConfigVariant            mVariant{};   ///< Transform variant.
   };
 } // namespace afft::detail
 

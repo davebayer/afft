@@ -72,7 +72,7 @@ namespace afft::detail
         // Copy source strides if provided, otherwise leave initialized to 0
         if (dims.srcStride.size() == mRank)
         {
-          std::copy(dims.srcStride.begin(), dims.srcStride.end(), mSrcStride.begin());
+          std::transform(dims.srcStride.begin(), dims.srcStride.end(), mSrcStride.begin(), assertNotZero);
         }
         else if (!dims.srcStride.empty())
         {
@@ -82,7 +82,7 @@ namespace afft::detail
         // Copy destination strides if provided, otherwise leave initialized to 0
         if (dims.dstStride.size() == mRank)
         {
-          std::copy(dims.dstStride.begin(), dims.dstStride.end(), mDstStride.begin());
+          std::transform(dims.dstStride.begin(), dims.dstStride.end(), mDstStride.begin(), assertNotZero);
         }
         else if (!dims.dstStride.empty())
         {
@@ -129,6 +129,15 @@ namespace afft::detail
       }
 
       /**
+       * @brief Check if source stride is set.
+       * @return True if set, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasSrcStride() const noexcept
+      {
+        return mSrcStride[0] != std::size_t{};
+      }
+
+      /**
        * @brief Get source stride.
        * @return Source stride.
        */
@@ -144,6 +153,15 @@ namespace afft::detail
       [[nodiscard]] constexpr std::span<const std::size_t> getSrcStride() const noexcept
       {
         return {mSrcStride.data(), mRank};
+      }
+
+      /**
+       * @brief Check if destination stride is set.
+       * @return True if set, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDstStride() const noexcept
+      {
+        return mDstStride[0] != std::size_t{};
       }
 
       /**
