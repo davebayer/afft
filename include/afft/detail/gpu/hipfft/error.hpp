@@ -26,7 +26,6 @@
 #define AFFT_DETAIL_GPU_HIPFFT_ERROR_HPP
 
 #include <string>
-#include <string_view>
 
 #include <hipfft/hipfft.h>
 

@@ -26,7 +26,6 @@
 #define AFFT_DETAIL_GPU_ROCFFT_ERROR_HPP
 
 #include <string>
-#include <string_view>
 
 #include <rocfft/rocfft.h>
 
