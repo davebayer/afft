@@ -28,8 +28,8 @@
 #include <string>
 
 #include "include.hpp"
-#include "../../utils.hpp"
 #include "../../error.hpp"
+#include "../../utils.hpp"
 
 /**
  * @brief Specialization of isOk method for VkFFTResult.
