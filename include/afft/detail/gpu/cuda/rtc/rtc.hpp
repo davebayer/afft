@@ -388,23 +388,23 @@ namespace afft::detail::gpu::cuda::rtc
         std::size_t size{};
         switch (codeType)
         {
-          case CodeType::PTX:     Error::check(nvrtcGetPTXSize(mProgram.get(), &size));     break;
-          case CodeType::CUBIN:   Error::check(nvrtcGetCUBINSize(mProgram.get(), &size));   break;
-          case CodeType::LTOIR:   Error::check(nvrtcGetLTOIRSize(mProgram.get(), &size));   break;
-          case CodeType::OptixIR: Error::check(nvrtcGetOptiXIRSize(mProgram.get(), &size)); break;
-          default:
-            throw makeException<std::runtime_error>("Invalid code type");
+        case CodeType::PTX:     Error::check(nvrtcGetPTXSize(mProgram.get(), &size));     break;
+        case CodeType::CUBIN:   Error::check(nvrtcGetCUBINSize(mProgram.get(), &size));   break;
+        case CodeType::LTOIR:   Error::check(nvrtcGetLTOIRSize(mProgram.get(), &size));   break;
+        case CodeType::OptixIR: Error::check(nvrtcGetOptiXIRSize(mProgram.get(), &size)); break;
+        default:
+          throw makeException<std::runtime_error>("Invalid code type");
         }
 
         Code code(codeType, size, Code::PrivilegedToken{});
         switch (codeType)
         {
-          case CodeType::PTX:     Error::check(nvrtcGetPTX(mProgram.get(), code.data()));     break;
-          case CodeType::CUBIN:   Error::check(nvrtcGetCUBIN(mProgram.get(), code.data()));   break;
-          case CodeType::LTOIR:   Error::check(nvrtcGetLTOIR(mProgram.get(), code.data()));   break;
-          case CodeType::OptixIR: Error::check(nvrtcGetOptiXIR(mProgram.get(), code.data())); break;
-          default:
-            throw makeException<std::runtime_error>("Invalid code type");
+        case CodeType::PTX:     Error::check(nvrtcGetPTX(mProgram.get(), code.data()));     break;
+        case CodeType::CUBIN:   Error::check(nvrtcGetCUBIN(mProgram.get(), code.data()));   break;
+        case CodeType::LTOIR:   Error::check(nvrtcGetLTOIR(mProgram.get(), code.data()));   break;
+        case CodeType::OptixIR: Error::check(nvrtcGetOptiXIR(mProgram.get(), code.data())); break;
+        default:
+          throw makeException<std::runtime_error>("Invalid code type");
         }
 
         return code;
@@ -428,7 +428,6 @@ namespace afft::detail::gpu::cuda::rtc
             nvrtcDestroyProgram(&program);
           }
         }
-      
       };
 
       std::shared_ptr<std::remove_pointer_t<nvrtcProgram>> mProgram{};        ///< The program.
@@ -446,7 +445,7 @@ namespace afft::detail::gpu::cuda::rtc
 
     Error::check(nvrtcGetNumSupportedArchs(&size));
 
-    std::vector<int> archs(size);
+    std::vector<int> archs(static_cast<std::size_t>(size));
 
     Error::check(nvrtcGetSupportedArchs(archs.data()));
 

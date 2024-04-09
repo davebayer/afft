@@ -349,6 +349,104 @@ namespace afft::detail
 
         return dstElemSizeOf;
       }
+
+      /**
+       * @brief Corrects the dimensions configuration.
+       * @param dimsConfig Dimensions configuration.
+       * @param commonParams Common parameters.
+       */
+      void correctDimensionsConfig(DimensionsConfig& dimsConfig, const CommonParameters& commonParams) const
+      {
+        auto generateStrides = [&](std::span<std::size_t> strides, std::invocable<std::size_t, std::size_t> auto fn)
+        {
+          for (std::size_t i{}; i < dimsConfig.getRank(); ++i)
+          {
+            if (i == 0)
+            {
+              strides.back() = 1;
+            }
+            else
+            {
+              std::size_t axis = dimsConfig.getRank() - i - 1;
+
+              strides[axis] = fn(axis + 1, strides[axis + 1]);
+            }
+          }
+        };
+
+        auto defaultStrideGenerator = [dimsConfig](std::size_t axis, std::size_t prevStride) -> std::size_t
+        {
+          return dimsConfig.getShape()[axis] * prevStride;
+        };
+
+        auto dftHermitComplexStrideGenerator = [dimsConfig, redAxis = mAxes.back()]
+                                               (std::size_t axis, std::size_t prevStride) -> std::size_t
+        {
+          const auto size = dimsConfig.getShape()[axis];
+
+          return ((axis == redAxis) ? size / 2 + 1 : size) * prevStride;
+        };
+
+        auto dftRealStrideGenerator = [dimsConfig, redAxis = mAxes.back(), placement = commonParams.placement]
+                                      (std::size_t axis, std::size_t prevStride) -> std::size_t
+        {
+          const auto size = dimsConfig.getShape()[axis];
+
+          return ((placement == Placement::inPlace && axis == redAxis) ? 2 * (size / 2 + 1) : size) * prevStride;
+        };
+
+        if (!dimsConfig.hasSrcStride())
+        {
+          switch (getType())
+          {
+          case TransformType::dft:
+          {
+            switch (getConfig<TransformType::dft>().srcFormat)
+            {
+            case dft::Format::hermitianComplexInterleaved:
+            case dft::Format::hermitianComplexPlanar:
+              generateStrides(dimsConfig.getSrcStride(), dftHermitComplexStrideGenerator);
+              break;
+            case dft::Format::real:
+              generateStrides(dimsConfig.getSrcStride(), dftRealStrideGenerator);
+              break;
+            default:
+              generateStrides(dimsConfig.getSrcStride(), defaultStrideGenerator);
+              break;
+            }
+          }
+          default:
+            generateStrides(dimsConfig.getSrcStride(), defaultStrideGenerator);
+            break;
+          }
+        }
+
+        if (!dimsConfig.hasDstStride())
+        {
+          switch (getType())
+          {
+          case TransformType::dft:
+          {
+            switch (getConfig<TransformType::dft>().dstFormat)
+            {
+            case dft::Format::hermitianComplexInterleaved:
+            case dft::Format::hermitianComplexPlanar:
+              generateStrides(dimsConfig.getDstStride(), dftHermitComplexStrideGenerator);
+              break;
+            case dft::Format::real:
+              generateStrides(dimsConfig.getDstStride(), dftRealStrideGenerator);
+              break;
+            default:
+              generateStrides(dimsConfig.getDstStride(), defaultStrideGenerator);
+              break;
+            }
+          }
+          default:
+            generateStrides(dimsConfig.getDstStride(), defaultStrideGenerator);
+            break;
+          }
+        }
+      }
       
       /**
        * @brief Equality operator.
