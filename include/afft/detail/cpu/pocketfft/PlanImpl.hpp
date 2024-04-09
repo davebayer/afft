@@ -113,6 +113,55 @@ namespace afft::detail::cpu::pocketfft
        */
       static const Config& checkConfig(const Config& config)
       {
+        switch (config.transformConfig.getType())
+        {
+        case TransformType::dft:
+        {
+          const auto& dftConfig = config.transformConfig.getConfig<TransformType::dft>();
+
+          if (dftConfig.srcFormat == complexInterleaved && dftConfig.dstFormat == complexInterleaved)
+          {
+            if (config.commonParams.placement == Placement::inplace)
+            {
+              if (!config.dimsConfig.stridesEqual())
+              {
+                throw makeException<std::runtime_error>("Inplace transform requires equal strides");
+              }
+            }
+          }
+          else if (dftConfig.srcFormat == real && dftConfig.dstFormat == hermitianComplexInterleaved)
+          {
+            if (config.commonParams.placement == Placement::inplace)
+            {
+              throw makeException<std::runtime_error>("Inplace transform not supported");
+            }
+          }
+          else if (dftConfig.srcFormat == hermitianComplexInterleaved && dftConfig.dstFormat == real)
+          {
+            if (config.commonParams.placement == Placement::inplace)
+            {
+              throw makeException<std::runtime_error>("Inplace transform not supported");
+            }
+          }
+          else
+          {
+            throw makeException<std::runtime_error>("Unsupported DFT configuration");
+          }
+          break;
+        }
+        case TransformType::dtt:
+          if (config.commonParams.placement == Placement::inplace)
+          {
+            if (!config.dimsConfig.stridesEqual())
+            {
+              throw makeException<std::runtime_error>("Inplace transform requires equal strides");
+            }
+          }
+          break;
+        default:
+          throw makeException<std::runtime_error>("Unsupported transform type");
+        }
+
         return config;
       }
 
