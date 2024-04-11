@@ -28,6 +28,7 @@
 #include <fftw3.h>
 
 #include "../../error.hpp"
+#include "../../../type.hpp"
 
 namespace afft::detail::cpu::fftw3
 {
@@ -44,7 +45,20 @@ namespace afft::detail::cpu::fftw3
 
     check(fftwf_init_threads());
     check(fftw_init_threads());
-    check(fftwl_init_threads());
+
+# if AFFT_CPU_FFTW3_LONG_FOUND
+    if constexpr (hasPrecision<Precision::f80>())
+    {
+      check(fftwl_init_threads());
+    }
+# endif
+
+# if AFFT_CPU_FFTW3_QUAD_FOUND    
+    if constexpr (hasPrecision<Precision::f128>())
+    {
+      check(fftwq_init_threads());
+    }
+# endif
   }
 
   /// @brief Finalize the FFTW3 library.
@@ -52,7 +66,20 @@ namespace afft::detail::cpu::fftw3
   {
     fftwf_cleanup_threads();
     fftw_cleanup_threads();
-    fftwl_cleanup_threads();
+
+# if AFFT_CPU_FFTW3_LONG_FOUND
+    if constexpr (hasPrecision<Precision::f80>())
+    {
+      fftwl_cleanup_threads();
+    }
+# endif
+
+# if AFFT_CPU_FFTW3_QUAD_FOUND    
+    if constexpr (hasPrecision<Precision::f128>())
+    {
+      fftwq_cleanup_threads();
+    }
+# endif
   }
 } // namespace afft::detail::cpu::fftw3
 
