@@ -22,31 +22,44 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_DETAIL_INIT_HPP
+#define AFFT_DETAIL_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
+#include <utility>
 
-namespace afft
+#include "cpu/init.hpp"
+#include "gpu/init.hpp"
+
+namespace afft::detail
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Is the library initialized?
+  inline bool isInitialized{false};
+
+  /// @brief Initialize the library.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
+    if (!std::exchange(isInitialized, true))
     {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
+      cpu::init();
 
-    return std::min({getPtrAlignment(ptrs)...});
+#   if AFFT_GPU_ENABLED
+      gpu::init();
+#   endif
+    }
   }
-} // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+  /// @brief Finalize the library usage.
+  inline void finalize()
+  {
+    if (std::exchange(isInitialized, false))
+    {
+      cpu::finalize();
+
+#   if AFFT_GPU_ENABLED
+      gpu::finalize();
+#   endif
+    }
+  }
+} // namespace afft::detail
+
+#endif /* AFFT_DETAIL_INIT_HPP */

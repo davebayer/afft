@@ -22,31 +22,28 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_DETAIL_CPU_FFTW3_INIT_HPP
+#define AFFT_DETAIL_CPU_FFTW3_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
+#include <fftw3.h>
 
-namespace afft
+namespace afft::detail::cpu::fftw3
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Initialize the FFTW3 library.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
-    {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
-
-    return std::min({getPtrAlignment(ptrs)...});
+    fftwf_init_threads();
+    fftw_init_threads();
+    fftwl_init_threads();
   }
-} // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+  /// @brief Finalize the FFTW3 library.
+  inline void finalize()
+  {
+    fftwf_cleanup_threads();
+    fftw_cleanup_threads();
+    fftwl_cleanup_threads();
+  }
+} // namespace afft::detail::cpu::fftw3
+
+#endif /* AFFT_DETAIL_CPU_FFTW3_INIT_HPP */

@@ -22,31 +22,22 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_DETAIL_CPU_POCKETFFT_INIT_HPP
+#define AFFT_DETAIL_CPU_POCKETFFT_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
-
-namespace afft
+namespace afft::detail::cpu::pocketfft
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Initialize the pocketfft library.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
-    {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
-
-    return std::min({getPtrAlignment(ptrs)...});
+    // Do nothing
   }
-} // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+  /// @brief Finalize the pocketfft library.
+  inline void finalize()
+  {
+    // Do nothing
+  }
+} // namespace afft::detail::cpu::pocketfft
+
+#endif /* AFFT_DETAIL_CPU_POCKETFFT_INIT_HPP */

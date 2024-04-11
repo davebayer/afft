@@ -22,31 +22,24 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_INIT_HPP
+#define AFFT_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
+#include "detail/init.hpp"
 
 namespace afft
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Initialize the library. Should be called before any other afft function.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
-    {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
+    detail::init();
+  }
 
-    return std::min({getPtrAlignment(ptrs)...});
+  /// @brief Finalize the library.
+  inline void finalize()
+  {
+    detail::finalize();
   }
 } // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+#endif /* AFFT_INIT_HPP */

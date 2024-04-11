@@ -22,31 +22,46 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_DETAIL_CPU_INIT_HPP
+#define AFFT_DETAIL_CPU_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
+#include "../../cpu.hpp"
 
-namespace afft
+#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
+# include "fftw3/init.hpp"
+#endif
+#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+# include "mkl/init.hpp"
+#endif
+#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+# include "pocketfft/init.hpp"
+#endif
+
+namespace afft::detail::cpu
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Initialize the CPU transform backend.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
-    {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
-
-    return std::min({getPtrAlignment(ptrs)...});
+# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
+    fftw3::init();
+# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+    mkl::init();
+# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+    pocketfft::init();
+# endif
   }
-} // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+  /// @brief Finalize the CPU transform backend.
+  inline void finalize()
+  {
+# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
+    fftw::finalize();
+# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+    mkl::finalize();
+# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+    pocketfft::finalize();
+# endif
+  }
+} // namespace afft::detail::cpu
+
+#endif /* AFFT_DETAIL_CPU_INIT_HPP */

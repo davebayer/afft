@@ -22,31 +22,26 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_UTILS_HPP
-#define AFFT_UTILS_HPP
+#ifndef AFFT_DETAIL_GPU_ROCFFT_INIT_HPP
+#define AFFT_DETAIL_GPU_ROCFFT_INIT_HPP
 
-#include <algorithm>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
+#include <rocfft/rocfft.h>
 
-namespace afft
+#include "error.hpp"
+
+namespace afft::detail::gpu::rocfft
 {
-  /**
-   * @brief Get the alignment of the pointers
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  /// @brief Initialize the rocFFT library.
+  inline void init()
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
-    {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
-    };
-
-    return std::min({getPtrAlignment(ptrs)...});
+    Error::check(rocfft_setup());
   }
-} // namespace afft
 
-#endif /* AFFT_UTILS_HPP */
+  /// @brief Finalize the rocFFT library.
+  inline void finalize()
+  {
+    Error::check(rocfft_cleanup());
+  }
+} // namespace afft::detail::gpu::rocfft
+
+#endif /* AFFT_DETAIL_GPU_ROCFFT_INIT_HPP */
