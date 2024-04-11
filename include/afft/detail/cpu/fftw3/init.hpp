@@ -27,14 +27,24 @@
 
 #include <fftw3.h>
 
+#include "../../error.hpp"
+
 namespace afft::detail::cpu::fftw3
 {
   /// @brief Initialize the FFTW3 library.
   inline void init()
   {
-    fftwf_init_threads();
-    fftw_init_threads();
-    fftwl_init_threads();
+    auto check = [](int result)
+    {
+      if (result == 0)
+      {
+        throw makeException<std::runtime_error>("[FFTW3 error] initialization failed.");
+      }
+    };
+
+    check(fftwf_init_threads());
+    check(fftw_init_threads());
+    check(fftwl_init_threads());
   }
 
   /// @brief Finalize the FFTW3 library.
