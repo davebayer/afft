@@ -25,8 +25,7 @@
 #ifndef AFFT_DETAIL_CPU_FFTW3_INIT_HPP
 #define AFFT_DETAIL_CPU_FFTW3_INIT_HPP
 
-#include <fftw3.h>
-
+#include "Lib.hpp"
 #include "../../error.hpp"
 #include "../../../type.hpp"
 
@@ -43,42 +42,26 @@ namespace afft::detail::cpu::fftw3
       }
     };
 
-    check(fftwf_init_threads());
-    check(fftw_init_threads());
-
-# if AFFT_CPU_FFTW3_LONG_FOUND
-    if constexpr (hasPrecision<Precision::f80>())
-    {
-      check(fftwl_init_threads());
-    }
+    check(Lib<Precision::f32>::initThreads());
+    check(Lib<Precision::f64>::initThreads());
+# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
+    check(Lib<Precision::f80>::initThreads());
 # endif
-
-# if AFFT_CPU_FFTW3_QUAD_FOUND    
-    if constexpr (hasPrecision<Precision::f128>())
-    {
-      check(fftwq_init_threads());
-    }
+# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
+    check(Lib<Precision::f128>::initThreads());
 # endif
   }
 
   /// @brief Finalize the FFTW3 library.
   inline void finalize()
   {
-    fftwf_cleanup_threads();
-    fftw_cleanup_threads();
-
-# if AFFT_CPU_FFTW3_LONG_FOUND
-    if constexpr (hasPrecision<Precision::f80>())
-    {
-      fftwl_cleanup_threads();
-    }
+    Lib<Precision::f32>::cleanUpThreads();
+    Lib<Precision::f64>::cleanUpThreads();
+# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
+    Lib<Precision::f80>::cleanUpThreads();
 # endif
-
-# if AFFT_CPU_FFTW3_QUAD_FOUND    
-    if constexpr (hasPrecision<Precision::f128>())
-    {
-      fftwq_cleanup_threads();
-    }
+# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
+    Lib<Precision::f128>::cleanUpThreads();
 # endif
   }
 } // namespace afft::detail::cpu::fftw3
