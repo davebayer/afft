@@ -29,6 +29,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "common.hpp"
+
 namespace afft
 {
   /**
@@ -45,6 +47,48 @@ namespace afft
     };
 
     return std::min({getPtrAlignment(static_cast<std::uintptr_t>(ptrs))...});
+  }
+
+  /**
+   * @brief Make a precision triad
+   * @tparam PrecT Precision type common for all three types, must be a known type
+   * @return Precision triad
+   */
+  template<KnownType PrecT>
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  {
+    return PrecisionTriad{.execution   = TypeProperties<std::remove_cvref_t<PrecT>>::precision,
+                          .source      = TypeProperties<std::remove_cvref_t<PrecT>>::precision,
+                          .destination = TypeProperties<std::remove_cvref_t<PrecT>>::precision};
+  }
+
+  /**
+   * @brief Make a precision triad
+   * @tparam ExecT Execution type, must be a known type
+   * @tparam MemoryT Memory type, must be a known type, used for both source and destination
+   * @return Precision triad
+   */
+  template<typename ExecT, typename MemoryT>
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  {
+    return PrecisionTriad{.execution   = TypeProperties<std::remove_cvref_t<ExecT>>::precision,
+                          .source      = TypeProperties<std::remove_cvref_t<MemoryT>>::precision,
+                          .destination = TypeProperties<std::remove_cvref_t<MemoryT>>::precision};
+  }
+
+  /**
+   * @brief Make a precision triad
+   * @tparam ExecT Execution type, must be a known type
+   * @tparam SrcT Source type, must be a known type
+   * @tparam DstT Destination type, must be a known type
+   * @return Precision triad
+   */
+  template<typename ExecT, typename SrcT, typename DstT>
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  {
+    return PrecisionTriad{.execution   = TypeProperties<std::remove_cvref_t<ExecT>>::precision,
+                          .source      = TypeProperties<std::remove_cvref_t<SrcT>>::precision,
+                          .destination = TypeProperties<std::remove_cvref_t<DstT>>::precision};
   }
 } // namespace afft
 
