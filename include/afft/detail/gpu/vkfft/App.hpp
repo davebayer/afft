@@ -46,7 +46,7 @@ namespace afft::detail::gpu::vkfft
        * @brief Constructor
        * @param config VkFFTConfiguration
        */
-      constexpr App(VkFFTConfiguration&& config)
+      App(VkFFTConfiguration&& config)
       {
         init(std::move(config));
       }
@@ -76,7 +76,7 @@ namespace afft::detail::gpu::vkfft
        * @brief Initialize VkFFTApplication
        * @param config VkFFTConfiguration
        */
-      constexpr void init(VkFFTConfiguration&& config)
+      void init(VkFFTConfiguration&& config)
       {
         if (isValid())
         {
