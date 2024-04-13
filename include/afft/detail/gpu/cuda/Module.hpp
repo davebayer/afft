@@ -76,7 +76,7 @@ namespace afft::detail::gpu::cuda
        * @brief Checks if the module is valid.
        * @return True if the module is valid, false otherwise.
        */
-      [[nodiscard]] constexpr bool valid() const noexcept
+      [[nodiscard]] bool valid() const noexcept
       {
         return (mModule != nullptr);
       }

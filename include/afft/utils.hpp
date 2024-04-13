@@ -26,7 +26,6 @@
 #define AFFT_UTILS_HPP
 
 #include <algorithm>
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 
@@ -40,12 +39,12 @@ namespace afft
   [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
     requires (sizeof...(ptrs) > 0)
   {
-    auto getPtrAlignment = [](const void* ptr) constexpr -> std::size_t
+    auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> std::size_t
     {
-      return (std::size_t{1} << std::countr_zero(reinterpret_cast<std::uintptr_t>(ptr)));
+      return static_cast<std::size_t>(uintPtr & ~(uintPtr - 1));
     };
 
-    return std::min({getPtrAlignment(ptrs)...});
+    return std::min({getPtrAlignment(static_cast<std::uintptr_t>(ptrs))...});
   }
 } // namespace afft
 
