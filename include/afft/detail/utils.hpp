@@ -38,7 +38,7 @@
 # include <fmt/format.h>
 #endif
 
-#include "../common.hpp"
+#include <mdspan.hpp>
 
 namespace afft::detail
 {
@@ -102,13 +102,29 @@ namespace afft::detail
   }
 
   /**
-   * @brief Flips the direction of a transform.
-   * @param dir Direction to flip.
-   * @return Flipped direction.
+   * @brief Divides two integers and returns the quotient and remainder.
+   * @tparam I Integral type.
+   * @param a Dividend.
+   * @param b Divisor.
+   * @return Tuple containing the quotient and remainder.
    */
-  [[nodiscard]] constexpr Direction flipDirection(Direction dir) noexcept
+  template<std::integral I>
+  [[nodiscard]] constexpr std::tuple<I, I> div(I a, I b)
   {
-    return (dir == Direction::forward) ? Direction::inverse : Direction::forward;
+    return std::make_tuple(a / b, a % b);
+  }
+
+  /**
+   * @brief Removes the const qualifier from a pointer.
+   * @tparam T Type of the pointer.
+   * @param ptr Pointer to remove the const qualifier from.
+   * @return Pointer without the const qualifier.
+   * @warning This function should be used with caution, as it can lead to undefined behavior.
+   */
+  template<typename T>
+  [[nodiscard]] constexpr T* removeConstFromPtr(const T* ptr)
+  {
+    return const_cast<T*>(ptr);
   }
 
 inline namespace cxx23
