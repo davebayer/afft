@@ -37,10 +37,6 @@
 # endif
 #endif
 
-#ifndef __cpp_lib_bitops
-# error "C++20 bit operations are required"
-#endif
-
 #ifndef __cpp_lib_integer_comparison_functions
 # error "C++20 integer comparison functions are required"
 #endif
@@ -50,13 +46,13 @@
 # define AFFT_UNDEF_MAX_DIM_COUNT
 #endif
 
-// If no CPU backend is defined, use PocketFFT
+// If no CPU transform backend is defined, use PocketFFT
 #ifndef AFFT_CPU_TRANSFORM_BACKEND_LIST
 # define AFFT_CPU_TRANSFORM_BACKEND_LIST         POCKETFFT
 # define AFFT_UNDEF_CPU_TRANSFORM_BACKEND_LIST
 #endif
 
-// If no GPU backend is defined, use VkFFT
+// If no GPU transform backend is defined, but AFFT_GPU_BACKEND is selected, use VkFFT
 #ifdef AFFT_GPU_BACKEND
 # ifndef AFFT_GPU_TRANSFORM_BACKEND_LIST
 #   define AFFT_GPU_TRANSFORM_BACKEND_LIST       VKFFT
@@ -71,6 +67,7 @@
 #include "cpu.hpp"
 #include "gpu.hpp"
 #include "common.hpp"
+#include "init.hpp"
 #include "type.hpp"
 #include "Plan.hpp"
 #include "PlanCache.hpp"
