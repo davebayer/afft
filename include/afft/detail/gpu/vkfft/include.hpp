@@ -54,6 +54,13 @@
 // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
 #define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
 
+// define the path to the CUDA toolkit if it is not already defined
+#if AFFT_GPU_BACKEND_IS_CUDA
+# ifndef CUDA_TOOLKIT_ROOT_DIR
+#   define CUDA_TOOLKIT_ROOT_DIR AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
+# endif
+#endif
+
 // include the vkFFT header
 #include <vkFFT.h>
 
