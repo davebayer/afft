@@ -27,8 +27,8 @@
 
 #include "macro.hpp"
 
-/// @brief Macro for FFTW CPU transform backend
-#define AFFT_CPU_TRANSFORM_BACKEND_FFTW      (1 << 0)
+/// @brief Macro for FFTW3 CPU transform backend
+#define AFFT_CPU_TRANSFORM_BACKEND_FFTW3     (1 << 0)
 /// @brief Macro for MKL CPU transform backend
 #define AFFT_CPU_TRANSFORM_BACKEND_MKL       (1 << 1)
 /// @brief Macro for PocketFFT CPU transform backend
@@ -85,7 +85,7 @@ namespace afft::cpu
   /// @brief Enumeration of CPU transform backends
   enum class TransformBackend
   {
-    fftw      = AFFT_CPU_TRANSFORM_BACKEND_FFTW,
+    fftw3     = AFFT_CPU_TRANSFORM_BACKEND_FFTW3,
     mkl       = AFFT_CPU_TRANSFORM_BACKEND_MKL,
     pocketfft = AFFT_CPU_TRANSFORM_BACKEND_POCKETFFT,
   };
