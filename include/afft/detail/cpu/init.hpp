@@ -27,7 +27,7 @@
 
 #include "../../cpu.hpp"
 
-#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
+#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
 # include "fftw3/init.hpp"
 #endif
 #if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
@@ -42,7 +42,7 @@ namespace afft::detail::cpu
   /// @brief Initialize the CPU transform backend.
   inline void init()
   {
-# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
+# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
     fftw3::init();
 # elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
     mkl::init();
@@ -54,8 +54,8 @@ namespace afft::detail::cpu
   /// @brief Finalize the CPU transform backend.
   inline void finalize()
   {
-# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW)
-    fftw::finalize();
+# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
+    fftw3::finalize();
 # elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
     mkl::finalize();
 # elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
