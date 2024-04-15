@@ -337,9 +337,10 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T[]> makeAlignedUnique(std::size_t n)
+    requires std::is_unbounded_array_v<T>
+  AlignedUniquePtr<T> makeAlignedUnique(std::size_t n)
   {
-    return makeAlignedUnique<T[]>(defaultAlignment, n);
+    return makeAlignedUnique<T>(defaultAlignment, n);
   }
 
   /**
@@ -350,11 +351,14 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T[]> makeAlignedUnique(Alignment alignment, std::size_t n)
+    requires std::is_unbounded_array_v<T>
+  AlignedUniquePtr<T> makeAlignedUnique(Alignment alignment, std::size_t n)
   {
+    using U = std::remove_extent_t<T>;
+
     const auto align = static_cast<std::align_val_t>(alignment);
 
-    return AlignedUniquePtr<T[]>(new(align) T[n]{}, AlignedDeleter<T[]>{alignment});
+    return AlignedUniquePtr<T>(new(align) U[n]{}, AlignedDeleter<T>{alignment});
   }
 
   /**
@@ -379,7 +383,7 @@ namespace afft::cpu
   {
     const auto align = static_cast<std::align_val_t>(alignment);
 
-    return AlignedUniquePtr<T>(new(align) T, AlignedDeleter<T[]>{alignment});
+    return AlignedUniquePtr<T>(new(align) T, AlignedDeleter<T>{alignment});
   }
 
   /**
@@ -389,9 +393,10 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T[]> makeAlignedUniqueForOverwrite(std::size_t n)
+    requires std::is_unbounded_array_v<T>
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(std::size_t n)
   {
-    return makeAlignedUniqueForOverwrite<T[]>(defaultAlignment, n);
+    return makeAlignedUniqueForOverwrite<T>(defaultAlignment, n);
   }
 
   /**
@@ -402,11 +407,14 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
+    requires std::is_unbounded_array_v<T>
   AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(Alignment alignment, std::size_t n)
   {
+    using U = std::remove_extent_t<T>;
+
     const auto align = static_cast<std::align_val_t>(alignment);
 
-    return AlignedUniquePtr<T[]>(new(align) T[n], AlignedDeleter<T[]>{alignment});
+    return AlignedUniquePtr<T>(new(align) U[n], AlignedDeleter<T>{alignment});
   }
 
   /**
