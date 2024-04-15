@@ -76,7 +76,12 @@
 #define AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(backendName) \
   (AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_CPU_TRANSFORM_BACKEND_MASK)
 
+#include <complex>
+#include <concepts>
 #include <cstddef>
+#include <memory>
+#include <new>
+#include <utility>
 
 #include "target.hpp"
 
@@ -109,6 +114,31 @@ namespace afft::cpu
     avx512     = simd512,                          ///< AVX-512 alignment
     neon       = simd128,                          ///< NEON alignment
   };
+
+#if defined(__AVX512F__)
+  inline constexpr auto defaultAlignment = Alignment::avx512;
+#elif defined(__AVX2__)
+  inline constexpr auto defaultAlignment = Alignment::avx2;
+#elif defined(__AVX__)
+  inline constexpr auto defaultAlignment = Alignment::avx;
+#elif defined(__SSE4_2__)
+  inline constexpr auto defaultAlignment = Alignment::sse4_2;
+#elif defined(__SSE4_1__)
+  inline constexpr auto defaultAlignment = Alignment::sse4_1;
+#elif defined(__SSE4__)
+  inline constexpr auto defaultAlignment = Alignment::sse4;
+#elif defined(__SSE3__)
+  inline constexpr auto defaultAlignment = Alignment::sse3;
+#elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
+  inline constexpr auto defaultAlignment = Alignment::sse2;
+#elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
+  inline constexpr auto defaultAlignment = Alignment::sse;
+#elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
+  inline constexpr auto defaultAlignment = Alignment::neon;
+#else
+  inline constexpr auto defaultAlignment = Alignment::defaultNew;
+#endif
+
   /**
    * @struct Parameters
    * @brief Parameters for CPU transform
@@ -117,7 +147,349 @@ namespace afft::cpu
   {
     Alignment alignment{Alignment::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
     unsigned  threadLimit{0u};                  ///< Thread limit for CPU transform, 0 for no limit
-  }; 
+  };
+
+  /**
+   * @brief Aligned memory deleter
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+    requires (!std::same_as<T, void>)
+  class AlignedDeleter
+  {
+    public:
+      /// @brief Default constructor
+      constexpr AlignedDeleter() noexcept = default;
+
+      /// @brief Constructor with alignment
+      constexpr AlignedDeleter(Alignment alignment) noexcept
+      : mAlignment{alignment}
+      {}
+
+      /// @brief Copy constructor
+      template<typename U>
+        requires std::convertible_to<U*, T*>
+      constexpr AlignedDeleter(const AlignedDeleter<U>& other) noexcept
+      : mAlignment{other.mAlignment}
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+        requires std::convertible_to<U*, T*>
+      constexpr AlignedDeleter(AlignedDeleter<U>&& other) noexcept
+      : mAlignment{std::move(other.mAlignment)}
+      {}
+
+      /// @brief Destructor
+      constexpr ~AlignedDeleter() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+        requires std::convertible_to<U*, T*>
+      constexpr AlignedDeleter& operator=(const AlignedDeleter<U>& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = other.mAlignment;
+        }
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+        requires std::convertible_to<U*, T*>
+      constexpr AlignedDeleter& operator=(AlignedDeleter<U>&& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = std::move(other.mAlignment);
+        }
+        return *this;
+      }
+      
+      /// @brief Operator for deleting memory
+      void operator()(T* ptr) const
+      {
+        static_assert(sizeof(T) > 0, "T must be a complete type");
+
+        if (ptr != nullptr)
+        {
+          ::operator delete(ptr, static_cast<std::align_val_t>(mAlignment));
+        }
+      }
+    private:
+      Alignment mAlignment{defaultAlignment}; ///< Alignment for memory allocation
+  };
+
+  /**
+   * @brief Specialization of AlignedDeleter for arrays
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class AlignedDeleter<T[]>
+  {
+    public:
+      /// @brief Default constructor
+      constexpr AlignedDeleter() noexcept = default;
+
+      /// @brief Constructor with alignment
+      constexpr AlignedDeleter(Alignment alignment) noexcept
+      : mAlignment{alignment}
+      {}
+
+      /// @brief Copy constructor
+      template<typename U>
+        requires std::convertible_to<U(*)[], T(*)[]>
+      constexpr AlignedDeleter(const AlignedDeleter<U[]>& other) noexcept
+      : mAlignment{other.mAlignment}
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+        requires std::convertible_to<U(*)[], T(*)[]>
+      constexpr AlignedDeleter(AlignedDeleter<U[]>&& other) noexcept
+      : mAlignment{std::move(other.mAlignment)}
+      {}
+
+      /// @brief Destructor
+      constexpr ~AlignedDeleter() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+        requires std::convertible_to<U(*)[], T(*)[]>
+      constexpr AlignedDeleter& operator=(const AlignedDeleter<U[]>& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = other.mAlignment;
+        }
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+        requires std::convertible_to<U(*)[], T(*)[]>
+      constexpr AlignedDeleter& operator=(AlignedDeleter<U[]>&& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = std::move(other.mAlignment);
+        }
+        return *this;
+      }
+
+      /// @brief Operator for deleting memory
+      template<typename U>
+        requires std::convertible_to<U(*)[], T(*)[]>
+      void operator()(U* ptr) const
+      {
+        static_assert(sizeof(T) > 0, "T must be a complete type");
+
+        if (ptr != nullptr)
+        {
+          ::operator delete[](ptr, static_cast<std::align_val_t>(mAlignment));
+        }
+      }
+    private:
+      Alignment mAlignment{defaultAlignment}; ///< Alignment for memory allocation
+  };
+
+  /**
+   * @brief Alias for aligned unique pointer
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  using AlignedUniquePtr = std::unique_ptr<T, AlignedDeleter<T>>;
+
+  /**
+   * @brief Make aligned unique pointer
+   * @tparam T Type of the memory
+   * @tparam Args Types of the arguments
+   * @param args Arguments for the constructor
+   * @return Aligned unique pointer
+   */
+  template<typename T, typename... Args>
+  AlignedUniquePtr<T> makeAlignedUnique(Args&&... args)
+  {
+    return makeAlignedUnique<T>(defaultAlignment, std::forward<Args>(args)...);
+  }
+
+  /**
+   * @brief Make aligned unique pointer
+   * @tparam T Type of the memory
+   * @tparam Args Types of the arguments
+   * @param alignment Alignment for memory allocation
+   * @param args Arguments for the constructor
+   * @return Aligned unique pointer
+   */
+  template<typename T, typename... Args>
+  AlignedUniquePtr<T> makeAlignedUnique(Alignment alignment, Args&&... args)
+  {
+    const auto align = static_cast<std::align_val_t>(alignment);
+
+    return AlignedUniquePtr<T>(new(align) T{std::forward<Args>(args)...}, AlignedDeleter<T>{alignment});
+  }
+  
+  /**
+   * @brief Make aligned unique pointer for arrays
+   * @tparam T Type of the memory
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T[]> makeAlignedUnique(std::size_t n)
+  {
+    return makeAlignedUnique<T[]>(defaultAlignment, n);
+  }
+
+  /**
+   * @brief Make aligned unique pointer for arrays
+   * @tparam T Type of the memory
+   * @param alignment Alignment for memory allocation
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T[]> makeAlignedUnique(Alignment alignment, std::size_t n)
+  {
+    const auto align = static_cast<std::align_val_t>(alignment);
+
+    return AlignedUniquePtr<T[]>(new(align) T[n]{}, AlignedDeleter<T[]>{alignment});
+  }
+
+  /**
+   * @brief Make aligned unique pointer to be overwritten
+   * @tparam T Type of the memory
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite()
+  {
+    return makeAlignedUniqueForOverwrite<T>(defaultAlignment);
+  }
+
+  /**
+   * @brief Make aligned unique pointer to be overwritten
+   * @tparam T Type of the memory
+   * @param alignment Alignment for memory allocation
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(Alignment alignment)
+  {
+    const auto align = static_cast<std::align_val_t>(alignment);
+
+    return AlignedUniquePtr<T>(new(align) T, AlignedDeleter<T[]>{alignment});
+  }
+
+  /**
+   * @brief Make aligned unique pointer for arrays to be overwritten
+   * @tparam T Type of the memory
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T[]> makeAlignedUniqueForOverwrite(std::size_t n)
+  {
+    return makeAlignedUniqueForOverwrite<T[]>(defaultAlignment, n);
+  }
+
+  /**
+   * @brief Make aligned unique pointer for arrays to be overwritten
+   * @tparam T Type of the memory
+   * @param alignment Alignment for memory allocation
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(Alignment alignment, std::size_t n)
+  {
+    const auto align = static_cast<std::align_val_t>(alignment);
+
+    return AlignedUniquePtr<T[]>(new(align) T[n], AlignedDeleter<T[]>{alignment});
+  }
+
+  /**
+   * @class AlignedAllocator
+   * @brief Allocator named concept implementation implementation for aligned CPU memory to be used with std::vector and
+   *        others.
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class AlignedAllocator
+  {
+    public:
+      /// @brief Type of the memory
+      using value_type = T;
+
+      /// @brief Default constructor
+      constexpr AlignedAllocator() = default;
+
+      /// @brief Constructor with alignment
+      constexpr AlignedAllocator(Alignment alignment) noexcept
+      : mAlignment{alignment}
+      {}
+
+      /// @brief Copy constructor
+      template<typename U>
+      constexpr AlignedAllocator(const AlignedAllocator<U>& other) noexcept
+      : mAlignment{other.mAlignment}
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+      constexpr AlignedAllocator(AlignedAllocator<U>&& other) noexcept
+      : mAlignment{std::move(other.mAlignment)}
+      {}
+
+      /// @brief Destructor
+      constexpr ~AlignedAllocator() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+      constexpr AlignedAllocator& operator=(const AlignedAllocator<U>& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = other.mAlignment;
+        }
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+      constexpr AlignedAllocator& operator=(AlignedAllocator<U>&& other) noexcept
+      {
+        if (this != &other)
+        {
+          mAlignment = std::move(other.mAlignment);
+        }
+        return *this;
+      }
+
+      /**
+       * @brief Allocate memory
+       * @param n Number of elements
+       * @return Pointer to the allocated memory
+       */
+      T* allocate(std::size_t n)
+      {
+        return static_cast<T*>(::operator new(n * sizeof(T), static_cast<std::align_val_t>(mAlignment)));
+      }
+
+      /**
+       * @brief Deallocate memory
+       * @param p Pointer to the memory
+       * @param n Number of elements
+       */
+      void deallocate(T* p, std::size_t) noexcept
+      {
+        ::operator delete(p, static_cast<std::align_val_t>(mAlignment));
+      }
+    protected:
+    private:
+      Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
+  };
 } // namespace afft::cpu
 
 #endif /* AFFT_CPU_HPP */
