@@ -90,18 +90,34 @@ namespace afft::cpu
     pocketfft = AFFT_CPU_TRANSFORM_BACKEND_POCKETFFT,
   };
 
-  /// @brief Default alignment for CPU memory allocation
-  inline constexpr std::size_t defaultAlignment{__STDCPP_DEFAULT_NEW_ALIGNMENT__};
+  /// @brief Alignment for CPU memory allocation
+  enum class Alignment : std::size_t
+  {
+    defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
+    simd128    = 16,                               ///< 128-bit SIMD alignment
+    simd256    = 32,                               ///< 256-bit SIMD alignment
+    simd512    = 64,                               ///< 512-bit SIMD alignment
 
+    sse        = simd128,                          ///< SSE alignment
+    sse2       = simd128,                          ///< SSE2 alignment
+    sse3       = simd128,                          ///< SSE3 alignment
+    sse4       = simd128,                          ///< SSE4 alignment
+    sse4_1     = simd128,                          ///< SSE4.1 alignment
+    sse4_2     = simd128,                          ///< SSE4.2 alignment
+    avx        = simd256,                          ///< AVX alignment
+    avx2       = simd256,                          ///< AVX2 alignment
+    avx512     = simd512,                          ///< AVX-512 alignment
+    neon       = simd128,                          ///< NEON alignment
+  };
   /**
    * @struct Parameters
    * @brief Parameters for CPU transform
    */
   struct Parameters
   {
-    std::size_t alignment{defaultAlignment}; ///< Alignment for CPU memory allocation, defaults to `defaultAlignment`
-    unsigned    threadLimit{0u};             ///< Thread limit for CPU transform, 0 for no limit
+    Alignment alignment{Alignment::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
+    unsigned  threadLimit{0u};                  ///< Thread limit for CPU transform, 0 for no limit
   }; 
-} // namespace afft
+} // namespace afft::cpu
 
 #endif /* AFFT_CPU_HPP */
