@@ -93,6 +93,13 @@ namespace afft
     gpu, ///< GPU target
   };
 
+  /// @brief Transform backend select strategy
+  enum class SelectStrategy
+  {
+    first, ///< select the first available backend
+    best,  ///< select the best available backend
+  };
+
   /// @brief Initialization effort
   enum class InitEffort
   {
@@ -180,8 +187,6 @@ namespace afft
       complexToReal,    ///< complex-to-real transform
     };
 
-    using enum Type;
-
     /// @brief DFT parameters
     struct Parameters
     {
@@ -193,6 +198,9 @@ namespace afft
       PrecisionTriad               precision{};                  ///< precision triad
       Type                         type{Type::complexToComplex}; ///< type of the transform
     };
+
+    // Import Type values into dft namespace
+    using enum Type;
   } // namespace dft
 
   namespace dtt
@@ -214,8 +222,6 @@ namespace afft
       dst = dst2, ///< default DST type
     };
 
-    using enum Type;
-
     /// @brief DTT parameters
     struct Parameters
     {
@@ -227,6 +233,9 @@ namespace afft
       std::span<const std::size_t> axes{allAxes};      ///< axes of the transform
       std::span<const Type>        types{};            ///< types of the transform
     };
+
+    // Import Type values into dtt namespace
+    using enum Type;
   } // namespace dtt
 } // namespace afft
 
