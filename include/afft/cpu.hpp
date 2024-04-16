@@ -83,6 +83,8 @@
 #include <new>
 #include <utility>
 
+#include "common.hpp"
+
 namespace afft::cpu
 {
   /// @brief Enumeration of CPU transform backends
@@ -93,48 +95,48 @@ namespace afft::cpu
     pocketfft = AFFT_CPU_TRANSFORM_BACKEND_POCKETFFT,
   };
 
-  /// @brief Alignment for CPU memory allocation
-  enum class Alignment : std::size_t
+  /// @brief alignments for CPU memory allocation
+  namespace alignments
   {
-    defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
-    simd128    = 16,                               ///< 128-bit SIMD alignment
-    simd256    = 32,                               ///< 256-bit SIMD alignment
-    simd512    = 64,                               ///< 512-bit SIMD alignment
+    inline constexpr Alignment defaultNew{__STDCPP_DEFAULT_NEW_ALIGNMENT__}; ///< Default alignment for new operator
+    inline constexpr Alignment simd128{16};                                  ///< 128-bit SIMD alignment
+    inline constexpr Alignment simd256{32};                                  ///< 256-bit SIMD alignment
+    inline constexpr Alignment simd512{64};                                  ///< 512-bit SIMD alignment
 
-    sse        = simd128,                          ///< SSE alignment
-    sse2       = simd128,                          ///< SSE2 alignment
-    sse3       = simd128,                          ///< SSE3 alignment
-    sse4       = simd128,                          ///< SSE4 alignment
-    sse4_1     = simd128,                          ///< SSE4.1 alignment
-    sse4_2     = simd128,                          ///< SSE4.2 alignment
-    avx        = simd256,                          ///< AVX alignment
-    avx2       = simd256,                          ///< AVX2 alignment
-    avx512     = simd512,                          ///< AVX-512 alignment
-    neon       = simd128,                          ///< NEON alignment
-  };
+    inline constexpr Alignment sse{simd128};                                 ///< SSE alignment
+    inline constexpr Alignment sse2{simd128};                                ///< SSE2 alignment
+    inline constexpr Alignment sse3{simd128};                                ///< SSE3 alignment
+    inline constexpr Alignment sse4{simd128};                                ///< SSE4 alignment
+    inline constexpr Alignment sse4_1{simd128};                              ///< SSE4.1 alignment
+    inline constexpr Alignment sse4_2{simd128};                              ///< SSE4.2 alignment
+    inline constexpr Alignment avx{simd256};                                 ///< AVX alignment
+    inline constexpr Alignment avx2{simd256};                                ///< AVX2 alignment
+    inline constexpr Alignment avx512{simd512};                              ///< AVX-512 alignment
+    inline constexpr Alignment neon{simd128};                                ///< NEON alignment
+  } // namespace Alignment
 
 #if defined(__AVX512F__)
-  inline constexpr auto defaultAlignment = Alignment::avx512;
+  inline constexpr auto defaultAlignment = alignments::avx512;
 #elif defined(__AVX2__)
-  inline constexpr auto defaultAlignment = Alignment::avx2;
+  inline constexpr auto defaultAlignment = alignments::avx2;
 #elif defined(__AVX__)
-  inline constexpr auto defaultAlignment = Alignment::avx;
+  inline constexpr auto defaultAlignment = alignments::avx;
 #elif defined(__SSE4_2__)
-  inline constexpr auto defaultAlignment = Alignment::sse4_2;
+  inline constexpr auto defaultAlignment = alignments::sse4_2;
 #elif defined(__SSE4_1__)
-  inline constexpr auto defaultAlignment = Alignment::sse4_1;
+  inline constexpr auto defaultAlignment = alignments::sse4_1;
 #elif defined(__SSE4__)
-  inline constexpr auto defaultAlignment = Alignment::sse4;
+  inline constexpr auto defaultAlignment = alignments::sse4;
 #elif defined(__SSE3__)
-  inline constexpr auto defaultAlignment = Alignment::sse3;
+  inline constexpr auto defaultAlignment = alignments::sse3;
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-  inline constexpr auto defaultAlignment = Alignment::sse2;
+  inline constexpr auto defaultAlignment = alignments::sse2;
 #elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-  inline constexpr auto defaultAlignment = Alignment::sse;
+  inline constexpr auto defaultAlignment = alignments::sse;
 #elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-  inline constexpr auto defaultAlignment = Alignment::neon;
+  inline constexpr auto defaultAlignment = alignments::neon;
 #else
-  inline constexpr auto defaultAlignment = Alignment::defaultNew;
+  inline constexpr auto defaultAlignment = alignments::defaultNew;
 #endif
 
   /**
@@ -143,8 +145,8 @@ namespace afft::cpu
    */
   struct Parameters
   {
-    Alignment alignment{Alignment::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
-    unsigned  threadLimit{0u};                  ///< Thread limit for CPU transform, 0 for no limit
+    Alignment alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
+    unsigned  threadLimit{0u};                   ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /**
@@ -303,19 +305,6 @@ namespace afft::cpu
    * @brief Make aligned unique pointer
    * @tparam T Type of the memory
    * @tparam Args Types of the arguments
-   * @param args Arguments for the constructor
-   * @return Aligned unique pointer
-   */
-  template<typename T, typename... Args>
-  AlignedUniquePtr<T> makeAlignedUnique(Args&&... args)
-  {
-    return makeAlignedUnique<T>(defaultAlignment, std::forward<Args>(args)...);
-  }
-
-  /**
-   * @brief Make aligned unique pointer
-   * @tparam T Type of the memory
-   * @tparam Args Types of the arguments
    * @param alignment Alignment for memory allocation
    * @param args Arguments for the constructor
    * @return Aligned unique pointer
@@ -329,16 +318,16 @@ namespace afft::cpu
   }
   
   /**
-   * @brief Make aligned unique pointer for arrays
+   * @brief Make aligned unique pointer
    * @tparam T Type of the memory
-   * @param n Number of elements
+   * @tparam Args Types of the arguments
+   * @param args Arguments for the constructor
    * @return Aligned unique pointer
    */
-  template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUnique(std::size_t n)
+  template<typename T, typename... Args>
+  AlignedUniquePtr<T> makeAlignedUnique(Args&&... args)
   {
-    return makeAlignedUnique<T>(defaultAlignment, n);
+    return makeAlignedUnique<T>(defaultAlignment, std::forward<Args>(args)...);
   }
 
   /**
@@ -360,14 +349,16 @@ namespace afft::cpu
   }
 
   /**
-   * @brief Make aligned unique pointer to be overwritten
+   * @brief Make aligned unique pointer for arrays
    * @tparam T Type of the memory
+   * @param n Number of elements
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite()
+    requires std::is_unbounded_array_v<T>
+  AlignedUniquePtr<T> makeAlignedUnique(std::size_t n)
   {
-    return makeAlignedUniqueForOverwrite<T>(defaultAlignment);
+    return makeAlignedUnique<T>(defaultAlignment, n);
   }
 
   /**
@@ -385,16 +376,14 @@ namespace afft::cpu
   }
 
   /**
-   * @brief Make aligned unique pointer for arrays to be overwritten
+   * @brief Make aligned unique pointer to be overwritten
    * @tparam T Type of the memory
-   * @param n Number of elements
    * @return Aligned unique pointer
    */
   template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(std::size_t n)
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite()
   {
-    return makeAlignedUniqueForOverwrite<T>(defaultAlignment, n);
+    return makeAlignedUniqueForOverwrite<T>(defaultAlignment);
   }
 
   /**
@@ -413,6 +402,19 @@ namespace afft::cpu
     const auto align = static_cast<std::align_val_t>(alignment);
 
     return AlignedUniquePtr<T>(new(align) U[n], AlignedDeleter<T>{alignment});
+  }
+
+  /**
+   * @brief Make aligned unique pointer for arrays to be overwritten
+   * @tparam T Type of the memory
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+    requires std::is_unbounded_array_v<T>
+  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(std::size_t n)
+  {
+    return makeAlignedUniqueForOverwrite<T>(defaultAlignment, n);
   }
 
   /**
@@ -494,7 +496,7 @@ namespace afft::cpu
       }
     protected:
     private:
-      Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
+      Alignment mAlignment{alignments::defaultNew}; ///< Alignment for memory allocation
   };
 } // namespace afft::cpu
 

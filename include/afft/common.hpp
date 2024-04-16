@@ -29,9 +29,6 @@
 #include <span>
 #include <utility>
 
-#include "cpu.hpp"
-#include "gpu.hpp"
-
 namespace afft
 {
   /// @brief Maximum number of dimensions
@@ -48,6 +45,9 @@ namespace afft
     f80    = 5, ///< x86 80-bit extended precision format
     f128   = 6, ///< IEEE 754 quadruple-precision binary floating-point format
   };
+
+  /// @brief Alignment of a data type
+  enum class Alignment : std::size_t {};
 
   /// @brief Complexity of a data type
   enum class Complexity
