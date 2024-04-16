@@ -38,12 +38,12 @@ namespace afft
    * @param ptrs Pointers
    * @return Alignment
    */
-  [[nodiscard]] constexpr std::size_t getAlignment(const auto*... ptrs)
+  [[nodiscard]] constexpr Alignment getAlignment(const auto*... ptrs)
     requires (sizeof...(ptrs) > 0)
   {
-    auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> std::size_t
+    auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> Alignment
     {
-      return static_cast<std::size_t>(uintPtr & ~(uintPtr - 1));
+      return static_cast<Alignment>(uintPtr & ~(uintPtr - 1));
     };
 
     return std::min({getPtrAlignment(static_cast<std::uintptr_t>(ptrs))...});
