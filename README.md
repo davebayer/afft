@@ -22,7 +22,7 @@ int main(void)
   AlignedVector<std::complex<PrecT>> src(size); // source vector
   AlignedVector<std::complex<PrecT>> dst(size); // destination vector
 
-  // init source vector
+  // initialize source vector
 
   const afft::dft::Parameters dftParams // parameters for dft
   {
@@ -49,6 +49,6 @@ int main(void)
 
   // use results from dst vector
 
-  afft::finalize();
+  afft::finalize(); // deinitialize afft library
 }
 ```

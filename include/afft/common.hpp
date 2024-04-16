@@ -180,6 +180,8 @@ namespace afft
       complexToReal,    ///< complex-to-real transform
     };
 
+    using enum Type;
+
     /// @brief DFT parameters
     struct Parameters
     {
@@ -211,6 +213,8 @@ namespace afft
       dct = dct2, ///< default DCT type
       dst = dst2, ///< default DST type
     };
+
+    using enum Type;
 
     /// @brief DTT parameters
     struct Parameters
