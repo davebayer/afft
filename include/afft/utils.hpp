@@ -46,7 +46,7 @@ namespace afft
       return static_cast<Alignment>(uintPtr & ~(uintPtr - 1));
     };
 
-    return std::min({getPtrAlignment(static_cast<std::uintptr_t>(ptrs))...});
+    return std::min({getPtrAlignment(reinterpret_cast<std::uintptr_t>(ptrs))...});
   }
 
   /**
