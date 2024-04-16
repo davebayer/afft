@@ -128,6 +128,7 @@
 # include "detail/gpu/opencl/opencl.hpp"
 #endif
 
+#include <array>
 #include <span>
 
 namespace afft::gpu
@@ -149,11 +150,36 @@ namespace afft::gpu
   {
   // GPU backend specific parameters
 # if AFFT_GPU_BACKEND_IS_CUDA
-    int  device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+    int              device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS_HIP
-    int  device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+    int              device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
 # endif
-    bool externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+    bool             externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+  };
+
+  /// @brief Default list of transform backends
+  inline constexpr std::array defaultTbList
+  {
+# if AFFT_GPU_BACKEND_IS_CUDA
+    TransformBackend::cufft,  // prefer cufft
+    TransformBackend::vkfft,  // fallback to vkfft
+# elif AFFT_GPU_BACKEND_IS_HIP && defined(__HIP_PLATFORM_NVIDIA__)
+    TransformBackend::hipfft, // prefer cufft (it is used by hipfft on CUDA)
+    TransformBackend::vkfft,  // prefer vkfft as it should be faster than rocfft
+    TransformBackend::rocfft, // fallback to rocfft
+# elif AFFT_GPU_BACKEND_IS_HIP && defined(__HIP_PLATFORM_AMD__)
+    TransformBackend::vkfft,  // prefer vkfft as it should be faster than rocfft
+    TransformBackend::rocfft, // fallback to rocfft
+# else
+    TransformBackend::vkfft,  // fallback to vkfft as it supports all platforms
+# endif
+  };
+
+  /// @brief Select parameters for transform backends
+  struct TBSelectParameters
+  {
+    std::span<const TransformBackend> tbList{defaultTbList};           ///< Priority list of allowed the transform backends
+    SelectStrategy                    strategy{SelectStrategy::first}; ///< Select strategy
   };
 
   /**

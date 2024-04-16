@@ -76,6 +76,7 @@
 #define AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(backendName) \
   (AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_CPU_TRANSFORM_BACKEND_MASK)
 
+#include <array>
 #include <complex>
 #include <concepts>
 #include <cstddef>
@@ -147,8 +148,23 @@ namespace afft::cpu
    */
   struct Parameters
   {
-    Alignment alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
+    Alignment alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
     unsigned  threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
+  };
+
+  /// @brief Default list of transform backends
+  inline constexpr std::array defaultTbList
+  {
+    TransformBackend::mkl,       // prefer mkl
+    TransformBackend::fftw3,     // if mkl cannot create plan, fallback fftw3
+    TransformBackend::pocketfft, // fallback to pocketfft
+  };
+
+  /// @brief Select strategy for transform backends
+  struct TBSelectParameters
+  {
+    std::span<const TransformBackend> tbList{defaultTbList};           ///< Priority of the transform backends
+    SelectStrategy                    strategy{SelectStrategy::first}; ///< Select strategy
   };
 
   /**
