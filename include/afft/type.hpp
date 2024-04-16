@@ -92,7 +92,8 @@ namespace afft
    * @tparam T The type.
    */
   template<typename>
-  struct TypeProperties;
+  struct TypeProperties
+    : detail::UnknownTypePropertiesBase {};
 
   /// Specialization of TypeProperties for float.
   template<>
