@@ -139,6 +139,8 @@ namespace afft::cpu
   inline constexpr auto defaultAlignment = alignments::defaultNew;
 #endif
 
+  inline constexpr unsigned allThreads{}; ///< All threads for CPU transform
+
   /**
    * @struct Parameters
    * @brief Parameters for CPU transform
@@ -146,7 +148,7 @@ namespace afft::cpu
   struct Parameters
   {
     Alignment alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `Alignment::defaultNew`
-    unsigned  threadLimit{0u};                   ///< Thread limit for CPU transform, 0 for no limit
+    unsigned  threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /**
