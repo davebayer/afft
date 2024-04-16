@@ -31,6 +31,9 @@
 #include <utility>
 #include <variant>
 #include <version>
+#include <span>
+#include <tuple>
+
 
 #ifdef __cpp_lib_format
 # include <format>
@@ -102,6 +105,26 @@ namespace afft::detail
   }
 
   /**
+   * @brief Return result integer division.
+   * @tparam I Integral type.
+   */
+  template<std::integral I>
+  struct DivResult
+  {
+    I quotient;  ///< Quotient.
+    I remainder; ///< Remainder.
+
+    /**
+     * @brief Converts the result to a tuple.
+     * @return Tuple containing the quotient and remainder.
+     */
+    [[nodiscard]] constexpr operator std::tuple<I, I>() const noexcept
+    {
+      return std::make_tuple(quotient, remainder);
+    }
+  };
+
+  /**
    * @brief Divides two integers and returns the quotient and remainder.
    * @tparam I Integral type.
    * @param a Dividend.
@@ -109,9 +132,9 @@ namespace afft::detail
    * @return Tuple containing the quotient and remainder.
    */
   template<std::integral I>
-  [[nodiscard]] constexpr std::tuple<I, I> div(I a, I b)
+  [[nodiscard]] constexpr DivResult<I> div(I a, I b)
   {
-    return std::make_tuple(a / b, a % b);
+    return DivResult<I>{.quotient = a / b, .remainder = a % b};
   }
 
   /**
