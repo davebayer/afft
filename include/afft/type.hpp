@@ -42,32 +42,29 @@ namespace afft
 
   /**
    * @brief Interleaved complex data type.
-   * @tparam prec The precision.
+   * @tparam T The real type.
    */
-  template<Precision prec>
-    requires (detail::isValidPrecision(prec))
-  using InterleavedComplex = std::complex<Real<prec>>;
+  template<typename T>
+  using InterleavedComplex = std::complex<T>;
 
   /**
    * @brief Planar complex data type.
-   * @tparam prec The precision.
+   * @tparam T The real type.
    */
-  template<Precision prec>
-    requires (detail::isValidPrecision(prec))
+  template<typename T>
   struct PlanarComplex
   {
-    Real<prec> real{};
-    Real<prec> imag{};
+    T* real{};
+    T* imag{};
   };
 
   /**
    * @brief Complex data type.
-   * @tparam prec The precision.
+   * @tparam T The real type.
    * @tparam fmt The complex format.
    */
-  template<Precision prec, ComplexFormat fmt = ComplexFormat::interleaved>
-    requires (detail::isValidPrecision(prec) && detail::isValidComplexFormat(fmt))
-  using Complex = std::conditional_t<fmt == ComplexFormat::interleaved, InterleavedComplex<prec>, PlanarComplex<prec>>;
+  template<typename T, ComplexFormat fmt = ComplexFormat::interleaved>
+  using Complex = std::conditional_t<fmt == ComplexFormat::interleaved, InterleavedComplex<T>, PlanarComplex<T>>;
 
   /**
    * @struct TypePropertiesBase
