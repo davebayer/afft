@@ -40,22 +40,22 @@ namespace afft
   template<typename T>
   concept KnownType = !std::derived_from<TypeProperties<std::remove_cv_t<T>>, detail::UnknownTypePropertiesBase>
                       && std::derived_from<TypeProperties<std::remove_cv_t<T>>, detail::KnownTypePropertiesBase>
-                      && detail::isValidPrecision(TypeProperties<std::remove_cv_t<T>>::precision)
-                      && detail::isValidComplexity(TypeProperties<std::remove_cv_t<T>>::complexity);
+                      && detail::isValidPrecision(typePrecision<T>)
+                      && detail::isValidComplexity(typeComplexity<T>);
 
   /**
    * @brief Real type concept.
    * @tparam T The type.
    */
   template<typename T>
-  concept RealType = KnownType<T> && detail::typeComplexity<T> == Complexity::real;
+  concept RealType = KnownType<T> && typeComplexity<T> == Complexity::real;
 
   /**
    * @brief Complex type concept.
    * @tparam T The type.
    */
   template<typename T>
-  concept ComplexType = KnownType<T> && detail::typeComplexity<T> == Complexity::complex;
+  concept ComplexType = KnownType<T> && typeComplexity<T> == Complexity::complex;
 
   /**
    * @brief TransformParameters concept.
