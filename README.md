@@ -36,8 +36,11 @@ int main(void)
 
   const afft::cpu::Parameters cpuParams // it will run on a cpu
   {
-    .alignment   = afft::getAlignment(src.data(), dst.data()), // get alignment of the pointers
-    .threadLimit = 4, // we will use up to 4 threads
+    .alignment                = afft::getAlignment(src.data(), dst.data()), // get alignment of the pointers
+    .threadLimit              = 4, // we will use up to 4 threads
+    .transformBackendPriority = {{afft::cpu::TransformBackend::fftw3, // prefer to use fftw3, then mkl and then pocketfft
+                                  afft::cpu::TransformBackend::mkl,
+                                  afft::cpu::TransformBackend::pocketfft}},
   };
 
   // just to make sure the plan is destroyed before afft::finalize() is called
