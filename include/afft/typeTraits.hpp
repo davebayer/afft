@@ -32,6 +32,20 @@
 namespace afft
 {
   /**
+   * @brief Get the precision of the type. There has to be a specialization of TypeProperties for the type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr Precision typePrecision = TypeProperties<std::remove_cv_t<T>>::precision;
+
+  /**
+   * @brief Get the complexity of the type. There has to be a specialization of TypeProperties for the type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr Complexity typeComplexity = TypeProperties<std::remove_cv_t<T>>::complexity;
+
+  /**
    * @brief Target Parameters type for given transform.
    * @tparam transform The transform type.
    */
@@ -67,11 +81,11 @@ namespace afft
   using TargetBackend = typename detail::TargetTransformBackendSelect<target>::Type;
 
   /**
-   * @brief Check if the type is TargetBackend.
+   * @brief Check if the type is target transform backend.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetBackend = detail::IsTargetBackend<std::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetTransformBackend = detail::IsTargetTransformBackend<std::remove_cvref_t<T>>::value;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */
