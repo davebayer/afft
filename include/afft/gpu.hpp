@@ -104,7 +104,7 @@
  * @return Non zero if the transform backend is allowed, zero otherwise
  */
 #define AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(backendName) \
-  (AFFT_GPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_GPU_TRANSFORM_BACKEND_MASK)
+  (AFFT_GPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_DETAIL_EXPAND(AFFT_GPU_TRANSFORM_BACKEND_MASK))
 
 // Set the mask of allowed transform backends for given GPU backend
 #if AFFT_GPU_BACKEND_IS_CUDA
@@ -129,8 +129,6 @@
 #endif
 
 #include <span>
-
-#include "target.hpp"
 
 namespace afft::gpu
 {

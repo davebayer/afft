@@ -83,8 +83,6 @@
 #include <new>
 #include <utility>
 
-#include "target.hpp"
-
 namespace afft::cpu
 {
   /// @brief Enumeration of CPU transform backends
