@@ -27,38 +27,38 @@
 
 #include "../../cpu.hpp"
 
-#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
+#if AFFT_CPU_BACKEND_IS_ENABLED(FFTW3)
 # include "fftw3/init.hpp"
 #endif
-#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+#if AFFT_CPU_BACKEND_IS_ENABLED(MKL)
 # include "mkl/init.hpp"
 #endif
-#if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+#if AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
 # include "pocketfft/init.hpp"
 #endif
 
 namespace afft::detail::cpu
 {
-  /// @brief Initialize the CPU transform backend.
+  /// @brief Initialize the CPU backends.
   inline void init()
   {
-# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
+# if AFFT_CPU_BACKEND_IS_ENABLED(FFTW3)
     fftw3::init();
-# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+# elif AFFT_CPU_BACKEND_IS_ENABLED(MKL)
     mkl::init();
-# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+# elif AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
     pocketfft::init();
 # endif
   }
 
-  /// @brief Finalize the CPU transform backend.
+  /// @brief Finalize the CPU backends.
   inline void finalize()
   {
-# if AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(FFTW3)
+# if AFFT_CPU_BACKEND_IS_ENABLED(FFTW3)
     fftw3::finalize();
-# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(MKL)
+# elif AFFT_CPU_BACKEND_IS_ENABLED(MKL)
     mkl::finalize();
-# elif AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(POCKETFFT)
+# elif AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
     pocketfft::finalize();
 # endif
   }

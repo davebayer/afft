@@ -27,65 +27,65 @@
 
 #include "../../gpu.hpp"
 
-#if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(CUFFT)
+#if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
 # include "cufft/init.hpp"
 #endif
-#if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(HIPFFT)
+#if AFFT_GPU_BACKEND_IS_ENABLED(HIPFFT)
 # include "hipfft/init.hpp"
 #endif
-#if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(ROCFFT)
+#if AFFT_GPU_BACKEND_IS_ENABLED(ROCFFT)
 # include "rocfft/init.hpp"
 #endif
-#if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(VKFFT)
+#if AFFT_GPU_BACKEND_IS_ENABLED(VKFFT)
 # include "vkfft/init.hpp"
 #endif
 
 namespace afft::detail::gpu
 {
-  /// @brief Initialize the GPU backend and the transform backend.
+  /// @brief Initialize the GPU framework and backends.
   inline void init()
   {
-    // Initialize the GPU backend
-# if AFFT_GPU_BACKEND_IS_CUDA
+    // Initialize the GPU framework
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
     cuda::init();
-# elif AFFT_GPU_BACKEND_IS_HIP
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
     hip::init();
-# elif AFFT_GPU_BACKEND_IS_OPENCL
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
     opencl::init();
 # endif
     
-    // Initialize the transform backend
-# if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(CUFFT)
+    // Initialize the backends
+# if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
     cufft::init();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(HIPFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(HIPFFT)
     hipfft::init();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(ROCFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(ROCFFT)
     rocfft::init();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(VKFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(VKFFT)
     vkfft::init();
 # endif
   }
 
-  /// @brief Finalize the GPU backend and the transform backend.
+  /// @brief Finalize the GPU framework and backends.
   inline void finalize()
   {
-    // Finalize the transform backend first
-# if AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(CUFFT)
+    // Finalize the backends first
+# if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
     cufft::finalize();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(HIPFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(HIPFFT)
     hipfft::finalize();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(ROCFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(ROCFFT)
     rocfft::finalize();
-# elif AFFT_GPU_TRANSFORM_BACKEND_IS_ALLOWED(VKFFT)
+# elif AFFT_GPU_BACKEND_IS_ENABLED(VKFFT)
     vkfft::finalize();
 # endif
 
-    // Finalize the GPU backend
-# if AFFT_GPU_BACKEND_IS_CUDA
+    // Finalize the GPU framework
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
     cuda::finalize();
-# elif AFFT_GPU_BACKEND_IS_HIP
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
     hip::finalize();
-# elif AFFT_GPU_BACKEND_IS_OPENCL
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
     opencl::finalize();
 # endif
   }
