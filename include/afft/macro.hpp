@@ -30,10 +30,10 @@
 /// @brief Macro for identity function
 #define AFFT_IDENTITY(...) __VA_ARGS__
 
-/// @brief Macro for emty delimiter
-#define AFFT_DELIM_EMPTY  AFFT_DETAIL_DELIM_EMPTY
+/// @brief Macro for empty delimiter
+#define AFFT_DELIM_EMPTY   AFFT_DETAIL_DELIM_EMPTY
 /// @brief Macro for comma delimiter
-#define AFFT_DELIM_COMMA  AFFT_DETAIL_DELIM_COMMA
+#define AFFT_DELIM_COMMA   AFFT_DETAIL_DELIM_COMMA
 
 /**
  * @brief Macro for applying a macro to each variadic argument

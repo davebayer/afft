@@ -78,14 +78,42 @@ namespace afft
    * @tparam target The target type.
    */
   template<Target target>
-  using TargetBackend = typename detail::TargetTransformBackendSelect<target>::Type;
+  using TargetBackend = typename detail::TargetBackendSelect<target>::Type;
 
   /**
    * @brief Check if the type is target transform backend.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetTransformBackend = detail::IsTargetTransformBackend<std::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetBackend = detail::IsTargetBackend<std::remove_cvref_t<T>>::value;
+
+  /**
+   * @brief BackendSelectParameters type for given target.
+   * @tparam target The target type.
+   */
+  template<Target target>
+  using BackendSelectParameters = typename detail::TargetBackendSelectParametersSelect<target>::Type;
+
+  /**
+   * @brief Check if the type is BackendSelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isBackendSelectParameters = detail::IsBackendSelectParameters<std::remove_cvref_t<T>>::value;
+  
+  /**
+   * @brief Get the target of the backend select parameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr Target backendSelectParametersTarget = detail::BackendSelectParametersTarget<std::remove_cvref_t<T>>::value;
+  
+  /**
+   * @brief Get the target of the target parameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr Target targetParametersTarget = detail::TargetParametersTarget<std::remove_cvref_t<T>>::value;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */

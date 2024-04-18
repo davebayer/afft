@@ -27,54 +27,54 @@
 
 #include "macro.hpp"
 
-/// @brief Macro for FFTW3 CPU transform backend
-#define AFFT_CPU_TRANSFORM_BACKEND_FFTW3     (1 << 0)
-/// @brief Macro for MKL CPU transform backend
-#define AFFT_CPU_TRANSFORM_BACKEND_MKL       (1 << 1)
-/// @brief Macro for PocketFFT CPU transform backend
-#define AFFT_CPU_TRANSFORM_BACKEND_POCKETFFT (1 << 2)
+/// @brief Macro for FFTW3 CPU backend
+#define AFFT_CPU_BACKEND_FFTW3     (1 << 0)
+/// @brief Macro for MKL CPU backend
+#define AFFT_CPU_BACKEND_MKL       (1 << 1)
+/// @brief Macro for PocketFFT CPU backend
+#define AFFT_CPU_BACKEND_POCKETFFT (1 << 2)
 
 /**
- * @brief Implementation of AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME
+ * @brief Implementation of AFFT_CPU_BACKEND_FROM_NAME
  * @param backendName Name of the backend
  * @return Transform backend
  * @warning Do not use this macro directly
  */
-#define AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME_IMPL(backendName) \
-  AFFT_CPU_TRANSFORM_BACKEND_##backendName
+#define AFFT_CPU_BACKEND_FROM_NAME_IMPL(backendName) \
+  AFFT_CPU_BACKEND_##backendName
 
 /**
- * @brief Macro for getting the transform backend from the name
+ * @brief Macro for getting the backend from the name
  * @param backendName Name of the backend
  * @return Transform backend
  */
-#define AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME(backendName) \
-  AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME_IMPL(backendName)
+#define AFFT_CPU_BACKEND_FROM_NAME(backendName) \
+  AFFT_CPU_BACKEND_FROM_NAME_IMPL(backendName)
 
 /**
- * @brief Implementation of AFFT_CPU_TRANSFORM_BACKEND_MASK
- * @param ... List of transform backend names
+ * @brief Implementation of AFFT_CPU_BACKEND_MASK
+ * @param ... List of backend names
  * @return Transform backend mask
  * @warning Do not use this macro directly
  */
-#define AFFT_CPU_TRANSFORM_BACKEND_MASK_IMPL(...) \
-  AFFT_BITOR(AFFT_FOR_EACH_WITH_DELIM(AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME, AFFT_DELIM_COMMA, __VA_ARGS__))
+#define AFFT_CPU_BACKEND_MASK_IMPL(...) \
+  AFFT_BITOR(AFFT_FOR_EACH_WITH_DELIM(AFFT_CPU_BACKEND_FROM_NAME, AFFT_DELIM_COMMA, __VA_ARGS__))
 
 /**
- * @brief Macro for getting the transform backend mask
+ * @brief Macro for getting the backend mask
  * @return Transform backend mask
- * @warning Requires AFFT_GPU_TRANSFORM_BACKEND_LIST to be defined
+ * @warning Requires AFFT_GPU_BACKEND_LIST to be defined
  */
-#define AFFT_CPU_TRANSFORM_BACKEND_MASK \
-  AFFT_CPU_TRANSFORM_BACKEND_MASK_IMPL(AFFT_CPU_TRANSFORM_BACKEND_LIST)
+#define AFFT_CPU_BACKEND_MASK \
+  AFFT_CPU_BACKEND_MASK_IMPL(AFFT_CPU_BACKEND_LIST)
 
 /**
- * @brief Macro for checking if the transform backend is allowed
+ * @brief Macro for checking if the backend is allowed
  * @param backendName Name of the backend
- * @return Non zero if the transform backend is allowed, false otherwise
+ * @return Non zero if the backend is allowed, false otherwise
  */
-#define AFFT_CPU_TRANSFORM_BACKEND_IS_ALLOWED(backendName) \
-  (AFFT_CPU_TRANSFORM_BACKEND_FROM_NAME(backendName) & AFFT_CPU_TRANSFORM_BACKEND_MASK)
+#define AFFT_CPU_BACKEND_IS_ENABLED(backendName) \
+  (AFFT_CPU_BACKEND_FROM_NAME(backendName) & AFFT_CPU_BACKEND_MASK)
 
 #include <array>
 #include <complex>
@@ -88,13 +88,16 @@
 
 namespace afft::cpu
 {
-  /// @brief Enumeration of CPU transform backends
-  enum class TransformBackend
+  /// @brief Enumeration of CPU backends
+  enum class Backend
   {
-    fftw3     = AFFT_CPU_TRANSFORM_BACKEND_FFTW3,
-    mkl       = AFFT_CPU_TRANSFORM_BACKEND_MKL,
-    pocketfft = AFFT_CPU_TRANSFORM_BACKEND_POCKETFFT,
+    fftw3,
+    mkl,
+    pocketfft,
   };
+
+  /// @brief Number of CPU backends
+  inline constexpr std::size_t backendCount{3};
 
   /// @brief alignments for CPU memory allocation
   namespace alignments
@@ -152,19 +155,19 @@ namespace afft::cpu
     unsigned  threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
   };
 
-  /// @brief Default list of transform backends
-  inline constexpr std::array defaultTbList
+  /// @brief Default list of backends
+  inline constexpr std::array defaultBackendList
   {
-    TransformBackend::mkl,       // prefer mkl
-    TransformBackend::fftw3,     // if mkl cannot create plan, fallback fftw3
-    TransformBackend::pocketfft, // fallback to pocketfft
+    Backend::mkl,       // prefer mkl
+    Backend::fftw3,     // if mkl cannot create plan, fallback fftw3
+    Backend::pocketfft, // fallback to pocketfft
   };
 
-  /// @brief Select strategy for transform backends
-  struct TBSelectParameters
+  /// @brief Set up strategy for backend selection
+  struct BackendSelectParameters
   {
-    std::span<const TransformBackend> tbList{defaultTbList};           ///< Priority of the transform backends
-    SelectStrategy                    strategy{SelectStrategy::first}; ///< Select strategy
+    std::span<const Backend> backendList{defaultBackendList}; ///< Priority of the backends
+    SelectStrategy           strategy{SelectStrategy::first}; ///< Select strategy
   };
 
   /**
