@@ -50,7 +50,7 @@ namespace afft::detail::gpu::cuda::rtc
      * @param args Arguments to forward to the std::string_view constructor.
      */
     template<typename... Args>
-    explicit CSymbolName(Args&&... args)
+    explicit constexpr CSymbolName(Args&&... args)
     : std::string_view(std::forward<Args>(args)...)
     {}
 
@@ -71,7 +71,7 @@ namespace afft::detail::gpu::cuda::rtc
      * @param args Arguments to forward to the std::string_view constructor.
      */
     template<typename... Args>
-    explicit CppSymbolName(Args&&... args)
+    explicit constexpr CppSymbolName(Args&&... args)
     : std::string_view(std::forward<Args>(args)...)
     {}
 
