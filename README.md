@@ -1,4 +1,21 @@
-# AFFT libary
+# afft library
+## Introduction
+`afft` is a C++20 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
+- user friendly interface,
+- support for wide range of the features offered by the backend libraries,
+- low overhead,
+- and being multiplatform (`Linux`, `Windows` and `MacOS`).
+
+Currently supported transfors are:
+- *Discrete Fourier Transform* (DFT) for real and complex inputs (in interleaved or plannar format) and
+- *Discrete Trigonomic Transform* (DTT) of types DCT (1-4) or DST (1-4).
+
+A transform may be executed *in-place* or *out-of-place* over multidimensional strided arrays in various precision. The created plans can be stored in a LRU plan cache.
+
+:warning: **Take into account that not all of the afft functionality is supported by all transform backends.**
+
+## License
+This library is available under MIT license. See `LICENSE` for details.
 
 ## Examples
 ### Simple 1D complex-to-complex transform
