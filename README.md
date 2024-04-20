@@ -12,7 +12,7 @@ Currently supported transfors are:
 
 A transform may be executed *in-place* or *out-of-place* over multidimensional strided arrays in various precision. The created plans can be stored in a LRU plan cache.
 
-:warning: **Take into account that not all of the afft functionality is supported by all transform backends.**
+:warning: **Take into account that not all of the afft functionality is supported by each transform backend.**
 
 ## License
 This library is available under MIT license. See `LICENSE` for details.
