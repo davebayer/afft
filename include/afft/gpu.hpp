@@ -181,8 +181,8 @@ namespace afft::gpu
   /// @brief Select parameters for backends
   struct BackendSelectParameters
   {
-    std::span<const Backend> backendList{defaultBackendList}; ///< Priority list of allowed backends
-    SelectStrategy           strategy{SelectStrategy::first}; ///< Select strategy
+    std::span<const Backend> backends{defaultBackendList};           ///< Priority list of allowed backends
+    BackendSelectStrategy    strategy{BackendSelectStrategy::first}; ///< Backend select strategy
   };
 
   /**

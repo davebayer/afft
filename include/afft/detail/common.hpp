@@ -131,16 +131,16 @@ namespace afft::detail
   }
 
   /**
-   * @brief Returns true if the given select strategy is valid.
-   * @param strategy Select strategy to check.
-   * @return True if the select strategy is valid, false otherwise.
+   * @brief Returns true if the given backend select strategy is valid.
+   * @param strategy Backend select strategy to check.
+   * @return True if the backend select strategy is valid, false otherwise.
    */
-  [[nodiscard]] constexpr bool isValidSelectStrategy(SelectStrategy strategy) noexcept
+  [[nodiscard]] constexpr bool isValidBackendSelectStrategy(BackendSelectStrategy strategy) noexcept
   {
     switch (strategy)
     {
-    case SelectStrategy::first:
-    case SelectStrategy::best:
+    case BackendSelectStrategy::first:
+    case BackendSelectStrategy::best:
       return true;
     default:
       return false;

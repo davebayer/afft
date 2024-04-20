@@ -93,8 +93,8 @@ namespace afft
     gpu, ///< GPU target
   };
 
-  /// @brief Transform backend select strategy
-  enum class SelectStrategy
+  /// @brief Backend select strategy
+  enum class BackendSelectStrategy
   {
     first, ///< select the first available backend
     best,  ///< select the best available backend
