@@ -37,6 +37,9 @@
 
 namespace afft::detail::gpu::vkfft
 {
+  /// @brief VkFFT's unsigned integer type
+  using UInt = pfUINT;
+
   /**
    * @brief VkFFT plan implementation
    */
@@ -72,14 +75,14 @@ namespace afft::detail::gpu::vkfft
 
         VkFFTConfiguration vkfftConfig{};
 
-        vkfftConfig.FFTdim               = safeIntCast<pfUINT>(getConfig().getShapeRank());
+        vkfftConfig.FFTdim               = safeIntCast<UInt>(getConfig().getShapeRank());
 
         std::transform(getConfig().getShape().rbegin(),
                        getConfig().getShape().rend(),
                        vkfftConfig.size,
                        [](const auto& dim)
         {
-          return safeIntCast<pfUINT>(dim);
+          return safeIntCast<UInt>(dim);
         });
 
 #     if AFFT_GPU_FRAMEWORK_IS_CUDA
@@ -104,10 +107,10 @@ namespace afft::detail::gpu::vkfft
 
         vkfftConfig.inverseReturnToInputBuffer = 1;
 
-        std::fill_n(vkfftConfig.omitDimension, maxDimCount, pfUINT{1});
+        std::fill_n(vkfftConfig.omitDimension, maxDimCount, UInt{1});
         for (const auto axis : getConfig().getTransformAxes())
         {
-          vkfftConfig.omitDimension[axis] = pfUINT{0};
+          vkfftConfig.omitDimension[axis] = UInt{0};
         }
 
         if (const auto& prec = getConfig().getTransformPrecision(); prec.source != prec.destination)
@@ -192,7 +195,7 @@ namespace afft::detail::gpu::vkfft
           for (std::size_t i{}; i < getConfig().getTransformRank(); ++i)
           {
             // VkFFT uses reverse order of axes
-            const auto vkfftAxis = getConfig().getTransformRank() - i - 1;
+            const auto vkfftAxis = transformAxes[getConfig().getTransformRank() - i - 1];
 
             switch (dttAxisTypes[i])
             {
@@ -234,10 +237,10 @@ namespace afft::detail::gpu::vkfft
         vkfftConfig.isOutputFormatted          = 1;
         for (std::size_t i{}; i < getConfig().getShapeRank(); ++i)
         {
-          vkfftConfig.inputBufferStride[i]  = safeIntCast<pfUINT>((getConfig().getTransformDirection() == Direction::forward)
+          vkfftConfig.inputBufferStride[i]  = safeIntCast<UInt>((getConfig().getTransformDirection() == Direction::forward)
                                                                ? getConfig().getSrcStrides()[i]
                                                                : getConfig().getDstStrides()[i]);
-          vkfftConfig.outputBufferStride[i] = safeIntCast<pfUINT>((getConfig().getTransformDirection() == Direction::inverse)
+          vkfftConfig.outputBufferStride[i] = safeIntCast<UInt>((getConfig().getTransformDirection() == Direction::inverse)
                                                                ? getConfig().getSrcStrides()[i]
                                                                : getConfig().getDstStrides()[i]);
         }
