@@ -30,6 +30,7 @@
 #include <cstdint>
 
 #include "common.hpp"
+#include "concepts.hpp"
 
 namespace afft
 {
