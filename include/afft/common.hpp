@@ -182,9 +182,13 @@ namespace afft
     /// @brief DFT transform type
     enum class Type
     {
-      complexToComplex, ///< complex-to-complex transform
-      realToComplex,    ///< real-to-complex transform
-      complexToReal,    ///< complex-to-real transform
+      complexToComplex,       ///< complex-to-complex transform
+      realToComplex,          ///< real-to-complex transform
+      complexToReal,          ///< complex-to-real transform
+
+      c2c = complexToComplex, ///< alias for complex-to-complex transform
+      r2c = realToComplex,    ///< alias for real-to-complex transform
+      c2r = complexToReal,    ///< alias for complex-to-real transform
     };
 
     /// @brief DFT parameters
