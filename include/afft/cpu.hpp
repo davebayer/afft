@@ -82,6 +82,7 @@
 #include <cstddef>
 #include <memory>
 #include <new>
+#include <string_view>
 #include <utility>
 
 #include "common.hpp"
@@ -98,6 +99,34 @@ namespace afft::cpu
 
   /// @brief Number of CPU backends
   inline constexpr std::size_t backendCount{3};
+
+  namespace fftw3
+  {
+    struct InitParameters
+    {
+      std::string_view floatWisdom{};
+      std::string_view doubleWisdom{};
+      std::string_view longDoubleWisdom{};
+      std::string_view quadWisdom{};
+    };
+  } // namespace fftw3
+
+  namespace mkl
+  {
+    struct InitParameters {};
+  } // namespace mkl
+
+  namespace pocketfft
+  {
+    struct InitParameters {};
+  } // namespace pocketfft
+
+  struct InitParameters
+  {
+    fftw3::InitParameters     fftw3Parameters{};
+    mkl::InitParameters       mklParameters{};
+    pocketfft::InitParameters pocketfftParameters{};
+  };
 
   /// @brief alignments for CPU memory allocation
   namespace alignments
@@ -169,6 +198,8 @@ namespace afft::cpu
     std::span<const Backend> backends{defaultBackendList}; ///< Priority of the backends
     BackendSelectStrategy           strategy{BackendSelectStrategy::first}; ///< Select strategy
   };
+
+  struct ExecutionParameters {};
 
   /**
    * @brief Aligned memory deleter
