@@ -43,7 +43,7 @@
 namespace afft::detail::gpu
 {
   /// @brief Initialize the GPU framework and backends.
-  inline void init()
+  inline void init(const afft::gpu::InitParameters& gpuInitParams)
   {
     // Initialize the GPU framework
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
@@ -56,13 +56,13 @@ namespace afft::detail::gpu
     
     // Initialize the backends
 # if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
-    cufft::init();
+    cufft::init(gpuInitParams.cufftParameters);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(HIPFFT)
-    hipfft::init();
+    hipfft::init(gpuInitParams.hipfftParameters);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(ROCFFT)
-    rocfft::init();
+    rocfft::init(gpuInitParams.rocfftParameters);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(VKFFT)
-    vkfft::init();
+    vkfft::init(gpuInitParams.vkfftParameters);
 # endif
   }
 

@@ -25,10 +25,12 @@
 #ifndef AFFT_DETAIL_GPU_VKFFT_INIT_HPP
 #define AFFT_DETAIL_GPU_VKFFT_INIT_HPP
 
+#include "../../../gpu.hpp"
+
 namespace afft::detail::gpu::vkfft
 {
   /// @brief Initialize the vkFFT library.
-  inline void init()
+  inline void init(const afft::gpu::vkfft::InitParameters&)
   {
     // Do nothing
   }

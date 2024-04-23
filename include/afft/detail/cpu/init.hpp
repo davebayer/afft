@@ -40,14 +40,14 @@
 namespace afft::detail::cpu
 {
   /// @brief Initialize the CPU backends.
-  inline void init()
+  inline void init(const afft::cpu::InitParameters& initParams)
   {
 # if AFFT_CPU_BACKEND_IS_ENABLED(FFTW3)
-    fftw3::init();
+    fftw3::init(initParams.fftw3Parameters);
 # elif AFFT_CPU_BACKEND_IS_ENABLED(MKL)
-    mkl::init();
+    mkl::init(initParams.mklParameters);
 # elif AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
-    pocketfft::init();
+    pocketfft::init(initParams.pocketfftParameters);
 # endif
   }
 

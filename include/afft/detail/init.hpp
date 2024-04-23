@@ -36,14 +36,14 @@ namespace afft::detail
   inline bool isInitialized{false};
 
   /// @brief Initialize the library.
-  inline void init()
+  inline void init(const afft::cpu::InitParameters& cpuInitParams, const afft::gpu::InitParameters& gpuInitParams)
   {
     if (!std::exchange(isInitialized, true))
     {
-      cpu::init();
+      cpu::init(cpuInitParams);
 
-#   if AFFT_GPU_ENABLED
-      gpu::init();
+#   if AFFT_GPU_IS_ENABLED
+      gpu::init(gpuInitParams);
 #   endif
     }
   }
@@ -55,7 +55,7 @@ namespace afft::detail
     {
       cpu::finalize();
 
-#   if AFFT_GPU_ENABLED
+#   if AFFT_GPU_IS_ENABLED
       gpu::finalize();
 #   endif
     }

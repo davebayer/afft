@@ -27,10 +27,12 @@
 
 #include <hipfft/hipfft.h>
 
+#include "../../../gpu.hpp"
+
 namespace afft::detail::gpu::hipfft
 {
   /// @brief Initialize the hipFFT library.
-  inline void init()
+  inline void init(const afft::gpu::hipfft::InitParameters&)
   {
     // Do nothing
   }

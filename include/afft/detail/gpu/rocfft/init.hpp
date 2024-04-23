@@ -28,11 +28,12 @@
 #include <rocfft/rocfft.h>
 
 #include "error.hpp"
+#include "../../../gpu.hpp"
 
 namespace afft::detail::gpu::rocfft
 {
   /// @brief Initialize the rocFFT library.
-  inline void init()
+  inline void init(const afft::gpu::rocfft::InitParameters&)
   {
     Error::check(rocfft_setup());
   }

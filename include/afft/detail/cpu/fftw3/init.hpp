@@ -29,10 +29,12 @@
 #include "../../error.hpp"
 #include "../../../type.hpp"
 
+#include "../../../cpu.hpp"
+
 namespace afft::detail::cpu::fftw3
 {
   /// @brief Initialize the FFTW3 library.
-  inline void init()
+  inline void init(const afft::cpu::fftw3::InitParameters& initParams)
   {
     auto check = [](int result)
     {
@@ -49,6 +51,28 @@ namespace afft::detail::cpu::fftw3
 # endif
 # if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
     check(Lib<Precision::f128>::initThreads());
+# endif
+
+    if (!initParams.floatWisdom.empty())
+    {
+      check(Lib<Precision::f32>::importWisdomFromString(initParams.floatWisdom.data()));
+    }
+
+    if (!initParams.doubleWisdom.empty())
+    {
+      check(Lib<Precision::f64>::importWisdomFromString(initParams.doubleWisdom.data()));
+    }
+# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
+    if (!initParams.longDoubleWisdom.empty())
+    {
+      check(Lib<Precision::f80>::importWisdomFromString(initParams.longDoubleWisdom.data()));
+    }
+# endif
+# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
+    if (!initParams.quadWisdom.empty())
+    {
+      check(Lib<Precision::f128>::importWisdomFromString(initParams.quadWisdom.data()));
+    }
 # endif
   }
 

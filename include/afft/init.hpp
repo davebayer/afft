@@ -30,9 +30,10 @@
 namespace afft
 {
   /// @brief Initialize the library. Should be called before any other afft function.
-  inline void init()
+  inline void init(const cpu::InitParameters& cpuInitParams = {},
+                   const gpu::InitParameters& gpuInitParams = {})
   {
-    detail::init();
+    detail::init(cpuInitParams, gpuInitParams);
   }
 
   /// @brief Finalize the library.

@@ -25,10 +25,12 @@
 #ifndef AFFT_DETAIL_CPU_POCKETFFT_INIT_HPP
 #define AFFT_DETAIL_CPU_POCKETFFT_INIT_HPP
 
+#include "../../../cpu.hpp"
+
 namespace afft::detail::cpu::pocketfft
 {
   /// @brief Initialize the pocketfft library.
-  inline void init()
+  inline void init(const afft::cpu::pocketfft::InitParameters&)
   {
     // Do nothing
   }
