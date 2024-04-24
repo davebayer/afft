@@ -29,11 +29,10 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <variant>
-#include <version>
 #include <span>
 #include <tuple>
-
+#include <variant>
+#include <version>
 
 #ifdef __cpp_lib_format
 # include <format>
@@ -41,16 +40,14 @@
 # include <fmt/format.h>
 #endif
 
+#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
+# include <source_location>
+#endif
+
 #include <mdspan.hpp>
 
 namespace afft::detail
 {
-# ifdef __cpp_lib_format
-  using std::format;
-# else
-  using fmt::format;
-# endif
-
   /**
    * @brief Returns the index of a type in a variant. Inpired by:
    *        https://stackoverflow.com/questions/52303316/get-index-by-type-in-stdvariant
@@ -150,6 +147,16 @@ namespace afft::detail
     return const_cast<T*>(ptr);
   }
 
+inline namespace cxx20
+{
+  /// @brief C++20 std::format() function. If not available, uses fmt::format().
+# ifdef __cpp_lib_format
+  using std::format;
+# else
+  using fmt::format;
+# endif
+} // inline namespace cxx20
+
 inline namespace cxx23
 {
   /**
@@ -171,6 +178,13 @@ inline namespace cxx23
    * @throw if AFFT_DEBUG is defined, otherwise calls __builtin_unreachable() or __assume(false).
    * @warning if this function ever throws, it means that there is a bug in the code, please submit an issue on GitHub.
    */
+#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
+  [[noreturn]] inline void unreachable(const std::source_location& loc = std::source_location::current())
+  {
+    throw std::logic_error(format("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n({}:{}:{})",
+                                  loc.file_name(), loc.line(), loc.column()));
+  }
+#else
   [[noreturn]] inline void unreachable()
   {
 # ifdef AFFT_DEBUG
@@ -183,7 +197,8 @@ inline namespace cxx23
 #   endif
 # endif
   }
-}
+#endif
+} // inline namespace cxx23
 
 } // afft::detail
 
