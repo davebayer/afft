@@ -36,22 +36,59 @@
 namespace afft::detail
 {
   /**
-   * @brief Make a plan implementation.
-   * @tparam target Target.
-   * @tparam Args Argument types.
-   * @param args Arguments.
-   * @return Plan implementation.
+   * @brief Create a PlanImpl object based on the given configuration.
+   * @tparam ConfigT The configuration type.
+   * @param config The configuration to use.
+   * @param backendSelectParams The parameters for the transform backend selection.
+   * @return std::unique_ptr<PlanImpl> The created PlanImpl object.
    */
-  template<Target target, typename... Args>
-  std::shared_ptr<PlanImpl> makePlanImpl(Args&&... args)
+  [[nodiscard]] inline std::unique_ptr<PlanImpl>
+  makePlanImpl(const Config&                           config,
+               const BackendSelectParametersType auto& backendSelectParams)
   {
+    constexpr auto target = backendSelectParametersTarget<decltype(backendSelectParams)>;
+
+    std::unique_ptr<PlanImpl> planImpl{};
+
+    if (config.getTarget() != target)
+    {
+      throw makeException<std::runtime_error>("Invalid target");
+    }
+
     if constexpr (target == Target::cpu)
     {
-      return cpu::makePlanImpl(std::forward<Args>(args)...);
+      planImpl = cpu::makePlanImpl(config, backendSelectParams);
     }
-    else
+    else if constexpr (target == Target::gpu)
     {
-      return gpu::makePlanImpl(std::forward<Args>(args)...);
+      planImpl = gpu::makePlanImpl(config, backendSelectParams);
+    }
+
+    if (!planImpl)
+    {
+      throw makeException<std::runtime_error>("Failed to create PlanImpl object");
+    }
+
+    return planImpl;
+  }
+
+  /**
+   * @brief Create a PlanImpl object based on the given configuration.
+   * @tparam ConfigT The configuration type.
+   * @param config The configuration to use.
+   * @param backendSelectParams The parameters for the transform backend selection.
+   * @return std::unique_ptr<PlanImpl> The created PlanImpl object.
+   */
+  [[nodiscard]] inline std::unique_ptr<PlanImpl> makePlanImpl(const Config& config)
+  {
+    const auto target = config.getTarget();
+
+    switch (target)
+    {
+    case Target::cpu: return makePlanImpl(config, afft::cpu::BackendSelectParameters{});
+    case Target::gpu: return makePlanImpl(config, afft::gpu::BackendSelectParameters{});
+    default:
+      unreachable();
     }
   }
 } // namespace afft::detail
