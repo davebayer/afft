@@ -122,6 +122,41 @@ namespace afft::detail
     template<typename R>
     [[nodiscard]] static std::string makeErrorMessage(R result);
   };
+
+  /**
+   * @brief Checks if a value is valid using a function. If not, it throws a invalid_argument.
+   * @tparam isValidFn Function to check the value.
+   * @param value Value to check.
+   * @param msg Message to display in the exception.
+   * @throws std::invalid_argument if the value is not valid.
+   */
+  template<auto isValidFn>
+  constexpr void checkValid(const auto& value, std::string_view msg = {})
+    requires std::invocable<decltype(isValidFn), decltype(value)>
+  {
+    if (!isValidFn(value))
+    {
+      throw std::invalid_argument(msg.empty() ? "Invalid value" : msg.data());
+    }
+  }
+
+  /**
+   * @brief Checks if a span of values are valid using a function. If not, it throws a invalid_argument.
+   * @tparam isValidFn Function to check the value.
+   * @tparam T type of the values.
+   * @param values Values to check.
+   * @param msg Message to display in the exception.
+   * @throws std::invalid_argument if any value is not valid.
+   */
+  template<auto isValidFn, typename T>
+  constexpr void checkValid(std::span<const T> values, std::string_view msg = {})
+    requires std::invocable<decltype(isValidFn), T>
+  {
+    for (const auto& value : values)
+    {
+      checkValid<isValidFn>(value, msg);
+    }
+  }
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_ERROR_HPP */
