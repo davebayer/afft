@@ -31,6 +31,7 @@
 #include <span>
 
 #include "common.hpp"
+#include "error.hpp"
 
 namespace afft::detail
 {
@@ -72,7 +73,7 @@ namespace afft::detail
         // Copy source strides if provided, otherwise leave initialized to 0
         if (dims.srcStride.size() == mRank)
         {
-          std::transform(dims.srcStride.begin(), dims.srcStride.end(), mSrcStride.begin(), assertNotZero);
+          std::transform(dims.srcStride.begin(), dims.srcStride.end(), mSrcStrides.begin(), assertNotZero);
         }
         else if (!dims.srcStride.empty())
         {
@@ -82,7 +83,7 @@ namespace afft::detail
         // Copy destination strides if provided, otherwise leave initialized to 0
         if (dims.dstStride.size() == mRank)
         {
-          std::transform(dims.dstStride.begin(), dims.dstStride.end(), mDstStride.begin(), assertNotZero);
+          std::transform(dims.dstStride.begin(), dims.dstStride.end(), mDstStrides.begin(), assertNotZero);
         }
         else if (!dims.dstStride.empty())
         {
@@ -134,25 +135,25 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr bool hasSrcStride() const noexcept
       {
-        return mSrcStride[0] != std::size_t{};
+        return mSrcStrides[0] != std::size_t{};
       }
 
       /**
        * @brief Get source stride.
        * @return Source stride.
        */
-      [[nodiscard]] constexpr std::span<std::size_t> getSrcStride() noexcept
+      [[nodiscard]] constexpr std::span<std::size_t> getSrcStrides() noexcept
       {
-        return {mSrcStride.data(), mRank};
+        return {mSrcStrides.data(), mRank};
       }
 
       /**
        * @brief Get source stride.
        * @return Source stride.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getSrcStride() const noexcept
+      [[nodiscard]] constexpr std::span<const std::size_t> getSrcStrides() const noexcept
       {
-        return {mSrcStride.data(), mRank};
+        return {mSrcStrides.data(), mRank};
       }
 
       /**
@@ -161,25 +162,31 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr bool hasDstStride() const noexcept
       {
-        return mDstStride[0] != std::size_t{};
+        return mDstStrides[0] != std::size_t{};
       }
 
       /**
        * @brief Get destination stride.
        * @return Destination stride.
        */
-      [[nodiscard]] constexpr std::span<std::size_t> getDstStride() noexcept
+      [[nodiscard]] constexpr std::span<std::size_t> getDstStrides() noexcept
       {
-        return {mDstStride.data(), mRank};
+        return {mDstStrides.data(), mRank};
       }
 
       /**
        * @brief Get destination stride.
        * @return Destination stride.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getDstStride() const noexcept
+      [[nodiscard]] constexpr std::span<const std::size_t> getDstStrides() const noexcept
       {
-        return {mDstStride.data(), mRank};
+        return {mDstStrides.data(), mRank};
+      }
+
+      [[nodiscard]] constexpr bool stridesEqual() const noexcept
+      {
+        return std::equal(mSrcStrides.begin(), mSrcStrides.begin() + mRank,
+                          mDstStrides.begin(), mDstStrides.begin() + mRank);
       }
 
       /**
@@ -202,12 +209,12 @@ namespace afft::detail
             return false;
           }
 
-          if (lhs.mSrcStride[i] != rhs.mSrcStride[i])
+          if (lhs.mSrcStrides[i] != rhs.mSrcStrides[i])
           {
             return false;
           }
 
-          if (lhs.mDstStride[i] != rhs.mDstStride[i])
+          if (lhs.mDstStrides[i] != rhs.mDstStrides[i])
           {
             return false;
           }
@@ -227,10 +234,10 @@ namespace afft::detail
         return !(lhs == rhs);
       }
     private:
-      std::size_t              mRank{};      ///< Rank.
-      MaxDimArray<std::size_t> mShape{};     ///< Shape.
-      MaxDimArray<std::size_t> mSrcStride{}; ///< Source stride.
-      MaxDimArray<std::size_t> mDstStride{}; ///< Destination stride.
+      std::size_t              mRank{};       ///< Rank.
+      MaxDimArray<std::size_t> mShape{};      ///< Shape.
+      MaxDimArray<std::size_t> mSrcStrides{}; ///< Source stride.
+      MaxDimArray<std::size_t> mDstStrides{}; ///< Destination stride.
   };
 } // namespace afft::detail
 
