@@ -42,8 +42,7 @@ namespace afft::detail
    */
   struct DftConfig
   {
-    dft::Format srcFormat{}; ///< Source data format.
-    dft::Format dstFormat{}; ///< Destination data format.
+    dft::Type type{}; ///< DFT transform type.
 
     /// @brief Default equality operator.
     friend constexpr bool operator==(const DftConfig&, const DftConfig&) = default;
@@ -65,104 +64,34 @@ namespace afft::detail
   class TransformConfig
   {
     public:
-      /**
-       * @brief Create a transform configuration from DFT parameters.
-       * @param dftParams DFT parameters.
-       * @return Transform configuration.
-       */
-      [[nodiscard]] static constexpr TransformConfig make(const dft::Parameters& dftParams)
-      {
-        checkDirection(dftParams.direction);
-        checkPrecision(dftParams.precision);
-        checkAxes(dftParams.axes, dftParams.dimensions.shape.size());
-
-        bool formatsOk = true;
-
-        switch (dftParams.srcFormat)
-        {
-          using enum dft::Format;
-        case real:
-          switch (dftParams.dstFormat)
-          {
-          case complexInterleaved:
-          case complexPlanar:      break;
-          default:                 formatsOk = false; break;
-          }
-          break;
-        case complexInterleaved:
-        case complexPlanar:
-          break;
-        default:
-          formatsOk = false;
-          break;
-        }
-
-        if (!formatsOk)
-        {
-          throw makeException<std::invalid_argument>("Invalid dft transform formats combination");
-        }
-
-        return TransformConfig{dftParams.direction,
-                               dftParams.precision,
-                               dftParams.axes,
-                               DftConfig{dftParams.srcFormat, dftParams.dstFormat}};
-      }
-
-      /**
-       * @brief Create a transform configuration from DTT parameters.
-       * @param dttParams DTT parameters.
-       * @return Transform configuration.
-       */
-      [[nodiscard]] static constexpr TransformConfig make(const dtt::Parameters& dttParams)
-      {
-        auto checkDttType = [](dtt::Type type) constexpr -> void
-        {
-          switch (type)
-          {
-            using enum dtt::Type;
-          case dct1: case dct2: case dct3: case dct4:
-          case dst1: case dst2: case dst3: case dst4:
-            break;
-          default:
-            throw makeException<std::invalid_argument>("Invalid dtt transform type");
-          }
-        };
-
-        DttConfig dttConfig{};
-
-        checkDirection(dttParams.direction);
-        checkPrecision(dttParams.precision);
-        checkAxes(dttParams.axes, dttParams.dimensions.shape.size());
-
-        if (dttParams.types.size() == 1)
-        {
-          checkDttType(dttParams.types[0]);
-          std::fill_n(dttConfig.axisTypes.begin(), dttParams.axes.size(), dttParams.types[0]);
-        }
-        else if (dttParams.types.size() == dttParams.axes.size())
-        {
-          std::for_each(dttParams.types.begin(), dttParams.types.end(), checkDttType);
-          std::copy(dttParams.types.begin(), dttParams.types.end(), dttConfig.axisTypes.begin());
-        }
-        else
-        {
-          throw makeException<std::invalid_argument>("Invalid dtt transform types");
-        }
-
-        return TransformConfig{dttParams.direction, dttParams.precision, dttParams.axes, std::move(dttConfig)};
-      }
-
       /// @brief Default constructor not allowed.
       TransformConfig() = delete;
+
+      /**
+       * @brief Create a transform configuration.
+       * @param axes Transform axes.
+       * @param variant Transform variant.
+       */
+      constexpr TransformConfig(const dft::Parameters& dftParams)
+      : mDirection{checkDirection(dftParams.direction)},
+        mPrec{checkPrecision(dftParams.precision)},
+        mRank{(dftParams.axes.empty()) ? dftParams.dimensions.shape.size() : dftParams.axes.size()},
+        mAxes{checkAxes(dftParams.axes, dftParams.dimensions.shape.size())},
+        mVariant{makeTransformVariant(dftParams)}
+      {}
+
       /// @brief Copy constructor.
       constexpr TransformConfig(const TransformConfig&) noexcept = default;
+
       /// @brief Move constructor.
       constexpr TransformConfig(TransformConfig&&) noexcept = default;
+
       /// @brief Destructor.
       ~TransformConfig() noexcept = default;
 
       /// @brief Copy assignment operator.
       constexpr TransformConfig& operator=(const TransformConfig&) noexcept = default;
+      
       /// @brief Move assignment operator.
       constexpr TransformConfig& operator=(TransformConfig&&) noexcept = default;
 
@@ -179,7 +108,7 @@ namespace afft::detail
        * @brief Get the transform precision.
        * @return Transform precision.
        */
-      [[nodiscard]] constexpr PrecisionTriad getPrecision() const noexcept
+      [[nodiscard]] constexpr const PrecisionTriad& getPrecision() const noexcept
       {
         return mPrec;
       }
@@ -206,148 +135,64 @@ namespace afft::detail
        * @brief Get transform type.
        * @return Transform type.
        */
-      [[nodiscard]] constexpr TransformType getType() const noexcept
+      [[nodiscard]] constexpr Transform getType() const noexcept
       {
-        return static_cast<TransformType>(mVariant.index());
+        return static_cast<Transform>(mVariant.index());
       }
 
       /**
        * @brief Get transform configuration.
-       * @tparam transformType Transform type.
+       * @tparam transform Transform type.
        * @return Transform configuration.
        */
-      template<TransformType transformType>
+      template<Transform transform>
       [[nodiscard]] constexpr const auto& getConfig() const noexcept
       {
-        if constexpr (transformType == TransformType::dft)
+        if constexpr (transform == Transform::dft)
         {
           return std::get<DftConfig>(mVariant);
         }
-        else if constexpr (transformType == TransformType::dtt)
+        else if constexpr (transform == Transform::dtt)
         {
           return std::get<DttConfig>(mVariant);
         }
       }
 
-      /**
-       * @brief Get the normalization factor.
-       * @tparam prec Precision.
-       * @param shape Shape.
-       * @return Normalization factor.
-       */
-      template<Precision prec>
-      [[nodiscard]] constexpr auto getNormFactor(std::span<const std::size_t> shape) const
+      [[nodiscard]] constexpr const std::size_t getTransformLogicalSize(std::span<const std::size_t> dims) const
       {
-        auto forEachAxisSize = [mAxes, shape](std::invocable<std::size_t, std::size_t> auto&& func)
+        std::size_t logicalSize{1};
+
+        for (std::size_t i{}; i < mRank; ++i)
         {
-          for (std::size_t i{}; i < mRank; ++i)
-          {
-            func(i, shape[mAxes[i]]);
-          }
-        };
+          const auto n = dims[mAxes[i]];
 
-        if constexpr (hasPrecision<prec>())
-        {
-          using PrecT = Float<prec>;
-
-          std::size_t n{1};
-
-          switch (getTransformType())
+          switch (getType())
           {
-          case TransformType::dft:
+          case Transform::dft:
+            logicalSize *= n;
+            break;
+          case Transform::dtt:
           {
-            forEachAxisSize([&n](std::size_t, std::size_t axisSize) { n *= axisSize; });
-          }
-          case TransformType::dtt:
-          {
-            const auto& dttParams = getTransformConfig<TransformType::dtt>();
+            const auto& dttParams = getConfig<Transform::dtt>();
 
-            forEachAxisSize([&n, dttParams = getTransformConfig<TransformType::dtt>()]
-                            (std::size_t axisIdx, std::size_t axisSize)
+            switch (dttParams.axisTypes[i])
             {
-              switch (dttParams.axisTypes[i])
-              {
-                using enum dtt::Type;
-              case dct1:                       n *= 2 * (axisSize - 1); break;
-              case dst1:                       n *= 2 * (axisSize + 1); break;
-              case dct2: case dct3: case dct4:
-              case dst2: case dst3: case dst4: n *= 2 * axisSize;       break;
-              default:
-                throw std::runtime_error("Invalid axis type");
-              }
-            });
-          }
-          default:
-            throw std::runtime_error("Invalid transform type");
-          }
-
-          switch (mCommonParams.normalize)
-          {
-          case Normalize::none:       return PrecT{1.0};
-          case Normalize::orthogonal: return PrecT{1.0} / std::sqrt(static_cast<PrecT>(n));
-          case Normalize::unitary:    return PrecT{1.0} / static_cast<PrecT>(n);
-          default:
-            throw std::runtime_error("Invalid normalization");
-          }
-        }
-        else
-        {
-          throw std::runtime_error("Invalid precision");
-        }
-      }
-
-      /**
-       * @brief Get the size of the source element.
-       * @return Size of the source element.
-       */
-      [[nodiscard]] constexpr std::size_t getSrcElemSizeOf() const
-      {
-        std::size_t srcElemSizeOf = sizeOf(mPrec.source);
-
-        if (getType() == TransformType::dft)
-        {
-          const auto& dftParams = getConfig<TransformType::dft>();
-
-          switch (dftParams.srcFormat)
-          {
-            using enum dft::Format;
-          case complexInterleaved:
-          case hermitianComplexInterleaved:
-            srcElemSizeOf *= 2;
+              using enum dtt::Type;
+            case dct1:                       logicalSize *= 2 * (n - 1); break;
+            case dst1:                       logicalSize *= 2 * (n + 1); break;
+            case dct2: case dct3: case dct4:
+            case dst2: case dst3: case dst4: logicalSize *= 2 * n;       break;
+            default:
+              unreachable();
+            }
             break;
+          }
           default:
-            break;
+            unreachable();
           }
         }
 
-        return srcElemSizeOf;
-      }
-
-      /**
-       * @brief Get the size of the destination element.
-       * @return Size of the destination element.
-       */
-      [[nodiscard]] constexpr std::size_t getDstElemSizeOf() const
-      {
-        std::size_t dstElemSizeOf = sizeOf(mPrec.destination);
-
-        if (getType() == TransformType::dft)
-        {
-          const auto& dftParams = getConfig<TransformType::dft>();
-
-          switch (dftParams.dstFormat)
-          {
-            using enum dft::Format;
-          case complexInterleaved:
-          case hermitianComplexInterleaved:
-            dstElemSizeOf *= 2;
-            break;
-          default:
-            break;
-          }
-        }
-
-        return dstElemSizeOf;
+        return logicalSize;
       }
 
       /**
@@ -399,24 +244,24 @@ namespace afft::detail
         {
           switch (getType())
           {
-          case TransformType::dft:
+          case Transform::dft:
           {
-            switch (getConfig<TransformType::dft>().srcFormat)
+            switch (getConfig<Transform::dft>().type)
             {
-            case dft::Format::hermitianComplexInterleaved:
-            case dft::Format::hermitianComplexPlanar:
-              generateStrides(dimsConfig.getSrcStride(), dftHermitComplexStrideGenerator);
+            case dft::Type::complexToReal:
+              generateStrides(dimsConfig.getSrcStrides(), dftHermitComplexStrideGenerator);
               break;
-            case dft::Format::real:
-              generateStrides(dimsConfig.getSrcStride(), dftRealStrideGenerator);
+            case dft::Type::realToComplex:
+              generateStrides(dimsConfig.getSrcStrides(), dftRealStrideGenerator);
               break;
             default:
-              generateStrides(dimsConfig.getSrcStride(), defaultStrideGenerator);
+              generateStrides(dimsConfig.getSrcStrides(), defaultStrideGenerator);
               break;
             }
+            break;
           }
           default:
-            generateStrides(dimsConfig.getSrcStride(), defaultStrideGenerator);
+            generateStrides(dimsConfig.getSrcStrides(), defaultStrideGenerator);
             break;
           }
         }
@@ -425,26 +270,92 @@ namespace afft::detail
         {
           switch (getType())
           {
-          case TransformType::dft:
+          case Transform::dft:
           {
-            switch (getConfig<TransformType::dft>().dstFormat)
+            switch (getConfig<Transform::dft>().type)
             {
-            case dft::Format::hermitianComplexInterleaved:
-            case dft::Format::hermitianComplexPlanar:
-              generateStrides(dimsConfig.getDstStride(), dftHermitComplexStrideGenerator);
+            case dft::Type::realToComplex:
+              generateStrides(dimsConfig.getDstStrides(), dftHermitComplexStrideGenerator);
               break;
-            case dft::Format::real:
-              generateStrides(dimsConfig.getDstStride(), dftRealStrideGenerator);
+            case dft::Type::complexToReal:
+              generateStrides(dimsConfig.getDstStrides(), dftRealStrideGenerator);
               break;
             default:
-              generateStrides(dimsConfig.getDstStride(), defaultStrideGenerator);
+              generateStrides(dimsConfig.getDstStrides(), defaultStrideGenerator);
               break;
             }
-          }
-          default:
-            generateStrides(dimsConfig.getDstStride(), defaultStrideGenerator);
             break;
           }
+          default:
+            generateStrides(dimsConfig.getDstStrides(), defaultStrideGenerator);
+            break;
+          }
+        }
+      }
+
+      /**
+       * @brief Check the execution types.
+       * @param srcPrec Source precision.
+       * @param srcCmpl Source complexity.
+       * @param dstPrec Destination precision.
+       * @param dstCmpl Destination complexity.
+       */
+      constexpr void checkExecTypes(Precision srcPrec, Complexity srcCmpl, Precision dstPrec, Complexity dstCmpl) const
+      {
+        if (srcPrec != mPrec.source)
+        {
+          throw makeException<std::invalid_argument>("Invalid source precision for transform");
+        }
+        
+        if (dstPrec != mPrec.destination)
+        {
+          throw makeException<std::invalid_argument>("Invalid destination precision for transform");
+        }
+
+        Complexity refSrcCmpl{};
+        Complexity refDstCmpl{};
+
+        switch (getType())
+        {
+        case Transform::dft:
+        {
+          const auto& dftParams = getConfig<Transform::dft>();
+
+          switch (dftParams.type)
+          {
+          case dft::Type::complexToComplex:
+            refSrcCmpl = Complexity::complex;
+            refDstCmpl = Complexity::complex;
+            break;
+          case dft::Type::realToComplex:
+            refSrcCmpl = Complexity::real;
+            refDstCmpl = Complexity::complex;
+            break;
+          case dft::Type::complexToReal:
+            refSrcCmpl = Complexity::complex;
+            refDstCmpl = Complexity::real;
+            break;
+          default:
+            unreachable();
+          }
+          break;
+        }
+        case Transform::dtt:
+          refSrcCmpl = Complexity::real;
+          refDstCmpl = Complexity::real;
+          break;
+        default:
+          throw makeException<std::runtime_error>("Invalid transform type");
+        }
+
+        if (srcCmpl != refSrcCmpl)
+        {
+          throw makeException<std::invalid_argument>("Invalid source complexity");
+        }
+
+        if (dstCmpl != refDstCmpl)
+        {
+          throw makeException<std::invalid_argument>("Invalid destination complexity");
         }
       }
       
@@ -484,38 +395,42 @@ namespace afft::detail
       }
     protected:
     private:
-      using ConfigVariant = std::variant<DftConfig,      // same index as TransformType::dft
-                                         DttConfig>;     // same index as TransformType::dtt
+      using ConfigVariant = std::variant<DftConfig,      // same index as Transform::dft
+                                         DttConfig>;     // same index as Transform::dtt
 
-      static_assert(variant_alternative_index<ConfigVariant, DftConfig>()
-                      == to_underlying(TransformType::dft));
-      static_assert(variant_alternative_index<ConfigVariant, DttConfig>()
-                      == to_underlying(TransformType::dtt));
+      // Check variant indices.
+      static_assert(variant_alternative_index<ConfigVariant, DftConfig>() == to_underlying(Transform::dft));
+      static_assert(variant_alternative_index<ConfigVariant, DttConfig>() == to_underlying(Transform::dtt));
 
       /**
        * @brief Check transform direction validity.
        * @param dir Transform direction.
+       * @return Direction.
        */
-      static void checkDirection(Direction dir)
+      [[nodiscard]] static constexpr Direction checkDirection(Direction dir)
       {
-        switch (dir)
-        {
-        case Direction::forward: case Direction::inverse: break;
-        default:
-          throw makeException<std::invalid_argument>("Invalid transform direction");
-        }
+        checkValid<isValidDirection>(dir, "Invalid transform direction");
+
+        return dir;
       }
 
       /**
        * @brief Check transform precision validity.
        * @param prec Transform precision.
+       * @return Precision.
        */
-      static void checkPrecision(PrecisionTriad prec)
+      [[nodiscard]] static constexpr const PrecisionTriad& checkPrecision(const PrecisionTriad& prec)
       {
+        checkValid<isValidPrecision>(prec.execution, "Invalid execution precision");
+        checkValid<isValidPrecision>(prec.source, "Invalid source precision");
+        checkValid<isValidPrecision>(prec.destination, "Invalid destination precision");
+
         if (!hasPrecision(prec.execution) || !hasPrecision(prec.source) || !hasPrecision(prec.destination))
         {
           throw makeException<std::invalid_argument>("Invalid transform precision");
         }
+
+        return prec;
       }
 
       /**
@@ -523,11 +438,19 @@ namespace afft::detail
        * @param axes Transform axes.
        * @param shapeRank Shape rank.
        */
-      static void checkAxes(std::span<const std::size_t> axes, std::size_t shapeRank)
+      [[nodiscard]] static constexpr MaxDimArray<std::size_t>
+      checkAxes(std::span<const std::size_t> axes, std::size_t shapeRank)
       {
         if (axes.empty())
         {
-          throw makeException<std::invalid_argument>("Transform axes cannot be empty");
+          MaxDimArray<std::size_t> axesArray{};
+
+          for (std::size_t i{}; i < shapeRank; ++i)
+          {
+            axesArray[i] = i;
+          }
+
+          return axesArray;
         }
         else if (axes.size() > shapeRank)
         {
@@ -553,23 +476,51 @@ namespace afft::detail
 
           seenAxes.set(axis);
         }
+
+        MaxDimArray<std::size_t> axesArray{};
+
+        std::copy(axes.begin(), axes.end(), axesArray.begin());
+
+        return axesArray;
+      }
+      
+      /**
+       * @brief Create a transform variant.
+       * @param dftParams DFT parameters.
+       * @return Transform variant.
+       */
+      [[nodiscard]] static constexpr DftConfig makeTransformVariant(const dft::Parameters& dftParams)
+      {
+        checkValid<isValidDftType>(dftParams.type, "Invalid dft transform type");
+        
+        return DftConfig{dftParams.type};
       }
 
       /**
-       * @brief Create a transform configuration.
-       * @param axes Transform axes.
-       * @param variant Transform variant.
+       * @brief Create a transform variant.
+       * @param dttParams DTT parameters.
+       * @return Transform variant.
        */
-      constexpr TransformConfig(Direction                    dir,
-                                PrecisionTriad               prec,
-                                std::span<const std::size_t> axes,
-                                auto&&                       variant) noexcept
-      : mDirection{dir},
-        mPrec{prec},
-        mRank{axes.size()},
-        mVariant{std::forward<decltype(variant)>(variant)}
+      [[nodiscard]] static constexpr DttConfig makeTransformVariant(const dtt::Parameters& dttParams)
       {
-        std::copy(axes.begin(), axes.end(), mAxes.begin());
+        checkValid<isValidDttType>(dttParams.types, "Invalid dtt transform types");
+
+        DttConfig dttConfig{};
+
+        if (dttParams.types.size() == 1)
+        {
+          std::fill_n(dttConfig.axisTypes.begin(), dttParams.axes.size(), dttParams.types[0]);
+        }
+        else if (dttParams.types.size() == dttParams.axes.size())
+        {
+          std::copy(dttParams.types.begin(), dttParams.types.end(), dttConfig.axisTypes.begin());
+        }
+        else
+        {
+          throw makeException<std::invalid_argument>("Invalid dtt transform types");
+        }
+
+        return dttConfig;
       }
 
       Direction                mDirection{}; ///< Transform direction.
