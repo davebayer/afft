@@ -1,20 +1,16 @@
 #ifndef AFFT_DETAIL_GPU_CUFFT_PLAN_IMPL_HPP
 #define AFFT_DETAIL_GPU_CUFFT_PLAN_IMPL_HPP
 
-#include <cassert>
+#include <array>
+#include <cstddef>
 #include <string_view>
 
-#include "../../../gpu.hpp"
-
-#if !AFFT_GPU_FRAMEWORK_IS_CUDA
-# error "cuFFT backend is only supported with CUDA"
-#endif
+#include <cufftXt.h>
 
 #include "error.hpp"
 #include "Handle.hpp"
 #include "../../PlanImpl.hpp"
-
-#include <cufftXt.h>
+#include "../../../gpu.hpp"
 
 namespace afft::detail::gpu::cufft
 {
@@ -237,7 +233,7 @@ extern "C" __device__ __constant__
         {
           cuda::rtc::Program program{callbackSrcCode, "cufftCallbackFn.cu"};
 
-          std::array params
+          std::array options
           {
             cuda::rtc::makeDefinitionOption("PRECISION", to_underlying(precision.execution)),
             cuda::rtc::makeDefinitionOption("COMPLEXITY", dftParams.type == dft::Type::complexToReal
@@ -248,9 +244,9 @@ extern "C" __device__ __constant__
             cuda::rtc::makeIncludePathOption(cuda::getIncludePath()),
           };
 
-          std::array options = {params[0].c_str(), params[1].c_str(), params[2].c_str(), params[3].c_str(), "-dc"};
+          std::array optionPtrs = {options[0].c_str(), options[1].c_str(), options[2].c_str(), options[3].c_str(), "-dc"};
 
-          if (!program.compile(options))
+          if (!program.compile(optionPtrs))
           {
             throw makeException<std::runtime_error>("Failed to compile callback function");
           }
