@@ -43,11 +43,11 @@ namespace afft::detail::cpu
   inline void init(const afft::cpu::InitParameters& initParams)
   {
 # if AFFT_CPU_BACKEND_IS_ENABLED(FFTW3)
-    fftw3::init(initParams.fftw3Parameters);
+    fftw3::init(initParams.fftw3);
 # elif AFFT_CPU_BACKEND_IS_ENABLED(MKL)
-    mkl::init(initParams.mklParameters);
+    mkl::init(initParams.mkl);
 # elif AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
-    pocketfft::init(initParams.pocketfftParameters);
+    pocketfft::init(initParams.pocketfft);
 # endif
   }
 

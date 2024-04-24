@@ -56,13 +56,13 @@ namespace afft::detail::gpu
     
     // Initialize the backends
 # if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
-    cufft::init(gpuInitParams.cufftParameters);
+    cufft::init(gpuInitParams.cufft);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(HIPFFT)
-    hipfft::init(gpuInitParams.hipfftParameters);
+    hipfft::init(gpuInitParams.hipfft);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(ROCFFT)
-    rocfft::init(gpuInitParams.rocfftParameters);
+    rocfft::init(gpuInitParams.rocfft);
 # elif AFFT_GPU_BACKEND_IS_ENABLED(VKFFT)
-    vkfft::init(gpuInitParams.vkfftParameters);
+    vkfft::init(gpuInitParams.vkfft);
 # endif
   }
 
