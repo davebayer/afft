@@ -27,9 +27,6 @@
 
 #include "macro.hpp"
 
-/// @brief Macro for checking if GPU framework is enabled
-#define AFFT_GPU_ENABLED             (AFFT_GPU_FRAMEWORK != 0)
-
 /// @brief Macro for CUDA GPU framework
 #define AFFT_GPU_FRAMEWORK_CUDA      (1)
 /// @brief Macro for HIP GPU framework
@@ -37,6 +34,8 @@
 /// @brief Macro for OpenCL GPU framework
 #define AFFT_GPU_FRAMEWORK_OPENCL    (3)
 
+/// @brief Macro for checking if GPU is enabled
+#define AFFT_GPU_IS_ENABLED          (AFFT_GPU_FRAMEWORK != 0)
 /// @brief Macro for checking if CUDA GPU framework is selected
 #define AFFT_GPU_FRAMEWORK_IS_CUDA   (AFFT_GPU_FRAMEWORK == AFFT_GPU_FRAMEWORK_CUDA)
 /// @brief Macro for checking if HIP GPU framework is selected
@@ -50,7 +49,7 @@
 # define AFFT_GPU_FRAMEWORK          (0)
 #else
   // Check if GPU framework is valid
-# if AFFT_GPU_ENABLED && !(AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP || AFFT_GPU_FRAMEWORK_IS_OPENCL)
+# if AFFT_GPU_IS_ENABLED && !(AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP || AFFT_GPU_FRAMEWORK_IS_OPENCL)
 #   error "Unsupported GPU framework"
 # endif
 #endif
@@ -144,6 +143,42 @@ namespace afft::gpu
   
   /// @brief Number of backends
   inline constexpr std::size_t backendCount{4};
+
+  namespace cufft
+  {
+    /// @brief Init parameters for cufft backend
+    struct InitParameters {};
+  } // namespace cufft
+
+  namespace hipfft
+  {
+    /// @brief Init parameters for hipfft backend
+    struct InitParameters {};
+  } // namespace hipfft
+
+  namespace rocfft
+  {
+    /// @brief Init parameters for rocfft backend
+    struct InitParameters {};
+  } // namespace rocfft
+
+  namespace vkfft
+  {
+    /// @brief Init parameters for vkfft backend
+    struct InitParameters {};
+  } // namespace vkfft
+
+  /**
+   * @struct InitParameters
+   * @brief Init parameters for GPU backend
+   */
+  struct InitParameters
+  {
+    cufft::InitParameters  cufft{};  ///< Parameters for cufft backend
+    hipfft::InitParameters hipfft{}; ///< Parameters for hipfft backend
+    rocfft::InitParameters rocfft{}; ///< Parameters for rocfft backend
+    vkfft::InitParameters  vkfft{};  ///< Parameters for vkfft backend
+  };
 
   /**
    * @struct Parameters

@@ -102,30 +102,34 @@ namespace afft::cpu
 
   namespace fftw3
   {
+    /// @brief Init parameters for FFTW3 CPU backend
     struct InitParameters
     {
-      std::string_view floatWisdom{};
-      std::string_view doubleWisdom{};
-      std::string_view longDoubleWisdom{};
-      std::string_view quadWisdom{};
+      std::string_view floatWisdom{};      ///< Wisdom for single precision (fftwf)
+      std::string_view doubleWisdom{};     ///< Wisdom for double precision (fftw)
+      std::string_view longDoubleWisdom{}; ///< Wisdom for long double precision (fftwl)
+      std::string_view quadWisdom{};       ///< Wisdom for quad precision (fftwq)
     };
   } // namespace fftw3
 
   namespace mkl
   {
+    /// @brief Init parameters for MKL CPU backend
     struct InitParameters {};
   } // namespace mkl
 
   namespace pocketfft
   {
+    /// @brief Init parameters for PocketFFT CPU backend
     struct InitParameters {};
   } // namespace pocketfft
 
+  /// @brief Init parameters for CPU backends
   struct InitParameters
   {
-    fftw3::InitParameters     fftw3Parameters{};
-    mkl::InitParameters       mklParameters{};
-    pocketfft::InitParameters pocketfftParameters{};
+    fftw3::InitParameters     fftw3{};     ///< FFTW3 init parameters
+    mkl::InitParameters       mkl{};       ///< MKL init parameters
+    pocketfft::InitParameters pocketfft{}; ///< PocketFFT init parameters
   };
 
   /// @brief alignments for CPU memory allocation
@@ -199,6 +203,7 @@ namespace afft::cpu
     BackendSelectStrategy    strategy{BackendSelectStrategy::first}; ///< Select strategy
   };
 
+  /// @brief Execution parameters for CPU transform
   struct ExecutionParameters {};
 
   /**
