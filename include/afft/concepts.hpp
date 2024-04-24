@@ -77,6 +77,13 @@ namespace afft
    */
   template<typename T>
   concept BackendSelectParametersType = isBackendSelectParameters<T>;
+
+  /**
+   * @brief ExecutionParameters concept.
+   * @tparam T The type.
+   */
+  template<typename T>
+  concept ExecutionParametersType = isExecutionParameters<T>;
 } // namespace afft
 
 #endif /* AFFT_CONCEPTS_HPP */

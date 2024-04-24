@@ -196,7 +196,7 @@ namespace afft::cpu
   struct BackendSelectParameters
   {
     std::span<const Backend> backends{defaultBackendList}; ///< Priority of the backends
-    BackendSelectStrategy           strategy{BackendSelectStrategy::first}; ///< Select strategy
+    BackendSelectStrategy    strategy{BackendSelectStrategy::first}; ///< Select strategy
   };
 
   struct ExecutionParameters {};

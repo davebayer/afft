@@ -27,6 +27,7 @@
 
 #include <type_traits>
 
+#include "type.hpp"
 #include "detail/typeTraits.hpp"
 
 namespace afft
@@ -107,6 +108,20 @@ namespace afft
    */
   template<typename T>
   inline constexpr Target backendSelectParametersTarget = detail::BackendSelectParametersTarget<std::remove_cvref_t<T>>::value;
+
+  /**
+   * @brief ExecutionParameters type for given target.
+   * @tparam target The target type.
+   */
+  template<Target target>
+  using ExecutionParameters = typename detail::ExecutionParametersSelect<target>::Type;
+
+  /**
+   * @brief Check if the type is ExecutionParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isExecutionParameters = detail::IsExecutionParameters<std::remove_cvref_t<T>>::value;
   
   /**
    * @brief Get the target of the target parameters.

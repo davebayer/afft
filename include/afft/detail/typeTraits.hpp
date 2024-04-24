@@ -108,36 +108,151 @@ namespace afft::detail
    * @tparam target The target type.
    */
   template<Target target>
-  struct TargetTransformBackendSelect;
+  struct TargetBackendSelect;
 
   /// @brief Specialization for cpu target.
   template<>
-  struct TargetTransformBackendSelect<Target::cpu>
+  struct TargetBackendSelect<Target::cpu>
   {
-    using Type = afft::cpu::TransformBackend;
+    using Type = afft::cpu::Backend;
   };
 
   /// @brief Specialization for gpu target.
   template<>
-  struct TargetTransformBackendSelect<Target::gpu>
+  struct TargetBackendSelect<Target::gpu>
   {
-    using Type = afft::gpu::TransformBackend;
+    using Type = afft::gpu::Backend;
   };
 
   /**
-   * @brief Check if the type is target transform backend.
+   * @brief Check if the type is target backend.
    * @tparam T The type.
    */
   template<typename>
-  struct IsTargetTransformBackend : std::false_type {};
+  struct IsTargetBackend : std::false_type {};
 
-  /// @brief Specialization for cpu transform backend.
+  /// @brief Specialization for cpu backend.
   template<>
-  struct IsTargetTransformBackend<afft::cpu::TransformBackend> : std::true_type {};
+  struct IsTargetBackend<afft::cpu::Backend> : std::true_type {};
 
-  /// @brief Specialization for gpu transform backend.
+  /// @brief Specialization for gpu backend.
   template<>
-  struct IsTargetTransformBackend<afft::gpu::TransformBackend> : std::true_type {};
+  struct IsTargetBackend<afft::gpu::Backend> : std::true_type {};
+
+  /**
+   * @brief BackendSelectParameters type for given target.
+   * @tparam target The target type.
+   */
+  template<Target target>
+  struct TargetBackendSelectParametersSelect;
+
+  /// @brief Specialization for cpu target.
+  template<>
+  struct TargetBackendSelectParametersSelect<Target::cpu>
+  {
+    using Type = afft::cpu::BackendSelectParameters;
+  };
+
+  /// @brief Specialization for gpu target.
+  template<>
+  struct TargetBackendSelectParametersSelect<Target::gpu>
+  {
+    using Type = afft::gpu::BackendSelectParameters;
+  };
+
+  /**
+   * @brief Check if the type is BackendSelectParameters.
+   * @tparam T The type.
+   */
+  template<typename>
+  struct IsBackendSelectParameters : std::false_type {};
+
+  /// @brief Specialization for cpu BackendSelectParameters.
+  template<>
+  struct IsBackendSelectParameters<afft::cpu::BackendSelectParameters> : std::true_type {};
+
+  /// @brief Specialization for gpu BackendSelectParameters.
+  template<>
+  struct IsBackendSelectParameters<afft::gpu::BackendSelectParameters> : std::true_type {};
+
+  /**
+   * @brief Get the target of the backend select parameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct BackendSelectParametersTarget;
+
+  /// @brief Specialization for cpu target.
+  template<>
+  struct BackendSelectParametersTarget<afft::cpu::BackendSelectParameters>
+  {
+    static constexpr Target value{Target::cpu};
+  };
+
+  /// @brief Specialization for gpu target.
+  template<>
+  struct BackendSelectParametersTarget<afft::gpu::BackendSelectParameters>
+  {
+    static constexpr Target value{Target::gpu};
+  };
+
+  /**
+   * @brief ExecutionParameters type for given target.
+   * @tparam target The target type.
+   */
+  template<Target target>
+  struct TargetExecutionParametersSelect;
+
+  /// @brief Specialization for cpu target.
+  template<>
+  struct TargetExecutionParametersSelect<Target::cpu>
+  {
+    using Type = afft::cpu::ExecutionParameters;
+  };
+
+  /// @brief Specialization for gpu target.
+  template<>
+  struct TargetExecutionParametersSelect<Target::gpu>
+  {
+    using Type = afft::gpu::ExecutionParameters;
+  };
+
+  /**
+   * @brief Check if the type is ExecutionParameters.
+   * @tparam T The type.
+   */
+  template<typename>
+  struct IsExecutionParameters : std::false_type {};
+
+  /// @brief Specialization for cpu ExecutionParameters.
+  template<>
+  struct IsExecutionParameters<afft::cpu::ExecutionParameters> : std::true_type {};
+
+  /// @brief Specialization for gpu ExecutionParameters.
+  template<>
+  struct IsExecutionParameters<afft::gpu::ExecutionParameters> : std::true_type {};
+
+  /**
+   * @brief Get the target of the target parameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct TargetParametersTarget;
+
+  /// @brief Specialization for cpu target.
+  template<>
+  struct TargetParametersTarget<afft::cpu::Parameters>
+  {
+    static constexpr Target value{Target::cpu};
+  };
+
+  /// @brief Specialization for gpu target.
+  template<>
+  struct TargetParametersTarget<afft::gpu::Parameters>
+  {
+    static constexpr Target value{Target::gpu};
+  };
+  
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */
