@@ -1,15 +1,12 @@
 #ifndef AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP
 #define AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP
 
-#if !__has_include(<pocketfft_hdronly.h>)
-# error "PocketFFT header not found"
-#endif
-
 #include <array>
 #include <algorithm>
 #include <concepts>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
 
@@ -44,13 +41,21 @@ namespace afft::detail::cpu::pocketfft
 
   /**
    * @class PlanImpl
+   * @tparam prec The precision of the data.
    * @brief Implementation of the plan for the CPU using PocketFFT
    */
-  class PlanImpl : public detail::PlanImpl
+  template<Precision prec>
+  class PlanImpl final : public detail::PlanImpl
   {
     private:
       /// @brief Alias for the parent class
       using Parent = detail::PlanImpl;
+
+      /// @brief Alias for the real type
+      using R = Real<prec>;
+
+      /// @brief Alias for the interleaved complex type
+      using C = InterleavedComplex<R>;
     public:
       /// @brief inherit constructors
       using Parent::Parent;
@@ -59,26 +64,27 @@ namespace afft::detail::cpu::pocketfft
        * @brief Constructor
        * @param config The configuration for the plan
        */
-      PlanImpl(const Config& config) noexcept
-      : Parent(checkConfig(config)),
-        mShape(getConfig().dimsConfig.getShape().begin(), getConfig().dimsConfig.getShape().end()),
-        mSrcStride(mShape.size()),
-        mDstStride(mShape.size())
+      PlanImpl(const Config& config)
+      : Parent(config),
+        mShape(getConfig().getShape().begin(), getConfig().getShape().end()),
+        mSrcStrides(mShape.size()),
+        mDstStrides(mShape.size()),
+        mAxes(getConfig().getTransformAxes().begin(), getConfig().getTransformAxes().end())
       {
-        std::transform(getConfig().dimsConfig.getSrcStrides().begin(),
-                       getConfig().dimsConfig.getSrcStrides().end(),
-                       mSrcStride.begin(),
+        std::transform(getConfig().getSrcStrides().begin(),
+                       getConfig().getSrcStrides().end(),
+                       mSrcStrides.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * getConfig().transformConfig.getSrcElemSizeOf());
+          return safeIntCast<std::ptrdiff_t>(stride * getConfig().sizeOfSrcElem());
         });
 
-        std::transform(getConfig().dimsConfig.getDstStrides().begin(),
-                       getConfig().dimsConfig.getDstStrides().end(),
-                       mDstStride.begin(),
+        std::transform(getConfig().getDstStrides().begin(),
+                       getConfig().getDstStrides().end(),
+                       mDstStrides.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * getConfig().transformConfig.getDstElemSizeOf());
+          return safeIntCast<std::ptrdiff_t>(stride * getConfig().sizeOfDstElem());
         });
       }
 
@@ -90,81 +96,27 @@ namespace afft::detail::cpu::pocketfft
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void execute(ExecParam src, ExecParam dst) override
+      void executeImpl(ExecParam src, ExecParam dst) override
       {
-        if (!std::holds_alternative<void*>(src) || !std::holds_alternative<void*>(dst))
+        if (src.isSplit() || dst.isSplit())
         {
           throw std::runtime_error("pocketfft does not support planar complex format");
         }
 
-        switch (getConfig().transformConfig.getType())
+        switch (getConfig().getTransform())
         {
-        case TransformType::dft: execDft(std::get<void*>(src), std::get<void*>(dst)); break;
-        case TransformType::dtt: execDtt(std::get<void*>(src), std::get<void*>(dst)); break;
-        default:                 throw makeException<std::runtime_error>("Unsupported transform type");
-        }
-      }
-    protected:
-    private:
-      /**
-       * @brief Check if the input configuration is supported
-       * @param config The configuration to be checked
-       * @return The configuration
-       */
-      static const Config& checkConfig(const Config& config)
-      {
-        switch (config.transformConfig.getType())
-        {
-        case TransformType::dft:
-        {
-          const auto& dftConfig = config.transformConfig.getConfig<TransformType::dft>();
-
-          if (dftConfig.srcFormat == complexInterleaved && dftConfig.dstFormat == complexInterleaved)
-          {
-            if (config.commonParams.placement == Placement::inplace)
-            {
-              if (!config.dimsConfig.stridesEqual())
-              {
-                throw makeException<std::runtime_error>("Inplace transform requires equal strides");
-              }
-            }
-          }
-          else if (dftConfig.srcFormat == real && dftConfig.dstFormat == hermitianComplexInterleaved)
-          {
-            if (config.commonParams.placement == Placement::inplace)
-            {
-              throw makeException<std::runtime_error>("Inplace transform not supported");
-            }
-          }
-          else if (dftConfig.srcFormat == hermitianComplexInterleaved && dftConfig.dstFormat == real)
-          {
-            if (config.commonParams.placement == Placement::inplace)
-            {
-              throw makeException<std::runtime_error>("Inplace transform not supported");
-            }
-          }
-          else
-          {
-            throw makeException<std::runtime_error>("Unsupported DFT configuration");
-          }
+        case Transform::dft:
+          execDft(src.getRealImag(), dst.getRealImag());
           break;
-        }
-        case TransformType::dtt:
-          if (config.commonParams.placement == Placement::inplace)
-          {
-            if (!config.dimsConfig.stridesEqual())
-            {
-              throw makeException<std::runtime_error>("Inplace transform requires equal strides");
-            }
-          }
+        case Transform::dtt:
+          execDtt(src.getRealAs<R>(), dst.getRealAs<R>());
           break;
         default:
           throw makeException<std::runtime_error>("Unsupported transform type");
         }
-
-        return config;
       }
-
+    protected:
+    private:
       /**
        * @brief Execute the DFT
        * @param src The source buffer
@@ -172,167 +124,59 @@ namespace afft::detail::cpu::pocketfft
        */
       void execDft(void* src, void* dst)
       {
-        using enum dft::Format;
+        const auto& dftConfig = getConfig().template getTransformConfig<Transform::dft>();
 
-        const auto& precision    = getConfig().transformConfig.getPrecision();
-        const auto& commonParams = getConfig().commonParams;
-        const auto& dftConfig    = getConfig().transformConfig.getConfig<TransformType::dft>();
-        const auto& cpuParams    = getConfig().targetConfig.getConfig<Target::cpu>();
+        const auto direction  = (getConfig().getTransformDirection() == Direction::forward)
+                                  ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
+        const auto nthreads   = static_cast<std::size_t>(getConfig().template getTargetConfig<Target::cpu>().threadLimit);
+        const auto normFactor = getConfig().template getTransformNormFactor<prec>();
 
-        if (dftConfig.srcFormat == complexInterleaved && dftConfig.dstFormat == complexInterleaved)
+        switch (dftConfig.type)
         {
-          switch (precision.execution)
-          {
-          case Precision::bf16:   this->c2c<Precision::bf16>(src, dst);   break;
-          case Precision::f16:    this->c2c<Precision::f16>(src, dst);    break;
-          case Precision::f32:    this->c2c<Precision::f32>(src, dst);    break;
-          case Precision::f64:    this->c2c<Precision::f64>(src, dst);    break;
-          case Precision::f64f64: this->c2c<Precision::f64f64>(src, dst); break;
-          case Precision::f80:    this->c2c<Precision::f80>(src, dst);    break;
-          case Precision::f128:   this->c2c<Precision::f128>(src, dst);   break;
-          default:                throw makeExeption<std::runtime_error>("Unsupported precision");
-          }
-        }
-        else if (dftConfig.srcFormat == real && dftConfig.dstFormat == hermitianComplexInterleaved)
-        {
-          switch (precision.execution)
-          {
-          case Precision::bf16:   this->r2c<Precision::bf16>(src, dst);   break;
-          case Precision::f16:    this->r2c<Precision::f16>(src, dst);    break;
-          case Precision::f32:    this->r2c<Precision::f32>(src, dst);    break;
-          case Precision::f64:    this->r2c<Precision::f64>(src, dst);    break;
-          case Precision::f64f64: this->r2c<Precision::f64f64>(src, dst); break;
-          case Precision::f80:    this->r2c<Precision::f80>(src, dst);    break;
-          case Precision::f128:   this->r2c<Precision::f128>(src, dst);   break;
-          default:                throw makeExeption<std::runtime_error>("Unsupported precision");
-          }
-        }
-        else if (dftConfig.srcFormat == hermitianComplexInterleaved && dftConfig.dstFormat == real)
-        {
-          switch (precision.execution)
-          {
-          case Precision::bf16:   this->c2r<Precision::bf16>(src, dst);   break;
-          case Precision::f16:    this->c2r<Precision::f16>(src, dst);    break;
-          case Precision::f32:    this->c2r<Precision::f32>(src, dst);    break;
-          case Precision::f64:    this->c2r<Precision::f64>(src, dst);    break;
-          case Precision::f64f64: this->c2r<Precision::f64f64>(src, dst); break;
-          case Precision::f80:    this->c2r<Precision::f80>(src, dst);    break;
-          case Precision::f128:   this->c2r<Precision::f128>(src, dst);   break;
-          default:                throw makeExeption<std::runtime_error>("Unsupported precision");
-          }
-        }
-        else
-        {
-          throw makeException<std::runtime_error>("Invalid dft compbination");
-        }
-      }
-
-      /**
-       * @brief Get the direction of the transform
-       * @return The direction
-       */
-      [[nodiscard]] constexpr auto getDirection() const noexcept
-      {
-        return (getConfig().transformConfig.getDirection() == Direction::forward)
-                 ? ::pocketfft::FORWARD : ::pocketfft::BACKWARD;
-      }
-
-      /**
-       * @brief Execute the C2C transform
-       * @tparam prec The precision of the data
-       * @param src The source buffer
-       * @param dst The destination buffer
-       */
-      template<Precision prec>
-      void c2c(void* src, void* dst)
-      {
-        if constexpr (hasPrecision<prec>())
-        {
-          const auto normalize = getConfig().commonParams.normalize;
-          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
-
-          safeCall([this, &]
+        case dft::Type::complexToComplex:
+          safeCall([&, this]
           {
             ::pocketfft::c2c(mShape,
-                             mSrcStride,
-                             mDstStride,
+                             mSrcStrides,
+                             mDstStrides,
                              mAxes,
-                             getDirection(),
-                             reinterpret_cast<InterleavedComplex<prec>*>(src),
-                             reinterpret_cast<InterleavedComplex<prec>*>(dst),
-                             getConfig().transformConfig.getNormFactor<prec>(),
-                             static_cast<std::size_t>(nthreads));
-          });          
-        }
-        else
-        {
-          throw std::runtime_error("Not supported");
-        }
-      }
-
-      /**
-       * @brief Execute the R2C transform
-       * @tparam prec The precision of the data
-       * @param src The source buffer
-       * @param dst The destination buffer
-       */
-      template<Precision prec>
-      void r2c(void* src, void* dst)
-      {
-        if constexpr (hasPrecision<prec>())
-        {
-          const auto normalize = getConfig().commonParams.normalize;
-          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
-
-          safeCall([this, &]
-          {
-            ::pocketfft::r2c(mShape,
-                             mSrcStride,
-                             mDstStride,
-                             mAxes,
-                             getDirection(),
-                             reinterpret_cast<Real<prec>*>(src),
-                             reinterpret_cast<InterleavedComplex<prec>*>(dst),
-                             getConfig().transformConfig.getNormFactor<prec>(),
-                             static_cast<std::size_t>(nthreads));
+                             direction,
+                             static_cast<C*>(src),
+                             static_cast<C*>(dst),
+                             normFactor,
+                             nthreads);
           });
-        }
-        else
-        {
-          throw makeException<std::runtime_error>("Unsupported precision");
-        }
-      }
-
-      /**
-       * @brief Execute the C2R transform
-       * @tparam prec The precision of the data
-       * @param src The source buffer
-       * @param dst The destination buffer
-       */
-      template<Precision prec>
-      void c2r(void* src, void* dst)
-      {
-        if constexpr (hasPrecision<prec>())
-        {
-          const auto normalize = getConfig().commonParams.normalize;
-          const auto nthreads  = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
-
-          safeCall([this, &]
+          break;
+        case dft::Type::realToComplex:
+          safeCall([&, this]
           {
             ::pocketfft::c2r(mShape,
-                            mSrcStride,
-                            mDstStride,
-                            mAxes,
-                            getDirection(),
-                            reinterpret_cast<InterleavedComplex<prec>*>(src),
-                            reinterpret_cast<Real<prec>*>(dst),
-                            getConfig().transformConfig.getNormFactor<prec>(),
-                            static_cast<std::size_t>(nthreads));
+                             mSrcStrides,
+                             mDstStrides,
+                             mAxes,
+                             direction,
+                             static_cast<C*>(src),
+                             static_cast<R*>(dst),
+                             normFactor,
+                             nthreads);
           });
-        }
-        else
-        {
-          throw makeException<std::runtime_error>("Unsupported precision");
+          break;
+        case dft::Type::complexToReal:
+          safeCall([&, this]
+          {
+            ::pocketfft::r2c(mShape,
+                             mSrcStrides,
+                             mDstStrides,
+                             mAxes,
+                             direction,
+                             static_cast<R*>(src),
+                             static_cast<C*>(dst),
+                             normFactor,
+                             nthreads);
+          });
+          break;
+        default:
+          unreachable();
         }
       }
 
@@ -341,175 +185,172 @@ namespace afft::detail::cpu::pocketfft
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void execDtt(void* src, void* dst)
+      void execDtt(R* src, R* dst)
       {
         static constexpr std::array dttTypes = {dtt::Type::dct1, dtt::Type::dct2, dtt::Type::dct3, dtt::Type::dct4,
                                                 dtt::Type::dst1, dtt::Type::dst2, dtt::Type::dst3, dtt::Type::dst4};
 
-        const auto& precision = getConfig().commonParams.normalize;
-        const auto& dttConfig = getConfig().transformConfig.getConfig<Target::cpu>().threadLimit;
+        auto cvtDttType = [dir = getConfig().getTransformDirection()](dtt::Type dttType) constexpr -> int
+        {
+          switch (dttType)
+          {
+          case dtt::Type::dct1: return (dir == Direction::forward) ? 1 : 1;
+          case dtt::Type::dct2: return (dir == Direction::forward) ? 2 : 3;
+          case dtt::Type::dct3: return (dir == Direction::forward) ? 3 : 2;
+          case dtt::Type::dct4: return (dir == Direction::forward) ? 4 : 4;
+          case dtt::Type::dst1: return (dir == Direction::forward) ? 1 : 1;
+          case dtt::Type::dst2: return (dir == Direction::forward) ? 2 : 3;
+          case dtt::Type::dst3: return (dir == Direction::forward) ? 3 : 2;
+          case dtt::Type::dst4: return (dir == Direction::forward) ? 4 : 4;
+          default:
+            unreachable();
+          }
+        };
 
-        ::pocketfft::shape_t axes{};
-        axes.reserve(getConfig().transformConfig.getRank());
-        bool normalize = true;
+        const auto  axes      = getConfig().getTransformAxes();
+        const auto& dttConfig = getConfig().template getTransformConfig<Transform::dtt>();
+
+        auto normFactor = getConfig().template getTransformNormFactor<prec>();
+
+        const auto ortho    = (getConfig().getCommonParameters().normalize == Normalize::orthogonal);
+        const auto nthreads = static_cast<std::size_t>(getConfig().template getTargetConfig<Target::cpu>().threadLimit);
 
         for (const auto dttType : dttTypes)
         {
-          for (std::size_t i{}; i < getConfig().transformConfig.getRank(); ++i)
+          mAxes.clear();
+
+          for (std::size_t i{}; i < getConfig().getTransformRank(); ++i)
           {
             if (dttConfig.axisTypes[i] == dttType)
             {
-              axes.push_back(getConfig().transformConfig.getAxes()[i]);
+              mAxes.push_back(axes[i]);
             }
           }
 
-          if (!axes.empty())
+          if (!mAxes.empty())
           {
             switch (dttType)
             {
             case dtt::Type::dct1: case dtt::Type::dct2: case dtt::Type::dct3: case dtt::Type::dct4:
-              switch (precision.execution)
+              safeCall([&, this]
               {
-              case Precision::bf16:   this->dct<Precision::bf16>(src, dst, axes, dttType, normalize);   break;
-              case Precision::f16:    this->dct<Precision::f16>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f32:    this->dct<Precision::f32>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f64:    this->dct<Precision::f64>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f64f64: this->dct<Precision::f64f64>(src, dst, axes, dttType, normalize); break;
-              case Precision::f80:    this->dct<Precision::f80>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f128:   this->dct<Precision::f128>(src, dst, axes, dttType, normalize);   break;
-              default:                throw makeException<std::runtime_error>("Unsupported precision");
-              }
+                ::pocketfft::dct(mShape,
+                                 mSrcStrides,
+                                 mDstStrides,
+                                 mAxes,
+                                 cvtDttType(dttType),
+                                 src,
+                                 dst,
+                                 normFactor,
+                                 ortho,
+                                 nthreads);
+              });
               break;
             case dtt::Type::dst1: case dtt::Type::dst2: case dtt::Type::dst3: case dtt::Type::dst4:
-              switch (precision.execution)
+              safeCall([&, this]
               {
-              case Precision::bf16:   this->dct<Precision::bf16>(src, dst, axes, dttType, normalize);   break;
-              case Precision::f16:    this->dct<Precision::f16>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f32:    this->dst<Precision::f32>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f64:    this->dst<Precision::f64>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f64f64: this->dst<Precision::f64f64>(src, dst, axes, dttType, normalize); break;
-              case Precision::f80:    this->dst<Precision::f80>(src, dst, axes, dttType, normalize);    break;
-              case Precision::f128:   this->dst<Precision::f128>(src, dst, axes, dttType, normalize);   break;
-              default:                throw makeException<std::runtime_error>("Unsupported precision");
-              }
+                ::pocketfft::dst(mShape,
+                                 mSrcStrides,
+                                 mDstStrides,
+                                 mAxes,
+                                 cvtDttType(dttType),
+                                 src,
+                                 dst,
+                                 normFactor,
+                                 ortho,
+                                 nthreads);
+              });
               break;
             default:
               throw makeException<std::runtime_error>("Unknown dtt type");
             }
 
-            axes.clear();
-            normalize = false;
+            normFactor = R{1.0};
           }
         }
       }
 
-      /**
-       * @brief Execute the DCT
-       * @tparam prec The precision of the data
-       * @param src The source buffer
-       * @param dst The destination buffer
-       * @param axes The axes to be transformed
-       * @param dctType The type of the DCT
-       * @param normalize Whether to normalize the result
-       */
-      template<Precision prec>
-      void dct(void* src, void* dst, ::pocketfft::shape_t axes, dtt::Type dctType, bool normalize)
-      {
-        auto getType = [this, dctType]() -> int
-        {
-          const bool isForward = (getConfig().transformConfig.getDirection() == Direction::forward);
-
-          switch (dctType)
-          {
-          case dtt::Type::dct1: return (isForward) ? 1 : 4;
-          case dtt::Type::dct2: return (isForward) ? 2 : 3;
-          case dtt::Type::dct3: return (isForward) ? 3 : 2;
-          case dtt::Type::dct4: return (isForward) ? 4 : 1;
-          default:
-            throw makeException<std::runtime_error>("Invalid dct type");
-          }
-        };
-
-        if constexpr (hasPrecision<prec>())
-        {
-          const auto nthreads = getConfig().targetConfig.getConfig<Target::cpu>().threadLimit;
-
-          safeCall([this, &]
-          {
-            ::pocketfft::dct(mShape,
-                             mSrcStride,
-                             mDstStride,
-                             axes,
-                             getType(),
-                             reinterpret_cast<Real<prec>*>(src),
-                             reinterpret_cast<Real<prec>*>(dst),
-                             (normalize) ? getConfig().transformConfig.getNormFactor<prec>() : Real<prec>(1.0),
-                             (getConfig().commonParams.normalize == Normalize::orthogonal),
-                             static_cast<std::size_t>(nthreads));
-          });
-        }
-        else
-        {
-          throw makeException<std::runtime_error>("Unsupported precision");
-        }
-      }
-
-      /**
-       * @brief Execute the DST
-       * @tparam prec The precision of the data
-       * @param src The source buffer
-       * @param dst The destination buffer
-       * @param axes The axes to be transformed
-       * @param dstType The type of the DST
-       * @param normalize Whether to normalize the result
-       */
-      template<Precision prec>
-      void dst(void* src, void* dst, ::pocketfft::shape_t axes, dtt::Type dstType, bool normalize)
-      {
-        auto getType = [this, dstType]() -> int
-        {
-          const bool isForward = (getConfig().transformConfig.getDirection() == Direction::forward);
-
-          switch (dstType)
-          {
-          case dtt::Type::dst1: return (isForward) ? 1 : 4;
-          case dtt::Type::dst2: return (isForward) ? 2 : 3;
-          case dtt::Type::dst3: return (isForward) ? 3 : 2;
-          case dtt::Type::dst4: return (isForward) ? 4 : 1;
-          default:
-            throw makeException<std::runtime_error>("Invalid dst type");
-          }
-        };
-        
-        if constexpr (hasPrecision<prec>())
-        {
-          const auto nthreads = getConfig().targetConfig.getConfig<Target::cpu>().threadLimit;
-
-          safeCall([this, &]
-          {
-            ::pocketfft::dst(mShape,
-                             mSrcStride,
-                             mDstStride,
-                             axes,
-                             getType(),
-                             reinterpret_cast<Real<prec>*>(src),
-                             reinterpret_cast<Real<prec>*>(dst),
-                             (normalize) ? getConfig().transformConfig.getNormFactor<prec>() : Real<prec>(1.0),
-                             (getConfig().commonParams.normalize == Normalize::orthogonal),
-                             static_cast<std::size_t>(nthreads));
-          });
-        }
-        else
-        {
-          throw makeException<std::runtime_error>("Unsupported precision");
-        }
-      }
-
-      ::pocketfft::shape_t  mShape{};     ///< The shape of the data
-      ::pocketfft::stride_t mSrcStride{}; ///< The stride of the source data
-      ::pocketfft::stride_t mDstStride{}; ///< The stride of the destination data
-      ::pocketfft::shape_t  mAxes{};      ///< The axes to be transformed, valid only for DFT
+      ::pocketfft::shape_t  mShape{};      ///< The shape of the data
+      ::pocketfft::stride_t mSrcStrides{}; ///< The stride of the source data
+      ::pocketfft::stride_t mDstStrides{}; ///< The stride of the destination data
+      ::pocketfft::shape_t  mAxes{};       ///< The axes to be transformed, valid for DFT, varies for DTT
   };
+
+  /**
+   * @brief Factory function for creating a plan implementation
+   * @param config The configuration for the plan implementation
+   * @return The plan implementation
+   */
+  [[nodiscard]] std::unique_ptr<detail::PlanImpl> makePlanImpl(const Config& config)
+  {
+    const auto& commonParams = config.getCommonParameters();
+
+    if (commonParams.complexFormat == ComplexFormat::planar)
+    {
+      throw makeException<std::runtime_error>("PocketFFT does not support planar complex format");
+    }
+
+    switch (config.getTransform())
+    {
+    case Transform::dft:
+    {
+      const auto& dftConfig = config.getTransformConfig<Transform::dft>();
+
+      switch (dftConfig.type)
+      {
+      case dft::Type::complexToComplex:
+        if (commonParams.placement == Placement::inPlace)
+        {
+          if (!config.hasEqualStrides())
+          {
+            throw makeException<std::runtime_error>("Inplace transform requires equal strides");
+          }
+        }
+        break;
+      case dft::Type::realToComplex:
+      case dft::Type::complexToReal:
+        if (commonParams.placement == Placement::inPlace)
+        {
+          throw makeException<std::runtime_error>("Inplace transform not supported");
+        }
+        break;
+      default:
+        unreachable();
+      }
+      break;
+    }
+    case Transform::dtt:
+      if (config.getCommonParameters().placement == Placement::inPlace)
+      {
+        if (!config.hasEqualStrides())
+        {
+          throw makeException<std::runtime_error>("Inplace transform requires equal strides");
+        }
+      }
+      break;
+    default:
+      throw makeException<std::runtime_error>("Unsupported transform type");
+    }
+
+    switch (config.getTransformPrecision().execution)
+    {
+#   ifdef AFFT_HAS_BF16
+    case Precision::bf16: return std::make_unique<PlanImpl<Precision::bf16>>(config);
+#   endif
+#   ifdef AFFT_HAS_F16
+    case Precision::f16:  return std::make_unique<PlanImpl<Precision::f16>>(config);
+#   endif
+    case Precision::f32:  return std::make_unique<PlanImpl<Precision::f32>>(config);
+    case Precision::f64:  return std::make_unique<PlanImpl<Precision::f64>>(config);
+#   ifdef AFFT_HAS_F80
+    case Precision::f80:  return std::make_unique<PlanImpl<Precision::f80>>(config);
+#   endif
+#   ifdef AFFT_HAS_F128
+    case Precision::f128: return std::make_unique<PlanImpl<Precision::f128>>(config);
+#   endif
+    default: throw makeException<std::runtime_error>("Unsupported precision");
+    }
+  }
 } // namespace afft::detail::cpu::pocketfft
 
 #endif /* AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP */
