@@ -54,8 +54,8 @@ namespace afft
   template<typename T>
   struct PlanarComplex
   {
-    T* real{};
-    T* imag{};
+    T* real{}; ///< The real part.
+    T* imag{}; ///< The imaginary part.
   };
 
   /**
@@ -75,12 +75,17 @@ namespace afft
    * @tparam cmpl The complexity.
    */
   template<typename T, Precision prec, Complexity cmpl>
-    requires (detail::isValidPrecision(prec) && detail::isValidComplexity(cmpl))
   struct TypePropertiesBase : detail::KnownTypePropertiesBase
   {
     // Ensure the size of the type matches the given precision and complexity
     static_assert(sizeof(T) == detail::sizeOf<prec, cmpl>(),
                   "Size of the type must match the given precision and complexity");
+
+    // Ensure the precision is valid
+    static_assert(detail::isValidPrecision(prec), "Invalid precision");
+
+    // Ensure the complexity is valid
+    static_assert(detail::isValidComplexity(cmpl), "Invalid complexity");
 
     static constexpr Precision  precision{prec};  ///< The precision.
     static constexpr Complexity complexity{cmpl}; ///< The complexity.
