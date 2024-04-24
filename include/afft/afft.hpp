@@ -70,7 +70,7 @@
 #include "init.hpp"
 #include "type.hpp"
 #include "Plan.hpp"
-#include "PlanCache.hpp"
+// #include "PlanCache.hpp" // future feature
 #include "utils.hpp"
 
 namespace afft
