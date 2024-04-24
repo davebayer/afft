@@ -287,16 +287,20 @@ namespace afft::detail::gpu::cuda::rtc
 
       /**
        * @brief Add a name expression.
+       * @param cSymbolName The name of the symbol.
+       */
+      void addNameExpression(CSymbolName cSymbolName)
+      {
+        addNameExpression(std::string_view{cSymbolName});
+      }
+
+      /**
+       * @brief Add a name expression.
        * @param cppSymbolName The name of the symbol.
        */
       void addNameExpression(CppSymbolName cppSymbolName)
       {
-        if (mIsCompiled)
-        {
-          throw makeException<std::runtime_error>("The program is already compiled");
-        }
-
-        Error::check(nvrtcAddNameExpression(mProgram.get(), cppSymbolName.data()));
+        addNameExpression(std::string_view{cppSymbolName});
       }
 
       /**
@@ -304,8 +308,7 @@ namespace afft::detail::gpu::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      [[nodiscard("Always check the compilation result")]] bool
-      compile(std::span<const char*> options = {})
+      [[nodiscard("Always check the compilation result")]] bool compile(std::span<const char*> options)
       {
         if (std::exchange(mIsCompiled, true))
         {
@@ -323,35 +326,6 @@ namespace afft::detail::gpu::cuda::rtc
         Error::check(nvrtcGetProgramLog(mProgram.get(), mCompilationLog.data()));
 
         return ok;
-      }
-
-      /**
-       * @brief Compile the program for a specific device.
-       * @param device The device.
-       * @param options The compilation options.
-       * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
-       */
-      [[nodiscard("Always check the compilation result")]] auto
-      compileForDevice(int device, std::span<const char*> options = {})
-      {
-        if (!cuda::isValidDevice(device))
-        {
-          throw makeException<std::runtime_error>("Invalid device");
-        }
-
-        int ccMajor{};
-        Error::check(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
-
-        int ccMinor{};
-        Error::check(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
-
-        std::string ccParam = format("-arch=sm_{:d}{:d}", ccMajor, ccMinor);
-
-        std::vector<const char*> optionPtrs(options.size() + 1);
-
-        std::copy(options.begin(), options.end(), optionPtrs.begin());
-
-        return compile(optionPtrs);
       }
 
       /**
@@ -408,9 +382,28 @@ namespace afft::detail::gpu::cuda::rtc
         }
 
         return code;
-      }      
+      }
+
+      [[nodiscard]] constexpr std::string_view getCompilationLog() const
+      {
+        return mCompilationLog;
+      }
     protected:
     private:
+      /**
+       * @brief Add a name expression.
+       * @param symbolName The name of the symbol.
+       */
+      void addNameExpression(std::string_view symbolName)
+      {
+        if (mIsCompiled)
+        {
+          throw makeException<std::runtime_error>("The program is already compiled");
+        }
+
+        Error::check(nvrtcAddNameExpression(mProgram.get(), symbolName.data()));
+      }
+
       /**
        * @struct Deleter
        * @brief A deleter for the nvrtcProgram.
@@ -450,6 +443,68 @@ namespace afft::detail::gpu::cuda::rtc
     Error::check(nvrtcGetSupportedArchs(archs.data()));
 
     return archs;
+  }
+
+  /**
+   * @brief Make an architecture option.
+   * @param device The CUDA device.
+   * @return The architecture option.
+   */
+  [[nodiscard]] inline std::string makeArchOption(int device)
+  {
+    if (!cuda::isValidDevice(device))
+    {
+      throw makeException<std::runtime_error>("Invalid device");
+    }
+
+    int ccMajor{};
+    Error::check(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
+
+    int ccMinor{};
+    Error::check(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
+
+    return format("-arch=sm_{:d}{:d}", ccMajor, ccMinor);
+  }
+
+  /**
+   * @brief Make an include path option.
+   * @param includePath The include path.
+   * @return The include path option.
+   */
+  [[nodiscard]] inline std::string makeIncludePathOption(std::string_view includePath)
+  {
+    return format("-I{}", includePath);
+  }
+
+  /**
+   * @brief Make a preprocessor definition option.
+   * @param name The name of the definition.
+   * @param value The value of the definition.
+   * @return The preprocessor definition option.
+   */
+  [[nodiscard]] inline std::string makeDefinitionOption(std::string_view name, const auto& value)
+  {
+    return format("-D{}={}", name, value);
+  }
+
+  /**
+   * @brief Make a preprocessor definition option.
+   * @param name The name of the definition.
+   * @param value The value of the definition.
+   * @return The preprocessor definition option.
+   */
+  [[nodiscard]] inline std::string makeDefinitionOption(std::string_view name)
+  {
+    return format("-D{}", name);
+  }
+  
+  /**
+   * @brief Make a debug option.
+   * @return The debug option.
+   */
+  [[nodiscard]] inline std::string makeDebugOption()
+  {
+    return "-G";
   }
 } // namespace afft::detail::gpu::cuda::rtc
 
