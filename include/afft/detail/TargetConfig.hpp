@@ -41,8 +41,11 @@ namespace afft::detail
    */
   struct CpuConfig
   {
-    std::size_t alignment{};   ///< Memory alignment.
-    unsigned    threadLimit{}; ///< Number of threads.
+    Alignment alignment{};   ///< Memory alignment.
+    unsigned  threadLimit{}; ///< Number of threads.
+
+    /// @brief Equality operator.
+    friend bool operator==(const CpuConfig&, const CpuConfig&) noexcept = default;
   };
 
   /**
@@ -51,13 +54,16 @@ namespace afft::detail
    */
   struct GpuConfig
   {
-# if AFFT_GPU_BACKEND_IS_CUDA
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
     int device{};             ///< CUDA device.
-# elif AFFT_GPU_BACKEND_IS_HIP
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
     int device{};             ///< HIP device.
 # endif
 
     bool externalWorkspace{}; ///< Use external workspace.
+
+    /// @brief Equality operator.
+    friend bool operator==(const GpuConfig&, const GpuConfig&) noexcept = default;
   };
 
   /**
@@ -67,53 +73,16 @@ namespace afft::detail
   class TargetConfig
   {
     public:
-      /**
-       * @brief Make a CPU target configuration.
-       * @param cpuParams CPU parameters.
-       * @return CPU target configuration.
-       */
-      static TargetConfig make(const afft::cpu::Parameters& cpuParams)
-      {
-        CpuConfig config{.alignment   = cpuParams.alignment,
-                         .threadLimit = std::min(cpuParams.threadLimit, std::thread::hardware_concurrency())};
-
-        return TargetConfig{std::move(config)};
-      }
-
-      /**
-       * @brief Make a GPU target configuration.
-       * @param gpuParams GPU parameters.
-       * @return GPU target configuration.
-       */
-      TargetConfig make(const afft::gpu::Parameters& gpuParams)
-      {
-        GpuConfig config{.externalWorkspace = gpuParams.externalWorkspace};
-
-        {
-#       if AFFT_GPU_BACKEND_IS_CUDA
-          if (!gpu::cuda::isValidDevice(gpuParams.device))
-          {
-            throw makeException<std::runtime_error>("Invalid CUDA device");
-          }
-
-          config.device = gpuParams.device;
-#       elif AFFT_GPU_BACKEND_IS_HIP
-          if (!gpu::hip::isValidDevice(gpuParams.device))
-          {
-            throw makeException<std::runtime_error>("Invalid HIP device");
-          }
-
-          config.device = gpuParams.device;
-#       else
-          throw makeException<std::runtime_error>("Invalid GPU backend");
-#       endif
-        }
-
-        return TargetConfig{std::move(config)};
-      }
-
       /// @brief Default constructor not allowed.
       TargetConfig() = delete;
+
+      /**
+       * @brief Constructor.
+       * @param cpuParams CPU parameters.
+       */
+      TargetConfig(const TargetParametersType auto& targetParams)
+      : mVariant{makeTargetVariant(targetParams)}
+      {}
 
       /// @brief Copy constructor.
       TargetConfig(const TargetConfig&) = default;
@@ -145,7 +114,7 @@ namespace afft::detail
        * @return Target configuration.
        */
       template<Target target>
-      [[nodiscard]] constexpr const auto& getConfig() noexcept
+      [[nodiscard]] constexpr const auto& getConfig() const
       {
         if constexpr (target == Target::cpu)
         {
@@ -166,16 +135,52 @@ namespace afft::detail
     private:
       using ConfigVariant = std::variant<CpuConfig, GpuConfig>;
 
+      // Check variant index.
       static_assert(variant_alternative_index<ConfigVariant, CpuConfig>() == to_underlying(Target::cpu));
       static_assert(variant_alternative_index<ConfigVariant, GpuConfig>() == to_underlying(Target::gpu));
 
       /**
-       * @brief Constructor.
-       * @param config Target configuration.
+       * @brief Make target configuration.
+       * @param cpuParams CPU parameters.
+       * @return Target configuration.
        */
-      TargetConfig(auto&& config)
-      : mVariant{std::forward<decltype(config)>(config)}
-      {}
+      [[nodiscard]] static CpuConfig makeTargetVariant(const afft::cpu::Parameters& cpuParams)
+      {
+        return CpuConfig{.alignment   = cpuParams.alignment,
+                         .threadLimit = std::min(cpuParams.threadLimit, std::thread::hardware_concurrency())};
+      }
+
+      /**
+       * @brief Make target configuration.
+       * @param gpuParams GPU parameters.
+       * @return Target configuration.
+       */
+      [[nodiscard]] static GpuConfig makeTargetVariant(const afft::gpu::Parameters& gpuParams)
+      {
+        GpuConfig config{.externalWorkspace = gpuParams.externalWorkspace};
+
+        {
+#       if AFFT_GPU_FRAMEWORK_IS_CUDA
+          if (!gpu::cuda::isValidDevice(gpuParams.device))
+          {
+            throw makeException<std::runtime_error>("Invalid CUDA device");
+          }
+
+          config.device = gpuParams.device;
+#       elif AFFT_GPU_FRAMEWORK_IS_HIP
+          if (!gpu::hip::isValidDevice(gpuParams.device))
+          {
+            throw makeException<std::runtime_error>("Invalid HIP device");
+          }
+
+          config.device = gpuParams.device;
+#       else
+          throw makeException<std::runtime_error>("Invalid GPU backend");
+#       endif
+
+          return config;
+        }
+      }
 
       ConfigVariant mVariant; ///< Target configuration.
   };
