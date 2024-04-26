@@ -43,7 +43,7 @@
 namespace afft::detail::gpu
 {
   /// @brief Initialize the GPU framework and backends.
-  inline void init(const afft::gpu::InitParameters& gpuInitParams)
+  inline void init([[maybe_unused]] const afft::gpu::InitParameters& gpuInitParams)
   {
     // Initialize the GPU framework
 # if AFFT_GPU_FRAMEWORK_IS_CUDA

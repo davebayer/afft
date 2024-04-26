@@ -36,7 +36,8 @@ namespace afft::detail
   inline bool isInitialized{false};
 
   /// @brief Initialize the library.
-  inline void init(const afft::cpu::InitParameters& cpuInitParams, const afft::gpu::InitParameters& gpuInitParams)
+  inline void init(const afft::cpu::InitParameters&                  cpuInitParams,
+                   [[maybe_unused]] const afft::gpu::InitParameters& gpuInitParams)
   {
     if (!std::exchange(isInitialized, true))
     {
