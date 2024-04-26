@@ -34,14 +34,37 @@
 /// @brief Macro for OpenCL GPU framework
 #define AFFT_GPU_FRAMEWORK_OPENCL    (3)
 
-/// @brief Macro for checking if GPU is enabled
-#define AFFT_GPU_IS_ENABLED          (AFFT_GPU_FRAMEWORK != 0)
+// Check if GPU framework is defined (GPU support is enabled)
+#ifdef AFFT_GPU_FRAMEWORK
+  /**
+   * @brief Macro for getting the GPU framework from the name
+   * @param frameworkName Name of the framework
+   * @return Framework id
+   */
+# define AFFT_GPU_FRAMEWORK_FROM_NAME(frameworkName) \
+    AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_GPU_FRAMEWORK_, frameworkName)
+
+  /// @brief Macro for checking if GPU support is enabled
+# define AFFT_GPU_IS_ENABLED                       (1)
+
+  /**
+   * @brief Implementation of AFFT_GPU_FRAMEWORK_IS_* macros
+   * @param frameworkName Name of the framework
+   * @return Non zero if the framework is selected, zero otherwise
+   */
+# define AFFT_GPU_FRAMEWORK_IS_IMPL(frameworkName) \
+    (AFFT_GPU_FRAMEWORK_FROM_NAME(frameworkName) == AFFT_GPU_FRAMEWORK_FROM_NAME(AFFT_GPU_FRAMEWORK))
+#else
+# define AFFT_GPU_IS_ENABLED                       (0)
+# define AFFT_GPU_FRAMEWORK_IS_IMPL(frameworkName) (0)
+#endif
+
 /// @brief Macro for checking if CUDA GPU framework is selected
-#define AFFT_GPU_FRAMEWORK_IS_CUDA   (AFFT_GPU_FRAMEWORK == AFFT_GPU_FRAMEWORK_CUDA)
+#define AFFT_GPU_FRAMEWORK_IS_CUDA   (AFFT_GPU_FRAMEWORK_IS_IMPL(CUDA))
 /// @brief Macro for checking if HIP GPU framework is selected
-#define AFFT_GPU_FRAMEWORK_IS_HIP    (AFFT_GPU_FRAMEWORK == AFFT_GPU_FRAMEWORK_HIP)
+#define AFFT_GPU_FRAMEWORK_IS_HIP    (AFFT_GPU_FRAMEWORK_IS_IMPL(HIP))
 /// @brief Macro for checking if OpenCL GPU framework is selected
-#define AFFT_GPU_FRAMEWORK_IS_OPENCL (AFFT_GPU_FRAMEWORK == AFFT_GPU_FRAMEWORK_OPENCL)
+#define AFFT_GPU_FRAMEWORK_IS_OPENCL (AFFT_GPU_FRAMEWORK_IS_IMPL(OPENCL))
 
 // Check if GPU framework is defined
 #ifndef AFFT_GPU_FRAMEWORK
@@ -64,21 +87,12 @@
 #define AFFT_GPU_BACKEND_VKFFT  (1 << 3)
 
 /**
- * @brief Implementation of AFFT_GPU_BACKEND_FROM_NAME
- * @param backendName Name of the backend
- * @return Backend id
- * @warning Do not use this macro directly
- */
-#define AFFT_GPU_BACKEND_FROM_NAME_IMPL(backendName) \
-  AFFT_GPU_BACKEND_##backendName
-
-/**
  * @brief Macro for getting the backend from the name
  * @param backendName Name of the backend
  * @return Backend id
  */
 #define AFFT_GPU_BACKEND_FROM_NAME(backendName) \
-  AFFT_GPU_BACKEND_FROM_NAME_IMPL(backendName)
+  AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_GPU_BACKEND_, backendName)
 
 /**
  * @brief Implementation of AFFT_GPU_BACKEND_MASK

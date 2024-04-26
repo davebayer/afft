@@ -35,21 +35,12 @@
 #define AFFT_CPU_BACKEND_POCKETFFT (1 << 2)
 
 /**
- * @brief Implementation of AFFT_CPU_BACKEND_FROM_NAME
- * @param backendName Name of the backend
- * @return Transform backend
- * @warning Do not use this macro directly
- */
-#define AFFT_CPU_BACKEND_FROM_NAME_IMPL(backendName) \
-  AFFT_CPU_BACKEND_##backendName
-
-/**
  * @brief Macro for getting the backend from the name
  * @param backendName Name of the backend
  * @return Transform backend
  */
 #define AFFT_CPU_BACKEND_FROM_NAME(backendName) \
-  AFFT_CPU_BACKEND_FROM_NAME_IMPL(backendName)
+  AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_CPU_BACKEND_, backendName)
 
 /**
  * @brief Implementation of AFFT_CPU_BACKEND_MASK
