@@ -114,7 +114,7 @@ namespace afft
    * @tparam target The target type.
    */
   template<Target target>
-  using ExecutionParameters = typename detail::ExecutionParametersSelect<target>::Type;
+  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target>::Type;
 
   /**
    * @brief Check if the type is ExecutionParameters.
