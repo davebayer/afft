@@ -25,6 +25,7 @@
 #ifndef AFFT_DETAIL_CONFIG_HPP
 #define AFFT_DETAIL_CONFIG_HPP
 
+#include <cmath>
 #include <functional>
 #include <stdexcept>
 
@@ -203,10 +204,10 @@ namespace afft::detail
           case Normalize::none:
             break;
           case Normalize::orthogonal:
-            factor /= std::sqrt(Real<prec>{logSize});
+            factor /= std::sqrt(static_cast<Real<prec>>(logSize));
             break;
-          case Normalize::backward:
-            factor /= Real<prec>{logSize};
+          case Normalize::unitary:
+            factor /= static_cast<Real<prec>>(logSize);
             break;
           default:
             unreachable();
