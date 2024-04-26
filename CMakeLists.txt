@@ -34,6 +34,7 @@ option(AFFT_BUILD_EXAMPLES  "Build examples"               OFF)
 option(AFFT_BUILD_TESTS     "Build tests"                  OFF)
 # option(AFFT_STATIC_LIBS     "Link to static libraries"     OFF)
 # option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries" ${AFFT_STATIC_LIBS})
+# option(AFFT_MODULE          "Build as C++20 module"        OFF)
 
 set(AFFT_CPU_BACKEND_LIST "POCKETFFT" CACHE STRING "Semicolon separated list of CPU backends to use (FFTW3, MKL and POCKETFFT), default is POCKETFFT")
 set(AFFT_GPU_FRAMEWORK    ""          CACHE STRING "GPU framework to use (CUDA or HIP), default is none (no GPU support)")
@@ -99,6 +100,7 @@ if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
 
     # Get the CUDA Toolkit root directory from the CUDAToolkit binary directory and pass it to the target
     cmake_path(GET CUDAToolkit_BIN_DIR PARENT_PATH AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR)
+    
     target_compile_definitions(afft INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR}")
     target_link_libraries(afft INTERFACE CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
   elseif(AFFT_GPU_FRAMEWORK STREQUAL "HIP")
