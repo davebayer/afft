@@ -158,7 +158,12 @@ namespace afft::detail
         }
       }
 
-      [[nodiscard]] constexpr const std::size_t getTransformLogicalSize(std::span<const std::size_t> dims) const
+      /**
+       * @brief Get the logical size of the transform.
+       * @param dims Dimensions.
+       * @return Logical size.
+       */
+      [[nodiscard]] constexpr std::size_t getTransformLogicalSize(std::span<const std::size_t> dims) const
       {
         std::size_t logicalSize{1};
 
