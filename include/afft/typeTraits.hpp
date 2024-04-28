@@ -37,14 +37,14 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Precision typePrecision = TypeProperties<std::remove_cv_t<T>>::precision;
+  inline constexpr Precision typePrecision = detail::TypePropertiesHelper<std::remove_cv_t<T>>::precision;
 
   /**
    * @brief Get the complexity of the type. There has to be a specialization of TypeProperties for the type.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Complexity typeComplexity = TypeProperties<std::remove_cv_t<T>>::complexity;
+  inline constexpr Complexity typeComplexity = detail::TypePropertiesHelper<std::remove_cv_t<T>>::complexity;
 
   /**
    * @brief Target Parameters type for given transform.

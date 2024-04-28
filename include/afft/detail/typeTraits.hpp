@@ -28,9 +28,28 @@
 #include <type_traits>
 
 #include "common.hpp"
+#include "../type.hpp"
 
 namespace afft::detail
 {
+  /**
+   * @brief TypeProperties helper. Removes const and volatile from Complex template parameter type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct TypePropertiesHelper
+    : TypeProperties<T> {};
+  
+  /// @brief Specialization for InterleavedComplex.
+  template<typename T>
+  struct TypePropertiesHelper<InterleavedComplex<T>>
+    : TypeProperties<InterleavedComplex<std::remove_cv_t<T>>> {};
+
+  /// @brief Specialization for PlanarComplex.
+  template<typename T>
+  struct TypePropertiesHelper<PlanarComplex<T>>
+    : TypeProperties<PlanarComplex<std::remove_cv_t<T>>> {};
+
   /**
    * @brief Target Parameters type for given target.
    * @tparam target The target type.
