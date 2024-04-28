@@ -80,14 +80,14 @@ namespace afft
   };
 
   /// @brief Transform type
-  enum class Transform : std::size_t
+  enum class Transform
   {
     dft, ///< Discrete Fourier Transform
     dtt, ///< Discrete Trigonometric Transform
   };
 
   /// @brief Target
-  enum class Target : std::size_t
+  enum class Target
   {
     cpu, ///< CPU target
     gpu, ///< GPU target

@@ -36,6 +36,7 @@ option(AFFT_BUILD_TESTS     "Build tests"                  OFF)
 # option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries" ${AFFT_STATIC_LIBS})
 # option(AFFT_MODULE          "Build as C++20 module"        OFF)
 
+set(AFFT_MAX_DIM_COUNT     4          CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
 set(AFFT_CPU_BACKEND_LIST "POCKETFFT" CACHE STRING "Semicolon separated list of CPU backends to use (FFTW3, MKL and POCKETFFT), default is POCKETFFT")
 set(AFFT_GPU_FRAMEWORK    ""          CACHE STRING "GPU framework to use (CUDA or HIP), default is none (no GPU support)")
 set(AFFT_GPU_BACKEND_LIST "VKFFT"     CACHE STRING "Semicolon separated list of GPU backends to use (CUFFT, HIPFFT, ROCFFT and VKFFT), default is VKFFT")
@@ -46,13 +47,14 @@ set(AFFT_GPU_BACKEND_LIST "VKFFT"     CACHE STRING "Semicolon separated list of 
 add_library(afft INTERFACE)
 add_library(afft::afft ALIAS afft)
 
-target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(afft INTERFACE cxx_std_20)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(afft INTERFACE AFFT_DEBUG)
 endif()
 
+target_compile_definitions(afft INTERFACE AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
+target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include/mdspan)
 
 ########################################################################################################################
@@ -143,7 +145,7 @@ endif()
 # Should be implemented as a function over all files in the source directory
 if(AFFT_BUILD_EXAMPLES)
   add_executable(example_dft_1D_C2C_simple examples/dft_1D_C2C_simple.cpp)
-  set_target_properties(example_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/examples")
+  set_target_properties(example_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
   target_link_libraries(example_dft_1D_C2C_simple PRIVATE afft::afft)
 endif()
 
