@@ -252,6 +252,132 @@ namespace afft::gpu
     // cl_mem           workspace{};
 # endif
   };
+
+  /**
+   * @class UnifiedMemoryAllocator
+   * @brief Allocator named concept implementation implementation for unified GPU memory to be used with std::vector and
+   *        others.
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class UnifiedMemoryAllocator
+  {
+    public:
+      /// @brief Type of the memory
+      using value_type = T;
+
+#   if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+      /// @brief Default constructor
+      constexpr UnifiedMemoryAllocator() noexcept = default;
+#   elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      /// @brief Default constructor
+      UnifiedMemoryAllocator() = delete;
+
+      /// @brief Constructor
+      constexpr UnifiedMemoryAllocator(cl_context context) noexcept
+      : mContext(context)
+      {}
+#   endif
+
+      /// @brief Copy constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator([[maybe_unused]] const UnifiedMemoryAllocator<U>& other) noexcept
+#   if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+#   elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      : mContext(other.context)
+#   endif
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator([[maybe_unused]] UnifiedMemoryAllocator<U>&& other) noexcept
+#   if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+#   elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      : mContext(std::move(other.context))
+#   endif
+      {}
+
+      /// @brief Destructor
+      constexpr ~UnifiedMemoryAllocator() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
+      {
+        if (this != &other)
+        {
+#       if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+#       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+          mContext = other.context;
+#       endif
+        }
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
+      {
+        if (this != &other)
+        {
+#       if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+#       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+          mContext = std::move(other.context);
+#       endif
+        }
+        return *this;
+      }
+
+      /**
+       * @brief Allocate memory
+       * @param n Number of elements
+       * @return Pointer to the allocated memory
+       */
+      [[nodiscard]] T* allocate(std::size_t n)
+      {
+        T* ptr{};
+
+        [[maybe_unused]] const std::size_t sizeInBytes = n * sizeof(T);
+
+#     if AFFT_GPU_FRAMEWORK_IS_CUDA
+        detail::Error::check(cudaMallocManaged(&ptr, sizeInBytes));
+#     elif AFFT_GPU_FRAMEWORK_IS_HIP
+        detail::Error::check(hipMallocManaged(&ptr, sizeInBytes));
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        ptr = static_cast<T*>(clSVMAlloc(mContext, CL_MEM_READ_WRITE, sizeInBytes, 0));
+#     endif
+
+        if (ptr == nullptr)
+        {
+          throw std::bad_alloc();
+        }
+
+        return ptr;
+      }
+
+      /**
+       * @brief Deallocate memory
+       * @param p Pointer to the memory
+       * @param n Number of elements
+       */
+      void deallocate([[maybe_unused]] T* p, std::size_t) noexcept
+      {
+#     if AFFT_GPU_FRAMEWORK_IS_CUDA
+        detail::Error::check(cudaFree(p));
+#     elif AFFT_GPU_FRAMEWORK_IS_HIP
+        detail::Error::check(hipFree(p));
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        clSVMFree(mContext, p);
+#     endif
+      }
+    protected:
+    private:
+#   if AFFT_GPU_FRAMEWORK_IS_CUDA
+#   elif AFFT_GPU_FRAMEWORK_IS_HIP
+#   elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      cl_context mContext; ///< OpenCL context
+#   endif  
+  };
 } // namespace afft
 
 #endif /* AFFT_GPU_HPP */

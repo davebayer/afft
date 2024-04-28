@@ -528,7 +528,7 @@ namespace afft::cpu
        * @param n Number of elements
        * @return Pointer to the allocated memory
        */
-      T* allocate(std::size_t n)
+      [[nodiscard]] T* allocate(std::size_t n)
       {
         return static_cast<T*>(::operator new(n * sizeof(T), static_cast<std::align_val_t>(mAlignment)));
       }
