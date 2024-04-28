@@ -25,6 +25,7 @@
 #ifndef AFFT_DETAIL_CONFIG_HPP
 #define AFFT_DETAIL_CONFIG_HPP
 
+#include <cstddef>
 #include <cmath>
 #include <functional>
 #include <stdexcept>

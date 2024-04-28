@@ -28,7 +28,9 @@
 #include <utility>
 
 #include "cpu/init.hpp"
-#include "gpu/init.hpp"
+#if AFFT_GPU_IS_ENABLED
+# include "gpu/init.hpp"
+#endif
 
 namespace afft::detail
 {

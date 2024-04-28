@@ -30,8 +30,10 @@
 
 #include "common.hpp"
 #include "PlanImpl.hpp"
-#include "gpu/makePlanImpl.hpp"
 #include "cpu/makePlanImpl.hpp"
+#if AFFT_GPU_IS_ENABLED
+# include "gpu/makePlanImpl.hpp"
+#endif
 
 namespace afft::detail
 {
@@ -61,7 +63,11 @@ namespace afft::detail
     }
     else if constexpr (target == Target::gpu)
     {
+#   if AFFT_GPU_IS_ENABLED
       planImpl = gpu::makePlanImpl(config, backendSelectParams);
+#   else
+      throw makeException<std::runtime_error>("GPU support is disabled");
+#   endif
     }
 
     if (!planImpl)

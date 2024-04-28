@@ -41,6 +41,7 @@
 # error "C++20 integer comparison functions are required"
 #endif
 
+// If max dimension count is not defined, use 4 as default
 #ifndef AFFT_MAX_DIM_COUNT
 # define AFFT_MAX_DIM_COUNT                      4
 # define AFFT_UNDEF_MAX_DIM_COUNT
@@ -60,9 +61,9 @@
 # endif
 #endif
 
-#define AFFT_VERSION_MAJOR                       0
-#define AFFT_VERSION_MINOR                       1
-#define AFFT_VERSION_PATCH                       0
+#define AFFT_VERSION_MAJOR                       0 ///< Major version.
+#define AFFT_VERSION_MINOR                       1 ///< Minor version.
+#define AFFT_VERSION_PATCH                       0 ///< Patch version
 
 #include "cpu.hpp"
 #include "gpu.hpp"
