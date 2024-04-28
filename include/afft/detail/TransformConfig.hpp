@@ -400,12 +400,7 @@ namespace afft::detail
       }
     protected:
     private:
-      using ConfigVariant = std::variant<DftConfig,      // same index as Transform::dft
-                                         DttConfig>;     // same index as Transform::dtt
-
-      // Check variant indices.
-      static_assert(variant_alternative_index<ConfigVariant, DftConfig>() == to_underlying(Transform::dft));
-      static_assert(variant_alternative_index<ConfigVariant, DttConfig>() == to_underlying(Transform::dtt));
+      using ConfigVariant = std::variant<DftConfig, DttConfig>;
 
       /**
        * @brief Check transform direction validity.

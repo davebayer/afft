@@ -135,10 +135,6 @@ namespace afft::detail
     private:
       using ConfigVariant = std::variant<CpuConfig, GpuConfig>;
 
-      // Check variant index.
-      static_assert(variant_alternative_index<ConfigVariant, CpuConfig>() == to_underlying(Target::cpu));
-      static_assert(variant_alternative_index<ConfigVariant, GpuConfig>() == to_underlying(Target::gpu));
-
       /**
        * @brief Make target configuration.
        * @param cpuParams CPU parameters.

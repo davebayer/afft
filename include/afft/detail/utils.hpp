@@ -49,31 +49,6 @@
 namespace afft::detail
 {
   /**
-   * @brief Returns the index of a type in a variant. Inpired by:
-   *        https://stackoverflow.com/questions/52303316/get-index-by-type-in-stdvariant
-   * @tparam VariantType Variant type.
-   * @tparam T Type to find.
-   * @tparam index Index of the type in the variant.
-   * @return Index of the type in the variant.
-   */
-  template<typename VariantType, typename T, std::size_t index = 0>
-  constexpr std::size_t variant_alternative_index()
-  {
-    if constexpr (index >= std::variant_size_v<VariantType>)
-    {
-      return std::variant_npos;
-    }
-    else if constexpr (std::is_same_v<std::variant_alternative_t<index, VariantType>, T>)
-    {
-      return index;
-    }
-    else
-    {
-      return variant_alternative_index<VariantType, T, index + 1>();
-    }
-  }
-
-  /**
    * @brief Safely casts a value to a different integral type.
    * @tparam T Target integral type.
    * @tparam U Source integral type.
@@ -157,6 +132,7 @@ inline namespace cxx20
 # endif
 } // inline namespace cxx20
 
+// C++23 backport
 inline namespace cxx23
 {
   /**
@@ -172,7 +148,6 @@ inline namespace cxx23
     return static_cast<std::underlying_type_t<E>>(value);
   }
 
-
   /**
    * @brief Backport of the C++23 std::unreachable() function.
    * @throw if AFFT_DEBUG is defined, otherwise calls __builtin_unreachable() or __assume(false).
@@ -187,15 +162,13 @@ inline namespace cxx23
 #else
   [[noreturn]] inline void unreachable()
   {
-# ifdef AFFT_DEBUG
+    // just throw now, later may be switched to real unreachable implementation
     throw std::logic_error("Unreachable code reached, this is a bug, please submit an issue on GitHub.");
-# else
-#   if defined(_MSC_VER) && !defined(__clang__)
-      __assume(false);
-#   else
-      __builtin_unreachable();
-#   endif
-# endif
+// #   if defined(_MSC_VER) && !defined(__clang__)
+//       __assume(false);
+// #   else
+//       __builtin_unreachable();
+// #   endif
   }
 #endif
 } // inline namespace cxx23
