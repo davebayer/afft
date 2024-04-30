@@ -96,23 +96,8 @@ namespace afft::detail::cpu::mkl
         Error::check(DftiSetValue(mHandle.get(), DFTI_PLACEMENT, placement));
 
         const auto scaleConfigParam = (direction == Direction::forward) ? DFTI_FORWARD_SCALE : DFTI_BACKWARD_SCALE;
-        switch (precision.execution)
-        {
-        case Precision::f32:
-        {
-          const auto scale = getConfig().getTransformNormFactor<Precision::f32>();
-          Error::check(DftiSetValue(mHandle.get(), scaleConfigParam, scale));
-          break;
-        }
-        case Precision::f64:
-        {
-          const auto scale = getConfig().getTransformNormFactor<Precision::f64>();
-          Error::check(DftiSetValue(mHandle.get(), scaleConfigParam, scale));
-          break;
-        }
-        default:
-          unreachable();
-        }
+        const auto scale            = getConfig().getTransformNormFactor<Precision::f64>();
+        Error::check(DftiSetValue(mHandle.get(), scaleConfigParam, scale));
 
         const auto& cpuConfig = getConfig().getTargetConfig<Target::cpu>();
         Error::check(DftiSetValue(mHandle.get(), DFTI_THREAD_LIMIT, static_cast<MKL_LONG>(cpuConfig.threadLimit)));
