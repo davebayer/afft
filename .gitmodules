@@ -7,3 +7,6 @@
 [submodule "3rdparty/VkFFT"]
 	path = 3rdparty/VkFFT
 	url = https://github.com/DTolm/VkFFT.git
+[submodule "3rdparty/fmtlib"]
+	path = 3rdparty/fmtlib
+	url = https://github.com/fmtlib/fmt.git
