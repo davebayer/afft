@@ -420,6 +420,7 @@ extern "C" __device__ __constant__
       default:
         throw makeException<std::runtime_error>("cuFFT does not support given precision for normalization");
       }
+      break;
     default:
       throw makeException<std::runtime_error>("cuFFT does not support given normalization");
     }
