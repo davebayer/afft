@@ -52,7 +52,7 @@ template<>
 template<>
 [[nodiscard]] std::string afft::detail::Error::makeErrorMessage(cudaError_t error)
 {
-  return format("[CUDA Runtime error] {} - {}", cudaGetErrorName(error), cudaGetErrorString(error));
+  return fmt::format("[CUDA Runtime error] {} - {}", cudaGetErrorName(error), cudaGetErrorString(error));
 }
 
 /**
@@ -80,8 +80,8 @@ template<>
   cuGetErrorName(result, &errorName);
   cuGetErrorString(result, &errorStr);
 
-  return format("[CUDA Driver error] {} - {}", (errorName != nullptr) ? errorName : "Unnamed error",
-                                               (errorStr != nullptr) ? errorName : "No description");
+  return fmt::format("[CUDA Driver error] {} - {}", (errorName != nullptr) ? errorName : "Unnamed error",
+                                                    (errorStr != nullptr) ? errorName : "No description");
 }
 
 #endif /* AFFT_DETAIL_GPU_CUDA_ERROR_HPP */

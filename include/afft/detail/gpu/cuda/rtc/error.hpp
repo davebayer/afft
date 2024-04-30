@@ -51,7 +51,7 @@ template<>
 template<>
 [[nodiscard]] std::string afft::detail::Error::makeErrorMessage(nvrtcResult result)
 {
-  return format("[CUDA RTC error] {}", nvrtcGetErrorString(result));
+  return fmt::format("[CUDA RTC error] {}", nvrtcGetErrorString(result));
 }
 
 #endif /* AFFT_DETAIL_GPU_CUDA_RTC_ERROR_HPP */

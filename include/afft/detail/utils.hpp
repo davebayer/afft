@@ -34,19 +34,11 @@
 #include <variant>
 #include <version>
 
-#ifndef AFFT_USE_STD_FORMAT
-# include <fmt/format.h>
-#elif defined(__cpp_lib_format)
-# include <format>
-#else
-# error "std::format is not available"
-#endif
-
 #if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
 # include <source_location>
 #endif
 
-#include <mdspan.hpp>
+#include "../3rdparty.hpp"
 
 namespace afft::detail
 {
@@ -124,19 +116,6 @@ namespace afft::detail
     return const_cast<T*>(ptr);
   }
 
-inline namespace cxx20
-{
-  /**
-   * @brief Implementation of std::format() function. If AFFT_USE_STD_FORMAT is defined, it uses std::format(),
-   *        otherwise fmt::format().
-   */
-#ifndef AFFT_USE_STD_FORMAT
-  using fmt::format;
-#else
-  using std::format;
-#endif
-} // inline namespace cxx20
-
 // C++23 backport
 inline namespace cxx23
 {
@@ -161,8 +140,8 @@ inline namespace cxx23
 #if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
   [[noreturn]] inline void unreachable(const std::source_location& loc = std::source_location::current())
   {
-    throw std::logic_error(format("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n({}:{}:{})",
-                                  loc.file_name(), loc.line(), loc.column()));
+    throw std::logic_error(fmt::format("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n({}:{}:{})",
+                                       loc.file_name(), loc.line(), loc.column()));
   }
 #else
   [[noreturn]] inline void unreachable()

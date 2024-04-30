@@ -22,35 +22,29 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_VKFFT_ERROR_HPP
-#define AFFT_DETAIL_GPU_VKFFT_ERROR_HPP
+#ifndef AFFT_3RD_PARTY_HPP
+#define AFFT_3RD_PARTY_HPP
 
-#include <string>
+// Set up namespaces for fmtlib
+#define FMT_START_NAMESPACE namespace afft::fmt {
+#define FMT_END_NAMESPACE }
 
-#include "include.hpp"
-#include "../../error.hpp"
-#include "../../utils.hpp"
+// Include fmtlib
+#include <fmt/format.h>
 
-/**
- * @brief Specialization of isOk method for VkFFTResult.
- * @param result VkFFT result.
- * @return True if result is VKFFT_SUCCESS, false otherwise.
- */
-template<>
-[[nodiscard]] constexpr bool afft::detail::Error::isOk(VkFFTResult result)
-{
-  return (result == VKFFT_SUCCESS);
-}
+// Undefine macros to avoid conflicts with other libraries
+#undef FMT_START_NAMESPACE
+#undef FMT_END_NAMESPACE
 
-/**
- * @brief Specialization of makeErrorMessage method for VkFFTResult.
- * @param result VkFFT result.
- * @return Error message.
- */
-template<>
-[[nodiscard]] std::string afft::detail::Error::makeErrorMessage(VkFFTResult result)
-{
-  return fmt::format("[VkFFT error] {}", getVkFFTErrorString(result));
-}
+// Set up namespaces for mdspan
+#define MDSPAN_IMPL_STANDARD_NAMESPACE afft::mdspan
+// #define MDSPAN_IMPL_PROPOSED_NAMESPACE
 
-#endif /* AFFT_DETAIL_GPU_VKFFT_ERROR_HPP */
+// Include mdspan
+#include <mdspan/mdspan.hpp>
+
+// Undefine macros to avoid conflicts with other libraries
+#undef MDSPAN_IMPL_STANDARD_NAMESPACE
+// #undef MDSPAN_IMPL_PROPOSED_NAMESPACE
+
+#endif /* AFFT_3RD_PARTY_HPP */

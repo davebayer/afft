@@ -50,7 +50,7 @@ namespace afft::detail
   template<std::derived_from<std::exception> E>
   [[nodiscard]] E makeException(std::string_view msg, std::source_location loc = std::source_location::current())
   {
-    return E{format("{} ({}:{})", std::move(msg), loc.file_name(), loc.line())};
+    return E{fmt::format("{} ({}:{})", std::move(msg), loc.file_name(), loc.line())};
   }
 #else
   /**

@@ -56,7 +56,7 @@ endif()
 
 target_compile_definitions(afft INTERFACE AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
 target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include/mdspan)
+target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include)
 
 # Add fmt library if needed
 if(${AFFT_USE_STD_FORMAT})
