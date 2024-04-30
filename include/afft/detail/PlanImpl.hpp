@@ -33,8 +33,66 @@
 
 namespace afft::detail
 {
-  /// @brief A variant type for the source and destination buffers
-  using ExecParam = std::variant<void*, PlannarComplex<void>>;
+  class ExecParam
+  {
+    public:
+      constexpr ExecParam() = default;
+      constexpr ExecParam(void* realOrRealImag, void* imag = nullptr) noexcept
+      : mRealOrRealImag(realOrRealImag), mImag(imag)
+      {}
+      template<typename T>
+      constexpr ExecParam(PlanarComplex<T> planarComplex) noexcept
+      : mRealOrRealImag(planarComplex.real), mImag(planarComplex.imag)
+      {}
+      constexpr ExecParam(const ExecParam&) = default;
+      constexpr ExecParam(ExecParam&&) = default;
+      constexpr ~ExecParam() = default;
+
+      constexpr ExecParam& operator=(const ExecParam&) = default;
+      constexpr ExecParam& operator=(ExecParam&&) = default;
+
+      [[nodiscard]] constexpr bool isSplit() const noexcept
+      {
+        return mImag != nullptr;
+      }
+
+      [[nodiscard]] constexpr void* getReal() const noexcept
+      {
+        return mRealOrRealImag;
+      }
+
+      template<typename T>
+      [[nodiscard]] constexpr T* getRealAs() const noexcept
+      {
+        return static_cast<T*>(mRealOrRealImag);
+      }
+
+      [[nodiscard]] constexpr void* getRealImag() const noexcept
+      {
+        return mRealOrRealImag;
+      }
+
+      template<typename T>
+      [[nodiscard]] constexpr T* getRealImagAs() const noexcept
+      {
+        return static_cast<T*>(mRealOrRealImag);
+      }
+
+      [[nodiscard]] constexpr void* getImag() const noexcept
+      {
+        return mImag;
+      }
+
+      template<typename T>
+      [[nodiscard]] constexpr T* getImagAs() const noexcept
+      {
+        return static_cast<T*>(mImag);
+      }
+    protected:
+    private:
+      void* mRealOrRealImag{};
+      void* mImag{};
+  };
 
   /**
    * @class PlanImpl
@@ -65,31 +123,127 @@ namespace afft::detail
        * @brief Get the configuration of the plan
        * @return const reference to the configuration of the plan
        */
-      const Config& getConfig() const noexcept
+      [[nodiscard]] constexpr const Config& getConfig() const noexcept
       {
         return mConfig;
       }
-      
-      /**
-       * @brief Execute the plan
-       * @param src the source buffer
-       * @param dst the destination buffer
-       */
-      virtual void execute(ExecParam src, ExecParam dst) = 0;
 
       /**
        * @brief Execute the plan
        * @param src the source buffer
        * @param dst the destination buffer
-       * @param execParams the GPU execution parameters
        */
-      virtual void execute(ExecParam src, ExecParam dst, const afft::gpu::ExecutionParameters& execParams) = 0;
+      void execute(ExecParam src, ExecParam dst, const ExecutionParametersType auto& execParams)
+      {
+        executeImpl(src, dst, execParams);
+      }
 
       /**
        * @brief Get the size of the workspace required for the plan
        * @return std::size_t the size of the workspace in bytes
        */
       virtual std::size_t getWorkspaceSize() const { return {}; }
+
+      /**
+       * @brief Check if the non-destructive transform is configured
+       */
+      constexpr void requireNonDestructiveTransform() const
+      {
+        if (mConfig.getCommonParameters().destroySource)
+        {
+          throw makeException<std::runtime_error>("Running a destructive transform on const input data.");
+        }
+      }
+
+      /**
+       * @brief Check if the out-of-place transform is configured
+       */
+      constexpr void requireOutOfPlaceTransform() const
+      {
+        if (mConfig.getCommonParameters().placement != Placement::outOfPlace)
+        {
+          throw makeException<std::runtime_error>("Running an in-place transform with out-of-place data.");
+        }
+      }
+
+      /**
+       * @brief Check if the in-place transform is configured
+       */
+      constexpr void requireInPlaceTransform() const
+      {
+        if (mConfig.getCommonParameters().placement != Placement::inPlace)
+        {
+          throw makeException<std::runtime_error>("Running an out-of-place transform with in-place data.");
+        }
+      }
+
+      /**
+       * @brief Check if the execution types are valid
+       * @param srcPrec the source precision
+       * @param srcCmpl the source complexity
+       * @param dstPrec the destination precision
+       * @param dstCmpl the destination complexity
+       */
+      constexpr void checkExecTypes(Precision srcPrec, Complexity srcCmpl, Precision dstPrec, Complexity dstCmpl) const
+      {
+        const auto& prec = mConfig.getTransformPrecision();
+
+        if (srcPrec != prec.source)
+        {
+          throw makeException<std::invalid_argument>("Invalid source precision for transform");
+        }
+        
+        if (dstPrec != prec.destination)
+        {
+          throw makeException<std::invalid_argument>("Invalid destination precision for transform");
+        }
+
+        switch (mConfig.getTransform())
+        {
+        case Transform::dft:
+        {
+          auto getFormatComplexity = [](dft::Type dftType)
+          {
+            switch (dftType)
+            {
+            case dft::Type::realToComplex:    return std::make_tuple(Complexity::real, Complexity::complex);
+            case dft::Type::complexToReal:    return std::make_tuple(Complexity::complex, Complexity::real);
+            case dft::Type::complexToComplex: return std::make_tuple(Complexity::complex, Complexity::complex);
+            default:
+              throw makeException<std::runtime_error>("Invalid DFT type");
+            }
+          };
+
+          const auto& dftParams = mConfig.getTransformConfig<Transform::dft>();
+
+          const auto [refSrcCmpl, refDstCmpl] = getFormatComplexity(dftParams.type);
+
+          if (srcCmpl != refSrcCmpl)
+          {
+            throw makeException<std::invalid_argument>("Invalid source complexity for DFT transform");
+          }
+
+          if (dstCmpl != refDstCmpl)
+          {
+            throw makeException<std::invalid_argument>("Invalid destination complexity for DFT transform");
+          }
+          break;
+        }
+        case Transform::dtt:
+          if (srcCmpl != Complexity::real)
+          {
+            throw makeException<std::invalid_argument>("Invalid source complexity for DTT transform");
+          }
+
+          if (dstCmpl != Complexity::real)
+          {
+            throw makeException<std::invalid_argument>("Invalid destination complexity for DTT transform");
+          }
+          break;
+        default:
+          throw makeException<std::runtime_error>("Invalid transform type");
+        }
+      }
     protected:
       /**
        * @brief Construct a new PlanImpl object
@@ -98,6 +252,28 @@ namespace afft::detail
       PlanImpl(const Config& config) noexcept
       : mConfig(config)
       {}
+
+      /**
+       * @brief Implementation of the plan execution on the CPU
+       * @param src the source buffer
+       * @param dst the destination buffer
+       * @param execParams the CPU execution parameters
+       */
+      virtual void executeImpl(ExecParam, ExecParam, const afft::cpu::ExecutionParameters&)
+      {
+        throw makeException<std::runtime_error>("CPU execution is by currently selected implementation");
+      }
+
+      /**
+       * @brief Implementation of the plan execution on the GPU
+       * @param src the source buffer
+       * @param dst the destination buffer
+       * @param execParams the GPU execution parameters
+       */
+      virtual void executeImpl(ExecParam, ExecParam, const afft::gpu::ExecutionParameters&)
+      {
+        throw makeException<std::runtime_error>("GPU execution is by currently selected implementation");
+      }
 
     private:
       Config mConfig; ///< The configuration of the plan
