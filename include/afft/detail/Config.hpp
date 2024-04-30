@@ -626,9 +626,15 @@ namespace afft::detail
         }
         else if constexpr (target == Target::gpu)
         {
-          const auto& gpuParams = getTargetConfig<Target::gpu>();
+          [[maybe_unused]] const auto& gpuParams = getTargetConfig<Target::gpu>();
 
-          return afft::gpu::Parameters{.device = gpuParams.device, .externalWorkspace = gpuParams.externalWorkspace};
+          return afft::gpu::Parameters
+          {
+#         if AFFT_GPU_BACKEND_IS_CUDA || AFFT_GPU_BACKEND_IS_HIP
+            .device            = gpuParams.device,
+            .externalWorkspace = gpuParams.externalWorkspace
+#         endif
+          };
         }
         else
         {

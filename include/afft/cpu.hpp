@@ -74,6 +74,7 @@
 #include <memory>
 #include <new>
 #include <string_view>
+#include <span>
 #include <utility>
 
 #include "common.hpp"
@@ -489,7 +490,7 @@ namespace afft::cpu
       /// @brief Copy constructor
       template<typename U>
       constexpr AlignedAllocator(const AlignedAllocator<U>& other) noexcept
-      : mAlignment{other.mAlignment}
+      : mAlignment{other.getAlignment()}
       {}
 
       /// @brief Move constructor
@@ -541,6 +542,15 @@ namespace afft::cpu
       void deallocate(T* p, std::size_t) noexcept
       {
         ::operator delete(p, static_cast<std::align_val_t>(mAlignment));
+      }
+
+      /**
+       * @brief Get alignment
+       * @return Alignment
+       */
+      [[nodiscard]] constexpr Alignment getAlignment() const noexcept
+      {
+        return mAlignment;
       }
     protected:
     private:

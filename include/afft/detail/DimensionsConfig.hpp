@@ -185,8 +185,8 @@ namespace afft::detail
 
       [[nodiscard]] constexpr bool stridesEqual() const noexcept
       {
-        return std::equal(mSrcStrides.begin(), mSrcStrides.begin() + mRank,
-                          mDstStrides.begin(), mDstStrides.begin() + mRank);
+        return std::equal(mSrcStrides.begin(), std::next(mSrcStrides.begin(), static_cast<std::ptrdiff_t>(mRank)),
+                          mDstStrides.begin(), std::next(mDstStrides.begin(), static_cast<std::ptrdiff_t>(mRank)));
       }
 
       /**
