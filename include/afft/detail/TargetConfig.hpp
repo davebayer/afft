@@ -126,6 +126,41 @@ namespace afft::detail
         }
       }
 
+      /**
+       * @brief Get target parameters.
+       * @tparam target Target.
+       * @return Target parameters.
+       */
+      template<Target target>
+        requires (isValidTarget(target))
+      [[nodiscard]] constexpr TargetParameters<target> getParameters() const
+      {
+        if constexpr (target == Target::cpu)
+        {
+          const auto& cpuConfig = getTargetConfig<Target::cpu>();
+
+          return afft::cpu::Parameters{.alignment = cpuConfig.alignment, .threadLimit = cpuConfig.threadLimit};
+        }
+        else if constexpr (target == Target::gpu)
+        {
+          [[maybe_unused]] const auto& gpuConfig = std::get<GpuConfig>(mVariant);
+
+          return afft::gpu::Parameters
+          {
+#         if AFFT_GPU_BACKEND_IS_CUDA
+            .device            = gpuParams.device,
+#         elif AFFT_GPU_BACKEND_IS_HIP
+            .device            = gpuParams.device,
+#         endif
+            .externalWorkspace = gpuParams.externalWorkspace
+          };
+        }
+        else
+        {
+          unreachable();
+        }
+      }
+
       /// @brief Equality operator.
       friend bool operator==(const TargetConfig&, const TargetConfig&) noexcept = default;
 

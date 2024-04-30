@@ -183,6 +183,7 @@ namespace afft::detail
        * @return The transform configuration.
        */
       template<Transform transform>
+        requires (isValidTransform(transform))
       [[nodiscard]] constexpr const auto& getTransformConfig() const
       {
         return mTransformConfig.getConfig<transform>();
@@ -194,6 +195,7 @@ namespace afft::detail
        * @return The transform parameters.
        */
       template<Transform transform>
+        requires (isValidTransform(transform))
       [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
       {
         Dimensions dims{.shape     = mDimsConfig.getShape(),
@@ -605,6 +607,7 @@ namespace afft::detail
        * @return The target configuration.
        */
       template<Target target>
+        requires (isValidTarget(target))
       [[nodiscard]] constexpr const auto& getTargetConfig() const
       {
         return mTargetConfig.getConfig<target>();
@@ -616,30 +619,10 @@ namespace afft::detail
        * @return The target parameters.
        */
       template<Target target>
+        requires (isValidTarget(target))
       [[nodiscard]] constexpr TargetParameters<target> getTargetParameters() const
       {
-        if constexpr (target == Target::cpu)
-        {
-          const auto& cpuParams = getTargetConfig<Target::cpu>();
-
-          return afft::cpu::Parameters{.alignment = cpuParams.alignment, .threadLimit = cpuParams.threadLimit};
-        }
-        else if constexpr (target == Target::gpu)
-        {
-          [[maybe_unused]] const auto& gpuParams = getTargetConfig<Target::gpu>();
-
-          return afft::gpu::Parameters
-          {
-#         if AFFT_GPU_BACKEND_IS_CUDA || AFFT_GPU_BACKEND_IS_HIP
-            .device            = gpuParams.device,
-            .externalWorkspace = gpuParams.externalWorkspace
-#         endif
-          };
-        }
-        else
-        {
-          unreachable();
-        }
+        return mTargetConfig.getParameters<target>();
       }
 
       /// @brief Equality operator.
