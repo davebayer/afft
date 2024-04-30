@@ -87,6 +87,7 @@ namespace afft
        * @return Transform parameters
        */
       template<Transform transform>
+        requires (detail::isValidTransform(transform))
       [[nodiscard]] TransformParameters<transform> getTransformParameters() const
       {
         return mImpl->getConfig().getTransformParameters<transform>();
@@ -107,6 +108,7 @@ namespace afft
        * @return Target parameters
        */
       template<Target target>
+        requires (detail::isValidTarget(target))
       [[nodiscard]] TargetParameters<target> getTargetParameters() const
       {
         return mImpl->getConfig().getTargetParameters<target>();

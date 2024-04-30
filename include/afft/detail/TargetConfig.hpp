@@ -114,6 +114,7 @@ namespace afft::detail
        * @return Target configuration.
        */
       template<Target target>
+        requires (isValidTarget(target))
       [[nodiscard]] constexpr const auto& getConfig() const
       {
         if constexpr (target == Target::cpu)
@@ -137,22 +138,22 @@ namespace afft::detail
       {
         if constexpr (target == Target::cpu)
         {
-          const auto& cpuConfig = getTargetConfig<Target::cpu>();
+          const auto& cpuConfig = getConfig<Target::cpu>();
 
           return afft::cpu::Parameters{.alignment = cpuConfig.alignment, .threadLimit = cpuConfig.threadLimit};
         }
         else if constexpr (target == Target::gpu)
         {
-          [[maybe_unused]] const auto& gpuConfig = std::get<GpuConfig>(mVariant);
+          const auto& gpuConfig = getConfig<Target::gpu>();
 
           return afft::gpu::Parameters
           {
 #         if AFFT_GPU_BACKEND_IS_CUDA
-            .device            = gpuParams.device,
+            .device            = gpuConfig.device,
 #         elif AFFT_GPU_BACKEND_IS_HIP
-            .device            = gpuParams.device,
+            .device            = gpuConfig.device,
 #         endif
-            .externalWorkspace = gpuParams.externalWorkspace
+            .externalWorkspace = gpuConfig.externalWorkspace,
           };
         }
         else
