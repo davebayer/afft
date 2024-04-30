@@ -55,7 +55,7 @@ namespace afft::detail::cpu::pocketfft
       using R = Real<prec>;
 
       /// @brief Alias for the interleaved complex type
-      using C = InterleavedComplex<R>;
+      using C = Complex<R>;
     public:
       /// @brief inherit constructors
       using Parent::Parent;
@@ -96,7 +96,7 @@ namespace afft::detail::cpu::pocketfft
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeImpl(ExecParam src, ExecParam dst) override
+      void executeImpl(ExecParam src, ExecParam dst, const afft::cpu::ExecutionParameters&) override
       {
         if (src.isSplit() || dst.isSplit())
         {
