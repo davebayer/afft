@@ -77,26 +77,6 @@ namespace afft::detail
 
     return planImpl;
   }
-
-  /**
-   * @brief Create a PlanImpl object based on the given configuration.
-   * @tparam ConfigT The configuration type.
-   * @param config The configuration to use.
-   * @param backendSelectParams The parameters for the transform backend selection.
-   * @return std::unique_ptr<PlanImpl> The created PlanImpl object.
-   */
-  [[nodiscard]] inline std::unique_ptr<PlanImpl> makePlanImpl(const Config& config)
-  {
-    const auto target = config.getTarget();
-
-    switch (target)
-    {
-    case Target::cpu: return makePlanImpl(config, afft::cpu::BackendSelectParameters{});
-    case Target::gpu: return makePlanImpl(config, afft::gpu::BackendSelectParameters{});
-    default:
-      unreachable();
-    }
-  }
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_MAKE_PLAN_IMPL_HPP */
