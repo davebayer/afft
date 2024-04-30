@@ -67,7 +67,7 @@ namespace afft::detail::cpu
 #   endif
 #   if AFFT_CPU_BACKEND_IS_ENABLED(MKL)
     case Backend::mkl:
-      return mkl::makePlanImpl(config)
+      return mkl::makePlanImpl(config);
 #   endif
 #   if AFFT_CPU_BACKEND_IS_ENABLED(POCKETFFT)
     case Backend::pocketfft:
