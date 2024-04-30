@@ -503,12 +503,16 @@ namespace afft::detail
         return dstElemSizeOf;
       }
 
-      [[nodiscard]] constexpr std::size_t getSrcMemorySize() const noexcept
+      /**
+       * @brief Get volume of source shape.
+       * @return The volume of source shape in terms of elements.
+       */
+      [[nodiscard]] constexpr std::size_t getSrcShapeVolume() const noexcept
       {
         const auto shape      = mDimsConfig.getShape();
         const auto srcStrides = mDimsConfig.getSrcStrides();
 
-        std::size_t size = sizeOfSrcElem();
+        std::size_t size = 1;
 
         for (std::size_t i{}; i < mDimsConfig.getRank(); ++i)
         {
@@ -518,12 +522,17 @@ namespace afft::detail
         return size;
       }
 
-      [[nodiscard]] constexpr std::size_t getDstMemorySize() const noexcept
+
+      /**
+       * @brief Get volume of destination shape.
+       * @return The volume of destination shape in terms of elements.
+       */
+      [[nodiscard]] constexpr std::size_t getDstShapeVolume() const noexcept
       {
         const auto shape      = mDimsConfig.getShape();
         const auto dstStrides = mDimsConfig.getDstStrides();
 
-        std::size_t size = sizeOfDstElem();
+        std::size_t size = 1;
 
         for (std::size_t i{}; i < mDimsConfig.getRank(); ++i)
         {
@@ -531,6 +540,54 @@ namespace afft::detail
         }
 
         return size;
+      }
+
+      /**
+       * @brief Get source complexity.
+       * @return The source complexity.
+       */
+      [[nodiscard]] constexpr Complexity getSrcComplexity() const noexcept
+      {
+        return getSrcDstComplexity().first;
+      }
+
+      /**
+       * @brief Get destination complexity.
+       * @return The destination complexity.
+       */
+      [[nodiscard]] constexpr Complexity getDstComplexity() const noexcept
+      {
+        return getSrcDstComplexity().second;
+      }
+
+      /**
+       * @brief Get complexity of source and destination.
+       * @return The complexity of source and destination.
+       */
+      [[nodiscard]] constexpr std::pair<Complexity, Complexity> getSrcDstComplexity() const noexcept
+      {
+        Complexity srcComplexity{};
+        Complexity dstComplexity{};
+
+        switch (getTransform())
+        {
+        case Transform::dft:
+        {
+          const auto& dftConfig = getTransformConfig<Transform::dft>();
+
+          srcComplexity = (dftConfig.type != dft::Type::realToComplex) ? Complexity::complex : Complexity::real;
+          dstComplexity = (dftConfig.type != dft::Type::complexToReal) ? Complexity::complex : Complexity::real;
+          break;
+        }
+        case Transform::dtt:
+          srcComplexity = Complexity::real;
+          dstComplexity = Complexity::real;
+          break;
+        default:
+          break;
+        }
+
+        return std::make_pair(srcComplexity, dstComplexity);
       }
 
       /**
