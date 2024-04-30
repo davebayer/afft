@@ -189,6 +189,42 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get transform parameters.
+       * @tparam transform The transform.
+       * @return The transform parameters.
+       */
+      template<Transform transform>
+      [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
+      {
+        Dimensions dims{.shape     = mDimsConfig.getShape(),
+                        .srcStride = mDimsConfig.getSrcStrides(),
+                        .dstStride = mDimsConfig.getDstStrides()};
+
+        if constexpr (transform == Transform::dft)
+        {
+          return dft::Parameters{.dimensions       = std::move(dims),
+                                 .commonParameters = mCommonParams,
+                                 .axes             = mTransformConfig.getAxes(),
+                                 .direction        = mTransformConfig.getDirection(),
+                                 .precision        = mTransformConfig.getPrecision(),
+                                 .type             = getTransformConfig<Transform::dft>().type};
+        }
+        else if constexpr (transform == Transform::dtt)
+        {
+          return dtt::Parameters{.dimensions       = std::move(dims),
+                                 .commonParameters = mCommonParams,
+                                 .direction        = mTransformConfig.getDirection(),
+                                 .precision        = mTransformConfig.getPrecision(),
+                                 .axes             = mTransformConfig.getAxes(),
+                                 .types            = getTransformConfig<Transform::dtt>().axisTypes};
+        }
+        else
+        {
+          unreachable();
+        }
+      }
+
+      /**
        * @brief Get normalization factor.
        * @tparam prec The precision.
        * @return The normalization factor.
@@ -515,6 +551,32 @@ namespace afft::detail
       [[nodiscard]] constexpr const auto& getTargetConfig() const
       {
         return mTargetConfig.getConfig<target>();
+      }
+
+      /**
+       * @brief Get target parameters.
+       * @tparam target The target.
+       * @return The target parameters.
+       */
+      template<Target target>
+      [[nodiscard]] constexpr TargetParameters<target> getTargetParameters() const
+      {
+        if constexpr (target == Target::cpu)
+        {
+          const auto& cpuParams = getTargetConfig<Target::cpu>();
+
+          return afft::cpu::Parameters{.alignment = cpuParams.alignment, .threadLimit = cpuParams.threadLimit};
+        }
+        else if constexpr (target == Target::gpu)
+        {
+          const auto& gpuParams = getTargetConfig<Target::gpu>();
+
+          return afft::gpu::Parameters{.device = gpuParams.device, .externalWorkspace = gpuParams.externalWorkspace};
+        }
+        else
+        {
+          unreachable();
+        }
       }
 
       /// @brief Equality operator.

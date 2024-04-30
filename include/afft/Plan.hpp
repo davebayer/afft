@@ -26,7 +26,6 @@
 #define AFFT_PLAN_HPP
 
 #include <memory>
-#include <type_traits>
 
 #include "common.hpp"
 #include "concepts.hpp"
