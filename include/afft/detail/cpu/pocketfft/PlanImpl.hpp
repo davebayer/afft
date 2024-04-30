@@ -335,20 +335,27 @@ namespace afft::detail::cpu::pocketfft
     switch (config.getTransformPrecision().execution)
     {
 #   ifdef AFFT_HAS_BF16
-    case Precision::bf16: return std::make_unique<PlanImpl<Precision::bf16>>(config);
+    case Precision::bf16:
+      return std::make_unique<PlanImpl<Precision::bf16>>(config);
 #   endif
 #   ifdef AFFT_HAS_F16
-    case Precision::f16:  return std::make_unique<PlanImpl<Precision::f16>>(config);
+    case Precision::f16:
+      return std::make_unique<PlanImpl<Precision::f16>>(config);
 #   endif
-    case Precision::f32:  return std::make_unique<PlanImpl<Precision::f32>>(config);
-    case Precision::f64:  return std::make_unique<PlanImpl<Precision::f64>>(config);
+    case Precision::f32:
+      return std::make_unique<PlanImpl<Precision::f32>>(config);
+    case Precision::f64:
+      return std::make_unique<PlanImpl<Precision::f64>>(config);
 #   ifdef AFFT_HAS_F80
-    case Precision::f80:  return std::make_unique<PlanImpl<Precision::f80>>(config);
+    case Precision::f80:
+      return std::make_unique<PlanImpl<Precision::f80>>(config);
 #   endif
 #   ifdef AFFT_HAS_F128
-    case Precision::f128: return std::make_unique<PlanImpl<Precision::f128>>(config);
+    case Precision::f128:
+      return std::make_unique<PlanImpl<Precision::f128>>(config);
 #   endif
-    default: throw makeException<std::runtime_error>("Unsupported precision");
+    default:
+      throw makeException<std::runtime_error>("Unsupported precision");
     }
   }
 } // namespace afft::detail::cpu::pocketfft
