@@ -278,6 +278,6 @@ namespace afft::detail
     private:
       Config mConfig; ///< The configuration of the plan
   };
-};
+} // namespace afft::detail
 
 #endif /* AFFT_DETAIL_PLAN_IMPL_HPP */

@@ -26,7 +26,7 @@ int main(void)
                          .normalize     = afft::Normalize::orthogonal}, // use orthogonal normalization
     .direction        = afft::Direction::forward, // it will be a forward transform
     .precision        = afft::makePrecision<PrecT>(), // set up precision of the transform
-    .type             = afft::dft::complexToComplex, // let's use complex-to-complex transform
+    .type             = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
   };
 
   const afft::cpu::Parameters cpuParams // it will run on a cpu

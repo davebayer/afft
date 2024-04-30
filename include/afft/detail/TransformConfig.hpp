@@ -182,11 +182,11 @@ namespace afft::detail
 
             switch (dttParams.axisTypes[i])
             {
-              using enum dtt::Type;
-            case dct1:                       logicalSize *= 2 * (n - 1); break;
-            case dst1:                       logicalSize *= 2 * (n + 1); break;
-            case dct2: case dct3: case dct4:
-            case dst2: case dst3: case dst4: logicalSize *= 2 * n;       break;
+              using Type = dtt::Type;
+            case Type::dct1:                                   logicalSize *= 2 * (n - 1); break;
+            case Type::dst1:                                   logicalSize *= 2 * (n + 1); break;
+            case Type::dct2: case Type::dct3: case Type::dct4:
+            case Type::dst2: case Type::dst3: case Type::dst4: logicalSize *= 2 * n;       break;
             default:
               unreachable();
             }

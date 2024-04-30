@@ -202,9 +202,6 @@ namespace afft
       PrecisionTriad               precision{};                  ///< precision triad
       Type                         type{Type::complexToComplex}; ///< type of the transform
     };
-
-    // Import Type values into dft namespace
-    using enum Type;
   } // namespace dft
 
   namespace dtt
@@ -237,9 +234,6 @@ namespace afft
       std::span<const std::size_t> axes{allAxes};      ///< axes of the transform
       std::span<const Type>        types{};            ///< types of the transform
     };
-
-    // Import Type values into dtt namespace
-    using enum Type;
   } // namespace dtt
 } // namespace afft
 

@@ -275,8 +275,8 @@ namespace afft
       void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams)
       {
         mImpl->requireNonDestructiveTransform();
-        executeUnsafe(PlanarComplex{detail::removeConstFromPtr(src.real),
-                                    detail::removeConstFromPtr(src.imag)}, dst, execParams);
+        executeUnsafe(PlanarComplex<void*>{detail::removeConstFromPtr(src.real),
+                                           detail::removeConstFromPtr(src.imag)}, dst, execParams);
       }
 
       /**
@@ -338,8 +338,8 @@ namespace afft
       void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
       {
         mImpl->requireNonDestructiveTransform();
-        executeUnsafe(PlanarComplex{detail::removeConstFromPtr(src.real),
-                                    detail::removeConstFromPtr(src.imag)}, dst, execParams);
+        executeUnsafe(PlanarComplex<void*>{detail::removeConstFromPtr(src.real),
+                                           detail::removeConstFromPtr(src.imag)}, dst, execParams);
       }
 
 #   if AFFT_GPU_FRAMEWORK_IS_OPENCL

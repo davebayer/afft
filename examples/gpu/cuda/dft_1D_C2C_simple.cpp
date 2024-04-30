@@ -25,7 +25,7 @@ int main(void)
     .commonParameters = {.destroySource = true}, // destroy source vector after the transform
     .direction        = afft::Direction::forward, // it will be a forward transform
     .precision        = afft::makePrecision<PrecT>(), // set up precision of the transform
-    .type             = afft::dft::complexToComplex, // let's use complex-to-complex transform
+    .type             = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
   };
 
   // create scope just to make sure the plan is destroyed before afft::finalize() is called
