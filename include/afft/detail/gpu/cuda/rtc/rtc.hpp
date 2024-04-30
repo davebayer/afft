@@ -384,7 +384,7 @@ namespace afft::detail::gpu::cuda::rtc
         return code;
       }
 
-      [[nodiscard]] constexpr std::string_view getCompilationLog() const
+      [[nodiscard]] std::string_view getCompilationLog() const
       {
         return mCompilationLog;
       }
