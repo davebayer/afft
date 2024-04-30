@@ -34,10 +34,12 @@
 #include <variant>
 #include <version>
 
-#ifdef __cpp_lib_format
+#ifndef AFFT_USE_STD_FORMAT
+# include <fmt/format.h>
+#elif defined(__cpp_lib_format)
 # include <format>
 #else
-# include <fmt/format.h>
+# error "std::format is not available"
 #endif
 
 #if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
@@ -124,12 +126,15 @@ namespace afft::detail
 
 inline namespace cxx20
 {
-  /// @brief C++20 std::format() function. If not available, uses fmt::format().
-# ifdef __cpp_lib_format
-  using std::format;
-# else
+  /**
+   * @brief Implementation of std::format() function. If AFFT_USE_STD_FORMAT is defined, it uses std::format(),
+   *        otherwise fmt::format().
+   */
+#ifndef AFFT_USE_STD_FORMAT
   using fmt::format;
-# endif
+#else
+  using std::format;
+#endif
 } // inline namespace cxx20
 
 // C++23 backport

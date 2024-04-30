@@ -30,11 +30,12 @@ project(afft VERSION 0.1.0 LANGUAGES CXX)
 ########################################################################################################################
 # Options and variables
 ########################################################################################################################
-option(AFFT_BUILD_EXAMPLES  "Build examples"               OFF)
-option(AFFT_BUILD_TESTS     "Build tests"                  OFF)
-# option(AFFT_STATIC_LIBS     "Link to static libraries"     OFF)
-# option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries" ${AFFT_STATIC_LIBS})
-# option(AFFT_MODULE          "Build as C++20 module"        OFF)
+option(AFFT_BUILD_EXAMPLES  "Build examples"                  OFF)
+option(AFFT_BUILD_TESTS     "Build tests"                     OFF)
+option(AFFT_USE_STD_FORMAT  "Use std::format insed of fmtlib" OFF)
+# option(AFFT_STATIC_LIBS     "Link to static libraries"      OFF)
+# option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries"  ${AFFT_STATIC_LIBS})
+# option(AFFT_MODULE          "Build as C++20 module"         OFF)
 
 set(AFFT_MAX_DIM_COUNT     4          CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
 set(AFFT_CPU_BACKEND_LIST "POCKETFFT" CACHE STRING "Semicolon separated list of CPU backends to use (FFTW3, MKL and POCKETFFT), default is POCKETFFT")
@@ -56,6 +57,17 @@ endif()
 target_compile_definitions(afft INTERFACE AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
 target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include/mdspan)
+
+# Add fmt library if needed
+if(${AFFT_USE_STD_FORMAT})
+  target_compile_definitions(afft INTERFACE AFFT_USE_STD_FORMAT)
+else()
+  set(FMT_INSTALL        OFF) # Do not install fmt
+  set(FMT_SYSTEM_HEADERS ON)  # Use fmt as system headers
+  
+  add_subdirectory(3rdparty/fmtlib EXCLUDE_FROM_ALL)
+  target_link_libraries(afft INTERFACE fmt::fmt-header-only)
+endif()
 
 ########################################################################################################################
 # Set up CPU target
@@ -90,8 +102,9 @@ foreach(CPU_BACKEND ${AFFT_CPU_BACKEND_LIST})
 endforeach()
 
 # Convert the list of CPU backends to uppercase and pass it to the target
-string(TOUPPER ${AFFT_CPU_BACKEND_LIST} CPU_BACKEND_LIST_UPPER)
-target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_LIST=${CPU_BACKEND_LIST_UPPER})
+string(TOUPPER "${AFFT_CPU_BACKEND_LIST}" CPU_BACKEND_LIST_UPPER)
+string(REPLACE ";" "," CPU_BACKEND_LIST_UPPER_COMMA "${CPU_BACKEND_LIST_UPPER}")
+target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_LIST=${CPU_BACKEND_LIST_UPPER_COMMA})
 
 ########################################################################################################################
 # Set up GPU target if needed
@@ -99,11 +112,7 @@ target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_LIST=${CPU_BACKEND_LI
 if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
   if(AFFT_GPU_FRAMEWORK STREQUAL "CUDA")
     find_package(CUDAToolkit REQUIRED)
-
-    # Get the CUDA Toolkit root directory from the CUDAToolkit binary directory and pass it to the target
-    cmake_path(GET CUDAToolkit_BIN_DIR PARENT_PATH AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR)
-    
-    target_compile_definitions(afft INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR}")
+    target_compile_definitions(afft INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${CUDAToolkit_ROOT_DIR}")
     target_link_libraries(afft INTERFACE CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
   elseif(AFFT_GPU_FRAMEWORK STREQUAL "HIP")
     find_package(hip REQUIRED)
@@ -127,19 +136,20 @@ if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
   endforeach()
 
   # Convert the GPU framework and the list of GPU backends to uppercase and pass it to the target
-  string(TOUPPER ${AFFT_GPU_FRAMEWORK} GPU_FRAMEWORK_UPPER)
-  string(TOUPPER ${AFFT_GPU_BACKEND_LIST} GPU_BACKEND_LIST_UPPER)
+  string(TOUPPER "${AFFT_GPU_FRAMEWORK}" GPU_FRAMEWORK_UPPER)
+  string(TOUPPER "${AFFT_GPU_BACKEND_LIST}" GPU_BACKEND_LIST_UPPER)
+  string(REPLACE ";" "," GPU_BACKEND_LIST_UPPER_COMMA "${GPU_BACKEND_LIST_UPPER}")
   target_compile_definitions(afft INTERFACE AFFT_GPU_FRAMEWORK=${GPU_FRAMEWORK_UPPER})
-  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND_LIST=${GPU_BACKEND_LIST_UPPER})
+  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND_LIST=${GPU_BACKEND_LIST_UPPER_COMMA})
 endif()
 
 ########################################################################################################################
 
 # Just a temporary solution
 iF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wimplicit-fallthrough")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wimplicit-fallthrough")
 endif()
 
 # Should be implemented as a function over all files in the source directory
