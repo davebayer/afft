@@ -26,14 +26,14 @@
 #define AFFT_3RD_PARTY_HPP
 
 // Set up namespaces for fmtlib
-#define FMT_START_NAMESPACE namespace afft::fmt {
-#define FMT_END_NAMESPACE }
+#define FMT_BEGIN_NAMESPACE namespace afft::fmt {
+#define FMT_END_NAMESPACE   }
 
 // Include fmtlib
 #include <fmt/format.h>
 
 // Undefine macros to avoid conflicts with other libraries
-#undef FMT_START_NAMESPACE
+#undef FMT_BEGIN_NAMESPACE
 #undef FMT_END_NAMESPACE
 
 // Set up namespaces for mdspan
