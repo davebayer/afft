@@ -38,17 +38,12 @@ namespace afft::detail
    */
   template<typename T>
   struct TypePropertiesHelper
-    : TypeProperties<T> {};
+    : TypeProperties<std::remove_cv_t<T>> {};
   
-  /// @brief Specialization for InterleavedComplex.
+  /// @brief Specialization for Complex.
   template<typename T>
-  struct TypePropertiesHelper<InterleavedComplex<T>>
-    : TypeProperties<InterleavedComplex<std::remove_cv_t<T>>> {};
-
-  /// @brief Specialization for PlanarComplex.
-  template<typename T>
-  struct TypePropertiesHelper<PlanarComplex<T>>
-    : TypeProperties<PlanarComplex<std::remove_cv_t<T>>> {};
+  struct TypePropertiesHelper<Complex<T>>
+    : TypeProperties<Complex<std::remove_cv_t<T>>> {};
 
   /**
    * @brief Target Parameters type for given target.
@@ -271,7 +266,6 @@ namespace afft::detail
   {
     static constexpr Target value{Target::gpu};
   };
-  
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

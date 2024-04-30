@@ -41,11 +41,11 @@ namespace afft
   using Real = detail::Float<prec>;
 
   /**
-   * @brief Interleaved complex data type.
+   * @brief Complex data type.
    * @tparam T The real type.
    */
   template<typename T>
-  using InterleavedComplex = std::complex<T>;
+  using Complex = std::complex<T>;
 
   /**
    * @brief Planar complex data type.
@@ -54,17 +54,9 @@ namespace afft
   template<typename T>
   struct PlanarComplex
   {
-    T* real{}; ///< The real part.
-    T* imag{}; ///< The imaginary part.
+    T real{}; ///< The real part.
+    T imag{}; ///< The imaginary part.
   };
-
-  /**
-   * @brief Complex data type.
-   * @tparam T The real type.
-   * @tparam fmt The complex format.
-   */
-  template<typename T, ComplexFormat fmt = ComplexFormat::interleaved>
-  using Complex = std::conditional_t<fmt == ComplexFormat::interleaved, InterleavedComplex<T>, PlanarComplex<T>>;
 
   /**
    * @struct TypePropertiesBase
@@ -91,24 +83,6 @@ namespace afft
     static constexpr Complexity complexity{cmpl}; ///< The complexity.
   };
 
-  /// @brief Specialization for PlannarComplex.
-  template<typename T, Precision prec, Complexity cmpl>
-  struct TypePropertiesBase<PlanarComplex<T>, prec, cmpl> : detail::KnownTypePropertiesBase
-  {
-    // Ensure the size of the type matches the given precision and complexity
-    static_assert((2 * sizeof(T)) == detail::sizeOf<prec, cmpl>(),
-                  "Size of the type must match the given precision and complexity");
-
-    // Ensure the precision is valid
-    static_assert(detail::isValidPrecision(prec), "Invalid precision");
-
-    // Ensure the complexity is valid
-    static_assert(detail::isValidComplexity(cmpl), "Invalid complexity");
-
-    static constexpr Precision  precision{prec};  ///< The precision.
-    static constexpr Complexity complexity{cmpl}; ///< The complexity.
-  };
-
   /**
    * @struct TypeProperties
    * @brief Type properties structure for the given type. Specialize this structure for new types.
@@ -123,30 +97,20 @@ namespace afft
   struct TypeProperties<float>
     : TypePropertiesBase<float, Precision::f32, Complexity::real> {};
 
-  /// Specialization of TypeProperties for InterleavedComplex<float> (std::complex<float>).
+  /// Specialization of TypeProperties for Complex<float> (std::complex<float>).
   template<>
-  struct TypeProperties<InterleavedComplex<float>>
-    : TypePropertiesBase<InterleavedComplex<float>, Precision::f32, Complexity::complex> {};
-
-  /// Specialization of TypeProperties for PlanarComplex<float>.
-  template<>
-  struct TypeProperties<PlanarComplex<float>>
-    : TypePropertiesBase<PlanarComplex<float>, Precision::f32, Complexity::complex> {};
+  struct TypeProperties<Complex<float>>
+    : TypePropertiesBase<Complex<float>, Precision::f32, Complexity::complex> {};
 
   /// Specialization of TypeProperties for double.
   template<>
   struct TypeProperties<double>
     : TypePropertiesBase<double, Precision::f64, Complexity::real> {};
 
-  /// Specialization of TypeProperties for InterleavedComplex<double> (std::complex<double>).
+  /// Specialization of TypeProperties for Complex<double> (std::complex<double>).
   template<>
-  struct TypeProperties<InterleavedComplex<double>>
-    : TypePropertiesBase<InterleavedComplex<double>, Precision::f64, Complexity::complex> {};
-
-  /// Specialization of TypeProperties for PlanarComplex<double>.
-  template<>
-  struct TypeProperties<PlanarComplex<double>>
-    : TypePropertiesBase<PlanarComplex<double>, Precision::f64, Complexity::complex> {};
+  struct TypeProperties<Complex<double>>
+    : TypePropertiesBase<Complex<double>, Precision::f64, Complexity::complex> {};
 } // namespace afft
 
 #endif /* AFFT_TYPE_HPP */
