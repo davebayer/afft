@@ -27,9 +27,6 @@
 
 #include "detail/macro.hpp"
 
-/// @brief Macro for identity function
-#define AFFT_IDENTITY(...) __VA_ARGS__
-
 /// @brief Macro for empty delimiter
 #define AFFT_DELIM_EMPTY   AFFT_DETAIL_DELIM_EMPTY
 /// @brief Macro for comma delimiter
