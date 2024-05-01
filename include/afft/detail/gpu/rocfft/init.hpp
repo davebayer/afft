@@ -41,13 +41,15 @@ namespace afft::detail::gpu::rocfft
 
     if (!initParams.rtcCachePath.empty())
     {
+      static constexpr std::string_view rtcCachePathEnvVar{"ROCFFT_RTC_CACHE_PATH"};
+
 #   ifdef _WIN32
-      if (_putenv_s("ROCFFT_RTC_CACHE_PATH", initParams.rtcCachePath.data()) != 0)
+      if (_putenv_s(rtcCachePathEnvVar.data(), initParams.rtcCachePath.data()) != 0)
       {
         throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
       }
 #   else
-      if (setenv("ROCFFT_RTC_CACHE_PATH", initParams.rtcCachePath.data(), 1) != 0)
+      if (setenv(rtcCachePathEnvVar.data(), initParams.rtcCachePath.data(), 1) != 0)
       {
         throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
       }
