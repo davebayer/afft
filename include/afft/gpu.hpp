@@ -173,7 +173,10 @@ namespace afft::gpu
   namespace rocfft
   {
     /// @brief Init parameters for rocfft backend
-    struct InitParameters {};
+    struct InitParameters
+    {
+      std::string_view rtcCachePath{}; ///< Path to the ROCFFT RTC cache directory
+    };
   } // namespace rocfft
 
   namespace vkfft
