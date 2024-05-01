@@ -47,9 +47,7 @@ namespace afft::detail::gpu::rocfft
         throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
       }
 #   else
-      auto assignment = cformat("ROCFFT_RTC_CACHE_PATH=%s", initParams.rtcCachePath.data());
-
-      if (putenv(assignment.data()) != 0)
+      if (setenv("ROCFFT_RTC_CACHE_PATH", initParams.rtcCachePath.data(), 1) != 0)
       {
         throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
       }
