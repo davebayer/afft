@@ -12,6 +12,8 @@ Currently supported transfors are:
 
 A transform may be executed *in-place* or *out-of-place* over multidimensional strided arrays in various precision. The created plans can be stored in a LRU plan cache.
 
+Compiles with GCC (10-14), Clang (12-19).
+
 :warning: **Take into account that not all of the afft functionality is supported by each transform backend.**
 
 ## License
@@ -48,7 +50,7 @@ int main(void)
                          .normalize     = afft::Normalize::orthogonal}, // use orthogonal normalization
     .direction        = afft::Direction::forward, // it will be a forward transform
     .precision        = afft::makePrecision<PrecT>(), // set up precision of the transform
-    .type             = afft::dft::complexToComplex, // let's use complex-to-complex transform
+    .type             = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
   };
 
   const afft::cpu::Parameters cpuParams // it will run on a cpu
