@@ -76,7 +76,7 @@ template<>
     }
   };
 
-  return fmt::format("[cuFFT error] {}", get());
+  return cformat("[cuFFT error] %s", get());
 }
 
 #endif /* AFFT_DETAIL_GPU_CUFFT_ERROR_HPP */

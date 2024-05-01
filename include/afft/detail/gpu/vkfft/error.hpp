@@ -50,7 +50,7 @@ template<>
 template<>
 [[nodiscard]] std::string afft::detail::Error::makeErrorMessage(VkFFTResult result)
 {
-  return fmt::format("[VkFFT error] {}", getVkFFTErrorString(result));
+  return cformat("[VkFFT error] %s", getVkFFTErrorString(result));
 }
 
 #endif /* AFFT_DETAIL_GPU_VKFFT_ERROR_HPP */

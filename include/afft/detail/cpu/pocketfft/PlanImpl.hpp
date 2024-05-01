@@ -35,7 +35,7 @@ namespace afft::detail::cpu::pocketfft
     }
     catch (const std::exception& e)
     {
-      throw makeException<std::runtime_error>(fmt::format("[PocketFFT error] {}", e.what()));
+      throw makeException<std::runtime_error>(cformat("[PocketFFT error] %s", e.what()));
     }
   }
 

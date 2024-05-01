@@ -32,7 +32,6 @@ project(afft VERSION 0.1.0 LANGUAGES CXX)
 ########################################################################################################################
 option(AFFT_BUILD_EXAMPLES  "Build examples"                  OFF)
 option(AFFT_BUILD_TESTS     "Build tests"                     OFF)
-option(AFFT_USE_STD_FORMAT  "Use std::format insed of fmtlib" OFF)
 # option(AFFT_STATIC_LIBS     "Link to static libraries"      OFF)
 # option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries"  ${AFFT_STATIC_LIBS})
 # option(AFFT_MODULE          "Build as C++20 module"         OFF)
@@ -57,17 +56,6 @@ endif()
 target_compile_definitions(afft INTERFACE AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
 target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include)
-
-# Add fmt library if needed
-if(${AFFT_USE_STD_FORMAT})
-  target_compile_definitions(afft INTERFACE AFFT_USE_STD_FORMAT)
-else()
-  set(FMT_INSTALL        OFF) # Do not install fmt
-  set(FMT_SYSTEM_HEADERS ON)  # Use fmt as system headers
-  
-  add_subdirectory(3rdparty/fmtlib EXCLUDE_FROM_ALL)
-  target_link_libraries(afft INTERFACE fmt::fmt-header-only)
-endif()
 
 ########################################################################################################################
 # Set up CPU target

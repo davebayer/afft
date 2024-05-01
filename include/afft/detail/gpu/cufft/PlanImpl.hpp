@@ -27,6 +27,8 @@
 
 #include <array>
 #include <cstddef>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 
 #include <cufftXt.h>
@@ -259,11 +261,11 @@ extern "C" __device__ __constant__
 
           std::array options
           {
-            cuda::rtc::makeDefinitionOption("PRECISION", to_underlying(precision.execution)),
-            cuda::rtc::makeDefinitionOption("COMPLEXITY", dftParams.type == dft::Type::complexToReal
-                                                              ? to_underlying(Complexity::real)
-                                                              : to_underlying(Complexity::complex)),
-            cuda::rtc::makeDefinitionOption("SCALE", getConfig().getTransformNormFactor<Precision::f64>()),
+            cuda::rtc::makeDefinitionOption("PRECISION", std::to_string(to_underlying(precision.execution))),
+            cuda::rtc::makeDefinitionOption("COMPLEXITY", std::to_string(dftParams.type == dft::Type::complexToReal
+                                                                           ? to_underlying(Complexity::real)
+                                                                           : to_underlying(Complexity::complex))),
+            cuda::rtc::makeDefinitionOption("SCALE", std::to_string(getConfig().getTransformNormFactor<Precision::f64>())),
             cuda::rtc::makeArchOption(device),
             cuda::rtc::makeIncludePathOption(cuda::getIncludePath()),
           };

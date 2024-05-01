@@ -463,7 +463,7 @@ namespace afft::detail::gpu::cuda::rtc
     int ccMinor{};
     Error::check(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
 
-    return fmt::format("-arch=sm_{:d}{:d}", ccMajor, ccMinor);
+    return cformat("-arch=sm_%d%d", ccMajor, ccMinor);
   }
 
   /**
@@ -473,7 +473,7 @@ namespace afft::detail::gpu::cuda::rtc
    */
   [[nodiscard]] inline std::string makeIncludePathOption(std::string_view includePath)
   {
-    return fmt::format("-I{}", includePath);
+    return cformat("-I%s", includePath.data());
   }
 
   /**
@@ -482,9 +482,9 @@ namespace afft::detail::gpu::cuda::rtc
    * @param value The value of the definition.
    * @return The preprocessor definition option.
    */
-  [[nodiscard]] inline std::string makeDefinitionOption(std::string_view name, const auto& value)
+  [[nodiscard]] inline std::string makeDefinitionOption(std::string_view name, std::string_view value)
   {
-    return fmt::format("-D{}={}", name, value);
+    return cformat("-D%s=%s", name.data(), value.data());
   }
 
   /**
@@ -495,7 +495,7 @@ namespace afft::detail::gpu::cuda::rtc
    */
   [[nodiscard]] inline std::string makeDefinitionOption(std::string_view name)
   {
-    return fmt::format("-D{}", name);
+    return cformat("-D%s", name.data());
   }
   
   /**
