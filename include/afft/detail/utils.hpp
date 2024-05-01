@@ -25,7 +25,10 @@
 #ifndef AFFT_DETAIL_UTILS_HPP
 #define AFFT_DETAIL_UTILS_HPP
 
+#include <cinttypes>
 #include <concepts>
+#include <cstddef>
+#include <cstdio>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -68,6 +71,30 @@ namespace afft::detail
     }
 
     return ret;
+  }
+
+  /**
+   * @brief Formats a string using C-style format.
+   * @param format Format string.
+   * @param args Arguments to format.
+   * @return Formatted string.
+   * @throw std::runtime_error if the string could not be formatted.
+   */
+  [[nodiscard]] std::string cformat(std::string_view format, const auto&... args)
+  {
+    const auto size = std::snprintf(nullptr, 0, format.data(), args...);
+
+    if (size >= 0)
+    {
+      std::string result(static_cast<std::size_t>(size), '\0');
+
+      if (std::snprintf(result.data(), result.size() + 1, format.data(), args...) == size)
+      {
+        return result;
+      }
+    }
+
+    throw std::runtime_error("Failed to format string");
   }
 
   /**
@@ -140,8 +167,9 @@ inline namespace cxx23
 #if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
   [[noreturn]] inline void unreachable(const std::source_location& loc = std::source_location::current())
   {
-    throw std::logic_error(fmt::format("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n({}:{}:{})",
-                                       loc.file_name(), loc.line(), loc.column()));
+    throw std::logic_error(cformat("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n"
+                                   "(%s:" PRIuLEAST32 ":" PRIuLEAST32 ")",
+                                   loc.file_name(), loc.line(), loc.column()));
   }
 #else
   [[noreturn]] inline void unreachable()
