@@ -28,6 +28,19 @@
 #include <complex>
 #include <type_traits>
 
+#if AFFT_GPU_FRAMEWORK_IS_CUDA
+# if __has_include(<cuComplex.h>)
+#   include <cuComplex.h>
+# endif
+# if __has_include(<cuda/std/complex>)
+#   include <cuda/std/complex>
+# endif
+#elif AFFT_GPU_FRAMEWORK_IS_HIP
+# if __has_include(<hip/hip_complex.h>)
+#   include <hip/hip_complex.h>
+# endif
+#endif
+
 #include "detail/type.hpp"
 
 namespace afft
@@ -111,6 +124,44 @@ namespace afft
   template<>
   struct TypeProperties<Complex<double>>
     : TypePropertiesBase<Complex<double>, Precision::f64, Complexity::complex> {};
+
+#if AFFT_GPU_FRAMEWORK_IS_CUDA
+# if __has_include(<cuComplex.h>)
+  /// Specialization of TypeProperties for cuFloatComplex.
+  template<>
+  struct TypeProperties<cuFloatComplex>
+    : TypePropertiesBase<cuFloatComplex, Precision::f32, Complexity::complex> {};
+
+  /// Specialization of TypeProperties for cuDoubleComplex.
+  template<>
+  struct TypeProperties<cuDoubleComplex>
+    : TypePropertiesBase<cuDoubleComplex, Precision::f64, Complexity::complex> {};
+# endif
+# if __has_include(<cuda/std/complex>)
+  /// Specialization of TypeProperties for cuda::std::complex<float>.
+  template<>
+  struct TypeProperties<cuda::std::complex<float>>
+    : TypePropertiesBase<cuda::std::complex<float>, Precision::f32, Complexity::complex> {};
+
+  /// Specialization of TypeProperties for cuda::std::complex<double>.
+  template<>
+  struct TypeProperties<cuda::std::complex<double>>
+    : TypePropertiesBase<cuda::std::complex<double>, Precision::f64, Complexity::complex> {};
+# endif
+#elif AFFT_GPU_FRAMEWORK_IS_HIP
+# if __has_include(<hip/hip_complex.h>)
+  /// Specialization of TypeProperties for hipFloatComplex.
+  template<>
+  struct TypeProperties<hipFloatComplex>
+    : TypePropertiesBase<hipFloatComplex, Precision::f32, Complexity::complex> {};
+
+  /// Specialization of TypeProperties for hipDoubleComplex.
+  template<>
+  struct TypeProperties<hipDoubleComplex>
+    : TypePropertiesBase<hipDoubleComplex, Precision::f64, Complexity::complex> {};
+# endif
+#endif
+
 } // namespace afft
 
 #endif /* AFFT_TYPE_HPP */
