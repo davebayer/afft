@@ -25,6 +25,7 @@
 #ifndef AFFT_DETAIL_PLAN_IMPL_HPP
 #define AFFT_DETAIL_PLAN_IMPL_HPP
 
+#include <array>
 #include <cstddef>
 #include <variant>
 
@@ -38,8 +39,10 @@ namespace afft::detail
     public:
       constexpr ExecParam() = default;
       constexpr ExecParam(void* realOrRealImag, void* imag = nullptr) noexcept
-      : mRealOrRealImag(realOrRealImag), mImag(imag)
-      {}
+      {
+        mBuffers[0] = realOrRealImag;
+        mBuffers[1] = imag;
+      }
       template<typename T>
       constexpr ExecParam(PlanarComplex<T> planarComplex) noexcept
       : mRealOrRealImag(planarComplex.real), mImag(planarComplex.imag)
@@ -53,45 +56,55 @@ namespace afft::detail
 
       [[nodiscard]] constexpr bool isSplit() const noexcept
       {
-        return mImag != nullptr;
+        return mBuffers[1] != nullptr;
       }
 
       [[nodiscard]] constexpr void* getReal() const noexcept
       {
-        return mRealOrRealImag;
+        return mBuffers[0];
       }
 
       template<typename T>
       [[nodiscard]] constexpr T* getRealAs() const noexcept
       {
-        return static_cast<T*>(mRealOrRealImag);
+        return static_cast<T*>(getReal());
       }
 
       [[nodiscard]] constexpr void* getRealImag() const noexcept
       {
-        return mRealOrRealImag;
+        return mBuffers[0];
       }
 
       template<typename T>
       [[nodiscard]] constexpr T* getRealImagAs() const noexcept
       {
-        return static_cast<T*>(mRealOrRealImag);
+        return static_cast<T*>(getRealImag());
       }
 
       [[nodiscard]] constexpr void* getImag() const noexcept
       {
-        return mImag;
+        return mBuffers[1];
       }
 
       template<typename T>
       [[nodiscard]] constexpr T* getImagAs() const noexcept
       {
-        return static_cast<T*>(mImag);
+        return static_cast<T*>(getImag());
+      }
+
+      [[nodiscard]] constexpr void** data() noexcept
+      {
+        return mBuffers.data();
+      }
+
+      template<typename T>
+      [[nodiscard]] constexpr T** dataAs() noexcept
+      {
+        return reinterpret_cast<T**>(mBuffers.data());
       }
     protected:
     private:
-      void* mRealOrRealImag{};
-      void* mImag{};
+      std::array<void*, 2> mBuffers{};
   };
 
   /**

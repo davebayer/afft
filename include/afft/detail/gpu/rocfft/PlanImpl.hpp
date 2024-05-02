@@ -267,7 +267,7 @@ namespace afft::detail::gpu::rocfft
    * @param config Configuration
    * @return Plan implementation
    */
-  [[nodiscard]] std::unique_ptr<PlanImpl> makePlanImpl(const Config& config)
+  [[nodiscard]] inline std::unique_ptr<PlanImpl> makePlanImpl(const Config& config)
   {
     switch (config.getTransform())
     {
