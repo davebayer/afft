@@ -75,7 +75,7 @@ template<>
     }
   };
   
-  return format("[hipFFT error] {}", get());
+  return cformat("[hipFFT error] %s", get());
 }
 
 #endif /* AFFT_DETAIL_GPU_HIPFFT_ERROR_HPP */
