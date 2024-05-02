@@ -45,8 +45,10 @@ namespace afft::detail
       }
       template<typename T>
       constexpr ExecParam(PlanarComplex<T> planarComplex) noexcept
-      : mRealOrRealImag(planarComplex.real), mImag(planarComplex.imag)
-      {}
+      {
+        mBuffers[0] = planarComplex.real;
+        mBuffers[1] = planarComplex.imag;
+      }
       constexpr ExecParam(const ExecParam&) = default;
       constexpr ExecParam(ExecParam&&) = default;
       constexpr ~ExecParam() = default;
