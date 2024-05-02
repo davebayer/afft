@@ -25,9 +25,8 @@
 #ifndef AFFT_DETAIL_GPU_HIP_INIT_HPP
 #define AFFT_DETAIL_GPU_HIP_INIT_HPP
 
-#include <hip/hip_runtime.h>
-
 #include "error.hpp"
+#include "include.hpp"
 
 namespace afft::detail::gpu::hip
 {

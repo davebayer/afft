@@ -27,8 +27,7 @@
 
 #include <string>
 
-#include <hip/hip_runtime.h>
-
+#include "include.hpp"
 #include "../../error.hpp"
 #include "../../utils.hpp"
 
