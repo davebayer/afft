@@ -68,7 +68,7 @@ template<>
     }
   };
 
-  return format("[rocFFT error] {}", get());
+  return cformat("[rocFFT error] %s", get());
 }
 
 #endif /* AFFT_DETAIL_GPU_ROCFFT_ERROR_HPP */

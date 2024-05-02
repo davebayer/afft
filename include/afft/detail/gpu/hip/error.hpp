@@ -51,7 +51,7 @@ template<>
 template<>
 [[nodiscard]] std::string afft::detail::Error::makeErrorMessage(hipError_t error)
 {
-  return format("[HIP error] {} - {}", hipGetErrorName(error), hipGetErrorString(error));
+  return cformat("[HIP error] %s - %s", hipGetErrorName(error), hipGetErrorString(error));
 }
 
 #endif /* AFFT_DETAIL_GPU_HIP_ERROR_HPP */
