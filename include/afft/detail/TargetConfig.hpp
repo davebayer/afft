@@ -55,9 +55,12 @@ namespace afft::detail
   struct GpuConfig
   {
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    int device{};             ///< CUDA device.
+    int          device{};    ///< CUDA device.
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    int device{};             ///< HIP device.
+    int          device{};    ///< HIP device.
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+    cl_context   context{};   ///< OpenCL context.
+    cl_device_id device{};    ///< OpenCL device.
 # endif
 
     bool externalWorkspace{}; ///< Use external workspace.
@@ -206,6 +209,11 @@ namespace afft::detail
           }
 
           config.device = gpuParams.device;
+#       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+          // TODO: Check if the context and device are valid.
+
+          config.context = gpuParams.context;
+          config.device  = gpuParams.device;
 #       else
           throw makeException<std::runtime_error>("Invalid GPU backend");
 #       endif
