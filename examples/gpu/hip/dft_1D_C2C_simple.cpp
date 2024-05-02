@@ -35,9 +35,9 @@ int main(void)
     plan.execute(src.data(), dst.data()); // execute the transform into zero stream
   }
 
-  if (cudaDeviceSynchronize() != cudaSuccess)
+  if (hipDeviceSynchronize() != hipSuccess)
   {
-    throw std::runtime_error("CUDA error: failed to synchronize");
+    throw std::runtime_error("HIP error: failed to synchronize");
   }
 
   // use results from dst vector
