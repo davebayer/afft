@@ -106,7 +106,7 @@ namespace afft::detail::gpu::vkfft
         vkfftConfig.coalescedMemory      = 32; // same for NVIDIA and AMD
         vkfftConfig.numSharedBanks       = 32; // same for NVIDIA and AMD
 #     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-        // TODO: OpenCL
+        // set by VkFFT internally
 #     endif
 
         vkfftConfig.inverseReturnToInputBuffer = 1;
