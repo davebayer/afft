@@ -210,7 +210,15 @@ namespace afft::detail
 
           config.device = gpuParams.device;
 #       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-          // TODO: Check if the context and device are valid.
+          if (config.context == nullptr)
+          {
+            throw makeException<std::runtime_error>("Invalid OpenCL context");
+          }
+
+          if (config.device == nullptr)
+          {
+            throw makeException<std::runtime_error>("Invalid OpenCL device");
+          }
 
           config.context = gpuParams.context;
           config.device  = gpuParams.device;
