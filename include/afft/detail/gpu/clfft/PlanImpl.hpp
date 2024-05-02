@@ -180,7 +180,7 @@ namespace afft::detail::gpu::clfft
                                       ? CLFFT_FORWARD : CLFFT_BACKWARD;
 
         auto tmpBuffer = (getConfig().getTargetConfig<Target::gpu>().externalWorkspace)
-                           ? static_cast<cl_mem>(execParams.workspace) : nullptr;
+                           ? execParams.workspace : nullptr;
 
         Error::check(clfftEnqueueTransform(mPlanHandle.value(),
                                            clfftDirection,
