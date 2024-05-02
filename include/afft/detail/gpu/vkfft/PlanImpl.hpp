@@ -63,10 +63,13 @@ namespace afft::detail::gpu::vkfft
 
 #     if AFFT_GPU_FRAMEWORK_IS_CUDA
         cuda::ScopedDevice scopedDevice{gpuConfig.device};
-        Error::check(cuDeviceGet(&mCuDevice, gpuConfig.device));        
+        Error::check(cuDeviceGet(&mCuDevice, gpuConfig.device));
 #     elif AFFT_GPU_FRAMEWORK_IS_HIP
         hip::ScopedDevice scopedDevice{gpuConfig.device};
         Error::check(hipDeviceGet(&mHipDevice, gpuConfig.device));
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        mContext = gpuConfig.context;
+        mDevice  = gpuConfig.device;
 #     endif
 
         VkFFTConfiguration vkfftConfig{};
@@ -89,6 +92,9 @@ namespace afft::detail::gpu::vkfft
         vkfftConfig.device               = &mHipDevice;
         vkfftConfig.stream               = &mStream;
         vkfftConfig.num_streams          = 1;
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        vkfftConfig.context              = &mContext;
+        vkfftConfig.device               = &mDevice;
 #     endif
 
         vkfftConfig.userTempBuffer       = gpuConfig.externalWorkspace;
@@ -99,6 +105,8 @@ namespace afft::detail::gpu::vkfft
 #     elif AFFT_GPU_FRAMEWORK_IS_HIP
         vkfftConfig.coalescedMemory      = 32; // same for NVIDIA and AMD
         vkfftConfig.numSharedBanks       = 32; // same for NVIDIA and AMD
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        // TODO: OpenCL
 #     endif
 
         vkfftConfig.inverseReturnToInputBuffer = 1;
@@ -119,7 +127,6 @@ namespace afft::detail::gpu::vkfft
 
           switch (prec.source)
           {
-#       ifdef AFFT_HAS_F16
           case Precision::f16: switch (prec.execution)
             {
             case Precision::f16: vkfftConfig.halfPrecision           = 1; break;
@@ -127,7 +134,6 @@ namespace afft::detail::gpu::vkfft
             default: ok = false; break;
             }
             break;
-#        endif
           case Precision::f32: switch (prec.execution)
             {
             case Precision::f32:                                             break;
@@ -138,20 +144,16 @@ namespace afft::detail::gpu::vkfft
           case Precision::f64: switch (prec.execution)
             {
             case Precision::f64:  vkfftConfig.doublePrecision                       = 1; break;
-#         ifdef AFFT_HAS_F128
             case Precision::f128: vkfftConfig.quadDoubleDoublePrecisionDoubleMemory = 1; break;
-#         endif
             default: ok = false; break;
             }
             break;
-#         ifdef AFFT_HAS_F128
           case Precision::f128: switch (prec.execution)
             {
             case Precision::f128: vkfftConfig.quadDoubleDoublePrecision = 1; break;
             default: ok = false; break;
             }
             break;
-#         endif
           default: ok = false; break;
           }
 
@@ -270,22 +272,21 @@ namespace afft::detail::gpu::vkfft
         }
 
         int               inverse{};
-        void*             workspace{};
         VkFFTLaunchParams params{};
-
-        void*             srcPtr = src.getRealImag();
-        void*             dstPtr = dst.getRealImag();
 
         if (getConfig().getTransformDirection() == Direction::forward)
         {
           inverse = -1;
 
 #       if AFFT_GPU_FRAMEWORK_IS_CUDA
-          params.inputBuffer = &srcPtr;
-          params.buffer      = &dstPtr;
+          params.inputBuffer = src.data();
+          params.buffer      = dst.data();
 #       elif AFFT_GPU_FRAMEWORK_IS_HIP
-          params.inputBuffer = &srcPtr;
-          params.buffer      = &dstPtr;
+          params.inputBuffer = src.data();
+          params.buffer      = dst.data();
+#       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+          params.inputBuffer = reinterpret_cast<cl_mem*>(src.data());
+          params.buffer      = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
         }
         else
@@ -293,15 +294,30 @@ namespace afft::detail::gpu::vkfft
           inverse = 1;
 
 #       if AFFT_GPU_FRAMEWORK_IS_CUDA
-          params.buffer      = &srcPtr;
-          params.inputBuffer = &dstPtr;
+          params.buffer      = src.data();
+          params.inputBuffer = dst.data();
 #       elif AFFT_GPU_FRAMEWORK_IS_HIP
-          params.buffer      = &srcPtr;
-          params.inputBuffer = &dstPtr;
+          params.buffer      = src.data();
+          params.inputBuffer = dst.data();
+#       elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+          params.buffer      = reinterpret_cast<cl_mem*>(src.data());
+          params.inputBuffer = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
         }
 
+#     if AFFT_GPU_FRAMEWORK_IS_CUDA
         mStream = execParams.stream;
+#     elif AFFT_GPU_FRAMEWORK_IS_HIP
+        mStream = execParams.stream;
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        mQueue = execParams.commandQueue;
+#     endif
+
+#     if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+        void*             workspace{};
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+        cl_mem            workspace{};
+#     endif
 
         if (getConfig().getTargetConfig<Target::gpu>().externalWorkspace)
         {
@@ -323,13 +339,17 @@ namespace afft::detail::gpu::vkfft
     protected:
     private:
 #   if AFFT_GPU_FRAMEWORK_IS_CUDA
-      CUdevice     mCuDevice{};
-      cudaStream_t mStream{0};
+      CUdevice         mCuDevice{};
+      cudaStream_t     mStream{0};
 #   elif AFFT_GPU_FRAMEWORK_IS_HIP
-      hipDevice_t  mHipDevice{};
-      hipStream_t  mStream{0};
+      hipDevice_t      mHipDevice{};
+      hipStream_t      mStream{0};
+#   elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      cl_context       mContext{};
+      cl_device_id     mDevice{};
+      cl_command_queue mQueue{};
 #   endif
-      App          mApp{};
+      App              mApp{};
   };
 
   /**
