@@ -84,6 +84,13 @@ namespace afft
   };
 
   /**
+   * @brief Deduction guide for PlanarComplex.
+   * @tparam T The real type.
+   */
+  template<typename T>
+  PlanarComplex(T r, T i) -> PlanarComplex<T>;
+
+  /**
    * @struct TypePropertiesBase
    * @brief Type properties base structure implementing TypeProperties's static members. Should not be used directly,
    *        only as the base class for the TypeProperties specialization.
