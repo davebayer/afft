@@ -66,7 +66,7 @@ namespace afft::detail::gpu::vkfft
         Error::check(cuDeviceGet(&mCuDevice, gpuConfig.device));        
 #     elif AFFT_GPU_FRAMEWORK_IS_HIP
         hip::ScopedDevice scopedDevice{gpuConfig.device};
-        Error::check(hipGetDevice(&mHipDevice, gpuConfig.device));
+        Error::check(hipDeviceGet(&mHipDevice, gpuConfig.device));
 #     endif
 
         VkFFTConfiguration vkfftConfig{};
