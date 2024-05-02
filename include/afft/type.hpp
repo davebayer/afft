@@ -28,6 +28,8 @@
 #include <complex>
 #include <type_traits>
 
+#include "detail/type.hpp"
+
 #if AFFT_GPU_FRAMEWORK_IS_CUDA
 # if __has_include(<cuComplex.h>)
 #   include <cuComplex.h>
@@ -35,13 +37,23 @@
 # if __has_include(<cuda/std/complex>)
 #   include <cuda/std/complex>
 # endif
+# if defined(AFFT_HAS_F16) && __has_include(<cuda_fp16.h>)
+#   include <cuda_fp16.h>
+# endif
+# if defined(AFFT_HAS_BF16) && __has_include(<cuda_bf16.h>)
+#   include <cuda_bf16.h>
+# endif
 #elif AFFT_GPU_FRAMEWORK_IS_HIP
 # if __has_include(<hip/hip_complex.h>)
 #   include <hip/hip_complex.h>
 # endif
+# if defined(AFFT_HAS_F16) && __has_include(<hip_fp16.h>)
+#   include <hip/hip_fp16.h>
+# endif
+# if defined(AFFT_HAS_BF16) && __has_include(<hip_bf16.h>)
+#   include <hip/hip_bf16.h>
+# endif
 #endif
-
-#include "detail/type.hpp"
 
 namespace afft
 {
@@ -148,6 +160,28 @@ namespace afft
   struct TypeProperties<cuda::std::complex<double>>
     : TypePropertiesBase<cuda::std::complex<double>, Precision::f64, Complexity::complex> {};
 # endif
+# if defined(AFFT_HAS_F16) && __has_include(<cuda_fp16.h>)
+  /// Specialization of TypeProperties for half.
+  template<>
+  struct TypeProperties<half>
+    : TypePropertiesBase<half, Precision::f16, Complexity::real> {};
+
+  /// Specialization of TypeProperties for half2.
+  template<>
+  struct TypeProperties<half2>
+    : TypePropertiesBase<half2, Precision::f16, Complexity::complex> {};
+# endif
+# if defined(AFFT_HAS_BF16) && __has_include(<cuda_bf16.h>)
+  /// Specialization of TypeProperties for __nv_bfloat16.
+  template<>
+  struct TypeProperties<__nv_bfloat16>
+    : TypePropertiesBase<__nv_bfloat16, Precision::bf16, Complexity::real> {};
+
+  /// Specialization of TypeProperties for __nv_bfloat162.
+  template<>
+  struct TypeProperties<__nv_bfloat162>
+    : TypePropertiesBase<__nv_bfloat162, Precision::bf16, Complexity::complex> {};
+# endif
 #elif AFFT_GPU_FRAMEWORK_IS_HIP
 # if __has_include(<hip/hip_complex.h>)
   /// Specialization of TypeProperties for hipFloatComplex.
@@ -159,6 +193,28 @@ namespace afft
   template<>
   struct TypeProperties<hipDoubleComplex>
     : TypePropertiesBase<hipDoubleComplex, Precision::f64, Complexity::complex> {};
+# endif
+# if defined(AFFT_HAS_F16) && __has_include(<hip_fp16.h>)
+  /// Specialization of TypeProperties for half.
+  template<>
+  struct TypeProperties<half>
+    : TypePropertiesBase<half, Precision::f16, Complexity::real> {};
+
+  /// Specialization of TypeProperties for half2.
+  template<>
+  struct TypeProperties<half2>
+    : TypePropertiesBase<half2, Precision::f16, Complexity::complex> {};
+# endif
+# if defined(AFFT_HAS_BF16) && __has_include(<hip_bf16.h>)
+  /// Specialization of TypeProperties for __hip_bfloat16.
+  template<>
+  struct TypeProperties<__hip_bfloat16>
+    : TypePropertiesBase<__hip_bfloat16, Precision::bf16, Complexity::real> {};
+
+  /// Specialization of TypeProperties for __hip_bfloat162.
+  template<>
+  struct TypeProperties<__hip_bfloat162>
+    : TypePropertiesBase<__hip_bfloat162, Precision::bf16, Complexity::complex> {};
 # endif
 #endif
 
