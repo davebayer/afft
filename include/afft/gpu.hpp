@@ -77,14 +77,16 @@
 # endif
 #endif
 
+/// @brief Macro for clfft backend
+#define AFFT_GPU_BACKEND_CLFFT  (1 << 0)
 /// @brief Macro for cufft backend
-#define AFFT_GPU_BACKEND_CUFFT  (1 << 0)
+#define AFFT_GPU_BACKEND_CUFFT  (1 << 1)
 /// @brief Macro for hipfft backend
-#define AFFT_GPU_BACKEND_HIPFFT (1 << 1)
+#define AFFT_GPU_BACKEND_HIPFFT (1 << 2)
 /// @brief Macro for rocfft backend
-#define AFFT_GPU_BACKEND_ROCFFT (1 << 2)
+#define AFFT_GPU_BACKEND_ROCFFT (1 << 3)
 /// @brief Macro for vkfft backend
-#define AFFT_GPU_BACKEND_VKFFT  (1 << 3)
+#define AFFT_GPU_BACKEND_VKFFT  (1 << 4)
 
 /**
  * @brief Macro for getting the backend from the name
@@ -132,7 +134,8 @@
       (AFFT_GPU_BACKEND_HIPFFT | AFFT_GPU_BACKEND_ROCFFT)
 # endif
 #elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-# define AFFT_GPU_BACKEND_ALLOWED_MASK 0
+# define AFFT_GPU_BACKEND_ALLOWED_MASK \
+    (AFFT_GPU_BACKEND_CLFFT | AFFT_GPU_BACKEND_VKFFT)
 #else
 # define AFFT_GPU_BACKEND_ALLOWED_MASK 0
 #endif
@@ -154,6 +157,7 @@ namespace afft::gpu
   /// @brief Enum class for backends
   enum class Backend
   {
+    clfft,
     cufft,
     hipfft,
     rocfft,
@@ -161,7 +165,13 @@ namespace afft::gpu
   };
   
   /// @brief Number of backends
-  inline constexpr std::size_t backendCount{4};
+  inline constexpr std::size_t backendCount{5};
+
+  namespace clfft
+  {
+    /// @brief Init parameters for clfft backend
+    struct InitParameters {};
+  } // namespace clfft
 
   namespace cufft
   {
@@ -196,6 +206,7 @@ namespace afft::gpu
    */
   struct InitParameters
   {
+    clfft::InitParameters  clfft{};  ///< Parameters for clfft backend
     cufft::InitParameters  cufft{};  ///< Parameters for cufft backend
     hipfft::InitParameters hipfft{}; ///< Parameters for hipfft backend
     rocfft::InitParameters rocfft{}; ///< Parameters for rocfft backend
@@ -210,11 +221,14 @@ namespace afft::gpu
   {
   // GPU framework specific parameters
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    int  device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+    int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    int  device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+    int          device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+    cl_context   context{};                                     ///< OpenCL context
+    cl_device_id device{};                                      ///< OpenCL device
 # endif
-    bool externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+    bool         externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
   };
 
   /// @brief Default list of backends
@@ -223,13 +237,18 @@ namespace afft::gpu
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     Backend::cufft,  // prefer cufft
     Backend::vkfft,  // fallback to vkfft
-# elif AFFT_GPU_FRAMEWORK_IS_HIP && defined(__HIP_PLATFORM_NVIDIA__)
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
+#   if defined(__HIP_PLATFORM_AMD__)
+    Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
+    Backend::rocfft, // fallback to rocfft
+#   elif defined(__HIP_PLATFORM_NVIDIA__)
     Backend::hipfft, // prefer cufft (it is used by hipfft on CUDA)
     Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
     Backend::rocfft, // fallback to rocfft
-# elif AFFT_GPU_FRAMEWORK_IS_HIP && defined(__HIP_PLATFORM_AMD__)
-    Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
-    Backend::rocfft, // fallback to rocfft
+#  endif
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+    Backend::vkfft,  // prefer vkfft
+    Backend::clfft,  // fallback to clfft
 # else
     Backend::vkfft,  // fallback to vkfft as it supports all platforms
 # endif
@@ -255,9 +274,9 @@ namespace afft::gpu
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
     hipStream_t stream{0};    ///< HIP stream, defaults to `zero` stream
     void*       workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
-// # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    // cl_command_queue commandQueue{};
-    // cl_mem           workspace{};
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+    cl_command_queue commandQueue{};
+    cl_mem           workspace{};
 # endif
   };
 
