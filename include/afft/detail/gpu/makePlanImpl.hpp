@@ -31,6 +31,9 @@
 
 #include "../../gpu.hpp"
 
+#if AFFT_GPU_BACKEND_IS_ENABLED(CLFFT)
+# include "clfft/PlanImpl.hpp"
+#endif
 #if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
 # include "cufft/PlanImpl.hpp"
 #endif
@@ -63,6 +66,10 @@ namespace afft::detail::gpu
   {
     switch (backend)
     {
+#   if AFFT_GPU_BACKEND_IS_ENABLED(CLFFT)
+    case Backend::clfft:
+      return clfft::makePlanImpl(config);
+#   endif
 #   if AFFT_GPU_BACKEND_IS_ENABLED(CUFFT)
     case Backend::cufft:
       return cufft::makePlanImpl(config);
