@@ -115,27 +115,109 @@ namespace afft
       }
 
       /**
-       * @brief Execute the plan without specifying execution parameters
-       * @param src Source
-       * @param dst Destination
+       * @brief Execute in-place plan with default execution parameters
+       * @param srcDst Source and destination
        */
-      void execute(auto src, auto dst)
+      template<KnownType SrcDstT>
+      void execute(SrcDstT* srcDst)
       {
-        switch (getTarget())
-        {
-        case Target::cpu:
-          execute(src, dst, cpu::ExecutionParameters{});
-          break;
-        case Target::gpu:
-          execute(src, dst, gpu::ExecutionParameters{});
-          break;
-        default:
-          detail::unreachable();
-        }
+        mImpl->executeWithDefaultTargetParameters(srcDst);
       }
 
       /**
-       * @brief Execute the plan
+       * @brief Execute in-place plan with default execution parameters
+       * @param srcDst Source and destination
+       */
+      template<RealType SrcDstT>
+      void execute(PlanarComplex<SrcDstT*> srcDst)
+      {
+        mImpl->executeWithDefaultTargetParameters(srcDst);
+      }
+
+      /**
+       * @brief Execute in-place plan
+       * @tparam SrcDstT Source or destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param srcDst Source and destination buffer
+       * @param execParams Execution parameters
+       */
+      template<KnownType SrcDstT, ExecutionParametersType ExecParamsT>
+      void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
+      {
+        mImpl->execute(srcDst, execParams);
+      }
+
+      /**
+       * @brief Execute in-place plan
+       * @tparam SrcDstT Source or destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param srcDst Source and destination buffer
+       * @param execParams Execution parameters
+       */
+      template<RealType SrcDstT, ExecutionParametersType ExecParamsT>
+      void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
+      {
+        mImpl->execute(srcDst, execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer
+       */
+      template<KnownType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      void execute(SrcT* src, DstT* dst)
+      {
+        mImpl->executeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan with source buffer as PlanarComplex
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer in PlanarComplex format
+       * @param dst Destination buffer
+       */
+      template<RealType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      void execute(PlanarComplex<SrcT*> src, DstT* dst)
+      {
+        mImpl->executeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer in PlanarComplex format
+       */
+      template<KnownType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      void execute(SrcT* src, PlanarComplex<DstT*> dst)
+      {
+        mImpl->executeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer in PlanarComplex format
+       * @param dst Destination buffer in PlanarComplex format
+       */
+      template<RealType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
+      {
+        mImpl->executeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -146,12 +228,11 @@ namespace afft
       template<KnownType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
       void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
-        mImpl->checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
-        executeUnsafe(src, dst, execParams);
+        mImpl->execute(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan with source buffer as PlanarComplex
+       * @brief Execute out-of-place plan with source buffer as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -162,12 +243,11 @@ namespace afft
       template<RealType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
-        mImpl->checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, typeComplexity<DstT>);
-        executeUnsafe(src, dst, execParams);
+        mImpl->execute(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan with destination buffer as PlanarComplex
+       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -178,12 +258,11 @@ namespace afft
       template<KnownType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
-        mImpl->checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, Complexity::complex);
-        executeUnsafe(src, dst, execParams);
+        mImpl->execute(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan with source and destination buffers as PlanarComplex
+       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -194,32 +273,67 @@ namespace afft
       template<RealType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
-        mImpl->checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, Complexity::complex);
-        executeUnsafe(src, dst, execParams);
+        mImpl->execute(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan without specifying execution parameters and without type checking
-       * @param src Source
-       * @param dst Destination
+       * @brief Execute out-of-place plan without type checking
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer
        */
-      void executeUnsafe(auto src, auto dst)
+      template<typename SrcT, typename DstT>
+      void executeUnsafe(SrcT* src, DstT* dst)
       {
-        switch (getTarget())
-        {
-        case Target::cpu:
-          executeUnsafe(src, dst, cpu::ExecutionParameters{});
-          break;
-        case Target::gpu:
-          executeUnsafe(src, dst, gpu::ExecutionParameters{});
-          break;
-        default:
-          detail::unreachable();
-        }
+        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
       /**
-       * @brief Execute the plan without type checking
+       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer
+       */
+      template<typename SrcT, typename DstT>
+      void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst)
+      {
+        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer
+       */
+      template<typename SrcT, typename DstT>
+      void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst)
+      {
+        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffer
+       * @param dst Destination buffer
+       */
+      template<typename SrcT, typename DstT>
+      void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
+      {
+        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -227,30 +341,14 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(void* src, void* dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      void executeUnsafe(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
-        mImpl->execute(src, dst, execParams);
+        mImpl->executeUnsafe(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan without type checking
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(const void* src, void* dst, const ExecParamsT& execParams)
-      {
-        mImpl->requireNonDestructiveTransform();
-        executeUnsafe(detail::removeConstFromPtr(src), dst, execParams);
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source buffer as PlanarComplex
+       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -258,31 +356,14 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(PlanarComplex<void*> src, void* dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
-        mImpl->execute(src, dst, execParams);
+        mImpl->executeUnsafe(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan without type checking and with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams)
-      {
-        mImpl->requireNonDestructiveTransform();
-        executeUnsafe(PlanarComplex<void*>{detail::removeConstFromPtr(src.real),
-                                           detail::removeConstFromPtr(src.imag)}, dst, execParams);
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type in PlanarComplex format
        * @tparam ExecParamsT Execution parameters type
@@ -290,14 +371,14 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
-        mImpl->execute(src, dst, execParams);
+        mImpl->executeUnsafe(src, dst, execParams);
       }
 
       /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type in PlanarComplex format
        * @tparam ExecParamsT Execution parameters type
@@ -305,52 +386,11 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(const void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
-        mImpl->requireNonDestructiveTransform();
-        executeUnsafe(detail::removeConstFromPtr(src), dst, execParams);
+        mImpl->executeUnsafe(src, dst, execParams);
       }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(PlanarComplex<void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
-      {
-        mImpl->execute(src, dst, execParams);
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<ExecutionParametersType ExecParamsT>
-      void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
-      {
-        mImpl->requireNonDestructiveTransform();
-        executeUnsafe(PlanarComplex<void*>{detail::removeConstFromPtr(src.real),
-                                           detail::removeConstFromPtr(src.imag)}, dst, execParams);
-      }
-
-#   if AFFT_GPU_FRAMEWORK_IS_OPENCL
-      // TODO: Implement GPU execution for OpenCL buffers
-      void executeUnsafe(cl_mem src, cl_mem dst, const gpu::Parameters& gpuParams)
-      {
-        
-      }
-#   endif
     protected:
     private:
       // Allow makePlan to create Plan objects
