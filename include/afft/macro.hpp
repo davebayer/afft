@@ -54,4 +54,13 @@
 /// @brief Macro for bit-wise OR on variadic arguments
 #define AFFT_BITOR(...) AFFT_DETAIL_BITOR(__VA_ARGS__)
 
+// implement C++20 requires clause for older C++ versions
+#if defined(__cpp_concepts) && __cpp_concepts >= 201907L
+  /// @brief Macro for requires clause
+# define AFFT_RET_REQUIRES(retType, requiredExpr) retType requires(requiredExpr)
+#else
+  /// @brief Macro for requires clause, using std::enable_if_t for older C++ versions
+# define AFFT_RET_REQUIRES(retType, requiredExpr) std::enable_if_t<requiredExpr, retType>
+#endif
+
 #endif /* AFFT_MACRO_HPP */

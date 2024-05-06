@@ -30,7 +30,6 @@
 #include <cstdint>
 
 #include "common.hpp"
-#include "concepts.hpp"
 
 namespace afft
 {
@@ -39,8 +38,8 @@ namespace afft
    * @param ptrs Pointers
    * @return Alignment
    */
-  [[nodiscard]] constexpr Alignment getAlignment(const auto*... ptrs)
-    requires (sizeof...(ptrs) > 0)
+  [[nodiscard]] constexpr auto getAlignment(const auto*... ptrs) noexcept
+    -> AFFT_RET_REQUIRES(Alignment, (sizeof...(ptrs) > 0))
   {
     auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> Alignment
     {
@@ -55,8 +54,9 @@ namespace afft
    * @tparam PrecT Precision type common for all three types, must be a known type
    * @return Precision triad
    */
-  template<KnownType PrecT>
-  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  template<typename PrecT>
+  [[nodiscard]] constexpr auto makePrecision() noexcept
+    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<PrecT>)
   {
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
@@ -70,7 +70,8 @@ namespace afft
    * @return Precision triad
    */
   template<typename ExecT, typename MemoryT>
-  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  [[nodiscard]] constexpr auto makePrecision() noexcept
+    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<ExecT> && isKnownType<MemoryT>)
   {
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision,
@@ -85,7 +86,8 @@ namespace afft
    * @return Precision triad
    */
   template<typename ExecT, typename SrcT, typename DstT>
-  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
+  [[nodiscard]] constexpr auto makePrecision() noexcept
+    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<ExecT> && isKnownType<SrcT> && isKnownType<DstT>)
   {
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<SrcT>>::precision,
