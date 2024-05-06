@@ -62,8 +62,7 @@ namespace afft
    * @tparam prec The precision.
    */
   template<Precision prec>
-    requires (detail::isValidPrecision(prec))
-  using Real = detail::Float<prec>;
+  using Real = std::enable_if_t<detail::isValidPrecision(prec)>, detail::Float<prec>>;
 
   /**
    * @brief Complex data type.
