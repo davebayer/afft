@@ -58,9 +58,9 @@ namespace afft
   template<KnownType PrecT>
   [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cvref_t<PrecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cvref_t<PrecT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cvref_t<PrecT>>::precision};
+    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
+                          /* .source      = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
+                          /* .destination = */ TypeProperties<std::remove_cv_t<PrecT>>::precision};
   }
 
   /**
@@ -72,9 +72,9 @@ namespace afft
   template<typename ExecT, typename MemoryT>
   [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cvref_t<ExecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cvref_t<MemoryT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cvref_t<MemoryT>>::precision};
+    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
+                          /* .source      = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision,
+                          /* .destination = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision};
   }
 
   /**
@@ -87,9 +87,9 @@ namespace afft
   template<typename ExecT, typename SrcT, typename DstT>
   [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cvref_t<ExecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cvref_t<SrcT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cvref_t<DstT>>::precision};
+    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
+                          /* .source      = */ TypeProperties<std::remove_cv_t<SrcT>>::precision,
+                          /* .destination = */ TypeProperties<std::remove_cv_t<DstT>>::precision};
   }
 } // namespace afft
 

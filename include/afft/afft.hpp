@@ -31,10 +31,6 @@
 # error "C++20 concepts are required"
 #endif
 
-#if !defined(__cpp_lib_integer_comparison_functions) || __cpp_lib_integer_comparison_functions < 202002L
-# error "C++20 integer comparison functions are required"
-#endif
-
 #if !defined(__cpp_lib_span) || __cpp_lib_span < 202002L
 # error "C++20 std::span is required"
 #endif

@@ -35,18 +35,6 @@
 
 namespace afft
 {
-  // Forward declaration
-  class Plan;
-
-  // Forward declarations with default parameters
-  Plan makePlan(const TransformParametersType auto& transformParams,
-                const cpu::Parameters&              cpuParams,
-                const cpu::BackendSelectParameters& cpuBackendSelectParams = {});
-
-  Plan makePlan(const TransformParametersType auto& transformParams,
-                const gpu::Parameters&              gpuParams,
-                const gpu::BackendSelectParameters& gpuBackendSelectParams = {});
-
   /**
    * @class Plan
    * @brief Plan class
@@ -434,6 +422,30 @@ namespace afft
                 const gpu::BackendSelectParameters& gpuBackendSelectParams)
   {
     return Plan{detail::makePlanImpl(detail::Config(transformParams, gpuParams), gpuBackendSelectParams)};
+  }
+
+  /**
+   * @brief Create a plan for the given transform parameters
+   * @param transformParams Transform parameters
+   * @param targetParams Target parameters
+   * @return Plan
+   */
+  template<TransformParametersType TransformParamsT, TargetParametersType TargetParamsT>
+  Plan makePlan(const TransformParamsT& transformParams,
+                const TargetParamsT&    targetParams)
+  {
+    if constexpr (std::same_as<TargetParamsT, cpu::Parameters>)
+    {
+      return makePlan(transformParams, targetParams, cpu::BackendSelectParameters{});
+    }
+    else if constexpr (std::same_as<TargetParamsT, gpu::Parameters>)
+    {
+      return makePlan(transformParams, targetParams, gpu::BackendSelectParameters{});
+    }
+    else
+    {
+      detail::unreachable();
+    }
   }
 } // namespace afft
 

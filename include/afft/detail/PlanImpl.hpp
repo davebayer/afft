@@ -498,7 +498,7 @@ namespace afft::detail
 
 #   if AFFT_GPU_FRAMEWORK_IS_OPENCL
       template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcDstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcDstT>, cl_mem>)
       void executeUnsafe(SrcDstT srcDst, const ExecutionParameters& execParams)
       {
         checkExecParameters(execParams);
@@ -514,7 +514,7 @@ namespace afft::detail
       }
 
       template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcDstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcDstT>, cl_mem>)
       void executeUnsafe(PlanarComplex<SrcDstT> srcDst, const ExecutionParameters& execParams)
       {
         checkExecParameters(execParams);
@@ -535,7 +535,7 @@ namespace afft::detail
       }
 
       template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
       void executeUnsafe(SrcT src, DstT dst, const ExecutionParameters& execParams)
       {
         if (src == dst)
@@ -563,7 +563,7 @@ namespace afft::detail
       }
 
       template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
       void executeUnsafe(PlanarComplex<SrcT> src, DstT dst, const ExecutionParameters& execParams)
       {
         if (src.real == dst)
@@ -591,7 +591,7 @@ namespace afft::detail
       }
 
       template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
       void executeUnsafe(SrcT src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
       {
         if (src == dst.real)
@@ -619,7 +619,7 @@ namespace afft::detail
       }
 
       template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
       void executeUnsafe(PlanarComplex<SrcT> src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
       {
         if (src.real == dst.real && src.imag == dst.imag)

@@ -45,6 +45,114 @@
 
 namespace afft::detail
 {
+inline namespace cxx20
+{
+  /**
+   * @brief Compares two values for equality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the values are equal, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_equal(T t, U u) noexcept
+  {
+    if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
+    {
+      return t == u;
+    }
+    else if constexpr (std::is_signed_v<T>)
+    {
+      return t >= 0 && std::make_unsigned_t<T>(t) == u;
+    }
+    else
+    {
+      return u >= 0 && std::make_unsigned_t<U>(u) == t;
+    }
+  }
+  
+  /**
+   * @brief Compares two values for inequality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the values are not equal, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_not_equal(T t, U u) noexcept
+  {
+    return !cmp_equal(t, u);
+  }
+  
+  /**
+   * @brief Compares two values for less than. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the first value is less than the second value, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_less(T t, U u) noexcept
+  {
+    if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
+    {
+      return t < u;
+    }
+    else if constexpr (std::is_signed_v<T>)
+    {
+      return t < 0 || std::make_unsigned_t<T>(t) < u;
+    }
+    else
+    {
+      return u >= 0 && t < std::make_unsigned_t<U>(u);
+    }
+  }
+  
+  /**
+   * @brief Compares two values for greater than. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the first value is greater than the second value, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_greater(T t, U u) noexcept
+  {
+    return cmp_less(u, t);
+  }
+  
+  /**
+   * @brief Compares two values for less than or equal. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the first value is less than or equal to the second value, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_less_equal(T t, U u) noexcept
+  {
+    return !cmp_less(u, t);
+  }
+  
+  /**
+   * @brief Compares two values for greater than or equal. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
+   * @tparam T First value type.
+   * @tparam U Second value type.
+   * @param t First value.
+   * @param u Second value.
+   * @return true if the first value is greater than or equal to the second value, false otherwise.
+   */
+  template<class T, class U>
+  constexpr bool cmp_greater_equal(T t, U u) noexcept
+  {
+    return !cmp_less(t, u);
+  }
+} // inline namespace cxx20
   /**
    * @brief Safely casts a value to a different integral type.
    * @tparam T Target integral type.
@@ -58,9 +166,9 @@ namespace afft::detail
   {
     const auto ret = static_cast<T>(value);
 
-    if (std::cmp_not_equal(ret, value))
+    if (cmp_not_equal(ret, value))
     {
-      if (std::cmp_less(ret, value))
+      if (cmp_less(ret, value))
       {
         throw std::underflow_error("Safe int conversion failed (underflow)");
       }
