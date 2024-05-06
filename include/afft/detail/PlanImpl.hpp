@@ -292,7 +292,8 @@ namespace afft::detail
 // #     if AFFT_GPU_FRAMEWORK_IS_OPENCL
 //         if (std::same_as<ExecParamsT, afft::gpu::Parameters>)
 //         {
-//           auto clSrcDst = gpu::opencl::makeBufferFromPtr(srcDst);
+//           const auto& gpuConfig = getConfig().getTargetConfig<Target::gpu>();
+//           auto clSrcDst = gpu::opencl::makeBufferFromPtr(gpuConfig.context, srcDst, mConfig.getSrcShapeVolume());
 //           executeImpl(clSrcDst.get(), srcDst.get(), execParams);
 //         }
 //         else
@@ -309,7 +310,8 @@ namespace afft::detail
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      void executeUnsafe(PlanarComplex<void*> srcDst, const ExecutionParametersType auto& execParams)
+      template<ExecutionParametersType ExecParamsT>
+      void executeUnsafe(PlanarComplex<void*> srcDst, const ExecParamsT& execParams)
       {
         checkExecParameters(execParams);
         requireInPlaceTransform();
@@ -498,15 +500,34 @@ namespace afft::detail
 #   if AFFT_GPU_FRAMEWORK_IS_OPENCL
       template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
         requires (std::same_as<std::remove_cvref_t<SrcDstT>, cl_mem>)
-      // TODO: Implement GPU execution for OpenCL buffers
       void executeUnsafe(SrcDstT srcDst, const ExecutionParameters& execParams)
       {
         checkExecParameters(execParams);
+        requireInPlaceTransform();
+        requireNotNull(srcDst);
 
-        cl_mem_flags flags{};
-        Error::check(clGetMemObjectInfo(srcDst, CL_MEM_TYPE, sizeof(cl_mem_flags), &flags, nullptr));
+        if (gpu::opencl::isReadOnlyBuffer(srcDst))
+        {
+          throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
+        }
 
-        if (flags & CL_MEM_READ_ONLY)
+        executeImpl(srcDst, srcDst, execParams);
+      }
+
+      template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
+        requires (std::same_as<std::remove_cvref_t<SrcDstT>, cl_mem>)
+      void executeUnsafe(PlanarComplex<SrcDstT> srcDst, const ExecutionParameters& execParams)
+      {
+        checkExecParameters(execParams);
+        requireInPlaceTransform();
+        requireNotNull(srcDst.real, srcDst.imag);
+
+        if (gpu::opencl::isReadOnlyBuffer(srcDst.real))
+        {
+          throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
+        }
+
+        if (gpu::opencl::isReadOnlyBuffer(srcDst.imag))
         {
           throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
         }
@@ -516,38 +537,116 @@ namespace afft::detail
 
       template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
         requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
-      // TODO: Implement GPU execution for OpenCL buffers
       void executeUnsafe(SrcT src, DstT dst, const ExecutionParameters& execParams)
       {
-        checkExecParameters(execParams);
-
-        cl_mem_flags flags{};
-        Error::check(clGetMemObjectInfo(src, CL_MEM_TYPE, sizeof(cl_mem_flags), &flags, nullptr));
-
-        if (flags & CL_MEM_READ_ONLY)
+        if (src == dst)
         {
-          requireNonDestructiveTransform();
+          executeUnsafe(src, execParams);
         }
-
-        Error::check(clGetMemObjectInfo(dst, CL_MEM_TYPE, sizeof(cl_mem_flags), &flags, nullptr));
-        if (flags | CL_MEM_READ_ONLY)
+        else
         {
-          throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
-        }
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
+          requireNotNull(src, dst);
 
-        executeImpl(src, dst, execParams);
+          if (gpu::opencl::isReadOnlyBuffer(src))
+          {
+            requireNonDestructiveTransform();
+          }
+
+          if (gpu::opencl::isReadOnlyBuffer(dst))
+          {
+            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+          }
+
+          executeImpl(src, dst, execParams);
+        }
+      }
+
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
+        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+      void executeUnsafe(PlanarComplex<SrcT> src, DstT dst, const ExecutionParameters& execParams)
+      {
+        if (src.real == dst)
+        {
+          executeUnsafe(src, execParams);
+        }
+        else
+        {
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
+          requireNotNull(src.real, src.imag, dst);
+
+          if (gpu::opencl::isReadOnlyBuffer(src.real) || gpu::opencl::isReadOnlyBuffer(src.imag))
+          {
+            requireNonDestructiveTransform();
+          }
+
+          if (gpu::opencl::isReadOnlyBuffer(dst))
+          {
+            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+          }
+
+          executeImpl(src, dst, execParams);
+        }
+      }
+
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
+        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+      void executeUnsafe(SrcT src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
+      {
+        if (src == dst.real)
+        {
+          executeUnsafe(dst, execParams);
+        }
+        else
+        {
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
+          requireNotNull(src, dst.real, dst.imag);
+
+          if (gpu::opencl::isReadOnlyBuffer(src))
+          {
+            requireNonDestructiveTransform();
+          }
+
+          if (gpu::opencl::isReadOnlyBuffer(dst.real) || gpu::opencl::isReadOnlyBuffer(dst.imag))
+          {
+            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+          }
+
+          executeImpl(src, dst, execParams);
+        }
+      }
+
+      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
+        requires (std::same_as<std::remove_cvref_t<SrcT>, cl_mem> && std::same_as<std::remove_cvref_t<DstT>, cl_mem>)
+      void executeUnsafe(PlanarComplex<SrcT> src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
+      {
+        if (src.real == dst.real && src.imag == dst.imag)
+        {
+          executeUnsafe(src, execParams);
+        }
+        else
+        {
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
+          requireNotNull(src.real, src.imag, dst.real, dst.imag);
+
+          if (gpu::opencl::isReadOnlyBuffer(src.real) || gpu::opencl::isReadOnlyBuffer(src.imag))
+          {
+            requireNonDestructiveTransform();
+          }
+
+          if (gpu::opencl::isReadOnlyBuffer(dst.real) || gpu::opencl::isReadOnlyBuffer(dst.imag))
+          {
+            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+          }
+
+          executeImpl(src, dst, execParams);
+        }
       }
 #   endif
-
-      /**
-       * @brief Execute the plan
-       * @param src the source buffer
-       * @param dst the destination buffer
-       */
-      void execute(ExecParam src, ExecParam dst, const ExecutionParametersType auto& execParams)
-      {
-        executeImpl(src, dst, execParams);
-      }
 
       /**
        * @brief Get the size of the workspace required for the plan
