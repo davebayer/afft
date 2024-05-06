@@ -127,7 +127,8 @@ namespace afft::detail
   template<std::integral I>
   [[nodiscard]] constexpr DivResult<I> div(I a, I b)
   {
-    return DivResult<I>{.quotient = a / b, .remainder = a % b};
+    return DivResult<I>{/* .quotient  = */ a / b,
+                        /* .remainder = */ a % b};
   }
 
   /**

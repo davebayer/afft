@@ -38,7 +38,7 @@ option(AFFT_BUILD_TESTS     "Build tests"                     OFF)
 
 set(AFFT_MAX_DIM_COUNT     4          CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
 set(AFFT_CPU_BACKEND_LIST "POCKETFFT" CACHE STRING "Semicolon separated list of CPU backends to use (FFTW3, MKL and POCKETFFT), default is POCKETFFT")
-set(AFFT_GPU_FRAMEWORK    ""          CACHE STRING "GPU framework to use (CUDA or HIP), default is none (no GPU support)")
+set(AFFT_GPU_FRAMEWORK    ""          CACHE STRING "GPU framework to use (CUDA, HIP or OPENCL), default is none (no GPU support)")
 set(AFFT_GPU_BACKEND_LIST "VKFFT"     CACHE STRING "Semicolon separated list of GPU backends to use (CUFFT, HIPFFT, ROCFFT and VKFFT), default is VKFFT")
 
 ########################################################################################################################
@@ -99,7 +99,7 @@ target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_LIST=${CPU_BACKEND_LI
 ########################################################################################################################
 if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
   if(AFFT_GPU_FRAMEWORK STREQUAL "CUDA")
-    find_package(CUDAToolkit REQUIRED)
+      find_package(CUDAToolkit REQUIRED)
     target_include_directories(afft SYSTEM INTERFACE ${CUDAToolkit_INCLUDE_DIRS})
     target_compile_definitions(afft INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${CUDAToolkit_ROOT_DIR}") #fixme: is empty
     target_link_libraries(afft INTERFACE CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
@@ -120,7 +120,7 @@ if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
       message(FATAL_ERROR "Invalid HIP platform: ${HIP_PLATFORM}")
     endif()
   elseif(AFFT_GPU_FRAMEWORK STREQUAL "OPENCL")
-    find_package(OpenCL REQUIRED)
+      find_package(OpenCL REQUIRED)
     target_link_libraries(afft INTERFACE OpenCL::OpenCL)
   else()
     message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_FRAMEWORK}")
