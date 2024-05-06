@@ -30,7 +30,6 @@
 #include <variant>
 
 #include "Config.hpp"
-#include "../gpu.hpp"
 
 namespace afft::detail
 {

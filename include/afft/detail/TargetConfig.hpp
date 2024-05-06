@@ -143,7 +143,8 @@ namespace afft::detail
         {
           const auto& cpuConfig = getConfig<Target::cpu>();
 
-          return afft::cpu::Parameters{.alignment = cpuConfig.alignment, .threadLimit = cpuConfig.threadLimit};
+          return afft::cpu::Parameters{/* .alignment   = */ cpuConfig.alignment,
+                                       /* .threadLimit = */ cpuConfig.threadLimit};
         }
         else if constexpr (target == Target::gpu)
         {
@@ -181,8 +182,8 @@ namespace afft::detail
        */
       [[nodiscard]] static CpuConfig makeTargetVariant(const afft::cpu::Parameters& cpuParams)
       {
-        return CpuConfig{.alignment   = cpuParams.alignment,
-                         .threadLimit = std::min(cpuParams.threadLimit, std::thread::hardware_concurrency())};
+        return CpuConfig{/* .alignment   = */ cpuParams.alignment,
+                         /* .threadLimit = */ std::min(cpuParams.threadLimit, std::thread::hardware_concurrency())};
       }
 
       /**
@@ -192,7 +193,8 @@ namespace afft::detail
        */
       [[nodiscard]] static GpuConfig makeTargetVariant(const afft::gpu::Parameters& gpuParams)
       {
-        GpuConfig config{.externalWorkspace = gpuParams.externalWorkspace};
+        GpuConfig config{};
+        config.externalWorkspace = gpuParams.externalWorkspace;
 
         {
 #       if AFFT_GPU_FRAMEWORK_IS_CUDA

@@ -27,18 +27,16 @@
 
 #include <version>
 
-#ifndef __cpp_lib_concepts
+#if !defined(__cpp_lib_concepts) && __cpp_lib_concepts < 202002L
 # error "C++20 concepts are required"
 #endif
 
-#ifndef __cpp_lib_format
-# if !__has_include(<fmt/format.h>)
-#   error "fmtlib or C++20 std::format is required"
-# endif
+#if !defined(__cpp_lib_integer_comparison_functions) || __cpp_lib_integer_comparison_functions < 202002L
+# error "C++20 integer comparison functions are required"
 #endif
 
-#ifndef __cpp_lib_integer_comparison_functions
-# error "C++20 integer comparison functions are required"
+#if !defined(__cpp_lib_span) || __cpp_lib_span < 202002L
+# error "C++20 std::span is required"
 #endif
 
 // If max dimension count is not defined, use 4 as default

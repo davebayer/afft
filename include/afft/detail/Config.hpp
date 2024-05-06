@@ -198,27 +198,27 @@ namespace afft::detail
         requires (isValidTransform(transform))
       [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
       {
-        Dimensions dims{.shape     = mDimsConfig.getShape(),
-                        .srcStride = mDimsConfig.getSrcStrides(),
-                        .dstStride = mDimsConfig.getDstStrides()};
+        Dimensions dims{/* .shape     = */ mDimsConfig.getShape(),
+                        /* .srcStride = */ mDimsConfig.getSrcStrides(),
+                        /* .dstStride = */ mDimsConfig.getDstStrides()};
 
         if constexpr (transform == Transform::dft)
         {
-          return dft::Parameters{.dimensions       = std::move(dims),
-                                 .commonParameters = mCommonParams,
-                                 .axes             = mTransformConfig.getAxes(),
-                                 .direction        = mTransformConfig.getDirection(),
-                                 .precision        = mTransformConfig.getPrecision(),
-                                 .type             = getTransformConfig<Transform::dft>().type};
+          return dft::Parameters{/* .dimensions       = */ std::move(dims),
+                                 /* .commonParameters = */ mCommonParams,
+                                 /* .axes             = */ mTransformConfig.getAxes(),
+                                 /* .direction        = */ mTransformConfig.getDirection(),
+                                 /* .precision        = */ mTransformConfig.getPrecision(),
+                                 /* .type             = */ getTransformConfig<Transform::dft>().type};
         }
         else if constexpr (transform == Transform::dtt)
         {
-          return dtt::Parameters{.dimensions       = std::move(dims),
-                                 .commonParameters = mCommonParams,
-                                 .direction        = mTransformConfig.getDirection(),
-                                 .precision        = mTransformConfig.getPrecision(),
-                                 .axes             = mTransformConfig.getAxes(),
-                                 .types            = getTransformConfig<Transform::dtt>().axisTypes};
+          return dtt::Parameters{/* .dimensions       = */ std::move(dims),
+                                 /* .commonParameters = */ mCommonParams,
+                                 /* .direction        = */ mTransformConfig.getDirection(),
+                                 /* .precision        = */ mTransformConfig.getPrecision(),
+                                 /* .axes             = */ mTransformConfig.getAxes(),
+                                 /* .types            = */ getTransformConfig<Transform::dtt>().axisTypes};
         }
         else
         {

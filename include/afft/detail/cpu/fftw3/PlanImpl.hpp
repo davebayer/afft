@@ -377,7 +377,9 @@ namespace afft::detail::cpu::fftw3
 
         for (std::size_t i{}; i < rank; ++i)
         {
-          fftwDims[i] = IoDim{.n = dims[i], .is = srcStrides[i], .os = dstStrides[i]};
+          fftwDims[i] = IoDim{/* .n  = */ dims[i],
+                              /* .is = */ srcStrides[i],
+                              /* .os = */ dstStrides[i]};
         }
 
         return std::make_tuple(static_cast<int>(rank), fftwDims);
@@ -399,7 +401,9 @@ namespace afft::detail::cpu::fftw3
 
         for (std::size_t i{}; i < howManyRank; ++i)
         {
-          fftwHowManyDims[i] = IoDim{.n  = howManyDims[i], .is = howManySrcStrides[i], .os = howManyDstStrides[i]};
+          fftwHowManyDims[i] = IoDim{/* .n  = */ howManyDims[i],
+                                     /* .is = */ howManySrcStrides[i],
+                                     /* .os = */ howManyDstStrides[i]};
         }
 
         return std::make_tuple(static_cast<int>(howManyRank), fftwHowManyDims);
