@@ -34,12 +34,17 @@ namespace afft::detail
 {
 inline namespace cxx20
 {
+  /**
+   * @brief TypeProperties helper. Removes const and volatile from Complex template parameter type.
+   * @tparam T The type.
+   */
   template<typename T>
   struct remove_cvref
   {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
   };
 
+  /// @brief Shortcut for remove_cvref type.
   template<typename T>
   using remove_cvref_t = typename remove_cvref<T>::type;
 } // namespace cxx20
