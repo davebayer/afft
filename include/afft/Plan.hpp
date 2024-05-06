@@ -164,11 +164,10 @@ namespace afft
        * @brief Execute out-of-place plan
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer
        */
-      template<KnownType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<KnownType SrcT, KnownType DstT>
       void execute(SrcT* src, DstT* dst)
       {
         mImpl->executeWithDefaultTargetParameters(src, dst);
@@ -178,11 +177,10 @@ namespace afft
        * @brief Execute out-of-place plan with source buffer as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer in PlanarComplex format
        * @param dst Destination buffer
        */
-      template<RealType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<RealType SrcT, KnownType DstT>
       void execute(PlanarComplex<SrcT*> src, DstT* dst)
       {
         mImpl->executeWithDefaultTargetParameters(src, dst);
@@ -192,11 +190,10 @@ namespace afft
        * @brief Execute out-of-place plan with destination buffer as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer in PlanarComplex format
        */
-      template<KnownType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<KnownType SrcT, RealType DstT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst)
       {
         mImpl->executeWithDefaultTargetParameters(src, dst);
@@ -206,11 +203,10 @@ namespace afft
        * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer in PlanarComplex format
        * @param dst Destination buffer in PlanarComplex format
        */
-      template<RealType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<RealType SrcT, RealType DstT>
       void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
       {
         mImpl->executeWithDefaultTargetParameters(src, dst);
@@ -280,7 +276,6 @@ namespace afft
        * @brief Execute out-of-place plan without type checking
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer
        */
@@ -294,7 +289,6 @@ namespace afft
        * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer
        */
@@ -308,7 +302,6 @@ namespace afft
        * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer
        */
@@ -322,7 +315,6 @@ namespace afft
        * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
        * @param src Source buffer
        * @param dst Destination buffer
        */
