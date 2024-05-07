@@ -58,7 +58,7 @@ template<>
     return (msg != nullptr) ? msg : "Unknown error";
   };
 
-  return format("[MKL error] {}", get());
+  return cformat("[MKL error] %s", get());
 }
 
 #endif /* AFFT_DETAIL_CPU_MKL_ERROR_HPP */
