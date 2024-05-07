@@ -31,17 +31,17 @@
 # define AFFT_UNDEF_MAX_DIM_COUNT
 #endif
 
-// If CPU backend list is not defined, use PocketFFT
-#ifndef AFFT_CPU_BACKEND_LIST
-# define AFFT_CPU_BACKEND_LIST                   POCKETFFT
-# define AFFT_UNDEF_CPU_BACKEND_LIST
+// If CPU backend mask is not defined, use PocketFFT
+#ifndef AFFT_CPU_BACKEND_MASK
+# define AFFT_CPU_BACKEND_MASK                   AFFT_CPU_BACKEND_POCKETFFT
+# define AFFT_UNDEF_CPU_BACKEND_MASK
 #endif
 
 // If GPU backend list is not defined, but gpu framework is selected, use VkFFT
 #ifdef AFFT_GPU_FRAMEWORK
-# ifndef AFFT_GPU_BACKEND_LIST
-#   define AFFT_GPU_BACKEND_LIST                 VKFFT
-#   define AFFT_UNDEF_GPU_BACKEND_LIST
+# ifndef AFFT_GPU_BACKEND_MASK
+#   define AFFT_GPU_BACKEND_MASK                 AFFT_GPU_BACKEND_VKFFT
+#   define AFFT_UNDEF_GPU_BACKEND_MASK
 # endif
 #endif
 
@@ -72,14 +72,14 @@ namespace afft
   } version;
 } // namespace afft
 
-#ifdef AFFT_UNDEF_GPU_BACKEND_LIST
-# undef AFFT_GPU_BACKEND_LIST
-# undef AFFT_UNDEF_GPU_BACKEND_LIST
+#ifdef AFFT_UNDEF_GPU_BACKEND_MASK
+# undef AFFT_GPU_BACKEND_MASK
+# undef AFFT_UNDEF_GPU_BACKEND_MASK
 #endif
 
-#ifdef AFFT_UNDEF_CPU_BACKEND_LIST
-# undef AFFT_CPU_BACKEND_LIST
-# undef AFFT_UNDEF_CPU_BACKEND_LIST
+#ifdef AFFT_UNDEF_CPU_BACKEND_MASK
+# undef AFFT_CPU_BACKEND_MASK
+# undef AFFT_UNDEF_CPU_BACKEND_MASK
 #endif
 
 #ifdef AFFT_UNDEF_MAX_DIM_COUNT

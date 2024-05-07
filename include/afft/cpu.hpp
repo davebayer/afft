@@ -43,29 +43,12 @@
   AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_CPU_BACKEND_, backendName)
 
 /**
- * @brief Implementation of AFFT_CPU_BACKEND_MASK
- * @param ... List of backend names
- * @return Transform backend mask
- * @warning Do not use this macro directly
- */
-#define AFFT_CPU_BACKEND_MASK_IMPL(...) \
-  AFFT_BITOR(AFFT_FOR_EACH_WITH_DELIM(AFFT_CPU_BACKEND_FROM_NAME, AFFT_DELIM_COMMA, __VA_ARGS__))
-
-/**
- * @brief Macro for getting the backend mask
- * @return Transform backend mask
- * @warning Requires AFFT_GPU_BACKEND_LIST to be defined
- */
-#define AFFT_CPU_BACKEND_MASK \
-  AFFT_CPU_BACKEND_MASK_IMPL(AFFT_CPU_BACKEND_LIST)
-
-/**
  * @brief Macro for checking if the backend is allowed
  * @param backendName Name of the backend
  * @return Non zero if the backend is allowed, false otherwise
  */
 #define AFFT_CPU_BACKEND_IS_ENABLED(backendName) \
-  (AFFT_CPU_BACKEND_FROM_NAME(backendName) & AFFT_CPU_BACKEND_MASK)
+  (AFFT_CPU_BACKEND_FROM_NAME(backendName) & (AFFT_CPU_BACKEND_MASK))
 
 #include <array>
 #include <complex>

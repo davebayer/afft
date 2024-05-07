@@ -92,8 +92,9 @@ endforeach()
 
 # Convert the list of CPU backends to uppercase and pass it to the target
 string(TOUPPER "${AFFT_CPU_BACKEND_LIST}" CPU_BACKEND_LIST_UPPER)
-string(REPLACE ";" "," CPU_BACKEND_LIST_UPPER_COMMA "${CPU_BACKEND_LIST_UPPER}")
-target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_LIST=${CPU_BACKEND_LIST_UPPER_COMMA})
+list(TRANSFORM CPU_BACKEND_LIST_UPPER PREPEND "AFFT_CPU_BACKEND_" OUTPUT_VARIABLE CPU_BACKEND_LIST_UPPER_PREP)
+string(REPLACE ";" "|" CPU_BACKEND_MASK "${CPU_BACKEND_LIST_UPPER_PREP}")
+target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_MASK=${CPU_BACKEND_MASK})
 
 ########################################################################################################################
 # Set up GPU target if needed
@@ -149,9 +150,10 @@ if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
   # Convert the GPU framework and the list of GPU backends to uppercase and pass it to the target
   string(TOUPPER "${AFFT_GPU_FRAMEWORK}" GPU_FRAMEWORK_UPPER)
   string(TOUPPER "${AFFT_GPU_BACKEND_LIST}" GPU_BACKEND_LIST_UPPER)
-  string(REPLACE ";" "," GPU_BACKEND_LIST_UPPER_COMMA "${GPU_BACKEND_LIST_UPPER}")
+  list(TRANSFORM GPU_BACKEND_LIST_UPPER PREPEND "AFFT_GPU_BACKEND_" OUTPUT_VARIABLE GPU_BACKEND_LIST_UPPER_PREP)
+  string(REPLACE ";" "|" GPU_BACKEND_MASK "${GPU_BACKEND_LIST_UPPER_PREP}")
   target_compile_definitions(afft INTERFACE AFFT_GPU_FRAMEWORK=${GPU_FRAMEWORK_UPPER})
-  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND_LIST=${GPU_BACKEND_LIST_UPPER_COMMA})
+  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND_MASK=${GPU_BACKEND_MASK})
 endif()
 
 ########################################################################################################################

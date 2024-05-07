@@ -97,29 +97,12 @@
   AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_GPU_BACKEND_, backendName)
 
 /**
- * @brief Implementation of AFFT_GPU_BACKEND_MASK
- * @param ... List of backend names
- * @return Backend mask
- * @warning Do not use this macro directly
- */
-#define AFFT_GPU_BACKEND_MASK_IMPL(...) \
-  AFFT_BITOR(AFFT_FOR_EACH_WITH_DELIM(AFFT_GPU_BACKEND_FROM_NAME, AFFT_DELIM_COMMA __VA_OPT__(,) __VA_ARGS__))
-
-/**
- * @brief Macro for getting the backend mask
- * @return Backend mask
- * @warning Requires AFFT_GPU_BACKEND_LIST to be defined
- */
-#define AFFT_GPU_BACKEND_MASK \
-  (AFFT_GPU_BACKEND_ALLOWED_MASK & AFFT_GPU_BACKEND_MASK_IMPL(AFFT_GPU_BACKEND_LIST))
-
-/**
  * @brief Macro for checking if the backend is enabled
  * @param backendName Name of the backend
  * @return Non zero if the backend is enabled, zero otherwise
  */
 #define AFFT_GPU_BACKEND_IS_ENABLED(backendName) \
-  (AFFT_GPU_BACKEND_FROM_NAME(backendName) & AFFT_DETAIL_EXPAND(AFFT_GPU_BACKEND_MASK))
+  (AFFT_GPU_BACKEND_FROM_NAME(backendName) & (AFFT_GPU_BACKEND_MASK))
 
 // Set the mask of enabled backends for given GPU framework
 #if AFFT_GPU_FRAMEWORK_IS_CUDA
@@ -325,7 +308,7 @@ namespace afft::gpu
       {}
 
       /// @brief Destructor
-      constexpr ~UnifiedMemoryAllocator() noexcept = default;
+      ~UnifiedMemoryAllocator() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
