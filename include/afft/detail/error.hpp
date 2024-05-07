@@ -25,7 +25,6 @@
 #ifndef AFFT_DETAIL_ERROR_HPP
 #define AFFT_DETAIL_ERROR_HPP
 
-#include <concepts>
 #include <string>
 #include <string_view>
 #include <version>
@@ -47,9 +46,11 @@ namespace afft::detail
    * @param loc Source location.
    * @return Exception.
    */
-  template<std::derived_from<std::exception> E>
+  template<typename E>
   [[nodiscard]] E makeException(std::string_view msg, std::source_location loc = std::source_location::current())
   {
+    static_assert(std::is_base_of_v<std::exception, E>, "E must be derived from std::exception");
+
     return E{cformat("%s (%s:" PRIuLEAST32 ")", msg.data(), loc.file_name(), loc.line())};
   }
 #else
@@ -59,9 +60,11 @@ namespace afft::detail
    * @param msg Message.
    * @return Exception.
    */
-  template<std::derived_from<std::exception> E>
+  template<typename E>
   [[nodiscard]] E makeException(std::string_view msg)
   {
+    static_assert(std::is_base_of_v<std::exception, E>, "E must be derived from std::exception");
+
     return E{msg.data()};
   }
 #endif
@@ -132,8 +135,9 @@ namespace afft::detail
    */
   template<auto isValidFn>
   constexpr void checkValid(const auto& value, std::string_view msg = {})
-    requires std::invocable<decltype(isValidFn), decltype(value)>
   {
+    static_assert(std::is_invocable_r_v<bool, decltype(isValidFn), decltype(value)>, "isValidFn must return a bool");
+
     if (!isValidFn(value))
     {
       throw std::invalid_argument(msg.empty() ? "Invalid value" : msg.data());
@@ -150,8 +154,9 @@ namespace afft::detail
    */
   template<auto isValidFn, typename T>
   constexpr void checkValid(Span<const T> values, std::string_view msg = {})
-    requires std::invocable<decltype(isValidFn), T>
   {
+    static_assert(std::is_invocable_r_v<bool, decltype(isValidFn), T>, "isValidFn must return a bool");
+
     for (const auto& value : values)
     {
       checkValid<isValidFn>(value, msg);
