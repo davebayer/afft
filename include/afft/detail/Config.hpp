@@ -53,13 +53,17 @@ namespace afft::detail
        * @param transformParams The parameters for the transform.
        * @param targetParams The parameters for the target platform.
        */
+      template<typename TransformParametersT, typename TargetParametersT>
       explicit constexpr
-      Config(const TransformParametersType auto& transformParams, const TargetParametersType auto& targetParams)
+      Config(const TransformParametersT& transformParams, const TargetParametersT& targetParams)
       : mCommonParams(checkCommonParameters(transformParams.commonParameters)),
         mDimsConfig(transformParams.dimensions),
         mTransformConfig(transformParams),
         mTargetConfig(targetParams)
       {
+        static_assert(isTransformParameters<TransformParametersT>, "Invalid transform");
+        static_assert(isTargetParameters<TargetParametersT>, "Invalid target");
+        
         // correct strides in dimensions config
         mTransformConfig.correctDimensionsConfig(mDimsConfig, getCommonParameters());
       }
@@ -183,9 +187,10 @@ namespace afft::detail
        * @return The transform configuration.
        */
       template<Transform transform>
-        requires (isValidTransform(transform))
       [[nodiscard]] constexpr const auto& getTransformConfig() const
       {
+        static_assert(isValidTransform(transform), "Invalid transform");
+
         return mTransformConfig.getConfig<transform>();
       }
 
@@ -195,9 +200,10 @@ namespace afft::detail
        * @return The transform parameters.
        */
       template<Transform transform>
-        requires (isValidTransform(transform))
       [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
       {
+        static_assert(isValidTransform(transform), "Invalid transform");
+
         Dimensions dims{/* .shape     = */ mDimsConfig.getShape(),
                         /* .srcStride = */ mDimsConfig.getSrcStrides(),
                         /* .dstStride = */ mDimsConfig.getDstStrides()};
@@ -234,6 +240,8 @@ namespace afft::detail
       template<Precision prec>
       [[nodiscard]] constexpr auto getTransformNormFactor() const
       {
+        static_assert(isValidPrecision(prec), "Invalid precision");
+
         Real<prec> factor{1};
 
         const auto logSize = mTransformConfig.getTransformLogicalSize(mDimsConfig.getShape());
@@ -260,9 +268,11 @@ namespace afft::detail
        * @tparam T The type of the returned dimension size elements. Must be integral.
        * @return The transform dimensions.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformDims() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> dims{};
 
         for (std::size_t i{}; i < mTransformConfig.getRank(); ++i)
@@ -278,9 +288,11 @@ namespace afft::detail
        * @tparam T The type of the returned stride size elements. Must be integral.
        * @return The transform strides.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformSrcStrides() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> strides{};
 
         for (std::size_t i{}; i < mTransformConfig.getRank(); ++i)
@@ -296,9 +308,11 @@ namespace afft::detail
        * @tparam T The type of the returned stride size elements. Must be integral.
        * @return The transform strides.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformDstStrides() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> strides{};
 
         for (std::size_t i{}; i < mTransformConfig.getRank(); ++i)
@@ -314,9 +328,11 @@ namespace afft::detail
        * @tparam T The type of the returned nembed and stride size elements. Must be integral.
        * @return The transform nembed and stride.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr auto getTransformSrcNembedAndStride() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         auto getStride = [this](std::size_t i)
         {
           return mDimsConfig.getSrcStrides()[mTransformConfig.getAxes()[i]];
@@ -355,9 +371,11 @@ namespace afft::detail
        * @tparam T The type of the returned nembed and stride size elements. Must be integral.
        * @return The transform nembed and stride.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr auto getTransformDstNembedAndStride() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         auto getStride = [this](std::size_t i)
         {
           return mDimsConfig.getDstStrides()[mTransformConfig.getAxes()[i]];
@@ -405,9 +423,11 @@ namespace afft::detail
        * @tparam T The type of the returned dimension size elements. Must be integral.
        * @return The transform how many dimensions.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformHowManyDims() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> dims{};
 
         const auto axes = mTransformConfig.getAxes();
@@ -428,9 +448,11 @@ namespace afft::detail
        * @tparam T The type of the returned stride size elements. Must be integral.
        * @return The transform how many strides.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformHowManySrcStrides() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> strides{};
 
         const auto axes = mTransformConfig.getAxes();
@@ -451,9 +473,11 @@ namespace afft::detail
        * @tparam T The type of the returned stride size elements. Must be integral.
        * @return The transform how many strides.
        */
-      template<std::integral I>
+      template<typename I>
       [[nodiscard]] constexpr MaxDimArray<I> getTransformHowManyDstStrides() const
       {
+        static_assert(std::is_integral_v<I>, "Integral type required");
+
         MaxDimArray<I> strides{};
 
         const auto axes = mTransformConfig.getAxes();
@@ -607,9 +631,10 @@ namespace afft::detail
        * @return The target configuration.
        */
       template<Target target>
-        requires (isValidTarget(target))
       [[nodiscard]] constexpr const auto& getTargetConfig() const
       {
+        static_assert(isValidTarget(target), "Invalid target");
+
         return mTargetConfig.getConfig<target>();
       }
 
@@ -619,9 +644,10 @@ namespace afft::detail
        * @return The target parameters.
        */
       template<Target target>
-        requires (isValidTarget(target))
       [[nodiscard]] constexpr TargetParameters<target> getTargetParameters() const
       {
+        static_assert(isValidTarget(target), "Invalid target");
+        
         return mTargetConfig.getParameters<target>();
       }
 

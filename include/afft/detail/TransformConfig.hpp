@@ -148,6 +148,8 @@ namespace afft::detail
       template<Transform transform>
       [[nodiscard]] constexpr const auto& getConfig() const noexcept
       {
+        static_assert(isValidTransform(transform), "Invalid transform type");
+
         if constexpr (transform == Transform::dft)
         {
           return std::get<DftConfig>(mVariant);

@@ -117,9 +117,10 @@ namespace afft::detail
        * @return Target configuration.
        */
       template<Target target>
-        requires (isValidTarget(target))
       [[nodiscard]] constexpr const auto& getConfig() const
       {
+        static_assert(isValidTarget(target), "Invalid target.");
+
         if constexpr (target == Target::cpu)
         {
           return std::get<CpuConfig>(mVariant);
@@ -136,9 +137,10 @@ namespace afft::detail
        * @return Target parameters.
        */
       template<Target target>
-        requires (isValidTarget(target))
       [[nodiscard]] constexpr TargetParameters<target> getParameters() const
       {
+        static_assert(isValidTarget(target), "Invalid target.");
+
         if constexpr (target == Target::cpu)
         {
           const auto& cpuConfig = getConfig<Target::cpu>();
