@@ -38,9 +38,10 @@ namespace afft
    * @param ptrs Pointers
    * @return Alignment
    */
-  [[nodiscard]] constexpr auto getAlignment(const auto*... ptrs) noexcept
-    -> AFFT_RET_REQUIRES(Alignment, (sizeof...(ptrs) > 0))
+  [[nodiscard]] constexpr Alignment getAlignment(const auto*... ptrs) noexcept
   {
+    static_assert(sizeof...(ptrs) > 0, "At least one pointer must be provided");
+
     auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> Alignment
     {
       return static_cast<Alignment>(uintPtr & ~(uintPtr - 1));
@@ -55,9 +56,10 @@ namespace afft
    * @return Precision triad
    */
   template<typename PrecT>
-  [[nodiscard]] constexpr auto makePrecision() noexcept
-    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<PrecT>)
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
+    static_assert(isKnownType<PrecT>, "Precision type must be a known type");
+
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
                           /* .destination = */ TypeProperties<std::remove_cv_t<PrecT>>::precision};
@@ -70,9 +72,11 @@ namespace afft
    * @return Precision triad
    */
   template<typename ExecT, typename MemoryT>
-  [[nodiscard]] constexpr auto makePrecision() noexcept
-    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<ExecT> && isKnownType<MemoryT>)
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
+    static_assert(isKnownType<ExecT>, "Execution precision type must be a known type");
+    static_assert(isKnownType<MemoryT>, "Memory precision type must be a known type");
+
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision,
                           /* .destination = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision};
@@ -86,9 +90,12 @@ namespace afft
    * @return Precision triad
    */
   template<typename ExecT, typename SrcT, typename DstT>
-  [[nodiscard]] constexpr auto makePrecision() noexcept
-    -> AFFT_RET_REQUIRES(PrecisionTriad, isKnownType<ExecT> && isKnownType<SrcT> && isKnownType<DstT>)
+  [[nodiscard]] constexpr PrecisionTriad makePrecision() noexcept
   {
+    static_assert(isKnownType<ExecT>, "Execution precision type must be a known type");
+    static_assert(isKnownType<SrcT>, "Source precision type must be a known type");
+    static_assert(isKnownType<DstT>, "Destination precision type must be a known type");
+
     return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
                           /* .source      = */ TypeProperties<std::remove_cv_t<SrcT>>::precision,
                           /* .destination = */ TypeProperties<std::remove_cv_t<DstT>>::precision};
