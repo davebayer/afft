@@ -133,10 +133,10 @@ namespace afft::detail
    * @param msg Message to display in the exception.
    * @throws std::invalid_argument if the value is not valid.
    */
-  template<auto isValidFn>
-  constexpr void checkValid(const auto& value, std::string_view msg = {})
+  template<auto isValidFn, typename T>
+  constexpr void checkValid(const T& value, std::string_view msg = {})
   {
-    static_assert(std::is_invocable_r_v<bool, decltype(isValidFn), decltype(value)>, "isValidFn must return a bool");
+    static_assert(std::is_invocable_r_v<bool, decltype(isValidFn), T>, "isValidFn must return a bool");
 
     if (!isValidFn(value))
     {

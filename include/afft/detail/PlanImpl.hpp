@@ -170,9 +170,12 @@ namespace afft::detail
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<KnownType SrcDstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcDstT, typename ExecParamsT>
       void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcDstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcDstT>, typeComplexity<SrcDstT>);
         executeUnsafe(srcDst, execParams);
       }
@@ -184,9 +187,12 @@ namespace afft::detail
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<RealType SrcDstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcDstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcDstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcDstT>, Complexity::complex);
         executeUnsafe(srcDst, execParams);
       }
@@ -200,9 +206,13 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<KnownType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
         executeUnsafe(src, dst, execParams);
       }
@@ -216,9 +226,13 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<RealType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, typeComplexity<DstT>);
         executeUnsafe(src, dst, execParams);
       }
@@ -232,9 +246,13 @@ namespace afft::detail
        * @param dst Destination buffer in PlanarComplex format
        * @param execParams Execution parameters
        */
-      template<KnownType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, Complexity::complex);
         executeUnsafe(src, dst, execParams);
       }
@@ -248,9 +266,13 @@ namespace afft::detail
        * @param dst Destination buffer in PlanarComplex format
        * @param execParams Execution parameters
        */
-      template<RealType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, Complexity::complex);
         executeUnsafe(src, dst, execParams);
       }
@@ -271,7 +293,7 @@ namespace afft::detail
           executeUnsafe(std::forward<decltype(args)>(args)..., afft::gpu::Parameters{});
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
       }
 
@@ -282,9 +304,11 @@ namespace afft::detail
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(void* srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireInPlaceTransform();
         requireNotNull(srcDst);
@@ -310,9 +334,11 @@ namespace afft::detail
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(PlanarComplex<void*> srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireInPlaceTransform();
         requireNotNull(srcDst.real, srcDst.imag);
@@ -328,9 +354,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(void* src, void* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src == dst)
         {
           executeUnsafe(src, execParams);
@@ -353,9 +381,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(const void* src, void* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
@@ -372,9 +402,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(PlanarComplex<void*> src, void* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src.real == dst)
         {
           executeUnsafe(src.real, execParams);
@@ -397,9 +429,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
@@ -417,9 +451,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src == dst.real)
         {
           executeUnsafe(dst, execParams);
@@ -442,9 +478,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(const void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
@@ -461,9 +499,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(PlanarComplex<void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src.real == dst.real && src.imag == dst.imag)
         {
           executeUnsafe(src, execParams);
@@ -486,9 +526,11 @@ namespace afft::detail
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<ExecutionParametersType ExecParamsT>
+      template<typename ExecParamsT>
       void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
@@ -498,10 +540,11 @@ namespace afft::detail
       }
 
 #   if AFFT_GPU_FRAMEWORK_IS_OPENCL
-      template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcDstT>, cl_mem>)
-      void executeUnsafe(SrcDstT srcDst, const ExecutionParameters& execParams)
+      template<typename ExecParamsT>
+      void executeUnsafe(cl_mem srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireInPlaceTransform();
         requireNotNull(srcDst);
@@ -514,10 +557,11 @@ namespace afft::detail
         executeImpl(srcDst, srcDst, execParams);
       }
 
-      template<typename SrcDstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcDstT>, cl_mem>)
-      void executeUnsafe(PlanarComplex<SrcDstT> srcDst, const ExecutionParameters& execParams)
+      template<typename ExecParamsT>
+      void executeUnsafe(PlanarComplex<cl_mem> srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         checkExecParameters(execParams);
         requireInPlaceTransform();
         requireNotNull(srcDst.real, srcDst.imag);
@@ -535,10 +579,11 @@ namespace afft::detail
         executeImpl(srcDst, srcDst, execParams);
       }
 
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
-      void executeUnsafe(SrcT src, DstT dst, const ExecutionParameters& execParams)
+      template<typename ExecParamsT>
+      void executeUnsafe(cl_mem src, cl_mem dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src == dst)
         {
           executeUnsafe(src, execParams);
@@ -563,10 +608,11 @@ namespace afft::detail
         }
       }
 
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
-      void executeUnsafe(PlanarComplex<SrcT> src, DstT dst, const ExecutionParameters& execParams)
+      template<typename ExecParamsT>
+      void executeUnsafe(PlanarComplex<cl_mem> src, cl_mem dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src.real == dst)
         {
           executeUnsafe(src, execParams);
@@ -591,10 +637,11 @@ namespace afft::detail
         }
       }
 
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
-      void executeUnsafe(SrcT src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
+      template<typename ExecutionParamsT>
+      void executeUnsafe(cl_mem src, PlanarComplex<cl_mem> dst, const ExecutionParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src == dst.real)
         {
           executeUnsafe(dst, execParams);
@@ -619,10 +666,11 @@ namespace afft::detail
         }
       }
 
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecutionParameters>
-        requires (std::same_as<remove_cvref_t<SrcT>, cl_mem> && std::same_as<remove_cvref_t<DstT>, cl_mem>)
-      void executeUnsafe(PlanarComplex<SrcT> src, PlanarComplex<DstT> dst, const ExecutionParameters& execParams)
+      template<typename ExecutionParams>
+      void executeUnsafe(PlanarComplex<cl_mem> src, PlanarComplex<cl_mem> dst, const ExecutionParams& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         if (src.real == dst.real && src.imag == dst.imag)
         {
           executeUnsafe(src, execParams);
@@ -802,7 +850,8 @@ namespace afft::detail
        * @brief Require that the pointers are not null
        * @param ptrs the pointers to check
        */
-      void requireNotNull(const auto*... ptrs)
+      template<typename... T>
+      void requireNotNull(const T*... ptrs)
       {
         if ((false || ... || (ptrs == nullptr)))
         {

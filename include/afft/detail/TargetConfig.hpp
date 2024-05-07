@@ -84,9 +84,12 @@ namespace afft::detail
        * @brief Constructor.
        * @param cpuParams CPU parameters.
        */
-      TargetConfig(const TargetParametersType auto& targetParams)
+      template<typename TargetParamsT>
+      TargetConfig(const TargetParamsT& targetParams)
       : mVariant{makeTargetVariant(targetParams)}
-      {}
+      {
+        static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters.");
+      }
 
       /// @brief Copy constructor.
       TargetConfig(const TargetConfig&) = default;

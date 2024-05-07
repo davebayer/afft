@@ -210,8 +210,10 @@ namespace afft::detail
        */
       void correctDimensionsConfig(DimensionsConfig& dimsConfig, const CommonParameters& commonParams) const
       {
-        auto generateStrides = [&](Span<std::size_t> strides, std::invocable<std::size_t, std::size_t> auto fn)
+        auto generateStrides = [&](Span<std::size_t> strides, auto fn)
         {
+          static_assert(std::is_invocable_v<decltype(fn), std::size_t, std::size_t>, "Invalid function signature");
+
           for (std::size_t i{}; i < dimsConfig.getRank(); ++i)
           {
             if (i == 0)
