@@ -44,11 +44,11 @@ namespace afft::detail
    * @param backendSelectParams The parameters for the transform backend selection.
    * @return std::unique_ptr<PlanImpl> The created PlanImpl object.
    */
+  template<typename BackendSelectParametersT>
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makePlanImpl(const Config&                           config,
-               const BackendSelectParametersType auto& backendSelectParams)
+  makePlanImpl(const Config& config, const BackendSelectParametersT& backendSelectParams)
   {
-    constexpr auto target = backendSelectParametersTarget<decltype(backendSelectParams)>;
+    constexpr auto target = backendSelectParametersTarget<BackendSelectParametersT>;
 
     std::unique_ptr<PlanImpl> planImpl{};
 
