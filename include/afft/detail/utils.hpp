@@ -59,6 +59,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_equal(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
     {
       return t == u;
@@ -84,6 +86,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_not_equal(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     return !cmp_equal(t, u);
   }
   
@@ -98,6 +102,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_less(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
     {
       return t < u;
@@ -123,6 +129,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_greater(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     return cmp_less(u, t);
   }
   
@@ -137,6 +145,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_less_equal(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     return !cmp_less(u, t);
   }
   
@@ -151,6 +161,8 @@ inline namespace cxx20
   template<class T, class U>
   constexpr bool cmp_greater_equal(T t, U u) noexcept
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     return !cmp_less(t, u);
   }
 } // inline namespace cxx20
@@ -162,9 +174,11 @@ inline namespace cxx20
    * @return Casted value.
    * @throw std::underflow or std::overflow if the casted value is not equal to the source value.
    */
-  template<std::integral T, std::integral U>
+  template<typename T, typename U>
   [[nodiscard]] constexpr T safeIntCast(U value)
   {
+    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
+
     const auto ret = static_cast<T>(value);
 
     if (cmp_not_equal(ret, value))
@@ -210,9 +224,11 @@ inline namespace cxx20
    * @brief Return result integer division.
    * @tparam I Integral type.
    */
-  template<std::integral I>
+  template<typename I>
   struct DivResult
   {
+    static_assert(std::is_integral_v<I>, "DivResult can only be used with integral types.");
+
     I quotient;  ///< Quotient.
     I remainder; ///< Remainder.
 
@@ -233,9 +249,11 @@ inline namespace cxx20
    * @param b Divisor.
    * @return Tuple containing the quotient and remainder.
    */
-  template<std::integral I>
+  template<typename I>
   [[nodiscard]] constexpr DivResult<I> div(I a, I b)
   {
+    static_assert(std::is_integral_v<I>, "div() can only be used with integral types.");
+
     return DivResult<I>{/* .quotient  = */ a / b,
                         /* .remainder = */ a % b};
   }
@@ -263,9 +281,10 @@ inline namespace cxx23
    * @return Value of the enum's underlying type.
    */
   template<typename E>
-    requires std::is_enum_v<E>
   [[nodiscard]] constexpr auto to_underlying(E value) noexcept
   {
+    static_assert(std::is_enum_v<E>, "to_underlying() can only be used with enum types.");
+
     return static_cast<std::underlying_type_t<E>>(value);
   }
 
