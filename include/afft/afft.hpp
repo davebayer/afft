@@ -25,12 +25,6 @@
 #ifndef AFFT_AFFT_HPP
 #define AFFT_AFFT_HPP
 
-#include <version>
-
-#if !defined(__cpp_lib_concepts) && __cpp_lib_concepts < 202002L
-# error "C++20 concepts are required"
-#endif
-
 // If max dimension count is not defined, use 4 as default
 #ifndef AFFT_MAX_DIM_COUNT
 # define AFFT_MAX_DIM_COUNT                      4
@@ -70,7 +64,7 @@ namespace afft
    * @struct Version
    * @brief AFFT version.
    */
-  struct Version
+  inline constexpr struct Version
   {
     static constexpr int major{AFFT_VERSION_MAJOR}; ///< Major version.
     static constexpr int minor{AFFT_VERSION_MINOR}; ///< Minor version.

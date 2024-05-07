@@ -28,7 +28,6 @@
 #include <memory>
 
 #include "common.hpp"
-#include "concepts.hpp"
 #include "detail/makePlanImpl.hpp"
 #include "detail/Config.hpp"
 #include "detail/PlanImpl.hpp"
