@@ -26,13 +26,11 @@
 #define AFFT_DETAIL_UTILS_HPP
 
 #include <cinttypes>
-#include <concepts>
 #include <cstddef>
 #include <cstdio>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-#include <span>
 #include <tuple>
 #include <variant>
 #include <version>

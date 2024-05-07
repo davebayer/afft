@@ -124,8 +124,7 @@ namespace detail
    * @tparam prec The precision.
    */
   template<Precision prec>
-    requires (isValidPrecision(prec))
-  using Float = typename FloatSelect<prec>::Type;
+  using Float = std::enable_if_t<isValidPrecision(prec), typename FloatSelect<prec>::Type>;
 
   /**
    * @brief Checks if the given precision is supported.
@@ -135,7 +134,7 @@ namespace detail
   template<Precision prec>
   [[nodiscard]] inline constexpr bool hasPrecision() noexcept
   {
-    return !std::same_as<detail::Float<prec>, void>;
+    return !std::is_same_v<detail::Float<prec>, void>;
   }
 
   /**
@@ -165,9 +164,11 @@ namespace detail
    * @return The size of the floating-point type. If the precision is not supported, returns 0.
    */
   template<Precision prec, Complexity cmpl = Complexity::real>
-    requires (isValidPrecision(prec) && isValidComplexity(cmpl))
   [[nodiscard]] inline constexpr std::size_t sizeOf() noexcept
   {
+    static_assert(isValidPrecision(prec), "Invalid precision.");
+    static_assert(isValidComplexity(cmpl), "Invalid complexity.");
+
     if constexpr (hasPrecision<prec>())
     {
       if constexpr (cmpl == Complexity::real)
