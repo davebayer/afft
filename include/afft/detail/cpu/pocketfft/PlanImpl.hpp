@@ -3,7 +3,6 @@
 
 #include <array>
 #include <algorithm>
-#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -20,15 +19,19 @@
 namespace afft::detail::cpu::pocketfft
 {
   // Check the types
-  static_assert(std::same_as<::pocketfft::shape_t::value_type, std::size_t>);
-  static_assert(std::same_as<::pocketfft::stride_t::value_type, std::ptrdiff_t>);
+  static_assert(std::is_same_v<::pocketfft::shape_t::value_type, std::size_t>,
+                "afft requires std::size_t to be the same as pocketfft::shape_t::value_type");
+  static_assert(std::is_same_v<::pocketfft::stride_t::value_type, std::ptrdiff_t>,
+                "afft requires std::ptrdiff_t to be the same as pocketfft::stride_t::value_type");
 
   /**
    * @brief Safe call to a pocketfft function
    * @param fn The function to be invoked
    */
-  void safeCall(std::invocable auto&& fn)
+  inline void safeCall(auto&& fn)
   {
+    static_assert(std::is_invocable_v<decltype(fn)>, "fn must be invocable");
+
     try
     {
       std::invoke(fn);
@@ -281,7 +284,7 @@ namespace afft::detail::cpu::pocketfft
    * @param config The configuration for the plan implementation
    * @return The plan implementation
    */
-  [[nodiscard]] std::unique_ptr<detail::PlanImpl> makePlanImpl(const Config& config)
+  [[nodiscard]] inline std::unique_ptr<detail::PlanImpl> makePlanImpl(const Config& config)
   {
     const auto& commonParams = config.getCommonParameters();
 
