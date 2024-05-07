@@ -12,6 +12,7 @@
 #include <pocketfft_hdronly.h>
 
 #include "../../common.hpp"
+#include "../../cxx.hpp"
 #include "../../error.hpp"
 #include "../../PlanImpl.hpp"
 #include "../../Config.hpp"
@@ -179,7 +180,7 @@ namespace afft::detail::cpu::pocketfft
           });
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
       }
 
@@ -206,7 +207,7 @@ namespace afft::detail::cpu::pocketfft
           case dtt::Type::dst3: return (dir == Direction::forward) ? 3 : 2;
           case dtt::Type::dst4: return (dir == Direction::forward) ? 4 : 4;
           default:
-            unreachable();
+            cxx::unreachable();
           }
         };
 
@@ -318,7 +319,7 @@ namespace afft::detail::cpu::pocketfft
         }
         break;
       default:
-        unreachable();
+        cxx::unreachable();
       }
       break;
     }

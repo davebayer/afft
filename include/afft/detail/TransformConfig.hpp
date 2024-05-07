@@ -32,6 +32,7 @@
 #include <span>
 
 #include "common.hpp"
+#include "cxx.hpp"
 #include "error.hpp"
 #include "utils.hpp"
 
@@ -190,12 +191,12 @@ namespace afft::detail
             case Type::dct2: case Type::dct3: case Type::dct4:
             case Type::dst2: case Type::dst3: case Type::dst4: logicalSize *= 2 * n;       break;
             default:
-              unreachable();
+              cxx::unreachable();
             }
             break;
           }
           default:
-            unreachable();
+            cxx::unreachable();
           }
         }
 
@@ -343,7 +344,7 @@ namespace afft::detail
             refDstCmpl = Complexity::real;
             break;
           default:
-            unreachable();
+            cxx::unreachable();
           }
           break;
         }

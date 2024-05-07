@@ -31,6 +31,8 @@
 #include <rocfft/rocfft.h>
 
 #include "error.hpp"
+#include "../../common.hpp"
+#include "../../cxx.hpp"
 #include "../../PlanImpl.hpp"
 
 namespace afft::detail::gpu::rocfft
@@ -136,7 +138,7 @@ namespace afft::detail::gpu::rocfft
                                     ? rocfft_array_type_real : rocfft_array_type_real;
             break;
           default:
-            unreachable();
+            cxx::unreachable();
         }
 
         rocfft_precision rocfftPrecision{};

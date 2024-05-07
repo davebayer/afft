@@ -35,6 +35,7 @@
 #include <variant>
 #include <version>
 
+#include "cxx.hpp"
 #include "../3rdparty.hpp"
 #include "../Span.hpp"
 
@@ -55,9 +56,9 @@ namespace afft::detail
 
     const auto ret = static_cast<T>(value);
 
-    if (cmp_not_equal(ret, value))
+    if (cxx::cmp_not_equal(ret, value))
     {
-      if (cmp_less(ret, value))
+      if (cxx::cmp_less(ret, value))
       {
         throw std::underflow_error("Safe int conversion failed (underflow)");
       }

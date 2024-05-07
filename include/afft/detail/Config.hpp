@@ -31,6 +31,7 @@
 #include <stdexcept>
 
 #include "common.hpp"
+#include "cxx.hpp"
 #include "DimensionsConfig.hpp"
 #include "TargetConfig.hpp"
 #include "TransformConfig.hpp"
@@ -228,7 +229,7 @@ namespace afft::detail
         }
         else
         {
-          unreachable();
+          cxx::unreachable();
         }
       }
 
@@ -257,7 +258,7 @@ namespace afft::detail
             factor /= static_cast<Real<prec>>(logSize);
             break;
           default:
-            unreachable();
+            cxx::unreachable();
         }
 
         return factor;

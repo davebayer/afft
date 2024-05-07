@@ -34,6 +34,7 @@
 
 #include "error.hpp"
 #include "../../common.hpp"
+#include "../../cxx.hpp"
 #include "../../PlanImpl.hpp"
 #include "../../Config.hpp"
 
@@ -146,7 +147,7 @@ namespace afft::detail::cpu::mkl
           Error::check(DftiSetValue(mHandle.get(), DFTI_CONJUGATE_EVEN_STORAGE, DFTI_COMPLEX_COMPLEX));
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
 
         const auto workspace = (commonParams.workspacePolicy != WorkspacePolicy::minimal)

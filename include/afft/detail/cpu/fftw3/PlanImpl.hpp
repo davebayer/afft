@@ -30,6 +30,7 @@
 #include <memory>
 
 #include "Lib.hpp"
+#include "../../cxx.hpp"
 #include "../../PlanImpl.hpp"
 
 namespace afft::detail::cpu::fftw3
@@ -111,7 +112,7 @@ namespace afft::detail::cpu::fftw3
           }
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
 
         if (commonParams.placement == Placement::inPlace)
@@ -220,7 +221,7 @@ namespace afft::detail::cpu::fftw3
             }
             break;
           default:
-            unreachable();
+            cxx::unreachable();
           }
           break;
         }
@@ -240,7 +241,7 @@ namespace afft::detail::cpu::fftw3
           break;
         }
         default:
-          unreachable();
+          cxx::unreachable();
         }
 
         if (plan == nullptr)
@@ -328,7 +329,7 @@ namespace afft::detail::cpu::fftw3
             }
             break;
           default:
-            unreachable();
+            cxx::unreachable();
           }
           break;
         }
@@ -338,7 +339,7 @@ namespace afft::detail::cpu::fftw3
                                 dst.getRealAs<R>());
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
       }
     protected:

@@ -30,6 +30,7 @@
 #include <variant>
 
 #include "Config.hpp"
+#include "cxx.hpp"
 
 namespace afft::detail
 {
@@ -158,7 +159,7 @@ namespace afft::detail
           execute(std::forward<decltype(buffers)>(buffers)..., afft::gpu::ExecutionParameters{});
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
       }
 

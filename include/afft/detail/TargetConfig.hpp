@@ -29,6 +29,7 @@
 #include <variant>
 
 #include "common.hpp"
+#include "cxx.hpp"
 #include "error.hpp"
 #include "../cpu.hpp"
 #include "../gpu.hpp"
@@ -164,7 +165,7 @@ namespace afft::detail
         }
         else
         {
-          unreachable();
+          cxx::unreachable();
         }
       }
 

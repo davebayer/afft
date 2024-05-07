@@ -48,6 +48,7 @@
 #endif
 
 #include "../common.hpp"
+#include "../cxx.hpp"
 #include "../PlanImpl.hpp"
 
 namespace afft::detail::gpu
@@ -173,7 +174,7 @@ namespace afft::detail::gpu
     case BackendSelectStrategy::best:
       return makeBestPlanImpl(config, backends);
     default:
-      unreachable();
+      cxx::unreachable();
     }
   }
 } // namespace afft::detail::gpu

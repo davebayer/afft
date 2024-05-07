@@ -43,6 +43,7 @@
 #endif
 
 #include "../common.hpp"
+#include "../cxx.hpp"
 #include "../PlanImpl.hpp"
 
 namespace afft::detail::cpu
@@ -158,7 +159,7 @@ namespace afft::detail::cpu
     case BackendSelectStrategy::best:
       return makeBestPlanImpl(config, backends);
     default:
-      unreachable();
+      cxx::unreachable();
     }
   }
 } // namespace afft::detail::cpu

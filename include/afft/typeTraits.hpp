@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "type.hpp"
+#include "detail/cxx.hpp"
 #include "detail/typeTraits.hpp"
 
 namespace afft
@@ -72,7 +73,7 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTransformParameters = detail::IsTransformParameters<detail::remove_cvref_t<T>>::value;
+  inline constexpr bool isTransformParameters = detail::IsTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief Target Parameters type for given target.
@@ -86,7 +87,7 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief Backend type for given target.
@@ -100,7 +101,7 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetBackend = detail::IsTargetBackend<detail::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetBackend = detail::IsTargetBackend<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief BackendSelectParameters type for given target.
@@ -114,14 +115,14 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isBackendSelectParameters = detail::IsBackendSelectParameters<detail::remove_cvref_t<T>>::value;
+  inline constexpr bool isBackendSelectParameters = detail::IsBackendSelectParameters<detail::cxx::remove_cvref_t<T>>::value;
   
   /**
    * @brief Get the target of the backend select parameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Target backendSelectParametersTarget = detail::BackendSelectParametersTarget<detail::remove_cvref_t<T>>::value;
+  inline constexpr Target backendSelectParametersTarget = detail::BackendSelectParametersTarget<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief ExecutionParameters type for given target.
@@ -135,14 +136,14 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isExecutionParameters = detail::IsExecutionParameters<detail::remove_cvref_t<T>>::value;
+  inline constexpr bool isExecutionParameters = detail::IsExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
   
   /**
    * @brief Get the target of the target parameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Target targetParametersTarget = detail::TargetParametersTarget<detail::remove_cvref_t<T>>::value;
+  inline constexpr Target targetParametersTarget = detail::TargetParametersTarget<detail::cxx::remove_cvref_t<T>>::value;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */

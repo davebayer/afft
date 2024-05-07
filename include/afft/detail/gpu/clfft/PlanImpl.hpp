@@ -32,6 +32,7 @@
 #include <clFFT.h>
 
 #include "error.hpp"
+#include "../../common.hpp"
 #include "../../PlanImpl.hpp"
 
 namespace afft::detail::gpu::clfft
@@ -143,7 +144,7 @@ namespace afft::detail::gpu::clfft
                              ? CLFFT_REAL : CLFFT_REAL;
           break;
         default:
-          unreachable();
+          cxx::unreachable();
         }
 
         Error::check(clfftSetLayout(mPlanHandle.value(), clfftInLayout, clfftOutLayout));

@@ -29,6 +29,7 @@
 
 #include "common.hpp"
 #include "typeTraits.hpp"
+#include "detail/cxx.hpp"
 #include "detail/makePlanImpl.hpp"
 #include "detail/Config.hpp"
 #include "detail/PlanImpl.hpp"
@@ -526,7 +527,7 @@ namespace afft
     }
     else
     {
-      detail::unreachable();
+      detail::cxx::unreachable();
     }
   }
 } // namespace afft
