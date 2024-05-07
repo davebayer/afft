@@ -7,3 +7,6 @@
 [submodule "3rdparty/VkFFT"]
 	path = 3rdparty/VkFFT
 	url = https://github.com/DTolm/VkFFT.git
+[submodule "3rdparty/span"]
+	path = 3rdparty/span
+	url = https://github.com/tcbrindle/span.git
