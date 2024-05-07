@@ -28,6 +28,7 @@
 #include <memory>
 
 #include "common.hpp"
+#include "typeTraits.hpp"
 #include "detail/makePlanImpl.hpp"
 #include "detail/Config.hpp"
 #include "detail/PlanImpl.hpp"
@@ -111,6 +112,7 @@ namespace afft
       void execute(SrcDstT* srcDst)
       {
         static_assert(isKnownType<SrcDstT>, "A known type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
@@ -123,6 +125,7 @@ namespace afft
       void execute(PlanarComplex<SrcDstT*> srcDst)
       {
         static_assert(isRealType<SrcDstT>, "A real type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
@@ -138,6 +141,7 @@ namespace afft
       void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcDstT>, "A known type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(srcDst, execParams);
@@ -154,6 +158,7 @@ namespace afft
       void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isRealType<SrcDstT>, "A real type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(srcDst, execParams);
@@ -171,6 +176,7 @@ namespace afft
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -187,6 +193,7 @@ namespace afft
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -203,6 +210,7 @@ namespace afft
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -219,6 +227,7 @@ namespace afft
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -237,6 +246,7 @@ namespace afft
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(src, dst, execParams);
@@ -256,6 +266,7 @@ namespace afft
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(src, dst, execParams);
@@ -275,6 +286,7 @@ namespace afft
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(src, dst, execParams);
@@ -294,6 +306,7 @@ namespace afft
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->execute(src, dst, execParams);
@@ -309,6 +322,8 @@ namespace afft
       template<typename SrcT, typename DstT>
       void executeUnsafe(SrcT* src, DstT* dst)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -322,6 +337,8 @@ namespace afft
       template<typename SrcT, typename DstT>
       void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -335,6 +352,8 @@ namespace afft
       template<typename SrcT, typename DstT>
       void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -348,6 +367,8 @@ namespace afft
       template<typename SrcT, typename DstT>
       void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -363,6 +384,7 @@ namespace afft
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->executeUnsafe(src, dst, execParams);
@@ -380,6 +402,7 @@ namespace afft
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->executeUnsafe(src, dst, execParams);
@@ -397,6 +420,7 @@ namespace afft
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->executeUnsafe(src, dst, execParams);
@@ -414,6 +438,7 @@ namespace afft
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         mImpl->executeUnsafe(src, dst, execParams);
@@ -485,7 +510,7 @@ namespace afft
    * @param targetParams Target parameters
    * @return Plan
    */
-  template<TransformParametersType TransformParamsT, TargetParametersType TargetParamsT>
+  template<typename TransformParamsT, typename TargetParamsT>
   Plan makePlan(const TransformParamsT& transformParams, const TargetParamsT& targetParams)
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
