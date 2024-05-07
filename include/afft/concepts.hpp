@@ -45,7 +45,7 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  concept RealType = KnownType<T> && typeComplexity<T> == Complexity::real;
+  concept RealType = isRealType<T>;
 
   /**
    * @brief Complex type concept.

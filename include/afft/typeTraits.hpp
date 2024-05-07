@@ -47,6 +47,20 @@ namespace afft
   inline constexpr Complexity typeComplexity = detail::TypePropertiesHelper<std::remove_cv_t<T>>::complexity;
 
   /**
+   * @brief Check if the type is a known type. There has to be a specialization of TypeProperties for the type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isKnownType = std::is_base_of_v<detail::KnownTypePropertiesBase, detail::TypePropertiesHelper<std::remove_cv_t<T>>>;
+
+  /**
+   * @brief Check if the type is a known real type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isRealType = isKnownType<T> && typeComplexity<T> == Complexity::real;
+
+  /**
    * @brief Target Parameters type for given transform.
    * @tparam transform The transform type.
    */
