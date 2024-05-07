@@ -58,7 +58,7 @@ namespace afft::detail::gpu::vkfft
       constexpr App(App&&) noexcept = default;
 
       /// @brief Destructor
-      constexpr ~App() noexcept
+      ~App() noexcept
       {
         if (isValid())
         {
@@ -67,10 +67,10 @@ namespace afft::detail::gpu::vkfft
       }
 
       /// @brief Copy assignment operator is not allowed
-      constexpr App& operator=(const App&) noexcept = delete;
+      App& operator=(const App&) = delete;
 
       /// @brief Move assignment operator
-      constexpr App& operator=(App&&) noexcept = default;
+      App& operator=(App&&) = default;
 
       /**
        * @brief Initialize VkFFTApplication

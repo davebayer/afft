@@ -47,7 +47,7 @@ set(AFFT_GPU_BACKEND_LIST "VKFFT"     CACHE STRING "Semicolon separated list of 
 add_library(afft INTERFACE)
 add_library(afft::afft ALIAS afft)
 
-target_compile_features(afft INTERFACE cxx_std_20)
+target_compile_features(afft INTERFACE cxx_std_17)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(afft INTERFACE AFFT_DEBUG)

@@ -244,7 +244,7 @@ namespace afft
       using MapValue = ListIter;                                             ///< The value type of the map.
       struct MapHash                                                         ///< The hash function of the map.
       {
-        [[nodiscard]] constexpr std::size_t operator()(Key key) const noexcept
+        [[nodiscard]] std::size_t operator()(Key key) const noexcept
         {
           return std::hash<detail::Config>{}(key.get());
         }

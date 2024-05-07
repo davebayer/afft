@@ -159,7 +159,15 @@ namespace afft
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
 
     /// @brief Default equality operator
-    friend constexpr bool operator==(const CommonParameters&, const CommonParameters&) = default;
+    friend constexpr bool operator==(const CommonParameters& lhs, const CommonParameters& rhs)
+    {
+      return (lhs.complexFormat == rhs.complexFormat) &&
+             (lhs.destroySource == rhs.destroySource) &&
+             (lhs.initEffort == rhs.initEffort) &&
+             (lhs.normalize == rhs.normalize) &&
+             (lhs.placement == rhs.placement) &&
+             (lhs.workspacePolicy == rhs.workspacePolicy);
+    }
   };
 
   /**
@@ -173,7 +181,12 @@ namespace afft
     Precision destination{}; ///< precision of the destination data
 
     /// @brief Default equality operator
-    friend constexpr bool operator==(const PrecisionTriad&, const PrecisionTriad&) = default;
+    friend constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
+    {
+      return (lhs.execution == rhs.execution) &&
+             (lhs.source == rhs.source) &&
+             (lhs.destination == rhs.destination);
+    }
   };
 
   /// @brief Named constant representing all axes (is empty span)

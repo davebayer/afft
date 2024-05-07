@@ -38,9 +38,10 @@ namespace afft
    * @param ptrs Pointers
    * @return Alignment
    */
-  [[nodiscard]] constexpr Alignment getAlignment(const auto*... ptrs) noexcept
+  template<typename... Args>
+  [[nodiscard]] constexpr Alignment getAlignment(const Args*... ptrs) noexcept
   {
-    static_assert(sizeof...(ptrs) > 0, "At least one pointer must be provided");
+    static_assert(sizeof...(Args) > 0, "At least one pointer must be provided");
 
     auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> Alignment
     {

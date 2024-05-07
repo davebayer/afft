@@ -46,7 +46,10 @@ namespace afft::detail
     unsigned  threadLimit{}; ///< Number of threads.
 
     /// @brief Equality operator.
-    friend bool operator==(const CpuConfig&, const CpuConfig&) noexcept = default;
+    friend bool operator==(const CpuConfig& lhs, const CpuConfig& rhs) noexcept
+    {
+      return (lhs.alignment == rhs.alignment) && (lhs.threadLimit == rhs.threadLimit);
+    }
   };
 
   /**
@@ -67,7 +70,14 @@ namespace afft::detail
     bool externalWorkspace{}; ///< Use external workspace.
 
     /// @brief Equality operator.
-    friend bool operator==(const GpuConfig&, const GpuConfig&) noexcept = default;
+    friend bool operator==(const GpuConfig& lhs, const GpuConfig& rhs) noexcept
+    {
+#     if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+      return lhs.device == rhs.device && lhs.externalWorkspace == rhs.externalWorkspace;
+#     elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+      return lhs.context == rhs.context && lhs.device == rhs.device && lhs.externalWorkspace == rhs.externalWorkspace;
+#     endif
+    }
   };
 
   /**
@@ -156,15 +166,16 @@ namespace afft::detail
         {
           const auto& gpuConfig = getConfig<Target::gpu>();
 
-          return afft::gpu::Parameters
-          {
+          afft::gpu::Parameters params{};
+
 #         if AFFT_GPU_BACKEND_IS_CUDA
-            .device            = gpuConfig.device,
+          params.device            = gpuConfig.device;
 #         elif AFFT_GPU_BACKEND_IS_HIP
-            .device            = gpuConfig.device,
+          params.device            = gpuConfig.device;
 #         endif
-            .externalWorkspace = gpuConfig.externalWorkspace,
-          };
+          params.externalWorkspace = gpuConfig.externalWorkspace;
+
+          return params;
         }
         else
         {
@@ -173,10 +184,10 @@ namespace afft::detail
       }
 
       /// @brief Equality operator.
-      friend bool operator==(const TargetConfig&, const TargetConfig&) noexcept = default;
-
-      /// @brief Inequality operator.
-      friend bool operator!=(const TargetConfig&, const TargetConfig&) noexcept = default;
+      friend bool operator==(const TargetConfig& lhs, const TargetConfig& rhs) noexcept
+      {
+        return lhs.mVariant == rhs.mVariant;
+      }
     protected:
     private:
       using ConfigVariant = std::variant<CpuConfig, GpuConfig>;

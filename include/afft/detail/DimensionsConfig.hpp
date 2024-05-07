@@ -48,7 +48,7 @@ namespace afft::detail
        * @brief Constructor.
        * @param dims Dimensions.
        */
-      constexpr DimensionsConfig(const Dimensions& dims)
+      DimensionsConfig(const Dimensions& dims)
       : mRank{dims.shape.size()}
       {
         auto assertNotZero = [](const std::size_t elem) constexpr -> std::size_t
@@ -183,7 +183,7 @@ namespace afft::detail
         return {mDstStrides.data(), mRank};
       }
 
-      [[nodiscard]] constexpr bool stridesEqual() const noexcept
+      [[nodiscard]] bool stridesEqual() const noexcept
       {
         return std::equal(mSrcStrides.begin(), std::next(mSrcStrides.begin(), static_cast<std::ptrdiff_t>(mRank)),
                           mDstStrides.begin(), std::next(mDstStrides.begin(), static_cast<std::ptrdiff_t>(mRank)));

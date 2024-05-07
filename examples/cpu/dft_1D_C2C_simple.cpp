@@ -19,21 +19,17 @@ int main(void)
 
   // initialize source vector
 
-  const afft::dft::Parameters dftParams // parameters for dft
-  {
-    .dimensions       = {.shape = {{size}}}, // set up the dimensions
-    .commonParameters = {.destroySource = true, // allow to destroy source data
-                         .normalize     = afft::Normalize::orthogonal}, // use orthogonal normalization
-    .direction        = afft::Direction::forward, // it will be a forward transform
-    .precision        = afft::makePrecision<PrecT>(), // set up precision of the transform
-    .type             = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
-  };
+  afft::dft::Parameters dftParams{}; // parameters for dft
+  dftParams.dimensions.shape               = {{size}}; // set up the dimensions
+  dftParams.commonParameters.destroySource = true; // allow to destroy source data
+  dftParams.commonParameters.normalize     = afft::Normalize::orthogonal; // use orthogonal normalization
+  dftParams.direction                      = afft::Direction::forward; // it will be a forward transform
+  dftParams.precision                      = afft::makePrecision<PrecT>(); // set up precision of the transform
+  dftParams.type                           = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
 
-  const afft::cpu::Parameters cpuParams // it will run on a cpu
-  {
-    .alignment        = afft::getAlignment(src.data(), dst.data()), // get alignment of the pointers
-    .threadLimit      = 4, // we will use up to 4 threads
-  };
+  afft::cpu::Parameters cpuParams{}; // it will run on a cpu
+  cpuParams.alignment   = afft::getAlignment(src.data(), dst.data()); // get alignment of the pointers
+  cpuParams.threadLimit = 4; // we will use up to 4 threads
 
   // create scope just to make sure the plan is destroyed before afft::finalize() is called
   {

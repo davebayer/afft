@@ -51,7 +51,7 @@ namespace afft::detail
       }
       constexpr ExecParam(const ExecParam&) = default;
       constexpr ExecParam(ExecParam&&) = default;
-      constexpr ~ExecParam() = default;
+      ~ExecParam() = default;
 
       constexpr ExecParam& operator=(const ExecParam&) = default;
       constexpr ExecParam& operator=(ExecParam&&) = default;
@@ -148,15 +148,16 @@ namespace afft::detail
        * @tparam ArgsT Argument types
        * @param args Arguments
        */
-      void executeWithDefaultTargetParameters(auto&&... buffers)
+      template<typename... Args>
+      void executeWithDefaultTargetParameters(Args&&... buffers)
       {
         switch (getConfig().getTarget())
         {
         case Target::cpu:
-          execute(std::forward<decltype(buffers)>(buffers)..., afft::cpu::ExecutionParameters{});
+          execute(std::forward<Args>(buffers)..., afft::cpu::ExecutionParameters{});
           break;
         case Target::gpu:
-          execute(std::forward<decltype(buffers)>(buffers)..., afft::gpu::ExecutionParameters{});
+          execute(std::forward<Args>(buffers)..., afft::gpu::ExecutionParameters{});
           break;
         default:
           cxx::unreachable();
@@ -282,15 +283,16 @@ namespace afft::detail
        * @tparam ArgsT Argument types
        * @param args Arguments
        */
-      void executeUnsafeWithDefaultTargetParameters(auto&&... args)
+      template<typename... Args>
+      void executeUnsafeWithDefaultTargetParameters(Args&&... args)
       {
         switch (getConfig().getTarget())
         {
         case Target::cpu:
-          executeUnsafe(std::forward<decltype(args)>(args)..., afft::cpu::Parameters{});
+          executeUnsafe(std::forward<Args>(args)..., afft::cpu::Parameters{});
           break;
         case Target::gpu:
-          executeUnsafe(std::forward<decltype(args)>(args)..., afft::gpu::Parameters{});
+          executeUnsafe(std::forward<Args>(args)..., afft::gpu::Parameters{});
           break;
         default:
           cxx::unreachable();

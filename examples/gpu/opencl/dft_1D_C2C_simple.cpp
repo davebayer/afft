@@ -52,20 +52,16 @@ int main(void)
 
   // initialize source vector
 
-  const afft::dft::Parameters dftParams // parameters for dft
-  {
-    .dimensions       = {.shape = {{size}}}, // set up the dimensions
-    .commonParameters = {.destroySource = true}, // destroy source vector after the transform
-    .direction        = afft::Direction::forward, // it will be a forward transform
-    .precision        = afft::makePrecision<PrecT>(), // set up precision of the transform
-    .type             = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
-  };
+  afft::dft::Parameters dftParams{}; // parameters for dft
+  dftParams.dimensions.shape               = {{size}}; // set up the dimensions
+  dftParams.commonParameters.destroySource = true; // destroy source vector after the transform
+  dftParams.direction                      = afft::Direction::forward; // it will be a forward transform
+  dftParams.precision                      = afft::makePrecision<PrecT>(); // set up precision of the transform
+  dftParams.type                           = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
 
-  const afft::gpu::Parameters gpuParams // parameters for GPU
-  {
-    .context = context, // set up OpenCL context
-    .device  = device, // set up OpenCL device
-  };
+  afft::gpu::Parameters gpuParams{}; // parameters for GPU
+  gpuParams.context = context; // set up OpenCL context
+  gpuParams.device  = device; // set up OpenCL device
 
   // create scope just to make sure the plan is destroyed before afft::finalize() is called
   {

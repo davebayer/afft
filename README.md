@@ -1,6 +1,6 @@
 # afft library
 ## Introduction
-`afft` is a C++20 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
+`afft` is a C++17 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
 - user friendly interface,
 - support for wide range of the features offered by the backend libraries,
 - low overhead,

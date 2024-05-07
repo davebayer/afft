@@ -29,7 +29,8 @@ namespace afft::detail::cpu::pocketfft
    * @brief Safe call to a pocketfft function
    * @param fn The function to be invoked
    */
-  inline void safeCall(auto&& fn)
+  template<typename Fn>
+  void safeCall(Fn&& fn)
   {
     static_assert(std::is_invocable_v<decltype(fn)>, "fn must be invocable");
 

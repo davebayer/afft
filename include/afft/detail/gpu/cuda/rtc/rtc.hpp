@@ -240,13 +240,13 @@ namespace afft::detail::gpu::cuda::rtc
       template<std::size_t n = 0>
       Program(std::string_view srcCode, std::string_view programName, Span<Header, n> headers = {})
       {
-        using CharPtrContainer = std::conditional_t<(n != std::dynamic_extent),
+        using CharPtrContainer = std::conditional_t<(n != dynamicExtent),
                                                     std::array<const char*, n>, std::vector<const char*>>;
 
         CharPtrContainer headerSrcCodePtrs{};
         CharPtrContainer headerIncludeNamePtrs{};
 
-        if constexpr (n == std::dynamic_extent)
+        if constexpr (n == dynamicExtent)
         {
           headerSrcCodePtrs.resize(headers.size());
           headerIncludeNamePtrs.resize(headers.size());
@@ -308,7 +308,7 @@ namespace afft::detail::gpu::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      [[nodiscard("Always check the compilation result")]] bool compile(Span<const char*> options)
+      [[nodiscard]] bool compile(Span<const char*> options)
       {
         if (std::exchange(mIsCompiled, true))
         {

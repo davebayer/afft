@@ -133,7 +133,7 @@ namespace afft::detail
        * @brief Are source and destination strides equal?
        * @return True if equal, false otherwise.
        */
-      [[nodiscard]] constexpr bool hasEqualStrides() const noexcept
+      [[nodiscard]] bool hasEqualStrides() const noexcept
       {
         return mDimsConfig.stridesEqual();
       }
@@ -653,7 +653,13 @@ namespace afft::detail
       }
 
       /// @brief Equality operator.
-      [[nodiscard]] friend constexpr bool operator==(const Config&, const Config&) noexcept = default;
+      [[nodiscard]] friend constexpr bool operator==(const Config& lhs, const Config& rhs) noexcept
+      {
+        return (lhs.mCommonParams == rhs.mCommonParams) &&
+               (lhs.mDimsConfig == rhs.mDimsConfig) &&
+               (lhs.mTransformConfig == rhs.mTransformConfig) &&
+               (lhs.mTargetConfig == rhs.mTargetConfig);
+      }
 
     private:
       /**

@@ -46,7 +46,10 @@ namespace afft::detail
     dft::Type type{}; ///< DFT transform type.
 
     /// @brief Default equality operator.
-    friend constexpr bool operator==(const DftConfig&, const DftConfig&) = default;
+    friend constexpr bool operator==(const DftConfig& lhs, const DftConfig& rhs)
+    {
+      return lhs.type == rhs.type;
+    }
   };
 
   /**
@@ -56,7 +59,10 @@ namespace afft::detail
   {
     MaxDimArray<dtt::Type> axisTypes{}; ///< DTT transform types for each axis.
 
-    friend constexpr bool operator==(const DttConfig&, const DttConfig&) = default;
+    friend bool operator==(const DttConfig& lhs, const DttConfig& rhs)
+    {
+      return lhs.axisTypes == rhs.axisTypes;
+    }
   };
 
   /**
@@ -506,7 +512,7 @@ namespace afft::detail
        * @param dttParams DTT parameters.
        * @return Transform variant.
        */
-      [[nodiscard]] static constexpr DttConfig makeTransformVariant(const dtt::Parameters& dttParams)
+      [[nodiscard]] static DttConfig makeTransformVariant(const dtt::Parameters& dttParams)
       {
         checkValid<isValidDttType>(dttParams.types, "Invalid dtt transform types");
 

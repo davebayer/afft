@@ -517,11 +517,11 @@ namespace afft
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
 
-    if constexpr (std::same_as<TargetParamsT, cpu::Parameters>)
+    if constexpr (std::is_same_v<TargetParamsT, cpu::Parameters>)
     {
       return makePlan(transformParams, targetParams, cpu::BackendSelectParameters{});
     }
-    else if constexpr (std::same_as<TargetParamsT, gpu::Parameters>)
+    else if constexpr (std::is_same_v<TargetParamsT, gpu::Parameters>)
     {
       return makePlan(transformParams, targetParams, gpu::BackendSelectParameters{});
     }
