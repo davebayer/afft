@@ -75,9 +75,10 @@ namespace afft
        * @return Transform parameters
        */
       template<Transform transform>
-        requires (detail::isValidTransform(transform))
       [[nodiscard]] TransformParameters<transform> getTransformParameters() const
       {
+        static_assert(detail::isValidTransform(transform), "Invalid transform type");
+
         return mImpl->getConfig().getTransformParameters<transform>();
       }
 
@@ -96,9 +97,10 @@ namespace afft
        * @return Target parameters
        */
       template<Target target>
-        requires (detail::isValidTarget(target))
       [[nodiscard]] TargetParameters<target> getTargetParameters() const
       {
+        static_assert(detail::isValidTarget(target), "Invalid target type");
+
         return mImpl->getConfig().getTargetParameters<target>();
       }
 
@@ -106,9 +108,11 @@ namespace afft
        * @brief Execute in-place plan with default execution parameters
        * @param srcDst Source and destination
        */
-      template<KnownType SrcDstT>
+      template<typename SrcDstT>
       void execute(SrcDstT* srcDst)
       {
+        static_assert(isKnownType<SrcDstT>, "A known type is required");
+
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
 
@@ -116,9 +120,11 @@ namespace afft
        * @brief Execute in-place plan with default execution parameters
        * @param srcDst Source and destination
        */
-      template<RealType SrcDstT>
+      template<typename SrcDstT>
       void execute(PlanarComplex<SrcDstT*> srcDst)
       {
+        static_assert(isRealType<SrcDstT>, "A real type is required");
+
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
 
@@ -129,9 +135,12 @@ namespace afft
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<KnownType SrcDstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcDstT, typename ExecParamsT>
       void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcDstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(srcDst, execParams);
       }
 
@@ -142,9 +151,12 @@ namespace afft
        * @param srcDst Source and destination buffer
        * @param execParams Execution parameters
        */
-      template<RealType SrcDstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcDstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcDstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(srcDst, execParams);
       }
 
@@ -155,9 +167,12 @@ namespace afft
        * @param src Source buffer
        * @param dst Destination buffer
        */
-      template<KnownType SrcT, KnownType DstT>
+      template<typename SrcT, typename DstT>
       void execute(SrcT* src, DstT* dst)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -168,9 +183,12 @@ namespace afft
        * @param src Source buffer in PlanarComplex format
        * @param dst Destination buffer
        */
-      template<RealType SrcT, KnownType DstT>
+      template<typename SrcT, typename DstT>
       void execute(PlanarComplex<SrcT*> src, DstT* dst)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -181,9 +199,12 @@ namespace afft
        * @param src Source buffer
        * @param dst Destination buffer in PlanarComplex format
        */
-      template<KnownType SrcT, RealType DstT>
+      template<typename SrcT, typename DstT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -194,9 +215,12 @@ namespace afft
        * @param src Source buffer in PlanarComplex format
        * @param dst Destination buffer in PlanarComplex format
        */
-      template<RealType SrcT, RealType DstT>
+      template<typename SrcT, typename DstT>
       void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -209,9 +233,13 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<KnownType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -224,9 +252,13 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<RealType SrcT, KnownType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -239,9 +271,13 @@ namespace afft
        * @param dst Destination buffer in PlanarComplex format
        * @param execParams Execution parameters
        */
-      template<KnownType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -254,9 +290,13 @@ namespace afft
        * @param dst Destination buffer in PlanarComplex format
        * @param execParams Execution parameters
        */
-      template<RealType SrcT, RealType DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -321,9 +361,11 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(SrcT* src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -336,9 +378,11 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -351,9 +395,11 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -366,19 +412,23 @@ namespace afft
        * @param dst Destination buffer
        * @param execParams Execution parameters
        */
-      template<typename SrcT, typename DstT, ExecutionParametersType ExecParamsT>
+      template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
       {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
     protected:
     private:
       // Allow makePlan to create Plan objects
-      friend Plan makePlan(const TransformParametersType auto& transformParams,
+      template<typename TransformParametersT>
+      friend Plan makePlan(const TransformParametersT&         transformParams,
                            const cpu::Parameters&              cpuParams,
                            const cpu::BackendSelectParameters& cpuBackendSelectParams);
     
-      friend Plan makePlan(const TransformParametersType auto& transformParams,
+      template<typename TransformParametersT>
+      friend Plan makePlan(const TransformParametersT&         transformParams,
                            const gpu::Parameters&              gpuParams,
                            const gpu::BackendSelectParameters& gpuBackendSelectParams);
 
@@ -403,10 +453,13 @@ namespace afft
    * @param cpuBackendSelectParams CPU backend selection parameters
    * @return Plan
    */
-  Plan makePlan(const TransformParametersType auto& transformParams,
+  template<typename TransformParametersT>
+  Plan makePlan(const TransformParametersT&         transformParams,
                 const cpu::Parameters&              cpuParams,
                 const cpu::BackendSelectParameters& cpuBackendSelectParams)
   {
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+
     return Plan{detail::makePlanImpl(detail::Config(transformParams, cpuParams), cpuBackendSelectParams)};
   }
 
@@ -417,10 +470,13 @@ namespace afft
    * @param gpuBackendSelectParams GPU backend selection parameters
    * @return Plan
    */
-  Plan makePlan(const TransformParametersType auto& transformParams,
+  template<typename TransformParametersT>
+  Plan makePlan(const TransformParametersT&         transformParams,
                 const gpu::Parameters&              gpuParams,
                 const gpu::BackendSelectParameters& gpuBackendSelectParams)
   {
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+
     return Plan{detail::makePlanImpl(detail::Config(transformParams, gpuParams), gpuBackendSelectParams)};
   }
 
@@ -431,9 +487,11 @@ namespace afft
    * @return Plan
    */
   template<TransformParametersType TransformParamsT, TargetParametersType TargetParamsT>
-  Plan makePlan(const TransformParamsT& transformParams,
-                const TargetParamsT&    targetParams)
+  Plan makePlan(const TransformParamsT& transformParams, const TargetParamsT& targetParams)
   {
+    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
+    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
+
     if constexpr (std::same_as<TargetParamsT, cpu::Parameters>)
     {
       return makePlan(transformParams, targetParams, cpu::BackendSelectParameters{});
