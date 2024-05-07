@@ -159,8 +159,9 @@ namespace afft
        * @param params The parameters of the transform.
        * @param targetParams The parameters of the target transform.
        */
-      void erase(const TransformParametersType auto& params,
-                 const TargetParametersType auto& targetParams)
+      template<typename TransformParametersT, typename TargetParametersT>
+      auto erase(const TransformParametersT& params, const TargetParametersT& targetParams)
+        -> AFFT_RET_REQUIRES(void, (isTransformParameters<TargetParametersT> && isTargetParameters<TargetParametersT>))
       {
         const auto config = detail::Config{params, targetParams};
 
@@ -212,8 +213,10 @@ namespace afft
        * @param targetParams The parameters of the target transform.
        * @return The plan that matches the specified parameters.
        */
-      std::optional<Plan> find(const TransformParametersType auto& params,
-                               const TargetParametersType auto& targetParams)
+      template<typename TransformParametersT, typename TargetParametersT>
+      [[nodiscard]] auto find(const TransformParametersT& params, const TargetParametersT& targetParams)
+        -> AFFT_RET_REQUIRES(std::optional<Plan>, (isTransformParameters<TargetParametersT>
+                                                   && isTargetParameters<TargetParametersT>))
       {
         std::optional<Plan> plan{};
 
@@ -229,8 +232,6 @@ namespace afft
       
     protected:
     private:
-      
-
       using Key      = std::reference_wrapper<const detail::Config>;         ///< The key type of the cache.
       using Value    = std::shared_ptr<detail::PlanImpl>;                    ///< The value type of the cache.
 
