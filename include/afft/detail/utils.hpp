@@ -35,135 +35,11 @@
 #include <variant>
 #include <version>
 
-#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
-# include <source_location>
-#endif
-
 #include "../3rdparty.hpp"
 #include "../Span.hpp"
 
 namespace afft::detail
 {
-inline namespace cxx20
-{
-  /**
-   * @brief Compares two values for equality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the values are equal, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_equal(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
-    {
-      return t == u;
-    }
-    else if constexpr (std::is_signed_v<T>)
-    {
-      return t >= 0 && std::make_unsigned_t<T>(t) == u;
-    }
-    else
-    {
-      return u >= 0 && std::make_unsigned_t<U>(u) == t;
-    }
-  }
-  
-  /**
-   * @brief Compares two values for inequality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the values are not equal, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_not_equal(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    return !cmp_equal(t, u);
-  }
-  
-  /**
-   * @brief Compares two values for less than. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the first value is less than the second value, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_less(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    if constexpr (std::is_signed_v<T> == std::is_signed_v<U>)
-    {
-      return t < u;
-    }
-    else if constexpr (std::is_signed_v<T>)
-    {
-      return t < 0 || std::make_unsigned_t<T>(t) < u;
-    }
-    else
-    {
-      return u >= 0 && t < std::make_unsigned_t<U>(u);
-    }
-  }
-  
-  /**
-   * @brief Compares two values for greater than. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the first value is greater than the second value, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_greater(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    return cmp_less(u, t);
-  }
-  
-  /**
-   * @brief Compares two values for less than or equal. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the first value is less than or equal to the second value, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_less_equal(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    return !cmp_less(u, t);
-  }
-  
-  /**
-   * @brief Compares two values for greater than or equal. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
-   * @tparam T First value type.
-   * @tparam U Second value type.
-   * @param t First value.
-   * @param u Second value.
-   * @return true if the first value is greater than or equal to the second value, false otherwise.
-   */
-  template<class T, class U>
-  constexpr bool cmp_greater_equal(T t, U u) noexcept
-  {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    return !cmp_less(t, u);
-  }
-} // inline namespace cxx20
   /**
    * @brief Safely casts a value to a different integral type.
    * @tparam T Target integral type.
@@ -201,7 +77,8 @@ inline namespace cxx20
    * @return Formatted string.
    * @throw std::runtime_error if the string could not be formatted.
    */
-  [[nodiscard]] std::string cformat(std::string_view format, const auto&... args)
+  template<typename... Args>
+  [[nodiscard]] std::string cformat(std::string_view format, const Args&... args)
   {
     const auto size = std::snprintf(nullptr, 0, format.data(), args...);
 
@@ -268,50 +145,6 @@ inline namespace cxx20
   {
     return const_cast<T*>(ptr);
   }
-
-// C++23 backport
-inline namespace cxx23
-{
-  /**
-   * @brief Backport of the C++23 std::to_underlying() function.
-   * @tparam E Enum type.
-   * @param value Enum value.
-   * @return Value of the enum's underlying type.
-   */
-  template<typename E>
-  [[nodiscard]] constexpr auto to_underlying(E value) noexcept
-  {
-    static_assert(std::is_enum_v<E>, "to_underlying() can only be used with enum types.");
-
-    return static_cast<std::underlying_type_t<E>>(value);
-  }
-
-  /**
-   * @brief Backport of the C++23 std::unreachable() function.
-   * @throw if AFFT_DEBUG is defined, otherwise calls __builtin_unreachable() or __assume(false).
-   * @warning if this function ever throws, it means that there is a bug in the code, please submit an issue on GitHub.
-   */
-#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
-  [[noreturn]] inline void unreachable(const std::source_location& loc = std::source_location::current())
-  {
-    throw std::logic_error(cformat("Unreachable code reached, this is a bug, please submit an issue on GitHub.\n"
-                                   "(%s:" PRIuLEAST32 ":" PRIuLEAST32 ")",
-                                   loc.file_name(), loc.line(), loc.column()));
-  }
-#else
-  [[noreturn]] inline void unreachable()
-  {
-    // just throw now, later may be switched to real unreachable implementation
-    throw std::logic_error("Unreachable code reached, this is a bug, please submit an issue on GitHub.");
-// #   if defined(_MSC_VER) && !defined(__clang__)
-//       __assume(false);
-// #   else
-//       __builtin_unreachable();
-// #   endif
-  }
-#endif
-} // inline namespace cxx23
-
-} // afft::detail
+} // namespace afft::detail
 
 #endif /* AFFT_DETAIL_UTILS_HPP */
