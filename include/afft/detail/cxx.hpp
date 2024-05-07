@@ -58,6 +58,13 @@ inline namespace cxx20
   struct is_unbounded_array<T[]> : std::true_type {};
 
   /**
+   * @brief Shortcut for is_unbounded_array value.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool is_unbounded_array_v = is_unbounded_array<T>::value;
+
+  /**
    * @brief Compares two values for equality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
    * @tparam T First value type.
    * @tparam U Second value type.

@@ -78,6 +78,7 @@
 #include <utility>
 
 #include "common.hpp"
+#include "detail/cxx.hpp"
 
 namespace afft::cpu
 {
@@ -203,9 +204,10 @@ namespace afft::cpu
    * @tparam T Type of the memory
    */
   template<typename T>
-    requires (!std::same_as<T, void>)
   class AlignedDeleter
   {
+    static_assert(!std::is_void_v<T>, "T cannot be void");
+
     public:
       /// @brief Default constructor
       constexpr AlignedDeleter() noexcept = default;
@@ -217,26 +219,29 @@ namespace afft::cpu
 
       /// @brief Copy constructor
       template<typename U>
-        requires std::convertible_to<U*, T*>
       constexpr AlignedDeleter(const AlignedDeleter<U>& other) noexcept
       : mAlignment{other.mAlignment}
-      {}
+      {
+        static_assert(std::is_convertible_v<U*, T*>, "U* must be convertible to T*");
+      }
 
       /// @brief Move constructor
       template<typename U>
-        requires std::convertible_to<U*, T*>
       constexpr AlignedDeleter(AlignedDeleter<U>&& other) noexcept
       : mAlignment{std::move(other.mAlignment)}
-      {}
+      {
+        static_assert(std::is_convertible_v<U*, T*>, "U* must be convertible to T*");
+      }
 
       /// @brief Destructor
-      constexpr ~AlignedDeleter() noexcept = default;
+      ~AlignedDeleter() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
-        requires std::convertible_to<U*, T*>
       constexpr AlignedDeleter& operator=(const AlignedDeleter<U>& other) noexcept
       {
+        static_assert(std::is_convertible_v<U*, T*>, "U* must be convertible to T*");
+
         if (this != &other)
         {
           mAlignment = other.mAlignment;
@@ -246,9 +251,10 @@ namespace afft::cpu
 
       /// @brief Move assignment operator
       template<typename U>
-        requires std::convertible_to<U*, T*>
       constexpr AlignedDeleter& operator=(AlignedDeleter<U>&& other) noexcept
       {
+        static_assert(std::is_convertible_v<U*, T*>, "U* must be convertible to T*");
+
         if (this != &other)
         {
           mAlignment = std::move(other.mAlignment);
@@ -277,6 +283,8 @@ namespace afft::cpu
   template<typename T>
   class AlignedDeleter<T[]>
   {
+    static_assert(!std::is_void_v<T>, "T cannot be void");
+
     public:
       /// @brief Default constructor
       constexpr AlignedDeleter() noexcept = default;
@@ -288,26 +296,29 @@ namespace afft::cpu
 
       /// @brief Copy constructor
       template<typename U>
-        requires std::convertible_to<U(*)[], T(*)[]>
       constexpr AlignedDeleter(const AlignedDeleter<U[]>& other) noexcept
       : mAlignment{other.mAlignment}
-      {}
+      {
+        static_assert(std::is_convertible_v<U(*)[], T(*)[]>, "U(*)[] must be convertible to T(*)[]");
+      }
 
       /// @brief Move constructor
       template<typename U>
-        requires std::convertible_to<U(*)[], T(*)[]>
       constexpr AlignedDeleter(AlignedDeleter<U[]>&& other) noexcept
       : mAlignment{std::move(other.mAlignment)}
-      {}
+      {
+        static_assert(std::is_convertible_v<U(*)[], T(*)[]>, "U(*)[] must be convertible to T(*)[]");
+      }
 
       /// @brief Destructor
-      constexpr ~AlignedDeleter() noexcept = default;
+      ~AlignedDeleter() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
-        requires std::convertible_to<U(*)[], T(*)[]>
       constexpr AlignedDeleter& operator=(const AlignedDeleter<U[]>& other) noexcept
       {
+        static_assert(std::is_convertible_v<U(*)[], T(*)[]>, "U(*)[] must be convertible to T(*)[]");
+
         if (this != &other)
         {
           mAlignment = other.mAlignment;
@@ -317,9 +328,10 @@ namespace afft::cpu
 
       /// @brief Move assignment operator
       template<typename U>
-        requires std::convertible_to<U(*)[], T(*)[]>
       constexpr AlignedDeleter& operator=(AlignedDeleter<U[]>&& other) noexcept
       {
+        static_assert(std::is_convertible_v<U(*)[], T(*)[]>, "U(*)[] must be convertible to T(*)[]");
+
         if (this != &other)
         {
           mAlignment = std::move(other.mAlignment);
@@ -329,9 +341,9 @@ namespace afft::cpu
 
       /// @brief Operator for deleting memory
       template<typename U>
-        requires std::convertible_to<U(*)[], T(*)[]>
       void operator()(U* ptr) const
       {
+        static_assert(std::is_convertible_v<U(*)[], T(*)[]>, "U(*)[] must be convertible to T(*)[]");
         static_assert(sizeof(T) > 0, "T must be a complete type");
 
         if (ptr != nullptr)
@@ -359,7 +371,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T, typename... Args>
-  AlignedUniquePtr<T> makeAlignedUnique(Alignment alignment, Args&&... args)
+  [[nodiscard]] auto makeAlignedUnique(Alignment alignment, Args&&... args)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
     const auto align = static_cast<std::align_val_t>(alignment);
 
@@ -374,7 +387,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T, typename... Args>
-  AlignedUniquePtr<T> makeAlignedUnique(Args&&... args)
+  [[nodiscard]] auto makeAlignedUnique(Args&&... args)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
     return makeAlignedUnique<T>(defaultAlignment, std::forward<Args>(args)...);
   }
@@ -387,8 +401,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUnique(Alignment alignment, std::size_t n)
+  [[nodiscard]] auto makeAlignedUnique(Alignment alignment, std::size_t n)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
     using U = std::remove_extent_t<T>;
 
@@ -404,8 +418,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUnique(std::size_t n)
+  [[nodiscard]] auto makeAlignedUnique(std::size_t n)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
     return makeAlignedUnique<T>(defaultAlignment, n);
   }
@@ -417,7 +431,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(Alignment alignment)
+  [[nodiscard]] auto makeAlignedUniqueForOverwrite(Alignment alignment)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
     const auto align = static_cast<std::align_val_t>(alignment);
 
@@ -430,7 +445,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite()
+  [[nodiscard]] auto makeAlignedUniqueForOverwrite()
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
     return makeAlignedUniqueForOverwrite<T>(defaultAlignment);
   }
@@ -443,8 +459,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(Alignment alignment, std::size_t n)
+  [[nodiscard]] auto makeAlignedUniqueForOverwrite(Alignment alignment, std::size_t n)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
     using U = std::remove_extent_t<T>;
 
@@ -460,8 +476,8 @@ namespace afft::cpu
    * @return Aligned unique pointer
    */
   template<typename T>
-    requires std::is_unbounded_array_v<T>
-  AlignedUniquePtr<T> makeAlignedUniqueForOverwrite(std::size_t n)
+  [[nodiscard]] auto makeAlignedUniqueForOverwrite(std::size_t n)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
     return makeAlignedUniqueForOverwrite<T>(defaultAlignment, n);
   }
@@ -500,7 +516,7 @@ namespace afft::cpu
       {}
 
       /// @brief Destructor
-      constexpr ~AlignedAllocator() noexcept = default;
+      ~AlignedAllocator() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
