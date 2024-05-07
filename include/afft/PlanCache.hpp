@@ -160,9 +160,11 @@ namespace afft
        * @param targetParams The parameters of the target transform.
        */
       template<typename TransformParametersT, typename TargetParametersT>
-      auto erase(const TransformParametersT& params, const TargetParametersT& targetParams)
-        -> AFFT_RET_REQUIRES(void, (isTransformParameters<TargetParametersT> && isTargetParameters<TargetParametersT>))
+      void erase(const TransformParametersT& params, const TargetParametersT& targetParams)
       {
+        static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+        static_assert(isTargetParameters<TargetParametersT>, "Invalid target parameters type");
+
         const auto config = detail::Config{params, targetParams};
 
         if (auto mapIter = mMap.find(config); mapIter != mMap.end())
@@ -214,10 +216,11 @@ namespace afft
        * @return The plan that matches the specified parameters.
        */
       template<typename TransformParametersT, typename TargetParametersT>
-      [[nodiscard]] auto find(const TransformParametersT& params, const TargetParametersT& targetParams)
-        -> AFFT_RET_REQUIRES(std::optional<Plan>, (isTransformParameters<TargetParametersT>
-                                                   && isTargetParameters<TargetParametersT>))
+      [[nodiscard]] std::optional<Plan> find(const TransformParametersT& params, const TargetParametersT& targetParams)
       {
+        static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+        static_assert(isTargetParameters<TargetParametersT>, "Invalid target parameters type");
+
         std::optional<Plan> plan{};
 
         const auto config = detail::Config{params, targetParams};
