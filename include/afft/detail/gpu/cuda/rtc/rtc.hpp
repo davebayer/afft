@@ -238,7 +238,7 @@ namespace afft::detail::gpu::cuda::rtc
        * @param headers The headers of the program.
        */
       template<std::size_t n = 0>
-      Program(std::string_view srcCode, std::string_view programName, std::span<Header, n> headers = {})
+      Program(std::string_view srcCode, std::string_view programName, Span<Header, n> headers = {})
       {
         using CharPtrContainer = std::conditional_t<(n != std::dynamic_extent),
                                                     std::array<const char*, n>, std::vector<const char*>>;
@@ -308,7 +308,7 @@ namespace afft::detail::gpu::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      [[nodiscard("Always check the compilation result")]] bool compile(std::span<const char*> options)
+      [[nodiscard("Always check the compilation result")]] bool compile(Span<const char*> options)
       {
         if (std::exchange(mIsCompiled, true))
         {

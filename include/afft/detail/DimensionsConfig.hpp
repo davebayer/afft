@@ -115,7 +115,7 @@ namespace afft::detail
        * @brief Get shape.
        * @return Shape.
        */
-      [[nodiscard]] constexpr std::span<std::size_t> getShape() noexcept
+      [[nodiscard]] constexpr Span<std::size_t> getShape() noexcept
       {
         return {mShape.data(), mRank};
       }
@@ -124,7 +124,7 @@ namespace afft::detail
        * @brief Get shape.
        * @return Shape.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getShape() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getShape() const noexcept
       {
         return {mShape.data(), mRank};
       }
@@ -142,7 +142,7 @@ namespace afft::detail
        * @brief Get source stride.
        * @return Source stride.
        */
-      [[nodiscard]] constexpr std::span<std::size_t> getSrcStrides() noexcept
+      [[nodiscard]] constexpr Span<std::size_t> getSrcStrides() noexcept
       {
         return {mSrcStrides.data(), mRank};
       }
@@ -151,7 +151,7 @@ namespace afft::detail
        * @brief Get source stride.
        * @return Source stride.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getSrcStrides() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getSrcStrides() const noexcept
       {
         return {mSrcStrides.data(), mRank};
       }
@@ -169,7 +169,7 @@ namespace afft::detail
        * @brief Get destination stride.
        * @return Destination stride.
        */
-      [[nodiscard]] constexpr std::span<std::size_t> getDstStrides() noexcept
+      [[nodiscard]] constexpr Span<std::size_t> getDstStrides() noexcept
       {
         return {mDstStrides.data(), mRank};
       }
@@ -178,7 +178,7 @@ namespace afft::detail
        * @brief Get destination stride.
        * @return Destination stride.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getDstStrides() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getDstStrides() const noexcept
       {
         return {mDstStrides.data(), mRank};
       }

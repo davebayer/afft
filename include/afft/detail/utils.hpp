@@ -42,6 +42,7 @@
 #endif
 
 #include "../3rdparty.hpp"
+#include "../Span.hpp"
 
 namespace afft::detail
 {

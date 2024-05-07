@@ -101,7 +101,7 @@ namespace afft::detail
        * @brief Get shape.
        * @return The shape.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getShape() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getShape() const noexcept
       {
         return mDimsConfig.getShape();
       }
@@ -110,7 +110,7 @@ namespace afft::detail
        * @brief Get source strides.
        * @return The source strides.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getSrcStrides() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getSrcStrides() const noexcept
       {
         return mDimsConfig.getSrcStrides();
       }
@@ -119,7 +119,7 @@ namespace afft::detail
        * @brief Get destination strides.
        * @return The destination strides.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getDstStrides() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getDstStrides() const noexcept
       {
         return mDimsConfig.getDstStrides();
       }
@@ -164,7 +164,7 @@ namespace afft::detail
        * @brief Get transform axes.
        * @return The transform axes.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getTransformAxes() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getTransformAxes() const noexcept
       {
         return mTransformConfig.getAxes();
       }

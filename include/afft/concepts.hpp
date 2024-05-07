@@ -38,10 +38,7 @@ namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  concept KnownType = !std::derived_from<TypeProperties<std::remove_cv_t<T>>, detail::UnknownTypePropertiesBase>
-                      && std::derived_from<TypeProperties<std::remove_cv_t<T>>, detail::KnownTypePropertiesBase>
-                      && detail::isValidPrecision(typePrecision<T>)
-                      && detail::isValidComplexity(typeComplexity<T>);
+  concept KnownType = isKnownType<T>;
 
   /**
    * @brief Real type concept.

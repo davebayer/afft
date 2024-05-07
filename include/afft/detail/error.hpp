@@ -149,7 +149,7 @@ namespace afft::detail
    * @throws std::invalid_argument if any value is not valid.
    */
   template<auto isValidFn, typename T>
-  constexpr void checkValid(std::span<const T> values, std::string_view msg = {})
+  constexpr void checkValid(Span<const T> values, std::string_view msg = {})
     requires std::invocable<decltype(isValidFn), T>
   {
     for (const auto& value : values)

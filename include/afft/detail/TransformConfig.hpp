@@ -126,7 +126,7 @@ namespace afft::detail
        * @brief Get the transform axes.
        * @return Transform axes.
        */
-      [[nodiscard]] constexpr std::span<const std::size_t> getAxes() const noexcept
+      [[nodiscard]] constexpr Span<const std::size_t> getAxes() const noexcept
       {
         return {mAxes.begin(), mRank};
       }
@@ -163,7 +163,7 @@ namespace afft::detail
        * @param dims Dimensions.
        * @return Logical size.
        */
-      [[nodiscard]] constexpr std::size_t getTransformLogicalSize(std::span<const std::size_t> dims) const
+      [[nodiscard]] constexpr std::size_t getTransformLogicalSize(Span<const std::size_t> dims) const
       {
         std::size_t logicalSize{1};
 
@@ -207,7 +207,7 @@ namespace afft::detail
        */
       void correctDimensionsConfig(DimensionsConfig& dimsConfig, const CommonParameters& commonParams) const
       {
-        auto generateStrides = [&](std::span<std::size_t> strides, std::invocable<std::size_t, std::size_t> auto fn)
+        auto generateStrides = [&](Span<std::size_t> strides, std::invocable<std::size_t, std::size_t> auto fn)
         {
           for (std::size_t i{}; i < dimsConfig.getRank(); ++i)
           {
@@ -439,7 +439,7 @@ namespace afft::detail
        * @param shapeRank Shape rank.
        */
       [[nodiscard]] static constexpr MaxDimArray<std::size_t>
-      checkAxes(std::span<const std::size_t> axes, std::size_t shapeRank)
+      checkAxes(Span<const std::size_t> axes, std::size_t shapeRank)
       {
         if (axes.empty())
         {

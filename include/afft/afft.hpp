@@ -31,10 +31,6 @@
 # error "C++20 concepts are required"
 #endif
 
-#if !defined(__cpp_lib_span) || __cpp_lib_span < 202002L
-# error "C++20 std::span is required"
-#endif
-
 // If max dimension count is not defined, use 4 as default
 #ifndef AFFT_MAX_DIM_COUNT
 # define AFFT_MAX_DIM_COUNT                      4

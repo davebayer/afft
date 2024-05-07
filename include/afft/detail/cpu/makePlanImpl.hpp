@@ -89,7 +89,7 @@ namespace afft::detail::cpu
    * @return The plan implementation.
    */
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeFirstPlanImpl(const Config& config, std::span<const Backend> backends)
+  makeFirstPlanImpl(const Config& config, Span<const Backend> backends)
   {
     std::unique_ptr<PlanImpl> planImpl{};
 
@@ -111,7 +111,7 @@ namespace afft::detail::cpu
    * @return The plan implementation.
    */
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeBestPlanImpl(const Config& config, std::span<const Backend> backends)
+  makeBestPlanImpl(const Config& config, Span<const Backend> backends)
   {
     // struct Item
     // {
@@ -148,8 +148,8 @@ namespace afft::detail::cpu
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
   makePlanImpl(const Config& config, const afft::cpu::BackendSelectParameters& backendSelectParams)
   {
-    std::span<const Backend> backends = (!backendSelectParams.backends.empty())
-                                          ? backendSelectParams.backends : afft::cpu::defaultBackendList;
+    Span<const Backend> backends = (!backendSelectParams.backends.empty())
+                                      ? backendSelectParams.backends : afft::cpu::defaultBackendList;
 
     switch (backendSelectParams.strategy)
     {
