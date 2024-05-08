@@ -35,6 +35,7 @@
 
 #include "error.hpp"
 #include "Handle.hpp"
+#include "../../cxx.hpp"
 #include "../../PlanImpl.hpp"
 #include "../../../gpu.hpp"
 
@@ -261,10 +262,10 @@ extern "C" __device__ __constant__
 
           std::array options
           {
-            cuda::rtc::makeDefinitionOption("PRECISION", std::to_string(to_underlying(precision.execution))),
+            cuda::rtc::makeDefinitionOption("PRECISION", std::to_string(cxx::to_underlying(precision.execution))),
             cuda::rtc::makeDefinitionOption("COMPLEXITY", std::to_string(dftParams.type == dft::Type::complexToReal
-                                                                           ? to_underlying(Complexity::real)
-                                                                           : to_underlying(Complexity::complex))),
+                                                                           ? cxx::to_underlying(Complexity::real)
+                                                                           : cxx::to_underlying(Complexity::complex))),
             cuda::rtc::makeDefinitionOption("SCALE", std::to_string(getConfig().getTransformNormFactor<Precision::f64>())),
             cuda::rtc::makeArchOption(device),
             cuda::rtc::makeIncludePathOption(cuda::getIncludePath()),

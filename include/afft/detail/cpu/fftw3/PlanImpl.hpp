@@ -433,7 +433,7 @@ namespace afft::detail::cpu::fftw3
           case dtt::Type::dst2: return (direction == Direction::forward) ? FFTW_RODFT10 : FFTW_RODFT01;
           case dtt::Type::dst3: return (direction == Direction::forward) ? FFTW_RODFT01 : FFTW_RODFT10;
           case dtt::Type::dst4: return FFTW_RODFT11;
-          default: unreachable();
+          default: cxx::unreachable();
           }
         };
 
