@@ -202,6 +202,7 @@ namespace afft::gpu
    */
   struct Parameters
   {
+    MemoryLayout memoryLayout{};             ///< Memory layout, defaults to `real`
   // GPU framework specific parameters
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
