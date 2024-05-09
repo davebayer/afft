@@ -102,6 +102,20 @@ namespace afft::detail
     using Type = afft::gpu::Parameters;
   };
 
+  /// @brief Specialization for distibuted cpu target.
+  template<>
+  struct TargetParametersSelect<Target::distribCpu>
+  {
+    using Type = afft::distrib::cpu::Parameters;
+  };
+
+  /// @brief Specialization for distibuted gpu target.
+  template<>
+  struct TargetParametersSelect<Target::distribGpu>
+  {
+    using Type = afft::distrib::gpu::Parameters;
+  };
+
   /**
    * @brief Check if the type is TargetParameters.
    * @tparam T The type.
@@ -116,6 +130,14 @@ namespace afft::detail
   /// @brief Specialization for gpu target parameters.
   template<>
   struct IsTargetParameters<afft::gpu::Parameters> : std::true_type {};
+
+  /// @brief Specialization for distributed cpu target parameters.
+  template<>
+  struct IsTargetParameters<afft::distrib::cpu::Parameters> : std::true_type {};
+
+  /// @brief Specialization for distributed gpu target parameters.
+  template<>
+  struct IsTargetParameters<afft::distrib::gpu::Parameters> : std::true_type {};
 
   /**
    * @brief Transform backend type for given target.
