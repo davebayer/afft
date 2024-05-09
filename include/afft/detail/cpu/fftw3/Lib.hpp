@@ -25,7 +25,12 @@
 #ifndef AFFT_DETAIL_CPU_FFTW3_LIB_HPP
 #define AFFT_DETAIL_CPU_FFTW3_LIB_HPP
 
+#include "../../../distrib.hpp"
+
 #include <fftw3.h>
+#if AFFT_DISTRIB_IMPL_IS(MPI)
+# include <fftw3-mpi.h>
+#endif
 
 #include "../../common.hpp"
 
@@ -70,6 +75,24 @@ namespace afft::detail::cpu::fftw3
     static constexpr auto destroyPlan            = fftwf_destroy_plan;
 
     static constexpr auto cleanUpThreads         = fftwf_cleanup_threads;
+
+# if AFFT_DISTRIB_IMPL_IS(MPI)
+    using MpiDDim                                = fftwf_mpi_ddim;
+
+    static constexpr auto mpiInit                = fftwf_mpi_init;
+
+    static constexpr auto mpiPlanManyC2C         = fftwf_mpi_plan_many_dft;
+    static constexpr auto mpiPlanManyR2C         = fftwf_mpi_plan_many_dft_r2c;
+    static constexpr auto mpiPlanManyC2R         = fftwf_mpi_plan_many_dft_c2r;
+    static constexpr auto mpiPlanManyR2R         = fftwf_mpi_plan_many_r2r;
+
+    static constexpr auto mpiExecuteC2C          = fftwf_mpi_execute_dft;
+    static constexpr auto mpiExecuteR2C          = fftwf_mpi_execute_dft_r2c;
+    static constexpr auto mpiExecuteC2R          = fftwf_mpi_execute_dft_c2r;
+    static constexpr auto mpiExecuteR2R          = fftwf_mpi_execute_r2r;
+
+    static constexpr auto mpiCleanUp             = fftwf_mpi_cleanup;
+# endif
   };
 
   /// @brief Library specialization for double precision.
@@ -104,6 +127,24 @@ namespace afft::detail::cpu::fftw3
     static constexpr auto destroyPlan            = fftw_destroy_plan;
 
     static constexpr auto cleanUpThreads         = fftw_cleanup_threads;
+
+# if AFFT_DISTRIB_IMPL_IS(MPI)
+    using MpiDDim                                = fftw_mpi_ddim;
+
+    static constexpr auto mpiInit                = fftw_mpi_init;
+
+    static constexpr auto mpiPlanManyC2C         = fftw_mpi_plan_many_dft;
+    static constexpr auto mpiPlanManyR2C         = fftw_mpi_plan_many_dft_r2c;
+    static constexpr auto mpiPlanManyC2R         = fftw_mpi_plan_many_dft_c2r;
+    static constexpr auto mpiPlanManyR2R         = fftw_mpi_plan_many_r2r;
+
+    static constexpr auto mpiExecuteC2C          = fftw_mpi_execute_dft;
+    static constexpr auto mpiExecuteR2C          = fftw_mpi_execute_dft_r2c;
+    static constexpr auto mpiExecuteC2R          = fftw_mpi_execute_dft_c2r;
+    static constexpr auto mpiExecuteR2R          = fftw_mpi_execute_r2r;
+
+    static constexpr auto mpiCleanUp             = fftw_mpi_cleanup;
+# endif
   };
 
 #if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
@@ -139,6 +180,24 @@ namespace afft::detail::cpu::fftw3
     static constexpr auto destroyPlan            = fftwl_destroy_plan;
 
     static constexpr auto cleanUpThreads         = fftwl_cleanup_threads;
+
+# if AFFT_DISTRIB_IMPL_IS(MPI)
+    using MpiDDim                                = fftwl_mpi_ddim;
+
+    static constexpr auto mpiInit                = fftwl_mpi_init;
+
+    static constexpr auto mpiPlanManyC2C         = fftwl_mpi_plan_many_dft;
+    static constexpr auto mpiPlanManyR2C         = fftwl_mpi_plan_many_dft_r2c;
+    static constexpr auto mpiPlanManyC2R         = fftwl_mpi_plan_many_dft_c2r;
+    static constexpr auto mpiPlanManyR2R         = fftwl_mpi_plan_many_r2r;
+
+    static constexpr auto mpiExecuteC2C          = fftwl_mpi_execute_dft;
+    static constexpr auto mpiExecuteR2C          = fftwl_mpi_execute_dft_r2c;
+    static constexpr auto mpiExecuteC2R          = fftwl_mpi_execute_dft_c2r;
+    static constexpr auto mpiExecuteR2R          = fftwl_mpi_execute_r2r;
+
+    static constexpr auto mpiCleanUp             = fftwl_mpi_cleanup;
+# endif
   };
 #endif
 
