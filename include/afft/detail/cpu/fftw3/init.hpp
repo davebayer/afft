@@ -53,6 +53,14 @@ namespace afft::detail::cpu::fftw3
     check(Lib<Precision::f128>::initThreads());
 # endif
 
+# if AFFT_DISTRIB_IMPL_IS(MPI)
+    Lib<Precision::f32>::mpiInit();
+    Lib<Precision::f64>::mpiInit();
+#   if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
+    Lib<Precision::f80>::mpiInit();
+#   endif
+# endif
+
     if (!initParams.floatWisdom.empty())
     {
       check(Lib<Precision::f32>::importWisdomFromString(initParams.floatWisdom.data()));
@@ -79,6 +87,13 @@ namespace afft::detail::cpu::fftw3
   /// @brief Finalize the FFTW3 library.
   inline void finalize()
   {
+# if AFFT_DISTRIB_IMPL_IS(MPI)
+    Lib<Precision::f32>::mpiCleanUp();
+    Lib<Precision::f64>::mpiCleanUp();
+#   if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
+    Lib<Precision::f80>::mpiCleanUp();
+#   endif
+
     Lib<Precision::f32>::cleanUpThreads();
     Lib<Precision::f64>::cleanUpThreads();
 # if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
