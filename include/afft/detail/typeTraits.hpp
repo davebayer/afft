@@ -28,6 +28,7 @@
 #include <type_traits>
 
 #include "common.hpp"
+#include "../distrib.hpp"
 #include "../type.hpp"
 
 namespace afft::detail
