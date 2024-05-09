@@ -20,11 +20,11 @@ int main(void)
   // initialize source vector
 
   afft::dft::Parameters dftParams{}; // parameters for dft
-  dftParams.dimensions.shape               = {{size}}; // set up the dimensions
-  dftParams.commonParameters.destroySource = true; // allow to destroy source data
-  dftParams.commonParameters.normalize     = afft::Normalize::orthogonal; // use orthogonal normalization
   dftParams.direction                      = afft::Direction::forward; // it will be a forward transform
   dftParams.precision                      = afft::makePrecision<PrecT>(); // set up precision of the transform
+  dftParams.commonParameters.destroySource = true; // allow to destroy source data
+  dftParams.commonParameters.normalize     = afft::Normalize::orthogonal; // use orthogonal normalization
+  dftParams.shape                          = {{size}}; // set up the dimensions
   dftParams.type                           = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
 
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
