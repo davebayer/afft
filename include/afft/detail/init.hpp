@@ -31,6 +31,7 @@
 #if AFFT_GPU_IS_ENABLED
 # include "gpu/init.hpp"
 #endif
+#include "../distrib.hpp"
 
 namespace afft::detail
 {
@@ -43,8 +44,22 @@ namespace afft::detail
   {
     if (!std::exchange(isInitialized, true))
     {
+      // Init distrib implementation.
+#   if AFFT_DISTRIB_IMPL_IS(NATIVE)
+#   elif AFFT_DISTRIB_IMPL_IS(MPI)
+      int mpiIsInitialized{};
+      MPI_Initialized(&mpiIsInitialized);
+
+      if (!mpiIsInitialized)
+      {
+        throw std::runtime_error("MPI must be initialized before afft::init() is called.");
+      }
+#   endif
+
+      // Init CPU implementation.
       cpu::init(cpuInitParams);
 
+      // Init GPU implementation if enabled.
 #   if AFFT_GPU_IS_ENABLED
       gpu::init(gpuInitParams);
 #   endif
