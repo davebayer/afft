@@ -93,6 +93,7 @@ namespace afft::detail::cpu::fftw3
 #   if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
     Lib<Precision::f80>::mpiCleanUp();
 #   endif
+# endif
 
     Lib<Precision::f32>::cleanUpThreads();
     Lib<Precision::f64>::cleanUpThreads();
