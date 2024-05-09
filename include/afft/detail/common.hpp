@@ -124,6 +124,8 @@ namespace afft::detail
     {
     case Target::cpu:
     case Target::gpu:
+    case Target::distribCpu:
+    case Target::distribGpu:
       return true;
     default:
       return false;
