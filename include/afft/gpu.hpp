@@ -241,22 +241,23 @@ namespace afft::gpu
   struct BackendSelectParameters
   {
     Span<const Backend>   backends{defaultBackendList};           ///< Priority list of allowed backends
+    Span<std::string>     backendsErrors{};                       ///< Why a backend creation failed
     BackendSelectStrategy strategy{BackendSelectStrategy::first}; ///< Backend select strategy
   };
 
   /**
    * @struct ExecutionParameters
-   * @brief Execution parameters for GPU backend
+   * @brief Execution parameters for gpu target
    */
   struct ExecutionParameters
   {
   // GPU framework specific execution parameters
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    cudaStream_t stream{0};   ///< CUDA stream, defaults to `zero` stream
-    void*        workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+    cudaStream_t     stream{0};   ///< CUDA stream, defaults to `zero` stream
+    void*            workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    hipStream_t stream{0};    ///< HIP stream, defaults to `zero` stream
-    void*       workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+    hipStream_t      stream{0};    ///< HIP stream, defaults to `zero` stream
+    void*            workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
 # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
     cl_command_queue commandQueue{};
     cl_mem           workspace{};

@@ -160,8 +160,9 @@ namespace afft::cpu
    */
   struct Parameters
   {
-    Alignment alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned  threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
+    MemoryLayout memoryLayout{};                    ///< Memory layout for CPU transform
+    Alignment    alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    unsigned     threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Default list of backends
@@ -175,7 +176,8 @@ namespace afft::cpu
   /// @brief Set up strategy for backend selection
   struct BackendSelectParameters
   {
-    Span<const Backend>   backends{defaultBackendList}; ///< Priority of the backends
+    Span<const Backend>   backends{defaultBackendList};           ///< Priority of the backends
+    Span<std::string>     backendsErrors{};                       ///< Why a backend creation failed
     BackendSelectStrategy strategy{BackendSelectStrategy::first}; ///< Select strategy
   };
 
