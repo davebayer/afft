@@ -66,10 +66,10 @@ namespace afft
   };
 
   /// @brief Direction of the transform
-  enum class Direction : bool
+  enum class Direction
   {
-    forward  = 0,       ///< forward transform
-    inverse  = 1,       ///< inverse transform
+    forward,            ///< forward transform
+    inverse,            ///< inverse transform
     backward = inverse, ///< alias for inverse transform
   };
 
@@ -139,6 +139,13 @@ namespace afft
     Span<const std::size_t> dstStride{}; ///< stride of the destination data
   };
 
+  /// @brief Memory layout of the transform
+  struct MemoryLayout
+  {
+    Span<const std::size_t> srcStride{}; ///< stride of the source data
+    Span<const std::size_t> dstStride{}; ///< stride of the destination data
+  };
+
   // struct ZeroPadding
   // {
   //   Span<const std::size_t> pre{};
@@ -157,17 +164,6 @@ namespace afft
     Normalize       normalize{Normalize::none};                    ///< normalization
     Placement       placement{Placement::outOfPlace};              ///< placement of the transform
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-
-    /// @brief Default equality operator
-    friend constexpr bool operator==(const CommonParameters& lhs, const CommonParameters& rhs)
-    {
-      return (lhs.complexFormat == rhs.complexFormat) &&
-             (lhs.destroySource == rhs.destroySource) &&
-             (lhs.initEffort == rhs.initEffort) &&
-             (lhs.normalize == rhs.normalize) &&
-             (lhs.placement == rhs.placement) &&
-             (lhs.workspacePolicy == rhs.workspacePolicy);
-    }
   };
 
   /**
@@ -179,14 +175,6 @@ namespace afft
     Precision execution{};   ///< precision of the execution
     Precision source{};      ///< precision of the source data
     Precision destination{}; ///< precision of the destination data
-
-    /// @brief Default equality operator
-    friend constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
-    {
-      return (lhs.execution == rhs.execution) &&
-             (lhs.source == rhs.source) &&
-             (lhs.destination == rhs.destination);
-    }
   };
 
   /// @brief Named constant representing all axes (is empty span)
@@ -250,6 +238,35 @@ namespace afft
       Span<const Type>        types{};            ///< types of the transform
     };
   } // namespace dtt
+
+  /**
+   * @brief Equality operator for CommonParameters
+   * @param lhs left-hand side
+   * @param rhs right-hand side
+   * @return true if the parameters are equal, false otherwise
+   */
+  [[nodiscard]] inline constexpr bool operator==(const CommonParameters& lhs, const CommonParameters& rhs)
+  {
+    return (lhs.complexFormat == rhs.complexFormat) &&
+           (lhs.destroySource == rhs.destroySource) &&
+           (lhs.initEffort == rhs.initEffort) &&
+           (lhs.normalize == rhs.normalize) &&
+           (lhs.placement == rhs.placement) &&
+           (lhs.workspacePolicy == rhs.workspacePolicy);
+  }
+
+  /**
+   * @brief Equality operator for PrecisionTriad
+   * @param lhs left-hand side
+   * @param rhs right-hand side
+   * @return true if the precision triads are equal, false otherwise
+   */
+  [[nodiscard]] inline constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
+  {
+    return (lhs.execution == rhs.execution) &&
+           (lhs.source == rhs.source) &&
+           (lhs.destination == rhs.destination);
+  }
 } // namespace afft
 
 #endif /* AFFT_COMMON_HPP */
