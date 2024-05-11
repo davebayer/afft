@@ -36,6 +36,14 @@ namespace afft
   /// @brief Maximum number of dimensions
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
 
+  /**
+   * @brief Non-owning const view of a contiguous sequence of objects.
+   * @tparam T Type of the elements.
+   * @tparam extent Number of elements in the span.
+   */
+  template<typename T, std::size_t extent = dynamicExtent>
+  using View = Span<const T, extent>;
+
   /// @brief Precision of a floating-point number
   enum class Precision
   {
@@ -134,8 +142,8 @@ namespace afft
   /// @brief Memory layout of the transform
   struct MemoryLayout
   {
-    Span<const std::size_t> srcStrides{}; ///< stride of the source data
-    Span<const std::size_t> dstStrides{}; ///< stride of the destination data
+    View<std::size_t> srcStrides{}; ///< stride of the source data
+    View<std::size_t> dstStrides{}; ///< stride of the destination data
   };
 
   /**
@@ -163,8 +171,8 @@ namespace afft
     Precision destination{}; ///< precision of the destination data
   };
 
-  /// @brief Named constant representing all axes (is empty span)
-  inline constexpr Span<const std::size_t> allAxes{};
+  /// @brief Named constant representing all axes (is empty view)
+  inline constexpr View<std::size_t> allAxes{};
 
   namespace dft
   {
@@ -183,12 +191,12 @@ namespace afft
     /// @brief DFT parameters
     struct Parameters
     {
-      Direction               direction{};                  ///< direction of the transform
-      PrecisionTriad          precision{};                  ///< precision triad
-      CommonParameters        commonParameters{};           ///< common parameters
-      Span<const std::size_t> shape{};                      ///< shape of the transform
-      Span<const std::size_t> axes{allAxes};                ///< axes of the transform
-      Type                    type{Type::complexToComplex}; ///< type of the transform
+      Direction         direction{};                  ///< direction of the transform
+      PrecisionTriad    precision{};                  ///< precision triad
+      CommonParameters  commonParameters{};           ///< common parameters
+      View<std::size_t> shape{};                      ///< shape of the transform
+      View<std::size_t> axes{allAxes};                ///< axes of the transform
+      Type              type{Type::complexToComplex}; ///< type of the transform
     };
   } // namespace dft
 
@@ -214,12 +222,12 @@ namespace afft
     /// @brief DTT parameters
     struct Parameters
     {
-      Direction               direction{};        ///< direction of the transform
-      PrecisionTriad          precision{};        ///< precision triad
-      CommonParameters        commonParameters{}; ///< common parameters
-      Span<const std::size_t> shape{};            ///< shape of the transform
-      Span<const std::size_t> axes{allAxes};      ///< axes of the transform
-      Span<const Type>        types{};            ///< types of the transform
+      Direction         direction{};        ///< direction of the transform
+      PrecisionTriad    precision{};        ///< precision triad
+      CommonParameters  commonParameters{}; ///< common parameters
+      View<std::size_t> shape{};            ///< shape of the transform
+      View<std::size_t> axes{allAxes};      ///< axes of the transform
+      View<Type>        types{};            ///< types of the transform
     };
   } // namespace dtt
 
