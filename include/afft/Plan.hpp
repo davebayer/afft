@@ -28,6 +28,7 @@
 #include <memory>
 
 #include "common.hpp"
+#include "distrib.hpp"
 #include "typeTraits.hpp"
 #include "detail/cxx.hpp"
 #include "detail/makePlanImpl.hpp"
@@ -43,8 +44,8 @@ namespace afft
   class Plan
   {
     public:
-      /// Default constructor is not allowed
-      Plan() = delete;
+      /// Default constructor. Creates an uninitialized plan.
+      Plan() = default;
 
       /// Copy constructor
       Plan(const Plan&) = default;
@@ -62,11 +63,22 @@ namespace afft
       Plan& operator=(Plan&&) = default;
 
       /**
+       * @brief Check if the plan is initialized
+       * @return True if the plan is initialized, false otherwise
+       */
+      [[nodiscard]] bool isInitialized() const
+      {
+        return static_cast<bool>(mImpl);
+      }
+
+      /**
        * @brief Get the transform type
        * @return Transform type
        */
       [[nodiscard]] Transform getTransform() const
       {
+        checkInitialized();
+
         return mImpl->getConfig().getTransform();
       }
 
@@ -80,6 +92,13 @@ namespace afft
       {
         static_assert(detail::isValidTransform(transform), "Invalid transform type");
 
+        checkInitialized();
+
+        if (transform != getTransform())
+        {
+          throw std::runtime_error("Plan transform does not match requested transform");
+        }
+
         return mImpl->getConfig().getTransformParameters<transform>();
       }
 
@@ -89,7 +108,20 @@ namespace afft
        */
       [[nodiscard]] Target getTarget() const
       {
+        checkInitialized();
+
         return mImpl->getConfig().getTarget();
+      }
+
+      /**
+       * @brief Get the distribution implementation
+       * @return Distribution implementation
+       */
+      [[nodiscard]] distrib::Implementation getDistribImpl() const
+      {
+        checkInitialized();
+
+        return mImpl->getConfig().getDistribImpl();
       }
 
       /**
@@ -97,12 +129,25 @@ namespace afft
        * @tparam target Target type
        * @return Target parameters
        */
-      template<Target target>
+      template<Target target, distrib::Implementation distribImpl = distrib::Implementation::none>
       [[nodiscard]] TargetParameters<target> getTargetParameters() const
       {
         static_assert(detail::isValidTarget(target), "Invalid target type");
+        static_assert(detail::isValidDistribImpl(distribImpl), "Invalid distribution implementation");
 
-        return mImpl->getConfig().getTargetParameters<target>();
+        checkInitialized();
+
+        if (target != getTarget())
+        {
+          throw std::runtime_error("Plan target does not match requested target");
+        }
+
+        if (distribImpl != getDistribImpl())
+        {
+          throw std::runtime_error("Plan distribution implementation does not match requested distribution implementation");
+        }
+
+        return mImpl->getConfig().getTargetParameters<target, distribImpl>();
       }
 
       /**
@@ -114,6 +159,8 @@ namespace afft
       {
         static_assert(isKnownType<SrcDstT>, "A known type is required");
         static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
+
+        checkInitialized();
 
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
@@ -127,6 +174,8 @@ namespace afft
       {
         static_assert(isRealType<SrcDstT>, "A real type is required");
         static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
+
+        checkInitialized();
 
         mImpl->executeWithDefaultTargetParameters(srcDst);
       }
@@ -145,6 +194,8 @@ namespace afft
         static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->execute(srcDst, execParams);
       }
 
@@ -161,6 +212,8 @@ namespace afft
         static_assert(isRealType<SrcDstT>, "A real type is required");
         static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
 
         mImpl->execute(srcDst, execParams);
       }
@@ -179,6 +232,8 @@ namespace afft
         static_assert(isKnownType<DstT>, "A known type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
+        checkInitialized();
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -195,6 +250,8 @@ namespace afft
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
+        checkInitialized();
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -213,6 +270,8 @@ namespace afft
         static_assert(isRealType<DstT>, "A real type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
+        checkInitialized();
+
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
@@ -229,6 +288,8 @@ namespace afft
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isRealType<DstT>, "A real type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
+        checkInitialized();
 
         mImpl->executeWithDefaultTargetParameters(src, dst);
       }
@@ -250,6 +311,8 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -269,6 +332,8 @@ namespace afft
         static_assert(isKnownType<DstT>, "A known type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
 
         mImpl->execute(src, dst, execParams);
       }
@@ -290,6 +355,8 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -310,6 +377,8 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -324,6 +393,8 @@ namespace afft
       void executeUnsafe(SrcT* src, DstT* dst)
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
+        checkInitialized();
 
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
@@ -340,6 +411,8 @@ namespace afft
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
+        checkInitialized();
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -355,6 +428,8 @@ namespace afft
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
 
+        checkInitialized();
+
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
 
@@ -369,6 +444,8 @@ namespace afft
       void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+
+        checkInitialized();
 
         mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
       }
@@ -388,6 +465,8 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -405,6 +484,8 @@ namespace afft
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
 
         mImpl->executeUnsafe(src, dst, execParams);
       }
@@ -424,6 +505,8 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkInitialized();
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -441,6 +524,8 @@ namespace afft
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
 
         mImpl->executeUnsafe(src, dst, execParams);
       }
@@ -468,6 +553,17 @@ namespace afft
       : mImpl{std::move(impl)}
       {}
 
+      /**
+       * @brief Check if the plan is initialized
+       */
+      void checkInitialized() const
+      {
+        if (!mImpl)
+        {
+          throw std::runtime_error("Plan is not initialized");
+        }
+      }
+
       std::shared_ptr<detail::PlanImpl> mImpl; ///< Plan implementation
   };
 
@@ -478,12 +574,13 @@ namespace afft
    * @param cpuBackendSelectParams CPU backend selection parameters
    * @return Plan
    */
-  template<typename TransformParametersT>
+  template<typename TransformParametersT, typename CpuParamsT>
   Plan makePlan(const TransformParametersT&         transformParams,
-                const cpu::Parameters&              cpuParams,
+                CpuParamsT&                         cpuParams,
                 const cpu::BackendSelectParameters& cpuBackendSelectParams)
   {
     static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert((std::is_same_v<std::remove_cv_t<CpuParamsT>, cpu::Parameters>), "Invalid CPU parameters type");
 
     return Plan{detail::makePlanImpl(detail::Config(transformParams, cpuParams), cpuBackendSelectParams)};
   }
@@ -495,12 +592,13 @@ namespace afft
    * @param gpuBackendSelectParams GPU backend selection parameters
    * @return Plan
    */
-  template<typename TransformParametersT>
+  template<typename TransformParametersT, typename GpuParamsT>
   Plan makePlan(const TransformParametersT&         transformParams,
-                const gpu::Parameters&              gpuParams,
+                GpuParamsT&                         gpuParams,
                 const gpu::BackendSelectParameters& gpuBackendSelectParams)
   {
     static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert((std::is_same_v<std::remove_cv_t<GpuParamsT>, gpu::Parameters>), "Invalid GPU parameters type");
 
     return Plan{detail::makePlanImpl(detail::Config(transformParams, gpuParams), gpuBackendSelectParams)};
   }
@@ -512,16 +610,16 @@ namespace afft
    * @return Plan
    */
   template<typename TransformParamsT, typename TargetParamsT>
-  Plan makePlan(const TransformParamsT& transformParams, const TargetParamsT& targetParams)
+  Plan makePlan(const TransformParamsT& transformParams, TargetParamsT& targetParams)
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
 
-    if constexpr (std::is_same_v<TargetParamsT, cpu::Parameters>)
+    if constexpr (std::is_same_v<std::remove_cv_t<TargetParamsT>, cpu::Parameters>)
     {
       return makePlan(transformParams, targetParams, cpu::BackendSelectParameters{});
     }
-    else if constexpr (std::is_same_v<TargetParamsT, gpu::Parameters>)
+    else if constexpr (std::is_same_v<std::remove_cv_t<TargetParamsT>, gpu::Parameters>)
     {
       return makePlan(transformParams, targetParams, gpu::BackendSelectParameters{});
     }
