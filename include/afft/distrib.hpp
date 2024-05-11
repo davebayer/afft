@@ -84,6 +84,17 @@ namespace afft::distrib
     MemoryBlock dstBlock{}; ///< destination memory block
   };
 
+  /**
+   * @enum Transposed
+   * @brief Transposed flag
+   */
+  enum class Transposed
+  {
+    none, ///< none
+    src,  ///< source
+    dst,  ///< destination
+  };
+
 namespace cpu
 {
   /**
@@ -103,10 +114,11 @@ namespace cpu
   template<>
   struct Parameters<Implementation::mpi>
   {
-    MPI_Comm     communicator{MPI_COMM_WORLD};
-    MemoryLayout memoryLayout{};
-    Alignment    alignment{afft::cpu::alignments::defaultNew};
-    unsigned     threadLimit{1};
+    MPI_Comm     communicator{MPI_COMM_WORLD};                 ///< MPI communicator
+    MemoryLayout memoryLayout{};                               ///< memory layout
+    Transposed   transposed{Transposed::none};                 ///< transposed flag
+    Alignment    alignment{afft::cpu::alignments::defaultNew}; ///< alignment
+    unsigned     threadLimit{1};                               ///< thread limit
   };
 #endif
 
@@ -139,16 +151,17 @@ namespace gpu
   template<>
   struct Parameters<Implementation::native>
   {
-    Span<const MemoryLayout> memoryLayouts{};          ///< span of memory layouts
+    Span<const MemoryLayout> memoryLayouts{};              ///< span of memory layouts
+    Transposed               transposed{Transposed::none}; ///< transposed flag
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    Span<const int>          devices{};                ///< span of CUDA device IDs
+    Span<const int>          devices{};                    ///< span of CUDA device IDs
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    Span<const int>          devices{};                ///< span of HIP device IDs
+    Span<const int>          devices{};                    ///< span of HIP device IDs
 # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context               context{};                ///< OpenCL context
-    Span<const cl_device_id> devices{};                ///< span of OpenCL device IDs
+    cl_context               context{};                    ///< OpenCL context
+    Span<const cl_device_id> devices{};                    ///< span of OpenCL device IDs
 # endif
-    bool                     externalWorkspace{false}; ///< external workspace flag
+    bool                     externalWorkspace{false};     ///< external workspace flag
   };
 
 #if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
@@ -158,6 +171,7 @@ namespace gpu
   {
     MPI_Comm     communicator{MPI_COMM_WORLD};                  ///< MPI communicator
     MemoryLayout memoryLayout{};                                ///< memory layout
+    Transposed   transposed{Transposed::none};                  ///< transposed flag
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device ID
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
