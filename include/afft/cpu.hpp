@@ -473,7 +473,7 @@ namespace afft::cpu
    *        others.
    * @tparam T Type of the memory
    */
-  template<typename T>
+  template<typename T = void>
   class AlignedAllocator
   {
     public:
