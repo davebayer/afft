@@ -316,7 +316,7 @@ namespace afft::detail
         requireNotNull(srcDst);
 
 // #     if AFFT_GPU_FRAMEWORK_IS_OPENCL
-//         if (std::same_as<ExecParamsT, afft::gpu::Parameters>)
+//         if (std::is_same_v<ExecParamsT, afft::gpu::Parameters>)
 //         {
 //           const auto& gpuConfig = getConfig().getTargetConfig<Target::gpu>();
 //           auto clSrcDst = gpu::opencl::makeBufferFromPtr(gpuConfig.context, srcDst, mConfig.getSrcShapeVolume());

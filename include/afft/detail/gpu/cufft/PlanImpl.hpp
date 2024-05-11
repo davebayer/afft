@@ -255,8 +255,8 @@ extern "C" __device__ __constant__
         // FIXME: This is not working
         // Error::check(cufftXtSetWorkAreaPolicy(mPlan, getWorkspacePolicy(commonParams.workspacePolicy), &workSize));
 
-        if (const auto normalize = getConfig().getCommonParameters().normalize;
-            normalize != Normalize::none)
+        if (const auto normalization = getConfig().getCommonParameters().normalization;
+            normalization != Normalization::none)
         {
           cuda::rtc::Program program{callbackSrcCode, "cufftCallbackFn.cu"};
 
@@ -409,12 +409,12 @@ extern "C" __device__ __constant__
       throw makeException<std::runtime_error>("cuFFT does not support given precision");
     }
 
-    switch (commonParams.normalize)
+    switch (commonParams.normalization)
     {
-    case Normalize::none:
+    case Normalization::none:
       break;
-    case Normalize::unitary:
-    case Normalize::orthogonal:
+    case Normalization::unitary:
+    case Normalization::orthogonal:
       switch (precision.execution)
       {
       case Precision::f32:

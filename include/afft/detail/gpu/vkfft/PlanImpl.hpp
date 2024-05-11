@@ -217,12 +217,12 @@ namespace afft::detail::gpu::vkfft
         }
         
         // fixme: normalization for hfft
-        switch (getConfig().getCommonParameters().normalize)
+        switch (getConfig().getCommonParameters().normalization)
         {
-        case Normalize::none:
+        case Normalization::none:
           vkfftConfig.normalize = 0;
           break;
-        case Normalize::unitary:
+        case Normalization::unitary:
           vkfftConfig.normalize = 1;
           break;
         default:

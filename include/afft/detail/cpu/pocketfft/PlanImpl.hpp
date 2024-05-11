@@ -217,7 +217,7 @@ namespace afft::detail::cpu::pocketfft
 
         auto normFactor = getConfig().template getTransformNormFactor<prec>();
 
-        const auto ortho    = (getConfig().getCommonParameters().normalize == Normalize::orthogonal);
+        const auto ortho    = (getConfig().getCommonParameters().normalization == Normalization::orthogonal);
         const auto nthreads = static_cast<std::size_t>(getConfig().template getTargetConfig<Target::cpu>().threadLimit);
 
         for (const auto dttType : dttTypes)

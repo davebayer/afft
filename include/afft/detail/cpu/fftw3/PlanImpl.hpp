@@ -246,7 +246,7 @@ namespace afft::detail::cpu::fftw3
 
         if (plan == nullptr)
         {
-          throw makeException<std::runtime_error>("Could not create FFTW plan");
+          throw makeException<std::runtime_error>("[FFTW3 error] Could not create FFTW plan");
         }
 
         mPlan.reset(plan);
@@ -495,7 +495,7 @@ namespace afft::detail::cpu::fftw3
     case Transform::dtt:
       break;
     default:
-      throw makeException<std::runtime_error>("Unsupported transform");
+      throw makeException<std::runtime_error>("[FFTW3 error] Unsupported transform");
     }
 
     switch(config.getTransformPrecision().execution)
@@ -513,7 +513,7 @@ namespace afft::detail::cpu::fftw3
       return std::make_unique<PlanImpl<Precision::f128>>(config);
 #   endif
     default:
-      throw std::runtime_error("Unsupported precision");
+      throw std::runtime_error("[FFTW3 error] Unsupported precision");
     }
   }
 } // namespace afft::detail::cpu::fftw3

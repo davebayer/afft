@@ -243,8 +243,8 @@ extern "C" __device__ __constant__
                                           executionType));
 
 #     ifdef __HIP_PLATFORM_NVIDIA__
-        if (const auto normalize = getConfig().getCommonParameters().normalize;
-            normalize != Normalize::none)
+        if (const auto normalization = getConfig().getCommonParameters().normalization;
+            normalization != Normalization::none)
         {
           throw makeException<std::runtime_error>("Normalization is not implemented for hipFFT on NVIDIA GPUs");
 
@@ -400,12 +400,12 @@ extern "C" __device__ __constant__
       throw makeException<std::runtime_error>("hipFFT does not support given precision");
     }
 
-    switch (commonParams.normalize)
+    switch (commonParams.normalization)
     {
-    case Normalize::none:
+    case Normalization::none:
       break;
-    case Normalize::unitary:
-    case Normalize::orthogonal:
+    case Normalization::unitary:
+    case Normalization::orthogonal:
       switch (precision.execution)
       {
       case Precision::f32:
