@@ -64,6 +64,17 @@ namespace afft::distrib
   };
 
   /**
+   * @enum Transposed
+   * @brief Transposed flag
+   */
+  enum class Transposed
+  {
+    none, ///< none
+    src,  ///< source
+    dst,  ///< destination
+  };
+
+  /**
    * @struct MemoryBlock
    * @brief Memory block
    */
@@ -80,19 +91,9 @@ namespace afft::distrib
    */
   struct MemoryLayout
   {
-    MemoryBlock srcBlock{}; ///< source memory block
-    MemoryBlock dstBlock{}; ///< destination memory block
-  };
-
-  /**
-   * @enum Transposed
-   * @brief Transposed flag
-   */
-  enum class Transposed
-  {
-    none, ///< none
-    src,  ///< source
-    dst,  ///< destination
+    MemoryBlock srcBlock{};   ///< source memory block
+    MemoryBlock dstBlock{};   ///< destination memory block
+    Transposed  transposed{}; ///< transposed flag
   };
 
 namespace cpu
@@ -116,7 +117,6 @@ namespace cpu
   {
     MPI_Comm     communicator{MPI_COMM_WORLD};                 ///< MPI communicator
     MemoryLayout memoryLayout{};                               ///< memory layout
-    Transposed   transposed{Transposed::none};                 ///< transposed flag
     Alignment    alignment{afft::cpu::alignments::defaultNew}; ///< alignment
     unsigned     threadLimit{1};                               ///< thread limit
   };
@@ -152,7 +152,6 @@ namespace gpu
   struct Parameters<Implementation::native>
   {
     Span<const MemoryLayout> memoryLayouts{};              ///< span of memory layouts
-    Transposed               transposed{Transposed::none}; ///< transposed flag
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     Span<const int>          devices{};                    ///< span of CUDA device IDs
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
@@ -171,7 +170,6 @@ namespace gpu
   {
     MPI_Comm     communicator{MPI_COMM_WORLD};                  ///< MPI communicator
     MemoryLayout memoryLayout{};                                ///< memory layout
-    Transposed   transposed{Transposed::none};                  ///< transposed flag
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device ID
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
