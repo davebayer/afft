@@ -29,6 +29,7 @@
 
 #include "../common.hpp"
 #include "../cpu.hpp"
+#include "../distrib.hpp"
 #include "../gpu.hpp"
 
 namespace afft::detail
@@ -124,8 +125,24 @@ namespace afft::detail
     {
     case Target::cpu:
     case Target::gpu:
-    case Target::distribCpu:
-    case Target::distribGpu:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  /**
+   * @brief Returns true if the given distrib implementation is valid.
+   * @param impl Distrib implementation to check.
+   * @return True if the distrib implementation is valid, false otherwise.
+   */
+  [[nodiscard]] constexpr bool isValidDistribImpl(distrib::Implementation impl) noexcept
+  {
+    switch (impl)
+    {
+    case distrib::Implementation::none:
+    case distrib::Implementation::native:
+    case distrib::Implementation::mpi:
       return true;
     default:
       return false;
