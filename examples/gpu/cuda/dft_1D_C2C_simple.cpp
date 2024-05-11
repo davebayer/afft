@@ -24,9 +24,11 @@ int main(void)
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
   dftParams.shape         = {{size}}; // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
-  dftParams.destroySource = true; // destroy source vector after the transform
 
-  auto plan = afft::makePlan(dftParams, afft::gpu::Parameters{}); // generate the plan of the transform, uses current device
+  afft::gpu::Parameters gpuParams{}; // it will run on a gpu
+  gpuParams.destroySource = true; // allow to destroy source data
+
+  auto plan = afft::makePlan(dftParams, gpuParams); // generate the plan of the transform, uses current device
 
   plan.execute(src.data(), dst.data()); // execute the transform into zero stream
 

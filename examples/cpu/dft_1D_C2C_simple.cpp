@@ -24,10 +24,10 @@ int main(void)
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
   dftParams.shape         = {{size}}; // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
-  dftParams.destroySource = true; // allow to destroy source data
-  dftParams.normalize     = afft::Normalize::orthogonal; // use orthogonal normalization
+  dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
 
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
+  cpuParams.destroySource = true; // allow to destroy source data
   cpuParams.alignment     = afft::getAlignment(src.data(), dst.data()); // get alignment of the pointers
   cpuParams.threadLimit   = 4; // we will use up to 4 threads
 

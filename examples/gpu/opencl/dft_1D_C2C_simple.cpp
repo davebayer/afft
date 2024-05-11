@@ -57,9 +57,9 @@ int main(void)
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
   dftParams.shape         = {{size}}; // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
-  dftParams.destroySource = true; // destroy source vector after the transform
 
   afft::gpu::Parameters gpuParams{}; // parameters for GPU
+  gpuParams.destroySource = true; // allow to destroy source data
   gpuParams.context       = context; // set up OpenCL context
   gpuParams.device        = device; // set up OpenCL device
 
