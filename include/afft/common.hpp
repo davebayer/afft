@@ -124,7 +124,7 @@ namespace afft
   };
 
   /// @brief Normalization
-  enum class Normalize
+  enum class Normalization
   {
     none,       ///< no normalization
     orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
@@ -146,20 +146,6 @@ namespace afft
   };
 
   /**
-   * @struct CommonParameters
-   * @brief Common parameters for all transforms
-   */
-  struct CommonParameters
-  {
-    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            destroySource{false};                          ///< destroy source data
-    InitEffort      initEffort{InitEffort::low};                   ///< initialization effort
-    Normalize       normalize{Normalize::none};                    ///< normalization
-    Placement       placement{Placement::outOfPlace};              ///< placement of the transform
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-  };
-
-  /**
    * @struct PrecisionTriad
    * @brief Precision triad
    */
@@ -173,6 +159,7 @@ namespace afft
   /// @brief Named constant representing all axes (is empty view)
   inline constexpr View<std::size_t> allAxes{};
 
+  /// @brief Namespace for discrete Fourier transform
   namespace dft
   {
     /// @brief DFT transform type
@@ -190,21 +177,31 @@ namespace afft
     /// @brief DFT parameters
     struct Parameters
     {
-      Direction         direction{};                                   ///< direction of the transform
-      PrecisionTriad    precision{};                                   ///< precision triad
-      View<std::size_t> shape{};                                       ///< shape of the transform
-      View<std::size_t> axes{allAxes};                                 ///< axes of the transform
-      Type              type{Type::complexToComplex};                  ///< type of the transform
-
-      ComplexFormat     complexFormat{ComplexFormat::interleaved};     ///< complex number format
-      bool              destroySource{false};                          ///< destroy source data
-      InitEffort        initEffort{InitEffort::low};                   ///< initialization effort
-      Normalize         normalize{Normalize::none};                    ///< normalization
-      Placement         placement{Placement::outOfPlace};              ///< placement of the transform
-      WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+      Direction         direction{};                        ///< direction of the transform
+      PrecisionTriad    precision{};                        ///< precision triad
+      View<std::size_t> shape{};                            ///< shape of the transform
+      View<std::size_t> axes{allAxes};                      ///< axes of the transform
+      Normalization     normalization{Normalization::none}; ///< normalization
+      Type              type{Type::complexToComplex};       ///< type of the transform
     };
   } // namespace dft
 
+  /// @brief Namespace for discrete Hartley transform
+  namespace dht
+  {
+    /// @brief DHT transform type
+    struct Parameters
+    {
+      Direction         direction{};                        ///< direction of the transform
+      PrecisionTriad    precision{};                        ///< precision triad
+      View<std::size_t> shape{};                            ///< shape of the transform
+      View<std::size_t> axes{allAxes};                      ///< axes of the transform
+      Normalization     normalization{Normalization::none}; ///< normalization
+      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
+    };
+  } // namespace dht
+
+  /// @brief Namespace for discrete trigonometric transform
   namespace dtt
   {
     /// @brief DTT transform type
@@ -227,35 +224,15 @@ namespace afft
     /// @brief DTT parameters
     struct Parameters
     {
-      Direction         direction{};                                   ///< direction of the transform
-      PrecisionTriad    precision{};                                   ///< precision triad
-      View<std::size_t> shape{};                                       ///< shape of the transform
-      View<std::size_t> axes{allAxes};                                 ///< axes of the transform
-      View<Type>        types{};                                       ///< types of the transform
-
-      bool              destroySource{false};                          ///< destroy source data
-      InitEffort        initEffort{InitEffort::low};                   ///< initialization effort
-      Normalize         normalize{Normalize::none};                    ///< normalization
-      Placement         placement{Placement::outOfPlace};              ///< placement of the transform
-      WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+      Direction         direction{};                        ///< direction of the transform
+      PrecisionTriad    precision{};                        ///< precision triad
+      View<std::size_t> shape{};                            ///< shape of the transform
+      View<std::size_t> axes{allAxes};                      ///< axes of the transform
+      Normalization     normalization{Normalization::none}; ///< normalization
+      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
+      View<Type>        types{};                            ///< types of the transform
     };
   } // namespace dtt
-
-  /**
-   * @brief Equality operator for CommonParameters
-   * @param lhs left-hand side
-   * @param rhs right-hand side
-   * @return true if the parameters are equal, false otherwise
-   */
-  [[nodiscard]] inline constexpr bool operator==(const CommonParameters& lhs, const CommonParameters& rhs)
-  {
-    return (lhs.complexFormat == rhs.complexFormat) &&
-           (lhs.destroySource == rhs.destroySource) &&
-           (lhs.initEffort == rhs.initEffort) &&
-           (lhs.normalize == rhs.normalize) &&
-           (lhs.placement == rhs.placement) &&
-           (lhs.workspacePolicy == rhs.workspacePolicy);
-  }
 
   /**
    * @brief Equality operator for PrecisionTriad

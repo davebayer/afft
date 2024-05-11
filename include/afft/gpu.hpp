@@ -201,17 +201,22 @@ namespace afft::gpu
    */
   struct Parameters
   {
-    MemoryLayout memoryLayout{};             ///< Memory layout, defaults to `real`
+    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
+    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool            destroySource{false};                          ///< destroy source data
+    InitEffort      initEffort{InitEffort::low};                   ///< initialization effort
+    Placement       placement{Placement::outOfPlace};              ///< placement of the transform
+    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
   // GPU framework specific parameters
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+    int             device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    int          device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+    int             device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
 # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context   context{};                                     ///< OpenCL context
-    cl_device_id device{};                                      ///< OpenCL device
+    cl_context      context{};                                     ///< OpenCL context
+    cl_device_id    device{};                                      ///< OpenCL device
 # endif
-    bool         externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+    bool            externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
   };
 
   /// @brief Default list of backends

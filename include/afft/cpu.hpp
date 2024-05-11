@@ -159,9 +159,14 @@ namespace afft::cpu
    */
   struct Parameters
   {
-    MemoryLayout memoryLayout{};                    ///< Memory layout for CPU transform
-    Alignment    alignment{alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned     threadLimit{allThreads};           ///< Thread limit for CPU transform, 0 for no limit
+    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
+    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool            destroySource{false};                          ///< destroy source data
+    InitEffort      initEffort{InitEffort::low};                   ///< initialization effort
+    Placement       placement{Placement::outOfPlace};              ///< placement of the transform
+    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    Alignment       alignment{alignments::defaultNew};             ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    unsigned        threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Default list of backends
