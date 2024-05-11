@@ -27,7 +27,6 @@
 
 #include <algorithm>
 #include <memory>
-#include <span>
 
 #include "../../cpu.hpp"
 

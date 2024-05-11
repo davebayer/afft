@@ -26,7 +26,6 @@
 #define AFFT_COMMON_HPP
 
 #include <cstddef>
-#include <span>
 #include <utility>
 
 #include "Span.hpp"

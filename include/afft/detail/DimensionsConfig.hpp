@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
-#include <span>
 
 #include "common.hpp"
 #include "error.hpp"

@@ -133,7 +133,6 @@
 #endif
 
 #include <array>
-#include <span>
 
 namespace afft::gpu
 {

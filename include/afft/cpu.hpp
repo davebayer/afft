@@ -57,7 +57,6 @@
 #include <memory>
 #include <new>
 #include <string_view>
-#include <span>
 #include <utility>
 
 #include "common.hpp"

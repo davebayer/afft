@@ -28,7 +28,6 @@
 #include <array>
 #include <string>
 #include <string_view>
-#include <span>
 #include <vector>
 
 #include <nvrtc.h>

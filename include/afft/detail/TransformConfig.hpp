@@ -29,7 +29,6 @@
 #include <bitset>
 #include <cstddef>
 #include <variant>
-#include <span>
 
 #include "common.hpp"
 #include "cxx.hpp"
