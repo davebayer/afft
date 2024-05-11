@@ -91,10 +91,8 @@ namespace afft
   /// @brief Target
   enum class Target
   {
-    cpu,        ///< CPU target
-    gpu,        ///< GPU target
-    distribCpu, ///< distributed CPU target
-    distribGpu, ///< distributed GPU target
+    cpu, ///< CPU target
+    gpu, ///< GPU target
   };
 
   /// @brief Backend select strategy
