@@ -220,17 +220,17 @@ namespace afft::detail
   }
 
   /**
-   * @brief Returns true if the given normalize is valid.
-   * @param normalize Normalize to check.
-   * @return True if the normalize is valid, false otherwise.
+   * @brief Returns true if the given normalization is valid.
+   * @param normalization Normalize to check.
+   * @return True if the normalization is valid, false otherwise.
    */
-  [[nodiscard]] constexpr bool isValidNormalize(Normalize normalize) noexcept
+  [[nodiscard]] constexpr bool isValidNormalization(Normalization normalization) noexcept
   {
-    switch (normalize)
+    switch (normalization)
     {
-    case Normalize::none:
-    case Normalize::orthogonal:
-    case Normalize::unitary:
+    case Normalization::none:
+    case Normalization::orthogonal:
+    case Normalization::unitary:
       return true;
     default:
       return false;
