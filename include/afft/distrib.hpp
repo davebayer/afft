@@ -80,9 +80,9 @@ namespace afft::distrib
    */
   struct MemoryBlock
   {
-    Span<const std::size_t> starts{};  ///< starts of the memory block
-    Span<const std::size_t> sizes{};   ///< sizes of the memory block
-    Span<const std::size_t> strides{}; ///< strides of the memory block
+    View<std::size_t> starts{};  ///< starts of the memory block
+    View<std::size_t> sizes{};   ///< sizes of the memory block
+    View<std::size_t> strides{}; ///< strides of the memory block
   };
 
   /**
@@ -151,16 +151,16 @@ namespace gpu
   template<>
   struct Parameters<Implementation::native>
   {
-    Span<const MemoryLayout> memoryLayouts{};              ///< span of memory layouts
+    View<MemoryLayout> memoryLayouts{};              ///< view of memory layouts
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    Span<const int>          devices{};                    ///< span of CUDA device IDs
+    View<int>          devices{};                    ///< view of CUDA device IDs
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    Span<const int>          devices{};                    ///< span of HIP device IDs
+    View<int>          devices{};                    ///< view of HIP device IDs
 # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context               context{};                    ///< OpenCL context
-    Span<const cl_device_id> devices{};                    ///< span of OpenCL device IDs
+    cl_context         context{};                    ///< OpenCL context
+    View<cl_device_id> devices{};                    ///< view of OpenCL device IDs
 # endif
-    bool                     externalWorkspace{false};     ///< external workspace flag
+    bool               externalWorkspace{false};     ///< external workspace flag
   };
 
 #if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
@@ -195,14 +195,14 @@ namespace gpu
   struct ExecutionParameters<Implementation::native>
   {
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
-    cudaStream_t       stream{0};    ///< CUDA stream, defaults to `zero` stream
-    Span<void* const>  workspace{};  ///< span of workspace pointers, must be specified if `externalWorkspace` is `true`
+    cudaStream_t     stream{0};      ///< CUDA stream, defaults to `zero` stream
+    View<void*>      workspace{};    ///< view of workspace pointers, must be specified if `externalWorkspace` is `true`
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
-    hipStream_t        stream{0};    ///< HIP stream, defaults to `zero` stream
-    Span<void* const>  workspace{};  ///< span of workspace pointers, must be specified if `externalWorkspace` is `true`
+    hipStream_t      stream{0};      ///< HIP stream, defaults to `zero` stream
+    View<void*>      workspace{};    ///< view of workspace pointers, must be specified if `externalWorkspace` is `true`
 # elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_command_queue   commandQueue{};
-    Span<const cl_mem> workspace{};
+    cl_command_queue commandQueue{}; ///< OpenCL command queue
+    View<cl_mem>     workspace{};    ///< view of workspace buffers, must be specified if `externalWorkspace` is `true`
 # endif
   };
 } // namespace gpu
