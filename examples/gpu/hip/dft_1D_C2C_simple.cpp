@@ -20,18 +20,15 @@ int main(void)
   // initialize source vector
 
   afft::dft::Parameters dftParams{}; // parameters for dft
-  dftParams.direction                      = afft::Direction::forward; // it will be a forward transform
-  dftParams.precision                      = afft::makePrecision<PrecT>(); // set up precision of the transform
-  dftParams.commonParameters.destroySource = true; // destroy source vector after the transform
-  dftParams.shape                          = {{size}}; // set up the dimensions
-  dftParams.type                           = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
+  dftParams.direction     = afft::Direction::forward; // it will be a forward transform
+  dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
+  dftParams.shape         = {{size}}; // set up the dimensions
+  dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
+  dftParams.destroySource = true; // destroy source vector after the transform
 
-  // create scope just to make sure the plan is destroyed before afft::finalize() is called
-  {
-    auto plan = afft::makePlan(dftParams, afft::gpu::Parameters{}); // generate the plan of the transform, uses current device
+  auto plan = afft::makePlan(dftParams, afft::gpu::Parameters{}); // generate the plan of the transform, uses current device
 
-    plan.execute(src.data(), dst.data()); // execute the transform into zero stream
-  }
+  plan.execute(src.data(), dst.data()); // execute the transform into zero stream
 
   if (hipDeviceSynchronize() != hipSuccess)
   {
@@ -39,6 +36,4 @@ int main(void)
   }
 
   // use results from dst vector
-
-  afft::finalize(); // deinitialize afft library
 }

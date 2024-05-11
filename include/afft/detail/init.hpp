@@ -38,15 +38,43 @@ namespace afft::detail
   /// @brief Is the library initialized?
   inline bool isInitialized{false};
 
+  /// @brief Finalize the library usage.
+  inline void finalize()
+  {
+    if (std::exchange(isInitialized, false))
+    {
+      cpu::finalize();
+
+#   if AFFT_GPU_IS_ENABLED
+      gpu::finalize();
+#   endif
+    }
+  }
+
+  /// @brief Deinitializer.
+  struct Deinitializer
+  {
+    /// @brief Destructor deinitializing the library if it was initialized.
+    ~Deinitializer()
+    {
+      if (isInitialized)
+      {
+        finalize();
+      }
+    }
+  };
+
   /// @brief Initialize the library.
   inline void init(const afft::cpu::InitParameters&                  cpuInitParams,
                    [[maybe_unused]] const afft::gpu::InitParameters& gpuInitParams)
   {
+    // Deinitializer.
+    static Deinitializer deinitializer{};
+
     if (!std::exchange(isInitialized, true))
     {
       // Init distrib implementation.
-#   if AFFT_DISTRIB_IMPL_IS(NATIVE)
-#   elif AFFT_DISTRIB_IMPL_IS(MPI)
+#   if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
       int mpiIsInitialized{};
       MPI_Initialized(&mpiIsInitialized);
 
@@ -62,19 +90,6 @@ namespace afft::detail
       // Init GPU implementation if enabled.
 #   if AFFT_GPU_IS_ENABLED
       gpu::init(gpuInitParams);
-#   endif
-    }
-  }
-
-  /// @brief Finalize the library usage.
-  inline void finalize()
-  {
-    if (std::exchange(isInitialized, false))
-    {
-      cpu::finalize();
-
-#   if AFFT_GPU_IS_ENABLED
-      gpu::finalize();
 #   endif
     }
   }

@@ -53,31 +53,24 @@ int main(void)
   // initialize source vector
 
   afft::dft::Parameters dftParams{}; // parameters for dft
-  dftParams.direction                      = afft::Direction::forward; // it will be a forward transform
-  dftParams.precision                      = afft::makePrecision<PrecT>(); // set up precision of the transform
-  dftParams.commonParameters.destroySource = true; // destroy source vector after the transform
-  dftParams.shape                          = {{size}}; // set up the dimensions
-  dftParams.type                           = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
+  dftParams.direction     = afft::Direction::forward; // it will be a forward transform
+  dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
+  dftParams.shape         = {{size}}; // set up the dimensions
+  dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
+  dftParams.destroySource = true; // destroy source vector after the transform
 
   afft::gpu::Parameters gpuParams{}; // parameters for GPU
-  gpuParams.context = context; // set up OpenCL context
-  gpuParams.device  = device; // set up OpenCL device
+  gpuParams.context       = context; // set up OpenCL context
+  gpuParams.device        = device; // set up OpenCL device
 
-  // create scope just to make sure the plan is destroyed before afft::finalize() is called
-  {
-    auto plan = afft::makePlan(dftParams, gpuParams); // generate the plan of the transform
+  auto plan = afft::makePlan(dftParams, gpuParams); // generate the plan of the transform
 
-    const afft::gpu::ExecutionParameters execParams
-    {
-      .commandQueue = queue, // set up OpenCL command queue
-    };
+  afft::gpu::ExecutionParameters execParams{}; // gpu parameters for execution
+  execParams.commandQueue = queue, // set up OpenCL command queue
 
-    plan.execute(src.data(), dst.data(), execParams); // execute the transform into zero stream
-  }
+  plan.execute(src.data(), dst.data(), execParams); // execute the transform into zero stream
 
   // use results from dst vector
-
-  afft::finalize(); // deinitialize afft library
 
   if (clReleaseCommandQueue(queue) != CL_SUCCESS)
   {

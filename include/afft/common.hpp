@@ -190,12 +190,18 @@ namespace afft
     /// @brief DFT parameters
     struct Parameters
     {
-      Direction         direction{};                  ///< direction of the transform
-      PrecisionTriad    precision{};                  ///< precision triad
-      CommonParameters  commonParameters{};           ///< common parameters
-      View<std::size_t> shape{};                      ///< shape of the transform
-      View<std::size_t> axes{allAxes};                ///< axes of the transform
-      Type              type{Type::complexToComplex}; ///< type of the transform
+      Direction         direction{};                                   ///< direction of the transform
+      PrecisionTriad    precision{};                                   ///< precision triad
+      View<std::size_t> shape{};                                       ///< shape of the transform
+      View<std::size_t> axes{allAxes};                                 ///< axes of the transform
+      Type              type{Type::complexToComplex};                  ///< type of the transform
+
+      ComplexFormat     complexFormat{ComplexFormat::interleaved};     ///< complex number format
+      bool              destroySource{false};                          ///< destroy source data
+      InitEffort        initEffort{InitEffort::low};                   ///< initialization effort
+      Normalize         normalize{Normalize::none};                    ///< normalization
+      Placement         placement{Placement::outOfPlace};              ///< placement of the transform
+      WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     };
   } // namespace dft
 
@@ -221,12 +227,17 @@ namespace afft
     /// @brief DTT parameters
     struct Parameters
     {
-      Direction         direction{};        ///< direction of the transform
-      PrecisionTriad    precision{};        ///< precision triad
-      CommonParameters  commonParameters{}; ///< common parameters
-      View<std::size_t> shape{};            ///< shape of the transform
-      View<std::size_t> axes{allAxes};      ///< axes of the transform
-      View<Type>        types{};            ///< types of the transform
+      Direction         direction{};                                   ///< direction of the transform
+      PrecisionTriad    precision{};                                   ///< precision triad
+      View<std::size_t> shape{};                                       ///< shape of the transform
+      View<std::size_t> axes{allAxes};                                 ///< axes of the transform
+      View<Type>        types{};                                       ///< types of the transform
+
+      bool              destroySource{false};                          ///< destroy source data
+      InitEffort        initEffort{InitEffort::low};                   ///< initialization effort
+      Normalize         normalize{Normalize::none};                    ///< normalization
+      Placement         placement{Placement::outOfPlace};              ///< placement of the transform
+      WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     };
   } // namespace dtt
 

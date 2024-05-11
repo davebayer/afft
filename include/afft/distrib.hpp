@@ -28,11 +28,6 @@
 /// @brief MPI distribution implementation
 #define AFFT_DISTRIB_IMPL_MPI    (1 << 0)
 
-// Set default distribution implementation if not defined
-#ifndef AFFT_DISTRIB_IMPL_MASK
-# define AFFT_DISTRIB_IMPL_MASK  0
-#endif
-
 /**
  * @brief Check if distribution implementation is enabled
  * @param implName Distribution implementation name
