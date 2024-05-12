@@ -36,7 +36,7 @@ namespace afft
 namespace detail
 {
   /// @brief Underlying type of the Backend enum
-  using BackendUnderlyingType     = std::uint8_t;
+  using BackendUnderlyingType = std::uint8_t;
 
   // Check that the Backend underlying type is unsigned
   static_assert(std::is_unsigned_v<BackendUnderlyingType>);
