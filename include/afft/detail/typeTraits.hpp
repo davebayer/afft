@@ -101,30 +101,37 @@ namespace afft::detail
 
   /// @brief Specialization for cpu target.
   template<>
-  struct TargetParametersSelect<Target::cpu, distrib::Type::single>
+  struct TargetParametersSelect<Target::cpu, distrib::Type::spst>
   {
     using Type = afft::cpu::Parameters;
   };
 
   /// @brief Specialization for gpu target.
   template<>
-  struct TargetParametersSelect<Target::gpu, distrib::Type::single>
+  struct TargetParametersSelect<Target::gpu, distrib::Type::spst>
   {
     using Type = afft::gpu::Parameters;
   };
 
-  /// @brief Specialization for distributed multi gpu target.
+  /// @brief Specialization for distributed spmt gpu target.
   template<>
-  struct TargetParametersSelect<Target::gpu, distrib::Type::multi>
+  struct TargetParametersSelect<Target::gpu, distrib::Type::spmt>
   {
-    using Type = afft::multi::gpu::Parameters;
+    using Type = afft::spmt::gpu::Parameters;
   };
 
-  /// @brief Specialization for distributed mpi cpu target.
+  /// @brief Specialization for distributed mpst cpu target.
   template<>
-  struct TargetParametersSelect<Target::cpu, distrib::Type::mpi>
+  struct TargetParametersSelect<Target::cpu, distrib::Type::mpst>
   {
-    using Type = afft::mpi::cpu::Parameters;
+    using Type = afft::mpst::cpu::Parameters;
+  };
+
+  /// @brief Specialization for distributed mpst gpu target.
+  template<>
+  struct TargetParametersSelect<Target::gpu, distrib::Type::mpst>
+  {
+    using Type = afft::mpst::gpu::Parameters;
   };
 
   /**
@@ -136,23 +143,23 @@ namespace afft::detail
 
   /// @brief Specialization for cpu target parameters.
   template<>
-  struct IsTargetParameters<afft::cpu::Parameters> : std::true_type {};
+  struct IsTargetParameters<afft::spst::cpu::Parameters> : std::true_type {};
 
   /// @brief Specialization for gpu target parameters.
   template<>
-  struct IsTargetParameters<afft::gpu::Parameters> : std::true_type {};
+  struct IsTargetParameters<afft::spst::gpu::Parameters> : std::true_type {};
 
-  /// @brief Specialization for distributed multi gpu target parameters.
+  /// @brief Specialization for distributed spmt gpu target parameters.
   template<>
-  struct IsTargetParameters<afft::multi::gpu::Parameters> : std::true_type {};
+  struct IsTargetParameters<afft::spmt::gpu::Parameters> : std::true_type {};
 
-  /// @brief Specialization for distributed mpi cpu target parameters.
+  /// @brief Specialization for distributed mpst cpu target parameters.
   template<>
-  struct IsTargetParameters<afft::mpi::cpu::Parameters> : std::true_type {};
+  struct IsTargetParameters<afft::mpst::cpu::Parameters> : std::true_type {};
 
   /// @brief Specialization for distributed cpu target parameters.
   template<>
-  struct IsTargetParameters<afft::mpi::gpu::Parameters> : std::true_type {};
+  struct IsTargetParameters<afft::mpst::gpu::Parameters> : std::true_type {};
 
   /**
    * @brief ExecutionParameters type for given target.
@@ -164,37 +171,37 @@ namespace afft::detail
 
   /// @brief Specialization for cpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::single>
+  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::spst>
   {
     using Type = afft::cpu::ExecutionParameters;
   };
 
   /// @brief Specialization for gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::single>
+  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::spst>
   {
     using Type = afft::gpu::ExecutionParameters;
   };
 
-  /// @brief Specialization for distributed multi gpu target.
+  /// @brief Specialization for distributed spmt gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::multi>
+  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::spmt>
   {
-    using Type = afft::multi::gpu::ExecutionParameters;
+    using Type = afft::spmt::gpu::ExecutionParameters;
   };
 
-  /// @brief Specialization for distributed mpi cpu target.
+  /// @brief Specialization for distributed mpst cpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::mpi>
+  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::mpst>
   {
-    using Type = afft::mpi::cpu::ExecutionParameters;
+    using Type = afft::mpst::cpu::ExecutionParameters;
   };
 
-  /// @brief Specialization for distributed mpi gpu target.
+  /// @brief Specialization for distributed mpst gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::mpi>
+  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::mpst>
   {
-    using Type = afft::mpi::gpu::ExecutionParameters;
+    using Type = afft::mpst::gpu::ExecutionParameters;
   };
 
   /**
@@ -212,17 +219,17 @@ namespace afft::detail
   template<>
   struct IsExecutionParameters<afft::gpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed multi gpu ExecutionParameters.
+  /// @brief Specialization for distributed spmt gpu ExecutionParameters.
   template<>
-  struct IsExecutionParameters<afft::multi::gpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters<afft::spmt::gpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed mpi cpu ExecutionParameters.
+  /// @brief Specialization for distributed mpst cpu ExecutionParameters.
   template<>
-  struct IsExecutionParameters<afft::mpi::cpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters<afft::mpst::cpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed mpi gpu ExecutionParameters.
+  /// @brief Specialization for distributed mpst gpu ExecutionParameters.
   template<>
-  struct IsExecutionParameters<afft::mpi::gpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters<afft::mpst::gpu::ExecutionParameters> : std::true_type {};
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

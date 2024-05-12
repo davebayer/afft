@@ -80,7 +80,7 @@ namespace afft
    * @tparam target The target type.
    * @tparam distribType The distribution type.
    */
-  template<Target target, distrib::Type distribType = distrib::Type::single>
+  template<Target target, distrib::Type distribType = distrib::Type::spst>
   using TargetParameters = typename detail::TargetParametersSelect<target, distribType>::Type;
 
   /**
@@ -95,7 +95,7 @@ namespace afft
    * @tparam target The target type.
    * @tparam distribType The distribution type.
    */
-  template<Target target, distrib::Type distribType = distrib::Type::single>
+  template<Target target, distrib::Type distribType = distrib::Type::spst>
   using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target, distribType>::Type;
 
   /**
