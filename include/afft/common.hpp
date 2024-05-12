@@ -142,13 +142,6 @@ namespace afft
     performance, ///< perfer performance over workspace minimization
   };
 
-  /// @brief Memory layout of the transform
-  struct MemoryLayout
-  {
-    View<std::size_t> srcStrides{}; ///< stride of the source data
-    View<std::size_t> dstStrides{}; ///< stride of the destination data
-  };
-
   /**
    * @struct PrecisionTriad
    * @brief Precision triad
