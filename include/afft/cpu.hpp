@@ -517,7 +517,6 @@ namespace cpu
   };
 } // namespace cpu
 
-#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
 namespace mpi::cpu
 {
   /// @brief Backend mask for mpi cpu transform
@@ -532,6 +531,7 @@ namespace mpi::cpu
 
   /// @brief Parameters for mpi cpu transform
   struct Parameters
+#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
   {
     distrib::MemoryLayout memoryLayout{};                                ///< memory layout for cpu transform
     View<std::size_t>     srcAxesOrder{};                                ///< source axes order, defaults to natural order
@@ -542,12 +542,13 @@ namespace mpi::cpu
     MPI_Comm              communicator{MPI_COMM_WORLD};                  ///< MPI communicator
     Alignment             alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
     unsigned              threadLimit{1};                                ///< thread limit for cpu transform
-  };
+  }
+#endif
+   ;
 
   /// @brief Execution parameters for mpi cpu transform
   using ExecutionParameters = afft::cpu::ExecutionParameters;
 } // namespace mpi::cpu
-#endif
 } // namespace afft
 
 #endif /* AFFT_CPU_HPP */

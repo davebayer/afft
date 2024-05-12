@@ -137,6 +137,7 @@
 #include "backend.hpp"
 #include "common.hpp"
 #include "distrib.hpp"
+#include "detail/cxx.hpp"
 
 namespace afft
 {
@@ -357,46 +358,41 @@ namespace gpu
   };
 } // namespace gpu
 
-#if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
 namespace p2p::gpu
 {
   /// @brief Maximum number of p2p devices
   inline constexpr std::size_t maxDevices{16}; ///< maximum number of devices
 
+  /// @brief Backend mask for p2p gpu target
+  inline constexpr BackendMask backendMask
+  {
+    BackendMask::empty
 #if AFFT_GPU_FRAMEWORK_IS_CUDA
-  /// @brief Backend mask for p2p gpu target
-  inline constexpr BackendMask backendMask{BackendMask::empty | Backend::cufft};
-
-  /// @brief Order of initialization of backends
-  inline constexpr std::array defaultBackendInitOrder
-  {
-    Backend::cufft, // just cufft
-  };
+    | Backend::cufft
 #elif AFFT_GPU_FRAMEWORK_IS_HIP
-# if defined(__HIP_PLATFORM_AMD__)
-  /// @brief Backend mask for p2p gpu target
-  inline constexpr BackendMask backendMask{Backend::hipfft | Backend::rocfft};
+    | Backend::hipfft | Backend::rocfft
+#endif
+  };
 
   /// @brief Order of initialization of backends
-  inline constexpr std::array defaultBackendInitOrder
+  inline constexpr std::array defaultBackendInitOrder = detail::cxx::to_array<Backend>(
   {
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
+    Backend::cufft, // just cufft
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
+#   if defined(__HIP_PLATFORM_AMD__)
     Backend::rocfft, // prefer rocfft
     Backend::hipfft, // fallback to hipfft
-  };
-# elif defined(__HIP_PLATFORM_NVIDIA__)
-  /// @brief Backend mask for p2p gpu target
-  inline constexpr BackendMask backendMask{Backend::hipfft};
-
-  /// @brief Order of initialization of backends
-  inline constexpr std::array defaultBackendInitOrder
-  {
+#   elif defined(__HIP_PLATFORM_NVIDIA__)
     Backend::hipfft, // prefer hipfft
     Backend::rocfft, // fallback to rocfft
-  };
-#endif
+#   endif
+# endif
+  });
 
   /// @brief Parameters for p2p gpu target
   struct Parameters
+#if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
   {
     View<distrib::MemoryLayout> memoryLayouts{};                               ///< memory layouts
     View<std::size_t>           srcAxesOrder{};                                ///< source axes order, defaults to natural order
@@ -410,28 +406,32 @@ namespace p2p::gpu
     View<int>                   devices{};                                     ///< list of HIP devices
 # endif
     bool                        externalWorkspace{false};                      ///< use external workspace, defaults to `false`
-  };
+  }
+#endif
+   ;
 
   /// @brief Execution parameters for p2p gpu target
   struct ExecutionParameters
+#if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
   {
-  // GPU framework specific execution parameters
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
+  // GPU framework specific execution parameters
     cudaStream_t stream{0};   ///< CUDA stream, defaults to `zero` stream
     View<void*>  workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
 # elif AFFT_GPU_FRAMEWORK_IS_HIP
     hipStream_t  stream{0};    ///< HIP stream, defaults to `zero` stream
     View<void*>  workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
 # endif
-  };
-} // namespace p2p::gpu
+  }
 #endif
+   ;
+} // namespace p2p::gpu
 
-#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
 namespace mpi::gpu
 {
   /// @brief Parameters for mpi gpu target
   struct Parameters
+#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
   {
     distrib::MemoryLayout memoryLayout{};                                ///< memory layout
     View<std::size_t>     srcAxesOrder{};                                ///< source axes order, defaults to natural order
@@ -449,7 +449,9 @@ namespace mpi::gpu
     cl_device_id          device{};                                      ///< OpenCL device
 # endif
     bool                  externalWorkspace{false};                      ///< use external workspace, defaults to `false`
-  };
+  }
+#endif
+   ;
 
   /// @brief Execution parameters for mpi gpu target
   using ExecutionParameters = afft::gpu::ExecutionParameters;
