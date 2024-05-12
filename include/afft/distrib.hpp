@@ -49,9 +49,9 @@ namespace afft::distrib
    */
   enum class Type
   {
-    none, ///< none
-    p2p,  ///< p2p
-    mpi,  ///< mpi
+    single, ///< single device, single process
+    multi,  ///< multiple devices, single process
+    mpi,    ///< mpi distribution, sigle device, multiple processes
   };
 
   /**

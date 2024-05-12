@@ -358,12 +358,12 @@ namespace gpu
   };
 } // namespace gpu
 
-namespace p2p::gpu
+namespace multi::gpu
 {
-  /// @brief Maximum number of p2p devices
+  /// @brief Maximum number of multi devices
   inline constexpr std::size_t maxDevices{16}; ///< maximum number of devices
 
-  /// @brief Backend mask for p2p gpu target
+  /// @brief Backend mask for multi gpu target
   inline constexpr BackendMask backendMask
   {
     BackendMask::empty
@@ -390,7 +390,7 @@ namespace p2p::gpu
 # endif
   });
 
-  /// @brief Parameters for p2p gpu target
+  /// @brief Parameters for multi gpu target
   struct Parameters
 #if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
   {
@@ -410,7 +410,7 @@ namespace p2p::gpu
 #endif
    ;
 
-  /// @brief Execution parameters for p2p gpu target
+  /// @brief Execution parameters for multi gpu target
   struct ExecutionParameters
 #if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
   {
@@ -425,7 +425,7 @@ namespace p2p::gpu
   }
 #endif
    ;
-} // namespace p2p::gpu
+} // namespace multi::gpu
 
 namespace mpi::gpu
 {
