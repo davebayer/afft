@@ -28,6 +28,7 @@
 #include <cstddef>
 
 #include "common.hpp"
+#include "mp.hpp"
 
 namespace afft
 {
@@ -103,8 +104,10 @@ namespace mpst
   /// @brief Alias for single process, multiple targets namespace
   namespace multi = spmt;
 
+#if AFFT_MP_BACKEND_IS(MPI)
   /// @brief Alias for multiple processes, single target namespace
   namespace mpi = mpst;
+#endif
 } // namespace afft
 
 #endif /* AFFT_DISTRIB_HPP */
