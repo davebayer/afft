@@ -78,9 +78,10 @@ namespace afft
   /**
    * @brief Target Parameters type for given target.
    * @tparam target The target type.
+   * @tparam distribType The distribution type.
    */
-  template<Target target>
-  using TargetParameters = typename detail::TargetParametersSelect<target>::Type;
+  template<Target target, distrib::Type distribType = distrib::Type::none>
+  using TargetParameters = typename detail::TargetParametersSelect<target, distribType>::Type;
 
   /**
    * @brief Check if the type is TargetParameters.
@@ -90,46 +91,12 @@ namespace afft
   inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
-   * @brief Backend type for given target.
-   * @tparam target The target type.
-   */
-  template<Target target>
-  using TargetBackend = typename detail::TargetBackendSelect<target>::Type;
-
-  /**
-   * @brief Check if the type is target transform backend.
-   * @tparam T The type.
-   */
-  template<typename T>
-  inline constexpr bool isTargetBackend = detail::IsTargetBackend<detail::cxx::remove_cvref_t<T>>::value;
-
-  /**
-   * @brief BackendSelectParameters type for given target.
-   * @tparam target The target type.
-   */
-  template<Target target>
-  using BackendSelectParameters = typename detail::TargetBackendSelectParametersSelect<target>::Type;
-
-  /**
-   * @brief Check if the type is BackendSelectParameters.
-   * @tparam T The type.
-   */
-  template<typename T>
-  inline constexpr bool isBackendSelectParameters = detail::IsBackendSelectParameters<detail::cxx::remove_cvref_t<T>>::value;
-  
-  /**
-   * @brief Get the target of the backend select parameters.
-   * @tparam T The type.
-   */
-  template<typename T>
-  inline constexpr Target backendSelectParametersTarget = detail::BackendSelectParametersTarget<detail::cxx::remove_cvref_t<T>>::value;
-
-  /**
    * @brief ExecutionParameters type for given target.
    * @tparam target The target type.
+   * @tparam distribType The distribution type.
    */
-  template<Target target>
-  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target>::Type;
+  template<Target target, distrib::Type distribType = distrib::Type::none>
+  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target, distribType>::Type;
 
   /**
    * @brief Check if the type is ExecutionParameters.
@@ -137,13 +104,6 @@ namespace afft
    */
   template<typename T>
   inline constexpr bool isExecutionParameters = detail::IsExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
-  
-  /**
-   * @brief Get the target of the target parameters.
-   * @tparam T The type.
-   */
-  template<typename T>
-  inline constexpr Target targetParametersTarget = detail::TargetParametersTarget<detail::cxx::remove_cvref_t<T>>::value;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */
