@@ -25,31 +25,6 @@
 #ifndef AFFT_BACKEND_HPP
 #define AFFT_BACKEND_HPP
 
-/// @brief clFFT backend id
-#define AFFT_BACKEND_CLFFT     (0)
-/// @brief cuFFT backend id
-#define AFFT_BACKEND_CUFFT     (1)
-/// @brief FFTW3 backend id
-#define AFFT_BACKEND_FFTW3     (2)
-/// @brief hipFFT backend id
-#define AFFT_BACKEND_HIPFFT    (3)
-/// @brief MKL backend id
-#define AFFT_BACKEND_MKL       (4)
-/// @brief PocketFFT backend id
-#define AFFT_BACKEND_POCKETFFT (5)
-/// @brief rocFFT backend id
-#define AFFT_BACKEND_ROCFFT    (6)
-/// @brief VkFFT backend id
-#define AFFT_BACKEND_VKFFT     (7)
-
-/**
- * @brief Is backend enabled?
- * @param bckndName Backend name.
- * @return True if the backend is enabled, false otherwise.
- */
-#define AFFT_BACKEND_IS_ENABLED(bckndName) \
-  ((AFFT_BACKEND_MASK & AFFT_BACKEND_##bckndName) != 0)
-
 #include <cstdint>
 #include <functional>
 #include <limits>

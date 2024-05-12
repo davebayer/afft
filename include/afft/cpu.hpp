@@ -25,31 +25,6 @@
 #ifndef AFFT_CPU_HPP
 #define AFFT_CPU_HPP
 
-#include "macro.hpp"
-
-/// @brief Macro for FFTW3 CPU backend
-#define AFFT_CPU_BACKEND_FFTW3     (1 << 0)
-/// @brief Macro for MKL CPU backend
-#define AFFT_CPU_BACKEND_MKL       (1 << 1)
-/// @brief Macro for PocketFFT CPU backend
-#define AFFT_CPU_BACKEND_POCKETFFT (1 << 2)
-
-/**
- * @brief Macro for getting the backend from the name
- * @param backendName Name of the backend
- * @return Transform backend
- */
-#define AFFT_CPU_BACKEND_FROM_NAME(backendName) \
-  AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_CPU_BACKEND_, backendName)
-
-/**
- * @brief Macro for checking if the backend is allowed
- * @param backendName Name of the backend
- * @return Non zero if the backend is allowed, false otherwise
- */
-#define AFFT_CPU_BACKEND_IS_ENABLED(backendName) \
-  (AFFT_CPU_BACKEND_FROM_NAME(backendName) & (AFFT_CPU_BACKEND_MASK))
-
 #include <array>
 #include <complex>
 #include <concepts>
@@ -62,6 +37,7 @@
 #include "backend.hpp"
 #include "common.hpp"
 #include "distrib.hpp"
+#include "macro.hpp"
 #include "mp.hpp"
 #include "detail/cxx.hpp"
 

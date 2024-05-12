@@ -27,37 +27,69 @@
 
 #include "detail/macro.hpp"
 
-/// @brief Macro for empty delimiter
-#define AFFT_DELIM_EMPTY   AFFT_DETAIL_DELIM_EMPTY
-/// @brief Macro for comma delimiter
-#define AFFT_DELIM_COMMA   AFFT_DETAIL_DELIM_COMMA
+/// @brief clFFT backend id
+#define AFFT_BACKEND_CLFFT      (0)
+/// @brief cuFFT backend id
+#define AFFT_BACKEND_CUFFT      (1)
+/// @brief FFTW3 backend id
+#define AFFT_BACKEND_FFTW3      (2)
+/// @brief hipFFT backend id
+#define AFFT_BACKEND_HIPFFT     (3)
+/// @brief MKL backend id
+#define AFFT_BACKEND_MKL        (4)
+/// @brief PocketFFT backend id
+#define AFFT_BACKEND_POCKETFFT  (5)
+/// @brief rocFFT backend id
+#define AFFT_BACKEND_ROCFFT     (6)
+/// @brief VkFFT backend id
+#define AFFT_BACKEND_VKFFT      (7)
 
 /**
- * @brief Macro for applying a macro to each variadic argument
- * @param macro Macro to apply
- * @param ... Variadic arguments
- * @return Macro applied to each variadic argument
+ * @brief Is backend enabled?
+ * @param bckndName Backend name.
+ * @return True if the backend is enabled, false otherwise.
  */
-#define AFFT_FOR_EACH(macro, ...) \
-  AFFT_FOR_EACH_WITH_DELIM(macro, AFFT_DELIM_EMPTY, __VA_ARGS__)
+#define AFFT_BACKEND_IS_ENABLED(bckndName) \
+  ((AFFT_BACKEND_MASK & (1 << AFFT_BACKEND_##bckndName)) != 0)
+
+/// @brief Macro for disabling GPU support
+#define AFFT_GPU_BACKEND_NONE   (0)
+/// @brief Macro for CUDA GPU backend
+#define AFFT_GPU_BACKEND_CUDA   (1)
+/// @brief Macro for HIP GPU backend
+#define AFFT_GPU_BACKEND_HIP    (2)
+/// @brief Macro for OpenCL GPU backend
+#define AFFT_GPU_BACKEND_OPENCL (3)
+
+/// @brief Macro for checking if GPU is enabled
+#define AFFT_GPU_IS_ENABLED     (!AFFT_GPU_BACKEND_IS(NONE))
 
 /**
- * @brief Macro for applying a macro to each variadic argument with a delimiter
- * @param macro Macro to apply
- * @param delimMacro Delimiter macro
- * @param ... Variadic arguments
- * @return Macro applied to each variadic argument with a delimiter
+ * @brief Macro for checking if the GPU backend is selected
+ * @param bckndName Name of the backend
+ * @return True zero if the backend is selected, false otherwise
  */
-#define AFFT_FOR_EACH_WITH_DELIM(macro, delimMacro, ...) \
-  AFFT_DETAIL_FOR_EACH_WITH_DELIM(macro, delimMacro, __VA_ARGS__)
+#define AFFT_GPU_BACKEND_IS(bckndName) \
+  (AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_GPU_BACKEND_, AFFT_GPU_BACKEND) == AFFT_GPU_BACKEND_##bckndName)
 
-/// @brief Macro for bit-wise OR on variadic arguments
-#define AFFT_BITOR(...) AFFT_DETAIL_BITOR(__VA_ARGS__)
+/// @brief Disable multi-process backend
+#define AFFT_MP_BACKEND_NONE    (0)
+/// @brief MPI multi-process backend
+#define AFFT_MP_BACKEND_MPI     (1)
 
-/// @brief Escape macro
-#define AFFT_ESCAPE(...) __VA_ARGS__
+/// @brief Check if multi-process is enabled
+#define AFFT_MP_IS_ENABLED      (!AFFT_MP_BACKEND_IS(NONE))
 
-// implement C++20 requires clause for older C++ versions
+/**
+ * @brief Check if multi-process backend is enabled
+ * @param bckndName multi-process backend name
+ * @return true if multi-process backend is enabled, false otherwise
+ */
+#define AFFT_MP_BACKEND_IS(bckndName) \
+  (AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_MP_BACKEND_, AFFT_MP_BACKEND) == AFFT_MP_BACKEND_##bckndName)
+
+// implement C++20 requires clause for older C++ versions, should be used as:
+// auto func() -> AFFT_RET_REQUIRES(returnType, requirements) { ... }
 #if defined(__cpp_concepts) && __cpp_concepts >= 201907L
   /// @brief Macro for requires clause
 # define AFFT_RET_REQUIRES(retType, requiredExpr) retType requires(requiredExpr)

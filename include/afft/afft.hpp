@@ -25,24 +25,32 @@
 #ifndef AFFT_AFFT_HPP
 #define AFFT_AFFT_HPP
 
+#include "macro.hpp"
+
 // If max dimension count is not defined, use 4 as default
 #ifndef AFFT_MAX_DIM_COUNT
 # define AFFT_MAX_DIM_COUNT                      0
 # define AFFT_UNDEF_MAX_DIM_COUNT
 #endif
 
-// If CPU backend mask is not defined, use PocketFFT
-#ifndef AFFT_CPU_BACKEND_MASK
-# define AFFT_CPU_BACKEND_MASK                   AFFT_CPU_BACKEND_POCKETFFT
-# define AFFT_UNDEF_CPU_BACKEND_MASK
+// Check if GPU backend is defined (GPU support is enabled)
+#ifdef AFFT_GPU_BACKEND
+# if !(AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP) || AFFT_GPU_BACKEND_IS(OPENCL))
+#   error "Invalid GPU backend"
+# endif
+#else
+# define AFFT_GPU_BACKEND                        NONE
+# define AFFT_UNDEF_GPU_BACKEND
 #endif
 
-// If GPU backend list is not defined, but gpu framework is selected, use VkFFT
-#ifdef AFFT_GPU_FRAMEWORK
-# ifndef AFFT_GPU_BACKEND_MASK
-#   define AFFT_GPU_BACKEND_MASK                 AFFT_GPU_BACKEND_VKFFT
-#   define AFFT_UNDEF_GPU_BACKEND_MASK
+// Check if multi-process backend is supported
+#ifdef AFFT_MP_BACKEND
+# if !(AFFT_MP_BACKEND_IS(MPI))
+#  error "Unsupported multi-process backend"
 # endif
+#else
+# define AFFT_MP_BACKEND                         NONE
+# define AFFT_UNDEF_MP_BACKEND
 #endif
 
 #define AFFT_VERSION_MAJOR                       0 ///< Major version.
@@ -72,14 +80,14 @@ namespace afft
   } version;
 } // namespace afft
 
-#ifdef AFFT_UNDEF_GPU_BACKEND_MASK
-# undef AFFT_GPU_BACKEND_MASK
-# undef AFFT_UNDEF_GPU_BACKEND_MASK
+#ifdef AFFT_UNDEF_MP_BACKEND
+# undef AFFT_MP_BACKEND
+# undef AFFT_UNDEF_MP_BACKEND
 #endif
 
-#ifdef AFFT_UNDEF_CPU_BACKEND_MASK
-# undef AFFT_CPU_BACKEND_MASK
-# undef AFFT_UNDEF_CPU_BACKEND_MASK
+#ifdef AFFT_UNDEF_GPU_BACKEND
+# undef AFFT_GPU_BACKEND
+# undef AFFT_UNDEF_GPU_BACKEND
 #endif
 
 #ifdef AFFT_UNDEF_MAX_DIM_COUNT
