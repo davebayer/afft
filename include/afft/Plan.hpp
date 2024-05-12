@@ -37,6 +37,14 @@
 
 namespace afft
 {
+  // Forward declarations
+  class Plan;
+
+  template<typename TransformParamsT, typename TargetParamsT>
+  Plan makePlan(const TransformParamsT& transformParams,
+                TargetParamsT&          targetParams,
+                const InitParameters&   initParams = {});
+
   /**
    * @class Plan
    * @brief Plan class
@@ -532,15 +540,10 @@ namespace afft
     protected:
     private:
       // Allow makePlan to create Plan objects
-      template<typename TransformParametersT>
-      friend Plan makePlan(const TransformParametersT&         transformParams,
-                           const cpu::Parameters&              cpuParams,
-                           const cpu::BackendSelectParameters& cpuBackendSelectParams);
-    
-      template<typename TransformParametersT>
-      friend Plan makePlan(const TransformParametersT&         transformParams,
-                           const gpu::Parameters&              gpuParams,
-                           const gpu::BackendSelectParameters& gpuBackendSelectParams);
+      template<typename TransformParamsT, typename TargetParamsT>
+      friend Plan makePlan(const TransformParamsT& transformParams,
+                           TargetParamsT&          targetParams,
+                           const InitParameters&   initParams);
 
       // Allow PlanCache to create Plan objects
       friend class PlanCache;
@@ -568,65 +571,22 @@ namespace afft
   };
 
   /**
-   * @brief Create a plan for the given transform parameters and CPU backend parameters
-   * @param transformParams Transform parameters
-   * @param cpuParams CPU backend parameters
-   * @param cpuBackendSelectParams CPU backend selection parameters
-   * @return Plan
-   */
-  template<typename TransformParametersT, typename CpuParamsT>
-  Plan makePlan(const TransformParametersT&         transformParams,
-                CpuParamsT&                         cpuParams,
-                const cpu::BackendSelectParameters& cpuBackendSelectParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert((std::is_same_v<std::remove_cv_t<CpuParamsT>, cpu::Parameters>), "Invalid CPU parameters type");
-
-    return Plan{detail::makePlanImpl(detail::Config(transformParams, cpuParams), cpuBackendSelectParams)};
-  }
-
-  /**
-   * @brief Create a plan for the given transform parameters and GPU backend parameters
-   * @param transformParams Transform parameters
-   * @param gpuParams GPU backend parameters
-   * @param gpuBackendSelectParams GPU backend selection parameters
-   * @return Plan
-   */
-  template<typename TransformParametersT, typename GpuParamsT>
-  Plan makePlan(const TransformParametersT&         transformParams,
-                GpuParamsT&                         gpuParams,
-                const gpu::BackendSelectParameters& gpuBackendSelectParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert((std::is_same_v<std::remove_cv_t<GpuParamsT>, gpu::Parameters>), "Invalid GPU parameters type");
-
-    return Plan{detail::makePlanImpl(detail::Config(transformParams, gpuParams), gpuBackendSelectParams)};
-  }
-
-  /**
    * @brief Create a plan for the given transform parameters
+   * @tparam TransformParamsT Transform parameters type
+   * @tparam TargetParamsT Target parameters type
    * @param transformParams Transform parameters
    * @param targetParams Target parameters
    * @return Plan
    */
   template<typename TransformParamsT, typename TargetParamsT>
-  Plan makePlan(const TransformParamsT& transformParams, TargetParamsT& targetParams)
+  Plan makePlan(const TransformParamsT& transformParams,
+                TargetParamsT&          targetParams,
+                const InitParameters&   initParams)
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
 
-    if constexpr (std::is_same_v<std::remove_cv_t<TargetParamsT>, cpu::Parameters>)
-    {
-      return makePlan(transformParams, targetParams, cpu::BackendSelectParameters{});
-    }
-    else if constexpr (std::is_same_v<std::remove_cv_t<TargetParamsT>, gpu::Parameters>)
-    {
-      return makePlan(transformParams, targetParams, gpu::BackendSelectParameters{});
-    }
-    else
-    {
-      detail::cxx::unreachable();
-    }
+    return Plan{detail::makePlanImpl(detail::Config(transformParams, targetParams), initParams)};
   }
 } // namespace afft
 

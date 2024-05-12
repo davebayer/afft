@@ -28,6 +28,7 @@
 #include <cstddef>
 #include <utility>
 
+#include "backend.hpp"
 #include "Span.hpp"
 
 namespace afft
@@ -44,7 +45,7 @@ namespace afft
   using View = Span<const T, extent>;
 
   /// @brief Precision of a floating-point number
-  enum class Precision
+  enum class Precision : std::uint8_t
   {
     bf16   = 0, ///< Google Brain's brain floating-point format
     f16    = 1, ///< IEEE 754 half-precision binary floating-point format
@@ -59,21 +60,21 @@ namespace afft
   enum class Alignment : std::size_t {};
 
   /// @brief Complexity of a data type
-  enum class Complexity
+  enum class Complexity : std::uint8_t
   {
     real,    ///< real
     complex, ///< complex
   };
 
   /// @brief Complex number format
-  enum class ComplexFormat
+  enum class ComplexFormat : std::uint8_t
   {
     interleaved, ///< interleaved complex format
     planar,      ///< planar complex format
   };
 
   /// @brief Direction of the transform
-  enum class Direction
+  enum class Direction : std::uint8_t
   {
     forward,            ///< forward transform
     inverse,            ///< inverse transform
@@ -81,7 +82,7 @@ namespace afft
   };
 
   /// @brief Placement of the transform
-  enum class Placement
+  enum class Placement : std::uint8_t
   {
     inPlace,                 ///< in-place transform
     outOfPlace,              ///< out-of-place transform
@@ -89,28 +90,22 @@ namespace afft
   };
 
   /// @brief Transform type
-  enum class Transform
+  enum class Transform : std::uint8_t
   {
     dft, ///< Discrete Fourier Transform
+    dht, ///< Discrete Hartley Transform
     dtt, ///< Discrete Trigonometric Transform
   };
 
   /// @brief Target
-  enum class Target
+  enum class Target : std::uint8_t
   {
     cpu, ///< CPU target
     gpu, ///< GPU target
   };
 
-  /// @brief Backend select strategy
-  enum class BackendSelectStrategy
-  {
-    first, ///< select the first available backend
-    best,  ///< select the best available backend
-  };
-
   /// @brief Initialization effort
-  enum class InitEffort
+  enum class InitEffort : std::uint8_t
   {
     low,               ///< low effort initialization
     med,               ///< medium effort initialization
@@ -123,8 +118,17 @@ namespace afft
     exhaustive = max,  ///< alias for maximum effort initialization in FFTW style
   };
 
+  /// @brief Initialization parameters
+  struct InitParameters
+  {
+    BackendMask           backendMask{BackendMask::empty};                     ///< backend mask
+    View<Backend>         backendInitOrder{};                                  ///< backend initialization order, empty view means default order for the target
+    BackendSelectStrategy backendSelectStrategy{BackendSelectStrategy::first}; ///< backend select strategy
+    InitEffort            initEffort{InitEffort::med};                         ///< plan initialization effort
+  };
+
   /// @brief Normalization
-  enum class Normalization
+  enum class Normalization : std::uint8_t
   {
     none,       ///< no normalization
     orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
@@ -132,7 +136,7 @@ namespace afft
   };
 
   /// @brief Workspace policy
-  enum class WorkspacePolicy
+  enum class WorkspacePolicy : std::uint8_t
   {
     minimal,     ///< use as little workspace as possible
     performance, ///< perfer performance over workspace minimization
@@ -182,6 +186,7 @@ namespace afft
       View<std::size_t> shape{};                            ///< shape of the transform
       View<std::size_t> axes{allAxes};                      ///< axes of the transform
       Normalization     normalization{Normalization::none}; ///< normalization
+      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
       Type              type{Type::complexToComplex};       ///< type of the transform
     };
   } // namespace dft
@@ -230,7 +235,7 @@ namespace afft
       View<std::size_t> axes{allAxes};                      ///< axes of the transform
       Normalization     normalization{Normalization::none}; ///< normalization
       Placement         placement{Placement::outOfPlace};   ///< placement of the transform
-      View<Type>        types{};                            ///< types of the transform
+      View<Type>        types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
     };
   } // namespace dtt
 
