@@ -59,54 +59,12 @@
 #include <string_view>
 #include <utility>
 
+#include "backend.hpp"
 #include "common.hpp"
 #include "detail/cxx.hpp"
 
 namespace afft::cpu
 {
-  /// @brief Enumeration of CPU backends
-  enum class Backend
-  {
-    fftw3,
-    mkl,
-    pocketfft,
-  };
-
-  /// @brief Number of CPU backends
-  inline constexpr std::size_t backendCount{3};
-
-  namespace fftw3
-  {
-    /// @brief Init parameters for FFTW3 CPU backend
-    struct InitParameters
-    {
-      std::string_view floatWisdom{};      ///< Wisdom for single precision (fftwf)
-      std::string_view doubleWisdom{};     ///< Wisdom for double precision (fftw)
-      std::string_view longDoubleWisdom{}; ///< Wisdom for long double precision (fftwl)
-      std::string_view quadWisdom{};       ///< Wisdom for quad precision (fftwq)
-    };
-  } // namespace fftw3
-
-  namespace mkl
-  {
-    /// @brief Init parameters for MKL CPU backend
-    struct InitParameters {};
-  } // namespace mkl
-
-  namespace pocketfft
-  {
-    /// @brief Init parameters for PocketFFT CPU backend
-    struct InitParameters {};
-  } // namespace pocketfft
-
-  /// @brief Init parameters for CPU backends
-  struct InitParameters
-  {
-    fftw3::InitParameters     fftw3{};     ///< FFTW3 init parameters
-    mkl::InitParameters       mkl{};       ///< MKL init parameters
-    pocketfft::InitParameters pocketfft{}; ///< PocketFFT init parameters
-  };
-
   /// @brief alignments for CPU memory allocation
   namespace alignments
   {
@@ -151,8 +109,19 @@ namespace afft::cpu
   inline constexpr auto defaultAlignment = alignments::defaultNew;
 #endif
 
-  inline constexpr unsigned allThreads{}; ///< All threads for CPU transform
+  /// @brief Backend mask for CPU transform
+  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl | Backend::pocketfft};
 
+  /// @brief Default backend initialization order
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::mkl,       // prefer mkl
+    Backend::fftw3,     // if mkl cannot create plan, fallback fftw3
+    Backend::pocketfft, // fallback to pocketfft
+  };
+
+  inline constexpr unsigned allThreads{}; ///< All threads for CPU transform
+  
   /**
    * @struct Parameters
    * @brief Parameters for CPU transform
@@ -162,27 +131,9 @@ namespace afft::cpu
     MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool            destroySource{false};                          ///< destroy source data
-    InitEffort      initEffort{InitEffort::low};                   ///< initialization effort
-    Placement       placement{Placement::outOfPlace};              ///< placement of the transform
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     Alignment       alignment{alignments::defaultNew};             ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
     unsigned        threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
-  };
-
-  /// @brief Default list of backends
-  inline constexpr std::array defaultBackendList
-  {
-    Backend::mkl,       // prefer mkl
-    Backend::fftw3,     // if mkl cannot create plan, fallback fftw3
-    Backend::pocketfft, // fallback to pocketfft
-  };
-
-  /// @brief Set up strategy for backend selection
-  struct BackendSelectParameters
-  {
-    Span<const Backend>   backends{defaultBackendList};           ///< Priority of the backends
-    Span<std::string>     backendsErrors{};                       ///< Why a backend creation failed
-    BackendSelectStrategy strategy{BackendSelectStrategy::first}; ///< Select strategy
   };
 
   /// @brief Execution parameters for CPU transform

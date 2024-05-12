@@ -134,93 +134,29 @@
 
 #include <array>
 
+#include "backend.hpp"
+#include "common.hpp"
+
 namespace afft::gpu
 {
-  /// @brief Enum class for backends
-  enum class Backend
-  {
-    clfft,
-    cufft,
-    hipfft,
-    rocfft,
-    vkfft,
-  };
-  
-  /// @brief Number of backends
-  inline constexpr std::size_t backendCount{5};
-
-  namespace clfft
-  {
-    /// @brief Init parameters for clfft backend
-    struct InitParameters {};
-  } // namespace clfft
-
-  namespace cufft
-  {
-    /// @brief Init parameters for cufft backend
-    struct InitParameters {};
-  } // namespace cufft
-
-  namespace hipfft
-  {
-    /// @brief Init parameters for hipfft backend
-    struct InitParameters {};
-  } // namespace hipfft
-
-  namespace rocfft
-  {
-    /// @brief Init parameters for rocfft backend
-    struct InitParameters
-    {
-      std::string_view rtcCachePath{}; ///< Path to the ROCFFT RTC cache directory
-    };
-  } // namespace rocfft
-
-  namespace vkfft
-  {
-    /// @brief Init parameters for vkfft backend
-    struct InitParameters {};
-  } // namespace vkfft
-
-  /**
-   * @struct InitParameters
-   * @brief Init parameters for GPU backend
-   */
-  struct InitParameters
-  {
-    clfft::InitParameters  clfft{};  ///< Parameters for clfft backend
-    cufft::InitParameters  cufft{};  ///< Parameters for cufft backend
-    hipfft::InitParameters hipfft{}; ///< Parameters for hipfft backend
-    rocfft::InitParameters rocfft{}; ///< Parameters for rocfft backend
-    vkfft::InitParameters  vkfft{};  ///< Parameters for vkfft backend
-  };
-
-  /**
-   * @struct Parameters
-   * @brief Parameters for GPU backend
-   */
-  struct Parameters
-  {
-    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
-    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            destroySource{false};                          ///< destroy source data
-    InitEffort      initEffort{InitEffort::low};                   ///< initialization effort
-    Placement       placement{Placement::outOfPlace};              ///< placement of the transform
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-  // GPU framework specific parameters
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
-    int             device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
-    int             device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context      context{};                                     ///< OpenCL context
-    cl_device_id    device{};                                      ///< OpenCL device
+#if AFFT_GPU_FRAMEWORK_IS_CUDA
+  /// @brief Backend mask for CUDA GPU framework
+  inline constexpr BackendMask backendMask{Backend::cufft | Backend::vkfft};
+#elif AFFT_GPU_FRAMEWORK_IS_HIP
+# if defined(__HIP_PLATFORM_AMD__)
+  /// @brief Backend mask for HIP GPU framework on AMD platform
+  inline constexpr BackendMask backendMask{Backend::vkfft | Backend::rocfft};
+# elif defined(__HIP_PLATFORM_NVIDIA__)
+  /// @brief Backend mask for HIP GPU framework on NVIDIA platform
+  inline constexpr BackendMask backendMask{Backend::hipfft | Backend::vkfft | Backend::rocfft};
 # endif
-    bool            externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
-  };
+#elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+  /// @brief Backend mask for OpenCL GPU framework
+  inline constexpr BackendMask backendMask{Backend::clfft | Backend::vkfft};
+#endif
 
-  /// @brief Default list of backends
-  inline constexpr std::array defaultBackendList
+  /// @brief Default backend initialization order
+  inline constexpr std::array defaultBackendInitOrder
   {
 # if AFFT_GPU_FRAMEWORK_IS_CUDA
     Backend::cufft,  // prefer cufft
@@ -242,12 +178,26 @@ namespace afft::gpu
 # endif
   };
 
-  /// @brief Select parameters for backends
-  struct BackendSelectParameters
+  /**
+   * @struct Parameters
+   * @brief Parameters for GPU backend
+   */
+  struct Parameters
   {
-    Span<const Backend>   backends{defaultBackendList};           ///< Priority list of allowed backends
-    Span<std::string>     backendsErrors{};                       ///< Why a backend creation failed
-    BackendSelectStrategy strategy{BackendSelectStrategy::first}; ///< Backend select strategy
+    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
+    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool            destroySource{false};                          ///< destroy source data
+    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    // GPU framework specific parameters
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
+    int             device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
+    int             device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+    cl_context      context{};                                     ///< OpenCL context
+    cl_device_id    device{};                                      ///< OpenCL device
+# endif
+    bool            externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
   };
 
   /**
@@ -386,6 +336,14 @@ namespace afft::gpu
         clSVMFree(mContext, p);
 #     endif
       }
+
+#   if AFFT_GPU_FRAMEWORK_IS_OPENCL
+      /// @brief Get the OpenCL context
+      [[nodiscard]] cl_context getContext() const noexcept
+      {
+        return mContext;
+      }
+#   endif
     protected:
     private:
 #   if AFFT_GPU_FRAMEWORK_IS_CUDA
