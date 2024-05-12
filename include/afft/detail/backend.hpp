@@ -51,7 +51,7 @@ namespace detail
    * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
    * @return True if the BackendMask underlying type has sufficient size, false otherwise.
    */
-  [[nodiscard]] inline constexpr bool backendMaskHasSufficientUderlyingTypeSize(Backend backendCount)
+  [[nodiscard]] inline constexpr bool backendMaskHasSufficientUnderlyingTypeSize(Backend backendCount)
   {
     return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= sizeof(BackendUnderlyingType);
   }
