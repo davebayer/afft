@@ -28,6 +28,9 @@
 /// @brief MPI multi-process backend
 #define AFFT_MP_BACKEND_MPI (1)
 
+/// @brief Check if multi-process is enabled
+#define AFFT_MP_IS_ENABLED  (AFFT_MP_BACKEND != 0)
+
 /**
  * @brief Check if multi-process backend is enabled
  * @param bckndName multi-process backend name
@@ -35,6 +38,15 @@
  */
 #define AFFT_MP_BACKEND_IS(bckndName) \
   (AFFT_MP_BACKEND == AFFT_MP_BACKEND_##bckndName)
+
+// Check if multi-process backend is supported
+#ifdef AFFT_MP_BACKEND
+# if !(AFFT_MP_BACKEND_IS(MPI))
+#  error "Unsupported multi-process backend"
+# endif
+#else
+# define AFFT_MP_BACKEND 0
+#endif
 
 // Include distribution type headers
 #if AFFT_MP_BACKEND_IS(MPI)
@@ -48,11 +60,14 @@ namespace afft
    * @brief Multi-process parameters
    */
   struct MultiProcessParameters
+#if AFFT_MP_IS_ENABLED
   {
 # if AFFT_MP_BACKEND_IS(MPI)
     MPI_Comm communicator{MPI_COMM_WORLD}; ///< MPI communicator
 # endif
-  };
+  }
+#endif
+   ;
 } // namespace afft
 
 #endif /* AFFT_MP_HPP */

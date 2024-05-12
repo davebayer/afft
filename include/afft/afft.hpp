@@ -31,12 +31,6 @@
 # define AFFT_UNDEF_MAX_DIM_COUNT
 #endif
 
-// If distribution type mask is not defined, use 0 as default
-#ifndef AFFT_DISTRIB_TYPE_MASK
-# define AFFT_DISTRIB_TYPE_MASK                  0
-# define AFFT_UNDEF_DISTRIB_TYPE_MASK
-#endif
-
 // If CPU backend mask is not defined, use PocketFFT
 #ifndef AFFT_CPU_BACKEND_MASK
 # define AFFT_CPU_BACKEND_MASK                   AFFT_CPU_BACKEND_POCKETFFT
@@ -86,11 +80,6 @@ namespace afft
 #ifdef AFFT_UNDEF_CPU_BACKEND_MASK
 # undef AFFT_CPU_BACKEND_MASK
 # undef AFFT_UNDEF_CPU_BACKEND_MASK
-#endif
-
-#ifdef AFFT_UNDEF_DISTRIB_TYPE_MASK
-# undef AFFT_DISTRIB_TYPE_MASK
-# undef AFFT_UNDEF_DISTRIB_TYPE_MASK
 #endif
 
 #ifdef AFFT_UNDEF_MAX_DIM_COUNT

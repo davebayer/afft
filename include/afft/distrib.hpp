@@ -25,23 +25,13 @@
 #ifndef AFFT_DISTRIB_HPP
 #define AFFT_DISTRIB_HPP
 
-/// @brief MPI distribution type
-#define AFFT_DISTRIB_TYPE_MPI    (1 << 0)
+#include <cstddef>
 
-/**
- * @brief Check if distribution type is enabled
- * @param typeName distribution type name
- * @return true if distribution type is enabled, false otherwise
- */
-#define AFFT_DISTRIB_TYPE_IS_ENABLED(typeName) \
-  (AFFT_DISTRIB_TYPE_MASK & AFFT_DISTRIB_TYPE_##typeName)
+#include "common.hpp"
 
-// Include distribution type headers
-#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
-# include <mpi.h>
-#endif
-
-namespace afft::distrib
+namespace afft
+{
+namespace distrib
 {
   /**
    * @enum Type
@@ -49,9 +39,13 @@ namespace afft::distrib
    */
   enum class Type
   {
-    single, ///< single device, single process
-    multi,  ///< multiple devices, single process
-    mpi,    ///< mpi distribution, sigle device, multiple processes
+    spst,           ///< single process, single target
+    spmt,           ///< single process, multiple targets
+    mpst,           ///< multiple processes, single target
+    
+    single = spst,  ///< alias for single process, single target
+    multi  = spmt,  ///< alias for single process, multiple targets
+    mpi    = mpst,  ///< alias for multiple processes, single target
   };
 
   /**
@@ -64,16 +58,53 @@ namespace afft::distrib
     View<std::size_t> sizes{};   ///< sizes of the memory block
     View<std::size_t> strides{}; ///< strides of the memory block
   };
+} // namespace distrib
 
-  /**
-   * @struct MemoryLayout
-   * @brief Memory layout
-   */
+namespace spst
+{
+  /// @brief Memory layout
   struct MemoryLayout
   {
-    MemoryBlock srcBlock{};     ///< source memory block
-    MemoryBlock dstBlock{};     ///< destination memory block
+    View<std::size_t> srcStrides{}; ///< stride of the source data
+    View<std::size_t> dstStrides{}; ///< stride of the destination data
   };
-} // namespace afft::distrib
+} // namespace spst
+
+namespace spmt
+{
+  /// @brief Memory layout
+  struct MemoryLayout
+  {
+    View<distrib::MemoryBlock> srcBlocks{};    ///< source memory blocks
+    View<distrib::MemoryBlock> dstBlocks{};    ///< destination memory blocks
+    View<std::size_t>          srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t>          dstAxesOrder{}; ///< order of the destination axes
+  };
+} // namespace spmt
+
+namespace mpst
+{
+  /// @brief Memory layout
+  struct MemoryLayout
+  {
+    distrib::MemoryBlock srcBlock{};     ///< source memory block
+    distrib::MemoryBlock dstBlock{};     ///< destination memory block
+    View<std::size_t>    srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t>    dstAxesOrder{}; ///< order of the destination axes
+  };
+} // namespace mpst
+
+  /// @brief Introduce single process, single target memory layout to the namespace
+  using spst::MemoryLayout;
+
+  /// @brief Alias for single process, single target namespace
+  namespace single = spst;
+
+  /// @brief Alias for single process, multiple targets namespace
+  namespace multi = spmt;
+
+  /// @brief Alias for multiple processes, single target namespace
+  namespace mpi = mpst;
+} // namespace afft
 
 #endif /* AFFT_DISTRIB_HPP */

@@ -62,6 +62,7 @@
 #include "backend.hpp"
 #include "common.hpp"
 #include "distrib.hpp"
+#include "mp.hpp"
 #include "detail/cxx.hpp"
 
 namespace afft
@@ -111,7 +112,10 @@ namespace cpu
 #else
   inline constexpr auto defaultAlignment = alignments::defaultNew;
 #endif
+}
 
+namespace spst::cpu
+{
   /// @brief Backend mask for CPU transform
   inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl | Backend::pocketfft};
 
@@ -135,12 +139,58 @@ namespace cpu
     ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool            preserveSource{true};                          ///< preserve source data
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-    Alignment       alignment{alignments::defaultNew};             ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    Alignment       alignment{afft::cpu::alignments::defaultNew};  ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
     unsigned        threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Execution parameters for CPU transform
   struct ExecutionParameters {};
+} // namespace spst::cpu
+
+namespace mpst::cpu
+{
+  /// @brief Backend mask for mpi cpu transform
+  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl};
+
+  /// @brief Default backend initialization order for mpi cpu transform
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::mkl,   // prefer mkl
+    Backend::fftw3, // if mkl cannot create plan, fallback fftw3
+  };
+
+  /// @brief Parameters for mpi cpu transform
+  struct Parameters
+#if AFFT_MP_IS_ENABLED
+  {
+    MemoryLayout           memoryLayout{};                                ///< memory layout for cpu transform
+    ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                   preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
+    Alignment              alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
+    unsigned               threadLimit{1};                                ///< thread limit for cpu transform
+  }
+#endif
+   ;
+
+  /// @brief Execution parameters for mpi cpu transform
+  using ExecutionParameters = std::conditional_t<AFFT_MP_IS_ENABLED, afft::mpst::cpu::ExecutionParameters, void>;
+} // namespace mpst::cpu
+
+namespace cpu
+{
+  /// @brief Introduce single process, single target backend mask to the cpu namespace
+  using spst::cpu::backendMask;
+
+  /// @brief Introduce single process, single target default backend initialization order to the cpu namespace
+  using spst::cpu::defaultBackendInitOrder;
+
+  /// @brief Introduce single process, single target parameters to the cpu namespace
+  using Parameters = spst::cpu::Parameters;
+
+  /// @brief Introduce single process, single target execution parameters to the cpu namespace
+  using ExecutionParameters = spst::cpu::ExecutionParameters;
 
   /**
    * @brief Aligned memory deleter
@@ -516,39 +566,6 @@ namespace cpu
       Alignment mAlignment{alignments::defaultNew}; ///< Alignment for memory allocation
   };
 } // namespace cpu
-
-namespace mpi::cpu
-{
-  /// @brief Backend mask for mpi cpu transform
-  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl};
-
-  /// @brief Default backend initialization order for mpi cpu transform
-  inline constexpr std::array defaultBackendInitOrder
-  {
-    Backend::mkl,   // prefer mkl
-    Backend::fftw3, // if mkl cannot create plan, fallback fftw3
-  };
-
-  /// @brief Parameters for mpi cpu transform
-  struct Parameters
-#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
-  {
-    distrib::MemoryLayout memoryLayout{};                                ///< memory layout for cpu transform
-    View<std::size_t>     srcAxesOrder{};                                ///< source axes order, defaults to natural order
-    View<std::size_t>     dstAxesOrder{};                                ///< destination axes order, defaults to natural order
-    ComplexFormat         complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                  preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy       workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-    MPI_Comm              communicator{MPI_COMM_WORLD};                  ///< MPI communicator
-    Alignment             alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
-    unsigned              threadLimit{1};                                ///< thread limit for cpu transform
-  }
-#endif
-   ;
-
-  /// @brief Execution parameters for mpi cpu transform
-  using ExecutionParameters = afft::cpu::ExecutionParameters;
-} // namespace mpi::cpu
 } // namespace afft
 
 #endif /* AFFT_CPU_HPP */
