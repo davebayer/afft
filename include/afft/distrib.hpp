@@ -25,48 +25,33 @@
 #ifndef AFFT_DISTRIB_HPP
 #define AFFT_DISTRIB_HPP
 
-/// @brief MPI distribution implementation
-#define AFFT_DISTRIB_IMPL_MPI    (1 << 0)
+/// @brief MPI distribution type
+#define AFFT_DISTRIB_TYPE_MPI    (1 << 0)
 
 /**
- * @brief Check if distribution implementation is enabled
- * @param implName Distribution implementation name
- * @return non-zero if distribution implementation is enabled, zero otherwise
+ * @brief Check if distribution type is enabled
+ * @param typeName distribution type name
+ * @return true if distribution type is enabled, false otherwise
  */
-#define AFFT_DISTRIB_IMPL_IS_ENABLED(implName) \
-  (AFFT_DISTRIB_IMPL_MASK & AFFT_DISTRIB_IMPL_##implName)
+#define AFFT_DISTRIB_TYPE_IS_ENABLED(typeName) \
+  (AFFT_DISTRIB_TYPE_MASK & AFFT_DISTRIB_TYPE_##typeName)
 
-// Include distribution implementation headers
-#if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
+// Include distribution type headers
+#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
 # include <mpi.h>
 #endif
-
-#include "common.hpp"
-#include "cpu.hpp"
-#include "gpu.hpp"
 
 namespace afft::distrib
 {
   /**
-   * @enum Implementation
-   * @brief Distribution implementation
+   * @enum Type
+   * @brief Distribution type
    */
-  enum class Implementation
-  {
-    none,   ///< none
-    native, ///< native
-    mpi,    ///< mpi
-  };
-
-  /**
-   * @enum Transposed
-   * @brief Transposed flag
-   */
-  enum class Transposed
+  enum class Type
   {
     none, ///< none
-    src,  ///< source
-    dst,  ///< destination
+    p2p,  ///< p2p
+    mpi,  ///< mpi
   };
 
   /**
@@ -86,121 +71,9 @@ namespace afft::distrib
    */
   struct MemoryLayout
   {
-    MemoryBlock srcBlock{};   ///< source memory block
-    MemoryBlock dstBlock{};   ///< destination memory block
-    Transposed  transposed{}; ///< transposed flag
+    MemoryBlock srcBlock{};     ///< source memory block
+    MemoryBlock dstBlock{};     ///< destination memory block
   };
-
-namespace cpu
-{
-  /**
-   * @struct Parameters
-   * @tparam impl Implementation
-   * @brief Parameters for distributed CPU backend
-   */
-  template<Implementation impl>
-  struct Parameters;
-
-  /// @brief Parameters for undistributed CPU implementation
-  template<>
-  struct Parameters<Implementation::none> : afft::cpu::Parameters {};
-
-#if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
-  /// @brief Parameters for distributed mpi CPU implementation
-  template<>
-  struct Parameters<Implementation::mpi>
-  {
-    MPI_Comm     communicator{MPI_COMM_WORLD};                 ///< MPI communicator
-    MemoryLayout memoryLayout{};                               ///< memory layout
-    Alignment    alignment{afft::cpu::alignments::defaultNew}; ///< alignment
-    unsigned     threadLimit{1};                               ///< thread limit
-  };
-#endif
-
-  /**
-   * @struct ExecutionParameters
-   * @tparam impl Implementation
-   * @brief Execution parameters for distributed CPU backend
-   */
-  template<Implementation impl>
-  struct ExecutionParameters : afft::cpu::ExecutionParameters {};
-} // namespace cpu
-
-namespace gpu
-{
-  inline constexpr std::size_t maxNativeDevices{16}; ///< Maximum number of native devices
-
-  /**
-   * @struct Parameters
-   * @tparam impl Implementation
-   * @brief Parameters for distributed GPU backend
-   */
-  template<Implementation impl>
-  struct Parameters;
-
-  /// @brief Parameters for undistributed GPU implementation
-  template<>
-  struct Parameters<Implementation::none> : afft::gpu::Parameters {};
-
-  /// @brief Parameters for distributed native GPU implementation
-  template<>
-  struct Parameters<Implementation::native>
-  {
-    View<MemoryLayout> memoryLayouts{};              ///< view of memory layouts
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
-    View<int>          devices{};                    ///< view of CUDA device IDs
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
-    View<int>          devices{};                    ///< view of HIP device IDs
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context         context{};                    ///< OpenCL context
-    View<cl_device_id> devices{};                    ///< view of OpenCL device IDs
-# endif
-    bool               externalWorkspace{false};     ///< external workspace flag
-  };
-
-#if AFFT_DISTRIB_IMPL_IS_ENABLED(MPI)
-  /// @brief Parameters for distributed mpi GPU implementation
-  template<>
-  struct Parameters<Implementation::mpi>
-  {
-    MPI_Comm     communicator{MPI_COMM_WORLD};                  ///< MPI communicator
-    MemoryLayout memoryLayout{};                                ///< memory layout
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
-    int          device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device ID
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
-    int          device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device ID
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_context   context{};                                     ///< OpenCL context
-    cl_device_id device{};                                      ///< OpenCL device ID
-# endif
-    bool         externalWorkspace{false};                      ///< external workspace flag
-  };
-#endif
-
-  /**
-   * @struct ExecutionParameters
-   * @tparam impl Implementation
-   * @brief Execution parameters for distributed GPU backend
-   */
-  template<Implementation impl>
-  struct ExecutionParameters : afft::gpu::ExecutionParameters {};
-
-  /// @brief Execution parameters for distributed native GPU implementation
-  template<>
-  struct ExecutionParameters<Implementation::native>
-  {
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
-    cudaStream_t     stream{0};      ///< CUDA stream, defaults to `zero` stream
-    View<void*>      workspace{};    ///< view of workspace pointers, must be specified if `externalWorkspace` is `true`
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
-    hipStream_t      stream{0};      ///< HIP stream, defaults to `zero` stream
-    View<void*>      workspace{};    ///< view of workspace pointers, must be specified if `externalWorkspace` is `true`
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
-    cl_command_queue commandQueue{}; ///< OpenCL command queue
-    View<cl_mem>     workspace{};    ///< view of workspace buffers, must be specified if `externalWorkspace` is `true`
-# endif
-  };
-} // namespace gpu
 } // namespace afft::distrib
 
 #endif /* AFFT_DISTRIB_HPP */

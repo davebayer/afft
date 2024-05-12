@@ -61,9 +61,12 @@
 
 #include "backend.hpp"
 #include "common.hpp"
+#include "distrib.hpp"
 #include "detail/cxx.hpp"
 
-namespace afft::cpu
+namespace afft
+{
+namespace cpu
 {
   /// @brief alignments for CPU memory allocation
   namespace alignments
@@ -130,7 +133,7 @@ namespace afft::cpu
   {
     MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            destroySource{false};                          ///< destroy source data
+    bool            preserveSource{true};                          ///< preserve source data
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     Alignment       alignment{alignments::defaultNew};             ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
     unsigned        threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
@@ -146,7 +149,7 @@ namespace afft::cpu
   template<typename T>
   class AlignedDeleter
   {
-    static_assert(!std::is_void_v<T>, "T cannot be void");
+    static_assert(std::is_object_v<T>, "T must be an object type");
 
     public:
       /// @brief Default constructor
@@ -512,6 +515,29 @@ namespace afft::cpu
     private:
       Alignment mAlignment{alignments::defaultNew}; ///< Alignment for memory allocation
   };
-} // namespace afft::cpu
+} // namespace cpu
+
+#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
+namespace mpi::cpu
+{
+  /// @brief Parameters for mpi cpu transform
+  struct Parameters
+  {
+    distrib::MemoryLayout memoryLayout{};                                ///< memory layout for cpu transform
+    View<std::size_t>     srcAxesOrder{};                                ///< source axes order, defaults to natural order
+    View<std::size_t>     dstAxesOrder{};                                ///< destination axes order, defaults to natural order
+    ComplexFormat         complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                  preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy       workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    MPI_Comm              communicator{MPI_COMM_WORLD};                  ///< MPI communicator
+    Alignment             alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
+    unsigned              threadLimit{1};                                ///< thread limit for cpu transform
+  };
+
+  /// @brief Execution parameters for mpi cpu transform
+  using ExecutionParameters = afft::cpu::ExecutionParameters;
+} // namespace mpi::cpu
+#endif
+} // namespace afft
 
 #endif /* AFFT_CPU_HPP */

@@ -136,8 +136,11 @@
 
 #include "backend.hpp"
 #include "common.hpp"
+#include "distrib.hpp"
 
-namespace afft::gpu
+namespace afft
+{
+namespace gpu
 {
 #if AFFT_GPU_FRAMEWORK_IS_CUDA
   /// @brief Backend mask for CUDA GPU framework
@@ -352,6 +355,73 @@ namespace afft::gpu
       cl_context mContext; ///< OpenCL context
 #   endif  
   };
+} // namespace gpu
+
+#if AFFT_GPU_FRAMEWORK_IS_CUDA || AFFT_GPU_FRAMEWORK_IS_HIP
+namespace p2p::gpu
+{
+  /// @brief Maximum number of p2p devices
+  inline constexpr std::size_t maxDevices{16}; ///< maximum number of devices
+
+  /// @brief Parameters for p2p gpu target
+  struct Parameters
+  {
+    View<distrib::MemoryLayout> memoryLayouts{};                               ///< memory layouts
+    View<std::size_t>           srcAxesOrder{};                                ///< source axes order, defaults to natural order
+    View<std::size_t>           dstAxesOrder{};                                ///< destination axes order, defaults to natural order
+    ComplexFormat               complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                        preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy             workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
+    View<int>                   devices{};                                     ///< list of CUDA devices
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
+    View<int>                   devices{};                                     ///< list of HIP devices
+# endif
+    bool                        externalWorkspace{false};                      ///< use external workspace, defaults to `false`
+  };
+
+  /// @brief Execution parameters for p2p gpu target
+  struct ExecutionParameters
+  {
+  // GPU framework specific execution parameters
+# if AFFT_GPU_FRAMEWORK_IS_CUDA
+    cudaStream_t stream{0};   ///< CUDA stream, defaults to `zero` stream
+    View<void*>  workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+# elif AFFT_GPU_FRAMEWORK_IS_HIP
+    hipStream_t  stream{0};    ///< HIP stream, defaults to `zero` stream
+    View<void*>  workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+# endif
+  };
+} // namespace p2p::gpu
+#endif
+
+#if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
+namespace mpi::gpu
+{
+  /// @brief Parameters for mpi gpu target
+  struct Parameters
+  {
+    distrib::MemoryLayout memoryLayout{};                                ///< memory layout
+    View<std::size_t>     srcAxesOrder{};                                ///< source axes order, defaults to natural order
+    View<std::size_t>     dstAxesOrder{};                                ///< destination axes order, defaults to natural order
+    ComplexFormat         complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                  preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy       workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    MPI_Comm              communicator{MPI_COMM_WORLD};                  ///< MPI communicator
+# if AFFT_GPU_BACKEND_IS_CUDA
+    int                   device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+# elif AFFT_GPU_BACKEND_IS_HIP
+    int                   device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+# elif AFFT_GPU_BACKEND_IS_OPENCL
+    cl_context            context{};                                     ///< OpenCL context
+    cl_device_id          device{};                                      ///< OpenCL device
+# endif
+    bool                  externalWorkspace{false};                      ///< use external workspace, defaults to `false`
+  };
+
+  /// @brief Execution parameters for mpi gpu target
+  using ExecutionParameters = afft::gpu::ExecutionParameters;
+} // namespace mpi::gpu
 } // namespace afft
 
 #endif /* AFFT_GPU_HPP */
