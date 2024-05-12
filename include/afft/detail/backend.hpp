@@ -32,9 +32,24 @@
 
 namespace afft
 {
+namespace detail
+{
+  /// @brief Underlying type of the Backend enum
+  using BackendUnderlyingType     = std::uint8_t;
+
+  // Check that the Backend underlying type is unsigned
+  static_assert(std::is_unsigned_v<BackendUnderlyingType>);
+  
+  /// @brief Underlying type of the BackendMask enum
+  using BackendMaskUnderlyingType = std::uint16_t;
+
+  // Check that the BackendMask underlying type is unsigned
+  static_assert(std::is_unsigned_v<BackendMaskUnderlyingType>);
+} // namespace detail
+
   // Forward declarations
-  enum class Backend : std::uint8_t;
-  enum class BackendMask : std::uint16_t;
+  enum class Backend : detail::BackendUnderlyingType;
+  enum class BackendMask : detail::BackendMaskUnderlyingType;
 
 namespace detail
 {
@@ -71,9 +86,7 @@ namespace detail
   template<typename UnOp, typename T>
   [[nodiscard]] inline constexpr BackendMask backendMaskUnaryOp(UnOp fn, T value)
   {
-    using U = std::underlying_type_t<BackendMask>;
-
-    U val = detail::cxx::to_underlying(detail::toBackendMask(value));
+    const auto val = detail::cxx::to_underlying(detail::toBackendMask(value));
 
     return BackendMask{fn(val)};
   }
@@ -91,10 +104,8 @@ namespace detail
   template<typename BinFn, typename T, typename U>
   [[nodiscard]] inline constexpr BackendMask backendMaskBinaryOp(BinFn fn, T lhs, U rhs)
   {
-    using U = std::underlying_type_t<BackendMask>;
-
-    U left  = detail::cxx::to_underlying(detail::toBackendMask(lhs));
-    U right = detail::cxx::to_underlying(detail::toBackendMask(rhs));
+    const auto left  = detail::cxx::to_underlying(detail::toBackendMask(lhs));
+    const auto right = detail::cxx::to_underlying(detail::toBackendMask(rhs));
 
     return BackendMask{fn(left, right)};
   }

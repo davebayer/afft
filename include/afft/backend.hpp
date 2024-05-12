@@ -36,7 +36,7 @@
 namespace afft
 {
   /// @brief Backend for the FFT
-  enum class Backend : std::uint8_t
+  enum class Backend : detail::BackendUnderlyingType
   {
     clfft,     ///< clFFT
     cufft,     ///< cuFFT
@@ -49,7 +49,11 @@ namespace afft
   };
 
   /// @brief Bitmask of backends
-  enum class BackendMask : std::uint16_t {};
+  enum class BackendMask : detail::BackendMaskUnderlyingType
+  {
+    empty = detail::BackendMaskUnderlyingType{0},                          ///< empty backend mask
+    all   = std::numeric_limits<detail::BackendMaskUnderlyingType>::max(), ///< all backends
+  };
 
   /// @brief Backend select strategy
   enum class BackendSelectStrategy : std::uint8_t
@@ -57,12 +61,6 @@ namespace afft
     first, ///< select the first available backend
     best,  ///< select the best available backend
   };
-
-  /// @brief Value representing empty backend mask
-  inline constexpr BackendMask noBackend{};
-
-  /// @brief Value representing all backends
-  inline constexpr BackendMask allBackends{std::numeric_limits<BackendMask>::max()};
 
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
