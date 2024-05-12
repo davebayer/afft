@@ -26,6 +26,7 @@
 #define AFFT_DETAIL_BACKEND_HPP
 
 #include <cstdint>
+#include <climits>
 #include <type_traits>
 
 #include "cxx.hpp"
@@ -45,6 +46,15 @@ namespace detail
 
   // Check that the BackendMask underlying type is unsigned
   static_assert(std::is_unsigned_v<BackendMaskUnderlyingType>);
+
+  /**
+   * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
+   * @return True if the BackendMask underlying type has sufficient size, false otherwise.
+   */
+  [[nodiscard]] inline constexpr bool backendMaskHasSufficientUderlyingTypeSize(Backend backendCount)
+  {
+    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= sizeof(BackendUnderlyingType);
+  }
 } // namespace detail
 
   // Forward declarations

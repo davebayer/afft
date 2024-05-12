@@ -46,7 +46,12 @@ namespace afft
     pocketfft, ///< PocketFFT
     rocfft,    ///< rocFFT
     vkfft,     ///< VkFFT
+    _count,    ///< number of backends, do not use, only for internal purposes
   };
+
+  // Check that the BackendMask underlying type has sufficient size to store all Backend values
+  static_assert(detail::backendMaskHasSufficientUderlyingTypeSize(Backend::_count),
+                "BackendMaskUnderlyingType does not have sufficient size to store all Backend values");
 
   /// @brief Bitmask of backends
   enum class BackendMask : detail::BackendMaskUnderlyingType
