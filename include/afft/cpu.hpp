@@ -520,6 +520,16 @@ namespace cpu
 #if AFFT_DISTRIB_TYPE_IS_ENABLED(MPI)
 namespace mpi::cpu
 {
+  /// @brief Backend mask for mpi cpu transform
+  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl};
+
+  /// @brief Default backend initialization order for mpi cpu transform
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::mkl,   // prefer mkl
+    Backend::fftw3, // if mkl cannot create plan, fallback fftw3
+  };
+
   /// @brief Parameters for mpi cpu transform
   struct Parameters
   {

@@ -363,6 +363,38 @@ namespace p2p::gpu
   /// @brief Maximum number of p2p devices
   inline constexpr std::size_t maxDevices{16}; ///< maximum number of devices
 
+#if AFFT_GPU_FRAMEWORK_IS_CUDA
+  /// @brief Backend mask for p2p gpu target
+  inline constexpr BackendMask backendMask{BackendMask::empty | Backend::cufft};
+
+  /// @brief Order of initialization of backends
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::cufft, // just cufft
+  };
+#elif AFFT_GPU_FRAMEWORK_IS_HIP
+# if defined(__HIP_PLATFORM_AMD__)
+  /// @brief Backend mask for p2p gpu target
+  inline constexpr BackendMask backendMask{Backend::hipfft | Backend::rocfft};
+
+  /// @brief Order of initialization of backends
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::rocfft, // prefer rocfft
+    Backend::hipfft, // fallback to hipfft
+  };
+# elif defined(__HIP_PLATFORM_NVIDIA__)
+  /// @brief Backend mask for p2p gpu target
+  inline constexpr BackendMask backendMask{Backend::hipfft};
+
+  /// @brief Order of initialization of backends
+  inline constexpr std::array defaultBackendInitOrder
+  {
+    Backend::hipfft, // prefer hipfft
+    Backend::rocfft, // fallback to rocfft
+  };
+#endif
+
   /// @brief Parameters for p2p gpu target
   struct Parameters
   {
