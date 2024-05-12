@@ -46,11 +46,11 @@ namespace afft::detail::gpu
   inline void init([[maybe_unused]] const afft::gpu::InitParameters& gpuInitParams)
   {
     // Initialize the GPU framework
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
+# if AFFT_GPU_FRAMEWORK_IS(CUDA)
     cuda::init();
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
+# elif AFFT_GPU_FRAMEWORK_IS(HIP)
     hip::init();
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+# elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
     opencl::init();
 # endif
     
@@ -81,11 +81,11 @@ namespace afft::detail::gpu
 # endif
 
     // Finalize the GPU framework
-# if AFFT_GPU_FRAMEWORK_IS_CUDA
+# if AFFT_GPU_FRAMEWORK_IS(CUDA)
     cuda::finalize();
-# elif AFFT_GPU_FRAMEWORK_IS_HIP
+# elif AFFT_GPU_FRAMEWORK_IS(HIP)
     hip::finalize();
-# elif AFFT_GPU_FRAMEWORK_IS_OPENCL
+# elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
     opencl::finalize();
 # endif
   }

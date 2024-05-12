@@ -30,7 +30,7 @@
 
 #include "detail/type.hpp"
 
-#if AFFT_GPU_FRAMEWORK_IS_CUDA
+#if AFFT_GPU_FRAMEWORK_IS(CUDA)
 # if __has_include(<cuComplex.h>)
 #   include <cuComplex.h>
 # endif
@@ -43,7 +43,7 @@
 # if defined(AFFT_HAS_BF16) && __has_include(<cuda_bf16.h>)
 #   include <cuda_bf16.h>
 # endif
-#elif AFFT_GPU_FRAMEWORK_IS_HIP
+#elif AFFT_GPU_FRAMEWORK_IS(HIP)
 # if __has_include(<hip/hip_complex.h>)
 #   include <hip/hip_complex.h>
 # endif
@@ -143,7 +143,7 @@ namespace afft
   struct TypeProperties<Complex<double>>
     : TypePropertiesBase<Complex<double>, Precision::f64, Complexity::complex> {};
 
-#if AFFT_GPU_FRAMEWORK_IS_CUDA
+#if AFFT_GPU_FRAMEWORK_IS(CUDA)
 # if __has_include(<cuComplex.h>)
   /// Specialization of TypeProperties for cuFloatComplex.
   template<>
@@ -188,7 +188,7 @@ namespace afft
   struct TypeProperties<__nv_bfloat162>
     : TypePropertiesBase<__nv_bfloat162, Precision::bf16, Complexity::complex> {};
 # endif
-#elif AFFT_GPU_FRAMEWORK_IS_HIP
+#elif AFFT_GPU_FRAMEWORK_IS(HIP)
 # if __has_include(<hip/hip_complex.h>)
   /// Specialization of TypeProperties for hipFloatComplex.
   template<>
