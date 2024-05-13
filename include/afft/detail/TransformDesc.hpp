@@ -30,6 +30,7 @@
 
 #include "common.hpp"
 #include "../type.hpp"
+#include "../typeTraits.hpp"
 
 namespace afft::detail
 {
@@ -353,6 +354,42 @@ namespace afft::detail
           default:
             cxx::unreachable();
         }
+      }
+
+      /**
+       * @brief Get the transform parameters.
+       * @tparam transform Transform type.
+       * @return Transform parameters.
+       */
+      template<Transform transform>
+      [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
+      {
+        static_assert(isValid(transform), "Invalid transform type");
+
+        TransformParameters<transform> transformParams{};
+
+        transformParams.direction     = getDirection();
+        transformParams.precision     = getPrecision();
+        transformParams.shape         = getShape();
+        transformParams.axes          = getTransformAxes();
+        transformParams.normalization = getNormalization();
+
+        if constexpr (transform == Transform::dft)
+        {
+          transformParams.type = getTransformDesc<Transform::dft>().type;
+        }
+        else if constexpr (transform == Transform::dht)
+        {
+          // Nothing to do.
+        }
+        else if constexpr (transform == Transform::dtt)
+        {
+          const auto& dttDesc = getTransformDesc<Transform::dtt>();
+
+          transformParams.types = dttDesc.types;
+        }
+        
+        return transformParams;
       }
     private:
       /// @brief Transform variant type.
