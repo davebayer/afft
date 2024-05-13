@@ -73,7 +73,7 @@ inline namespace cxx20
    * @return true if the values are equal, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_equal(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_equal(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -100,7 +100,7 @@ inline namespace cxx20
    * @return true if the values are not equal, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_not_equal(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_not_equal(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -116,7 +116,7 @@ inline namespace cxx20
    * @return true if the first value is less than the second value, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_less(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_less(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -143,7 +143,7 @@ inline namespace cxx20
    * @return true if the first value is greater than the second value, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_greater(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_greater(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -159,7 +159,7 @@ inline namespace cxx20
    * @return true if the first value is less than or equal to the second value, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_less_equal(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_less_equal(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -175,7 +175,7 @@ inline namespace cxx20
    * @return true if the first value is greater than or equal to the second value, false otherwise.
    */
   template<class T, class U>
-  constexpr bool cmp_greater_equal(T t, U u) noexcept
+  [[nodiscard]] constexpr bool cmp_greater_equal(T t, U u) noexcept
   {
     static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
 
@@ -193,7 +193,7 @@ inline namespace cxx20
      * @return std::array with the same elements as the input array.
      */
     template<class T, std::size_t N, std::size_t... I>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&a)[N], std::index_sequence<I...>)
+    [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&a)[N], std::index_sequence<I...>)
     {
       return {{a[I]...}};
     }
@@ -207,7 +207,7 @@ inline namespace cxx20
      * @return std::array with the same elements as the input array.
      */
     template<class T, std::size_t N, std::size_t... I>
-    constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&&a)[N], std::index_sequence<I...>)
+    [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&&a)[N], std::index_sequence<I...>)
     {
       return {{std::move(a[I])...}};
     }
@@ -221,7 +221,7 @@ inline namespace cxx20
    * @return std::array with the same elements as the input array.
    */
   template<class T, std::size_t N>
-  constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
+  [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
   {
     return detail2::to_array_impl(a, std::make_index_sequence<N>{});
   }
@@ -234,9 +234,28 @@ inline namespace cxx20
    * @return std::array with the same elements as the input array.
    */
   template<class T, std::size_t N>
-  constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&&a)[N])
+  [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&&a)[N])
   {
     return detail2::to_array_impl(std::move(a), std::make_index_sequence<N>{});
+  }
+
+  /**
+   * @brief Checks if the given value is a power of two. Taken from https://en.cppreference.com/w/cpp/numeric/has_single_bit
+   * @tparam T Type of the value.
+   * @param x Value to check.
+   * @return true if the value is a power of two, false otherwise.
+   */
+  template<typename T>
+  [[nodiscard]] constexpr bool has_single_bit(T x) noexcept
+  {
+    static_assert(std::is_unsigned_v<T>, "T must be an unsigned integral type.");
+    static_assert(!std::is_same_v<T, bool>, "T must not be a boolean type.");
+    static_assert(!std::is_same_v<T, char> &&
+                  !std::is_same_v<T, char16_t> &&
+                  !std::is_same_v<T, char32_t> &&
+                  !std::is_same_v<T, wchar_t>, "T must not be a character type.");
+
+    return x && !(x & (x - 1));
   }
 } // namespace cxx20
 
