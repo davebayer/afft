@@ -52,38 +52,4 @@
 #define AFFT_DETAIL_EXPAND_AND_CONCAT_HELPER(x, y) \
   x##y
 
-/// @brief Macro expanding to parentheses. Useful for expanding variadic arguments.
-#define AFFT_DETAIL_PARENS        ()
-
-/// @brief Empty delimiter macro implementation.
-#define AFFT_DETAIL_DELIM_EMPTY()
-/// @brief Comma delimiter macro implementation.
-#define AFFT_DETAIL_DELIM_COMMA() ,
-
-/**
- * @brief Apply a macro to each element in a variadic argument list and separate them with delimiter.
- * @param macro Macro to apply.
- * @param delimMacro Delimiter macro.
- * @param ... Elements to apply the macro to.
- * @return Result of applying the macro to each element separated by delimiter.
- */
-#define AFFT_DETAIL_FOR_EACH_WITH_DELIM(macro, delimMacro, ...) \
-  __VA_OPT__(AFFT_DETAIL_EXPAND(AFFT_DETAIL_FOR_EACH_WITH_DELIM_HELPER(macro, delimMacro, __VA_ARGS__)))
-#define AFFT_DETAIL_FOR_EACH_WITH_DELIM_HELPER(macro, delimMacro, elem, ...) \
-  macro(elem) \
-  __VA_OPT__(delimMacro AFFT_DETAIL_PARENS \
-             AFFT_DETAIL_FOR_EACH_WITH_DELIM_HELPER_AGAIN AFFT_DETAIL_PARENS (macro, delimMacro, __VA_ARGS__))
-#define AFFT_DETAIL_FOR_EACH_WITH_DELIM_HELPER_AGAIN() AFFT_DETAIL_FOR_EACH_WITH_DELIM_HELPER
-
-/**
- * @brief Variadic bit-or operation.
- * @param ... Values to bit-or.
- * @return Bit-or result.
- */
-#define AFFT_DETAIL_BITOR(...) \
-  (0 __VA_OPT__(| AFFT_DETAIL_EXPAND(AFFT_DETAIL_BITOR_HELPER(__VA_ARGS__))))
-#define AFFT_DETAIL_BITOR_HELPER(elem, ...) \
-  elem __VA_OPT__(| AFFT_DETAIL_BITOR_HELPER_AGAIN AFFT_DETAIL_PARENS (__VA_ARGS__))
-#define AFFT_DETAIL_BITOR_HELPER_AGAIN() AFFT_DETAIL_BITOR_HELPER
-
 #endif /* AFFT_DETAIL_MACRO_HPP */
