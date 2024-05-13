@@ -344,6 +344,18 @@ namespace afft::detail
   };
 
   /**
+   * @brief Is the value valid?
+   * @tparam T Type of the value.
+   * @param value Value to validate.
+   * @return true if the value is valid, false otherwise.
+   */
+  template<typename T>
+  constexpr bool isValid(const T& value)
+  {
+    return Validator<T>{}(value);
+  }
+
+  /**
    * @brief Validates a value.
    * @tparam T Type of the value.
    * @param value Value to validate.
@@ -351,7 +363,7 @@ namespace afft::detail
   template<typename T>
   constexpr void validate(const T& value)
   {
-    if (!Validator<T>{}(value))
+    if (!isValid(value))
     {
       throw std::invalid_argument("Invalid value of type " + typeid(T).name());
     }
@@ -369,6 +381,19 @@ namespace afft::detail
     {
       validate(value);
     }
+  }
+
+  /**
+   * @brief Validates a value and returns it.
+   * @tparam T Type of the value.
+   * @param value Value to validate.
+   * @return The validated value.
+   */
+  template<typename T>
+  [[nodiscard]] constexpr T validateAndReturn(const T& value)
+  {
+    validate(value);
+    return value;
   }
 } // namespace afft::detail
 
