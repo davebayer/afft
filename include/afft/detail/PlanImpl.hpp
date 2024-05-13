@@ -315,7 +315,7 @@ namespace afft::detail
         requireInPlaceTransform();
         requireNotNull(srcDst);
 
-// #     if AFFT_GPU_FRAMEWORK_IS(OPENCL)
+// #     if AFFT_GPU_BACKEND_IS(OPENCL)
 //         if (std::is_same_v<ExecParamsT, afft::gpu::Parameters>)
 //         {
 //           const auto& gpuConfig = getConfig().getTargetConfig<Target::gpu>();
@@ -541,7 +541,7 @@ namespace afft::detail
                                            removeConstFromPtr(src.imag)}, dst, execParams);
       }
 
-#   if AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#   if AFFT_GPU_BACKEND_IS(OPENCL)
       template<typename ExecParamsT>
       void executeUnsafe(cl_mem srcDst, const ExecParamsT& execParams)
       {

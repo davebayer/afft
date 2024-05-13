@@ -61,13 +61,13 @@ namespace afft::detail::gpu::vkfft
       {
         const auto& gpuConfig = getConfig().getTargetConfig<Target::gpu>();
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         cuda::ScopedDevice scopedDevice{gpuConfig.device};
         Error::check(cuDeviceGet(&mCuDevice, gpuConfig.device));
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         hip::ScopedDevice scopedDevice{gpuConfig.device};
         Error::check(hipDeviceGet(&mHipDevice, gpuConfig.device));
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         mContext = gpuConfig.context;
         mDevice  = gpuConfig.device;
 #     endif
@@ -84,28 +84,28 @@ namespace afft::detail::gpu::vkfft
           return safeIntCast<UInt>(dim);
         });
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         vkfftConfig.device               = &mCuDevice;
         vkfftConfig.stream               = &mStream;
         vkfftConfig.num_streams          = 1;
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         vkfftConfig.device               = &mHipDevice;
         vkfftConfig.stream               = &mStream;
         vkfftConfig.num_streams          = 1;
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         vkfftConfig.context              = &mContext;
         vkfftConfig.device               = &mDevice;
 #     endif
 
         vkfftConfig.userTempBuffer       = gpuConfig.externalWorkspace;
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         vkfftConfig.coalescedMemory      = 32;
         vkfftConfig.numSharedBanks       = 32;
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         vkfftConfig.coalescedMemory      = 32; // same for NVIDIA and AMD
         vkfftConfig.numSharedBanks       = 32; // same for NVIDIA and AMD
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         // set by VkFFT internally
 #     endif
 
@@ -278,13 +278,13 @@ namespace afft::detail::gpu::vkfft
         {
           inverse = -1;
 
-#       if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#       if AFFT_GPU_BACKEND_IS(CUDA)
           params.inputBuffer = src.data();
           params.buffer      = dst.data();
-#       elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#       elif AFFT_GPU_BACKEND_IS(HIP)
           params.inputBuffer = src.data();
           params.buffer      = dst.data();
-#       elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#       elif AFFT_GPU_BACKEND_IS(OPENCL)
           params.inputBuffer = reinterpret_cast<cl_mem*>(src.data());
           params.buffer      = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
@@ -293,29 +293,29 @@ namespace afft::detail::gpu::vkfft
         {
           inverse = 1;
 
-#       if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#       if AFFT_GPU_BACKEND_IS(CUDA)
           params.buffer      = src.data();
           params.inputBuffer = dst.data();
-#       elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#       elif AFFT_GPU_BACKEND_IS(HIP)
           params.buffer      = src.data();
           params.inputBuffer = dst.data();
-#       elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#       elif AFFT_GPU_BACKEND_IS(OPENCL)
           params.buffer      = reinterpret_cast<cl_mem*>(src.data());
           params.inputBuffer = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
         }
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         mStream = execParams.stream;
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         mStream = execParams.stream;
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         mQueue = execParams.commandQueue;
 #     endif
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA) || AFFT_GPU_FRAMEWORK_IS(HIP)
+#     if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
         void*             workspace{};
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         cl_mem            workspace{};
 #     endif
 
@@ -327,9 +327,9 @@ namespace afft::detail::gpu::vkfft
         }
 
         {
-#       if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#       if AFFT_GPU_BACKEND_IS(CUDA)
           cuda::ScopedDevice scopedDevice{getConfig().getTargetConfig<Target::gpu>().device};
-#       elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#       elif AFFT_GPU_BACKEND_IS(HIP)
           hip::ScopedDevice scopedDevice{getConfig().getTargetConfig<Target::gpu>().device};
 #       endif
 
@@ -338,13 +338,13 @@ namespace afft::detail::gpu::vkfft
       }
     protected:
     private:
-#   if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#   if AFFT_GPU_BACKEND_IS(CUDA)
       CUdevice         mCuDevice{};
       cudaStream_t     mStream{0};
-#   elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#   elif AFFT_GPU_BACKEND_IS(HIP)
       hipDevice_t      mHipDevice{};
       hipStream_t      mStream{0};
-#   elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
       cl_context       mContext{};
       cl_device_id     mDevice{};
       cl_command_queue mQueue{};

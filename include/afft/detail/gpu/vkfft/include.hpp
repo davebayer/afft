@@ -41,11 +41,11 @@
 #undef VKFFT_MAX_FFT_DIMENSIONS
 
 // define VKFFT_BACKEND based on the current GPU backend
-#if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#if AFFT_GPU_BACKEND_IS(CUDA)
 # define VKFFT_BACKEND 1
-#elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#elif AFFT_GPU_BACKEND_IS(HIP)
 # define VKFFT_BACKEND 2
-#elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#elif AFFT_GPU_BACKEND_IS(OPENCL)
 # define VKFFT_BACKEND 3
 #else
 # error "vkFFT backend is only supported with CUDA or HIP"
@@ -55,7 +55,7 @@
 #define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
 
 // define the path to the CUDA toolkit if it is not already defined
-#if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#if AFFT_GPU_BACKEND_IS(CUDA)
 # ifndef CUDA_TOOLKIT_ROOT_DIR
 #   define CUDA_TOOLKIT_ROOT_DIR AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
 # endif

@@ -70,7 +70,7 @@ namespace detail
    * @return BackendMask representation of the value.
    */
   template<typename T>
-  [[nodiscard]] inline constexpr BackendMask toBackendMask(T value)
+  [[nodiscard]] constexpr BackendMask toBackendMask(T value)
   {
     static_assert(std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>,
                   "T must be either Backend or BackendMask");
@@ -94,7 +94,7 @@ namespace detail
    * @return Result of the operation.
    */
   template<typename UnOp, typename T>
-  [[nodiscard]] inline constexpr BackendMask backendMaskUnaryOp(UnOp fn, T value)
+  [[nodiscard]] constexpr BackendMask backendMaskUnaryOp(UnOp fn, T value)
   {
     const auto val = detail::cxx::to_underlying(detail::toBackendMask(value));
 
@@ -112,7 +112,7 @@ namespace detail
    * @return Result of the operation.
    */
   template<typename BinFn, typename T, typename U>
-  [[nodiscard]] inline constexpr BackendMask backendMaskBinaryOp(BinFn fn, T lhs, U rhs)
+  [[nodiscard]] constexpr BackendMask backendMaskBinaryOp(BinFn fn, T lhs, U rhs)
   {
     const auto left  = detail::cxx::to_underlying(detail::toBackendMask(lhs));
     const auto right = detail::cxx::to_underlying(detail::toBackendMask(rhs));

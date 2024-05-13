@@ -195,11 +195,11 @@ namespace afft::detail
         mpi::init();
 #     endif
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         cuda::init();
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         hip::init();
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         opencl::init();
 #     endif
 
@@ -259,11 +259,11 @@ namespace afft::detail
         vkfft::finalize();
 #     endif
 
-#     if AFFT_GPU_FRAMEWORK_IS(CUDA)
+#     if AFFT_GPU_BACKEND_IS(CUDA)
         cuda::finalize();
-#     elif AFFT_GPU_FRAMEWORK_IS(HIP)
+#     elif AFFT_GPU_BACKEND_IS(HIP)
         hip::finalize();
-#     elif AFFT_GPU_FRAMEWORK_IS(OPENCL)
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
         opencl::finalize();
 #     endif
 
