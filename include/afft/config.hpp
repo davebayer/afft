@@ -32,21 +32,21 @@
 #define AFFT_VERSION_PATCH      0 ///< Patch version.
 
 /// @brief clFFT backend id
-#define AFFT_BACKEND_CLFFT      0
+#define AFFT_BACKEND_CLFFT      (1 << 0)
 /// @brief cuFFT backend id
-#define AFFT_BACKEND_CUFFT      1
+#define AFFT_BACKEND_CUFFT      (1 << 1)
 /// @brief FFTW3 backend id
-#define AFFT_BACKEND_FFTW3      2
+#define AFFT_BACKEND_FFTW3      (1 << 2)
 /// @brief hipFFT backend id
-#define AFFT_BACKEND_HIPFFT     3
+#define AFFT_BACKEND_HIPFFT     (1 << 3)
 /// @brief MKL backend id
-#define AFFT_BACKEND_MKL        4
+#define AFFT_BACKEND_MKL        (1 << 4)
 /// @brief PocketFFT backend id
-#define AFFT_BACKEND_POCKETFFT  5
+#define AFFT_BACKEND_POCKETFFT  (1 << 5)
 /// @brief rocFFT backend id
-#define AFFT_BACKEND_ROCFFT     6
+#define AFFT_BACKEND_ROCFFT     (1 << 6)
 /// @brief VkFFT backend id
-#define AFFT_BACKEND_VKFFT      7
+#define AFFT_BACKEND_VKFFT      (1 << 7)
 
 /**
  * @brief Is backend enabled?
@@ -54,7 +54,7 @@
  * @return True if the backend is enabled, false otherwise.
  */
 #define AFFT_BACKEND_IS_ENABLED(bckndName) \
-  (((AFFT_BACKEND_MASK) & (1 << AFFT_BACKEND_##bckndName)) != 0)
+  (((AFFT_BACKEND_MASK) & AFFT_BACKEND_##bckndName) != 0)
 
 /// @brief Macro for disabling GPU support
 #define AFFT_GPU_BACKEND_NONE   0
