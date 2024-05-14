@@ -138,7 +138,9 @@ import std;
 
 // Include vkFFT header
 #if AFFT_BACKEND_IS_ENABLED(VKFFT)
-# if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP) || AFFT_GPU_BACKEND_IS(OPENCL)
+# if AFFT_GPU_BACKEND_IS(CUDA) || \
+     (AFFT_GPU_BACKEND_IS(HIP) && defined(__HIP_PLATFORM_AMD__)) || \
+     AFFT_GPU_BACKEND_IS(OPENCL)
     // check if AFFT has been included before including vkFFT
 #   ifdef VKFFT_H
 #     error "AFFT and vkFFT cannot be included together in the same translation unit"
