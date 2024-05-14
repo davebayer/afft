@@ -48,6 +48,12 @@
 #   include <memory>
 #   include <new>
 #   include <optional>
+#   if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
+#     include <span>
+#   else
+#     define TCB_SPAN_NAMESPACE_NAME afft::thirdparty::span
+#     include <tcb/span.hpp>
+#   endif
 #   include <stdexcept>
 #   include <string>
 #   include <string_view>

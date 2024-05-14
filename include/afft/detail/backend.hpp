@@ -25,9 +25,9 @@
 #ifndef AFFT_DETAIL_BACKEND_HPP
 #define AFFT_DETAIL_BACKEND_HPP
 
-#include <cstdint>
-#include <climits>
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "cxx.hpp"
 

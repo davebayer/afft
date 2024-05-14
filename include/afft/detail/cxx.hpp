@@ -25,8 +25,9 @@
 #ifndef AFFT_DETAIL_CXX_HPP
 #define AFFT_DETAIL_CXX_HPP
 
-#include <stdexcept>
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 namespace afft::detail::cxx
 {

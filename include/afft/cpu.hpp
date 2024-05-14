@@ -25,14 +25,9 @@
 #ifndef AFFT_CPU_HPP
 #define AFFT_CPU_HPP
 
-#include <array>
-#include <complex>
-#include <concepts>
-#include <cstddef>
-#include <memory>
-#include <new>
-#include <string_view>
-#include <utility>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "backend.hpp"
 #include "common.hpp"

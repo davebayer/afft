@@ -25,7 +25,9 @@
 #ifndef AFFT_DETAIL_TYPE_TRAITS_HPP
 #define AFFT_DETAIL_TYPE_TRAITS_HPP
 
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "common.hpp"
 #include "../cpu.hpp"

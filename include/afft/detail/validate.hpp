@@ -25,8 +25,9 @@
 #ifndef AFFT_DETAIL_VALIDATE_HPP
 #define AFFT_DETAIL_VALIDATE_HPP
 
-#include <stdexcept>
-#include <typeinfo>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "cxx.hpp"
 #include "../backend.hpp"

@@ -25,11 +25,13 @@
 #ifndef AFFT_TYPE_HPP
 #define AFFT_TYPE_HPP
 
-#include <complex>
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "detail/type.hpp"
 
+// TODO: move precision to config.hpp and includes to detail/include.hpp
 #if AFFT_GPU_BACKEND_IS(CUDA)
 # if __has_include(<cuComplex.h>)
 #   include <cuComplex.h>

@@ -25,11 +25,8 @@
 #ifndef AFFT_MP_HPP
 #define AFFT_MP_HPP
 
-#include "macro.hpp"
-
-// Include distribution type headers
-#if AFFT_MP_BACKEND_IS(MPI)
-# include <mpi.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
 #endif
 
 namespace afft

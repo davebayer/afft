@@ -25,7 +25,9 @@
 #ifndef AFFT_DETAIL_COMMON_HPP
 #define AFFT_DETAIL_COMMON_HPP
 
-#include <array>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "validate.hpp"
 #include "../common.hpp"

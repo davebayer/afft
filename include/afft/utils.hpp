@@ -25,9 +25,9 @@
 #ifndef AFFT_UTILS_HPP
 #define AFFT_UTILS_HPP
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "common.hpp"
 

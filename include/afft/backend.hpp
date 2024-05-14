@@ -25,12 +25,10 @@
 #ifndef AFFT_BACKEND_HPP
 #define AFFT_BACKEND_HPP
 
-#include <cstdint>
-#include <functional>
-#include <limits>
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
-#include "macro.hpp"
 #include "detail/backend.hpp"
 
 namespace afft

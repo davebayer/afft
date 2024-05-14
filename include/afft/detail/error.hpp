@@ -25,12 +25,8 @@
 #ifndef AFFT_DETAIL_ERROR_HPP
 #define AFFT_DETAIL_ERROR_HPP
 
-#include <string>
-#include <string_view>
-#include <version>
-
-#ifdef __cpp_lib_source_location
-# include <source_location>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
 #endif
 
 #include "utils.hpp"

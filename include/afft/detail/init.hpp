@@ -25,11 +25,9 @@
 #ifndef AFFT_DETAIL_INIT_HPP
 #define AFFT_DETAIL_INIT_HPP
 
-// #include <atomic>
-#include <chrono>
-// #include <condition_variable>
-// #include <mutex>
-#include <utility>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "../backend.hpp"
 #include "../gpu.hpp"

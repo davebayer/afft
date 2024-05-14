@@ -25,9 +25,9 @@
 #ifndef AFFT_DETAIL_PLAN_IMPL_HPP
 #define AFFT_DETAIL_PLAN_IMPL_HPP
 
-#include <array>
-#include <cstddef>
-#include <variant>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "Config.hpp"
 #include "cxx.hpp"

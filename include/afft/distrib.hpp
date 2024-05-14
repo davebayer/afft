@@ -25,7 +25,9 @@
 #ifndef AFFT_DISTRIB_HPP
 #define AFFT_DISTRIB_HPP
 
-#include <cstddef>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "common.hpp"
 #include "mp.hpp"

@@ -25,14 +25,9 @@
 #ifndef AFFT_PLAN_CACHE_HPP
 #define AFFT_PLAN_CACHE_HPP
 
-#include <cstddef>
-#include <list>
-#include <limits>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <unordered_map>
-
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 #include "common.hpp"
 #include "Plan.hpp"
 #include "detail/Config.hpp"

@@ -25,8 +25,9 @@
 #ifndef AFFT_DETAIL_MAKE_PLAN_IMPL_HPP
 #define AFFT_DETAIL_MAKE_PLAN_IMPL_HPP
 
-#include <memory>
-#include <utility>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "common.hpp"
 #include "PlanImpl.hpp"

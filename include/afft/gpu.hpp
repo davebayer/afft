@@ -25,13 +25,13 @@
 #ifndef AFFT_GPU_HPP
 #define AFFT_GPU_HPP
 
-#include <array>
-#include <cstddef>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "backend.hpp"
 #include "common.hpp"
 #include "distrib.hpp"
-#include "macro.hpp"
 #include "mp.hpp"
 #include "detail/cxx.hpp"
 

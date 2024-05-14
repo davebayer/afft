@@ -25,8 +25,9 @@
 #ifndef AFFT_DETAIL_TRANSFORM_DESC_HPP
 #define AFFT_DETAIL_TRANSFORM_DESC_HPP
 
-#include <bitset>
-#include <variant>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "common.hpp"
 #include "../type.hpp"

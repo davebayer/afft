@@ -25,38 +25,11 @@
 #ifndef AFFT_AFFT_HPP
 #define AFFT_AFFT_HPP
 
-#include "macro.hpp"
+// Include only once in the top-level header.
+#include "detail/include.hpp"
+#define AFFT_TOP_LEVEL_INCLUDE
 
-// If max dimension count is not defined, use 4 as default
-#ifndef AFFT_MAX_DIM_COUNT
-# define AFFT_MAX_DIM_COUNT                      0
-# define AFFT_UNDEF_MAX_DIM_COUNT
-#endif
-
-// Check if GPU backend is defined (GPU support is enabled)
-#ifdef AFFT_GPU_BACKEND
-# if !(AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP) || AFFT_GPU_BACKEND_IS(OPENCL))
-#   error "Invalid GPU backend"
-# endif
-#else
-# define AFFT_GPU_BACKEND                        NONE
-# define AFFT_UNDEF_GPU_BACKEND
-#endif
-
-// Check if multi-process backend is supported
-#ifdef AFFT_MP_BACKEND
-# if !(AFFT_MP_BACKEND_IS(MPI))
-#  error "Unsupported multi-process backend"
-# endif
-#else
-# define AFFT_MP_BACKEND                         NONE
-# define AFFT_UNDEF_MP_BACKEND
-#endif
-
-#define AFFT_VERSION_MAJOR                       0 ///< Major version.
-#define AFFT_VERSION_MINOR                       1 ///< Minor version.
-#define AFFT_VERSION_PATCH                       0 ///< Patch version
-
+// Include all public headers.
 #include "cpu.hpp"
 #include "gpu.hpp"
 #include "common.hpp"
@@ -79,20 +52,5 @@ namespace afft
     static constexpr int patch{AFFT_VERSION_PATCH}; ///< Patch version.
   } version;
 } // namespace afft
-
-#ifdef AFFT_UNDEF_MP_BACKEND
-# undef AFFT_MP_BACKEND
-# undef AFFT_UNDEF_MP_BACKEND
-#endif
-
-#ifdef AFFT_UNDEF_GPU_BACKEND
-# undef AFFT_GPU_BACKEND
-# undef AFFT_UNDEF_GPU_BACKEND
-#endif
-
-#ifdef AFFT_UNDEF_MAX_DIM_COUNT
-# undef AFFT_MAX_DIM_COUNT
-# undef AFFT_UNDEF_MAX_DIM_COUNT
-#endif
 
 #endif /* AFFT_AFFT_HPP */

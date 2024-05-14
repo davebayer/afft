@@ -25,15 +25,9 @@
 #ifndef AFFT_DETAIL_UTILS_HPP
 #define AFFT_DETAIL_UTILS_HPP
 
-#include <cinttypes>
-#include <cstddef>
-#include <cstdio>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
-#include <tuple>
-#include <variant>
-#include <version>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "include.hpp"
+#endif
 
 #include "cxx.hpp"
 #include "../3rdparty.hpp"
@@ -41,6 +35,117 @@
 
 namespace afft::detail
 {
+  /**
+   * @brief Optional reference.
+   * @tparam T Type of the reference.
+   */
+  template<typename T>
+  class OptionalRef
+  {
+    public:
+      /// @brief Default constructor.
+      constexpr OptionalRef() noexcept = default;
+
+      /**
+       * @brief Constructor.
+       * @param ref Reference to store.
+       */
+      constexpr OptionalRef(T& ref) noexcept
+      : mPtr{&ref}
+      {}
+
+      /**
+       * @brief Copy constructor.
+       * @param other Other instance to copy.
+       */
+      constexpr OptionalRef(const OptionalRef& other) noexcept = default;
+
+      /**
+       * @brief Move constructor.
+       * @param other Other instance to move.
+       */
+      constexpr OptionalRef(OptionalRef&& other) noexcept = default;
+
+      /// @brief Destructor.
+      ~OptionalRef() noexcept = default;
+
+      /**
+       * @brief Copy assignment operator.
+       * @param other Other instance to copy.
+       * @return Reference to this instance.
+       */
+      constexpr OptionalRef& operator=(const OptionalRef& other) noexcept = default;
+
+      /**
+       * @brief Move assignment operator.
+       * @param other Other instance to move.
+       * @return Reference to this instance.
+       */
+      constexpr OptionalRef& operator=(OptionalRef&& other) noexcept = default;
+
+      /**
+       * @brief Gets the value.
+       * @return Reference to the value.
+       * @throw std::runtime_error if the optional does not have a value.
+       */
+      [[nodiscard]] constexpr T& value() const noexcept
+      {
+        if (!hasValue())
+        {
+          throw std::runtime_error("OptionalRef does not have a value");
+        }
+
+        return *mPtr;
+      }
+
+      /**
+       * @brief Checks if the optional has a value.
+       * @return True if the optional has a value, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasValue() const noexcept
+      {
+        return (mPtr != nullptr);
+      }
+
+      /**
+       * @brief Resets the optional.
+       */
+      constexpr void reset() noexcept
+      {
+        mPtr = nullptr;
+      }
+
+      /**
+       * @brief Gets the value without checking if it exists.
+       * @return Reference to the value.
+       */
+      [[nodiscard]] constexpr T& operator*() const noexcept
+      {
+        return *mPtr;
+      }
+
+      /**
+       * @brief Gets the value without checking if it exists.
+       * @return Pointer to the value.
+       */
+      [[nodiscard]] constexpr T* operator->() const noexcept
+      {
+        return mPtr;
+      }
+
+      /**
+       * @brief Checks if the optional has a value.
+       * @return True if the optional has a value, false otherwise.
+       */
+      [[nodiscard]] constexpr operator bool() const noexcept
+      {
+        return hasValue();
+      }
+    protected:
+    private:
+      T* mPtr{}; ///< Pointer to the value.
+  };
+
   /**
    * @brief Safely casts a value to a different integral type.
    * @tparam T Target integral type.

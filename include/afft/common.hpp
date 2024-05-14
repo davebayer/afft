@@ -25,8 +25,9 @@
 #ifndef AFFT_COMMON_HPP
 #define AFFT_COMMON_HPP
 
-#include <cstddef>
-#include <utility>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "backend.hpp"
 #include "Span.hpp"

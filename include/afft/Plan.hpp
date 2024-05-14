@@ -25,7 +25,9 @@
 #ifndef AFFT_PLAN_HPP
 #define AFFT_PLAN_HPP
 
-#include <memory>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
+#endif
 
 #include "common.hpp"
 #include "distrib.hpp"

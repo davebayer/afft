@@ -54,7 +54,7 @@
  * @return True if the backend is enabled, false otherwise.
  */
 #define AFFT_BACKEND_IS_ENABLED(bckndName) \
-  ((AFFT_BACKEND_MASK & (1 << AFFT_BACKEND_##bckndName)) != 0)
+  (((AFFT_BACKEND_MASK) & (1 << AFFT_BACKEND_##bckndName)) != 0)
 
 /// @brief Macro for disabling GPU support
 #define AFFT_GPU_BACKEND_NONE   0
