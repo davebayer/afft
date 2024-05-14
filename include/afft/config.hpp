@@ -135,7 +135,7 @@
 
 // implement C++20 requires clause for older C++ versions, should be used as:
 // auto func() -> AFFT_RET_REQUIRES(returnType, requirements) { ... }
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
+#if defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
   /// @brief Macro for requires clause
 # define AFFT_RET_REQUIRES(retType, requiredExpr) \
     retType requires(requiredExpr)
