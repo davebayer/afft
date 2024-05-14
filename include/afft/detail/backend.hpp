@@ -53,7 +53,7 @@ namespace detail
    */
   [[nodiscard]] inline constexpr bool backendMaskHasSufficientUnderlyingTypeSize(Backend backendCount)
   {
-    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= sizeof(BackendUnderlyingType);
+    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= cxx::to_underlying(backendCount);
   }
 } // namespace detail
 
