@@ -28,6 +28,11 @@ module;
 // First include the config header.
 #include "config.hpp"
 
+// Check the C++ version.
+#if AFFT_CXX_VERSION < 202002L
+# error "afft C++ module requires at least C++20"
+#endif
+
 // If import std is available, include only external backend headers.
 #ifdef AFFT_CXX_HAS_IMPORT_STD
 # define AFFT_INCLUDE_NO_STD
