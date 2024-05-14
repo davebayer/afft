@@ -93,7 +93,11 @@
   (AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_MP_BACKEND_, AFFT_MP_BACKEND) == AFFT_MP_BACKEND_##bckndName)
 
 // If max dimension count is not defined, use 4 as default
-#ifndef AFFT_MAX_DIM_COUNT
+#ifdef AFFT_MAX_DIM_COUNT
+# if AFFT_MAX_DIM_COUNT < 1
+#   error "AFFT_MAX_DIM_COUNT must be at least 1"
+# endif
+#else
 # define AFFT_MAX_DIM_COUNT     4
 #endif
 
@@ -108,7 +112,7 @@
 
 // Check if multi-process backend is supported
 #ifdef AFFT_MP_BACKEND
-# if !(AFFT_MP_BACKEND_IS(MPI))
+# if !AFFT_MP_BACKEND_IS(MPI)
 #  error "Unsupported multi-process backend"
 # endif
 #else
