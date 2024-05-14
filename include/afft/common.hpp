@@ -32,7 +32,7 @@
 #include "backend.hpp"
 #include "Span.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /// @brief Maximum number of dimensions
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};

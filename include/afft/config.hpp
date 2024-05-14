@@ -122,6 +122,11 @@
 #  define AFFT_CXX_VERSION      __cplusplus
 #endif
 
+// Define AFFT_EXPORT macro to expand to nothing if not defined
+#ifndef AFFT_EXPORT
+# define AFFT_EXPORT
+#endif
+
 // If C++ version is 20, try to include <version> header
 #if (AFFT_CXX_VERSION >= 202002L) && __has_include(<version>)
 # define AFFT_CXX_HAS_VERSION

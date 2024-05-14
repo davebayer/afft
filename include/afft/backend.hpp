@@ -31,7 +31,7 @@
 
 #include "detail/backend.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
   enum class Backend : detail::BackendUnderlyingType

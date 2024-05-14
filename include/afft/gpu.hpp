@@ -44,7 +44,7 @@
 # include "detail/gpu/opencl/opencl.hpp"
 #endif
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
 namespace spst::gpu
 {

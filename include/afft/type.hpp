@@ -57,7 +57,7 @@
 # endif
 #endif
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Real data type.

@@ -39,7 +39,7 @@
 #include "PlanCache.hpp"
 #include "utils.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @struct Version

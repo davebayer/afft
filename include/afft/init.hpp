@@ -27,7 +27,7 @@
 
 #include "detail/init.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /// @brief Initialize the library. Should be called before any other afft function.
   inline void init()

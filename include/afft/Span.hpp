@@ -29,7 +29,7 @@
 # include "detail/include.hpp"
 #endif
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
 #if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
   /// @brief The dynamic extent value for Span.

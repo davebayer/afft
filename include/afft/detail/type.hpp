@@ -35,7 +35,7 @@ namespace afft
 {
   // Forward declaration
   template<typename>
-  struct TypeProperties;
+  AFFT_EXPORT struct TypeProperties;
 
 namespace detail
 {

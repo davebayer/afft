@@ -29,7 +29,7 @@
 # include "detail/include.hpp"
 #endif
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @struct MultiProcessParameters

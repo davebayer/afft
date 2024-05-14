@@ -32,7 +32,7 @@
 #include "common.hpp"
 #include "mp.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
 namespace distrib
 {

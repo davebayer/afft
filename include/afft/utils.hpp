@@ -31,7 +31,7 @@
 
 #include "common.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Get the alignment of the pointers

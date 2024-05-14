@@ -58,8 +58,8 @@ namespace detail
 } // namespace detail
 
   // Forward declarations
-  enum class Backend : detail::BackendUnderlyingType;
-  enum class BackendMask : detail::BackendMaskUnderlyingType;
+  AFFT_EXPORT enum class Backend : detail::BackendUnderlyingType;
+  AFFT_EXPORT enum class BackendMask : detail::BackendMaskUnderlyingType;
 
 namespace detail
 {

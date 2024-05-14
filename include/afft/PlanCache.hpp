@@ -33,7 +33,7 @@
 #include "detail/Config.hpp"
 #include "detail/PlanImpl.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   class PlanCache
   {

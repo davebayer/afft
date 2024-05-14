@@ -33,7 +33,7 @@
 #include "detail/cxx.hpp"
 #include "detail/typeTraits.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Get the precision of the type. There has to be a specialization of TypeProperties for the type.
