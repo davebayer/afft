@@ -168,10 +168,10 @@ namespace afft::detail::gpu
 
     switch (backendSelectParams.strategy)
     {
-    case BackendSelectStrategy::first:
-      return makeFirstPlanImpl(config, backends);
-    case BackendSelectStrategy::best:
-      return makeBestPlanImpl(config, backends);
+    case SelectStrategy::first:
+      return makeFirstPlanImpl(config, backends, backendsErrors);
+    case SelectStrategy::best:
+      return makeBestPlanImpl(config, backends, backendsErrors);
     default:
       cxx::unreachable();
     }

@@ -67,16 +67,16 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the BackendSelectStrategy enum class.
+  /// @brief Validator for the SelectStrategy enum class.
   template<>
-  struct Validator<BackendSelectStrategy>
+  struct Validator<SelectStrategy>
   {
-    constexpr bool operator()(BackendSelectStrategy strategy) const noexcept
+    constexpr bool operator()(SelectStrategy strategy) const noexcept
     {
       switch (strategy)
       {
-      case BackendSelectStrategy::first:
-      case BackendSelectStrategy::best:
+      case SelectStrategy::first:
+      case SelectStrategy::best:
         return true;
       default:
         return false;

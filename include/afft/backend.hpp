@@ -59,7 +59,7 @@ AFFT_EXPORT namespace afft
                 "BackendMask does not have sufficient size to store all Backend values");
 
   /// @brief Backend select strategy
-  enum class BackendSelectStrategy : std::uint8_t
+  enum class SelectStrategy : std::uint8_t
   {
     first, ///< select the first available backend
     best,  ///< select the best available backend
