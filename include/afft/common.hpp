@@ -122,7 +122,7 @@ AFFT_EXPORT namespace afft
   /// @brief Initialization parameters
   struct InitParameters
   {
-    BackendMask           backendMask{BackendMask::empty};                     ///< backend mask
+    BackendMask           backendMask{BackendMask::all};                       ///< backend mask
     View<Backend>         backendInitOrder{};                                  ///< backend initialization order, empty view means default order for the target
     BackendSelectStrategy backendSelectStrategy{BackendSelectStrategy::first}; ///< backend select strategy
     InitEffort            initEffort{InitEffort::med};                         ///< plan initialization effort
