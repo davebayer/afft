@@ -109,11 +109,21 @@ AFFT_EXPORT namespace afft
    * @return Strides
    */
   template<std::size_t extent = dynamicExtent>
-  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1) noexcept
+  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
   {
     using ReturnT = std::conditional_t<(extent == dynamicExtent),
                                        std::array<std::size_t, extent>,
                                        std::vector<std::size_t>>;
+
+    auto checkShape = [](View<std::size_t> shape)
+    {
+      if (std::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
+      {
+        throw std::invalid_argument("Shape must not contain zeros");
+      }
+    };
+
+    checkShape(shape);
 
     ReturnT strides{};
 
@@ -122,7 +132,7 @@ AFFT_EXPORT namespace afft
       strides.resize(resultShape.size());
     }
 
-    if (shape.size() > 0)
+    if (!shape.empty())
     {
       strides[shape.size() - 1] = fastestAxisStride;
 
@@ -145,13 +155,21 @@ AFFT_EXPORT namespace afft
   template<std::size_t extent = dynamicExtent>
   [[nodiscard]] auto makeTransposedStrides(View<std::size_t, extent> resultShape,
                                            View<std::size_t>         orgAxesOrder,
-                                           std::size_t               fastestAxisStride = 1) noexcept
+                                           std::size_t               fastestAxisStride = 1)
   {
     using ReturnT = std::conditional_t<(extent == dynamicExtent),
                                        std::array<std::size_t, extent>,
                                        std::vector<std::size_t>>;
 
-    auto checkAxes = [](View<std::size_t> axes) -> bool
+    auto checkShape = [](View<std::size_t> shape)
+    {
+      if (std::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
+      {
+        throw std::invalid_argument("Shape must not contain zeros");
+      }
+    };
+
+    auto checkAxes = [](View<std::size_t> axes)
     {
       ReturnT orgAxesOrderCopy{};
 
@@ -176,7 +194,7 @@ AFFT_EXPORT namespace afft
       }
     };
 
-    if (orgAxesOrder.size() == 0)
+    if (orgAxesOrder.empty())
     {
       return makeStrides(resultShape, fastestAxisStride);
     }
@@ -185,6 +203,7 @@ AFFT_EXPORT namespace afft
       throw std::invalid_argument("Axes order must have the same size as the shape");
     }
 
+    checkShape(resultShape);
     checkAxes(orgAxesOrder);
 
     ReturnT strides{};
