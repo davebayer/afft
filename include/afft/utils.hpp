@@ -101,6 +101,111 @@ AFFT_EXPORT namespace afft
                           /* .source      = */ TypeProperties<std::remove_cv_t<SrcT>>::precision,
                           /* .destination = */ TypeProperties<std::remove_cv_t<DstT>>::precision};
   }
+
+  /**
+   * @brief Make strides.
+   * @param shape Shape
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */
+  template<std::size_t extent = dynamicExtent>
+  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1) noexcept
+  {
+    using ReturnT = std::conditional_t<(extent == dynamicExtent),
+                                       std::array<std::size_t, extent>,
+                                       std::vector<std::size_t>>;
+
+    ReturnT strides{};
+
+    if constexpr (extent == dynamicExtent)
+    {
+      strides.resize(resultShape.size());
+    }
+
+    if (shape.size() > 0)
+    {
+      strides[shape.size() - 1] = fastestAxisStride;
+
+      for (std::size_t i = shape.size() - 1; i > 0; --i)
+      {
+        strides[i - 1] = shape[i] * strides[i];
+      }
+    }
+
+    return strides;
+  }
+
+  /**
+   * @brief Make transposed strides.
+   * @param resultShape Shape of the result
+   * @param orgAxesOrder Original axes order
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */
+  template<std::size_t extent = dynamicExtent>
+  [[nodiscard]] auto makeTransposedStrides(View<std::size_t, extent> resultShape,
+                                           View<std::size_t>         orgAxesOrder,
+                                           std::size_t               fastestAxisStride = 1) noexcept
+  {
+    using ReturnT = std::conditional_t<(extent == dynamicExtent),
+                                       std::array<std::size_t, extent>,
+                                       std::vector<std::size_t>>;
+
+    auto checkAxes = [](View<std::size_t> axes) -> bool
+    {
+      ReturnT orgAxesOrderCopy{};
+
+      if constexpr (extent == dynamicExtent)
+      {
+        orgAxesOrderCopy.resize(orgAxesOrder.size());
+      }
+
+      std::copy(orgAxesOrder.begin(), orgAxesOrder.end(), orgAxesOrderCopy.begin());
+      std::sort(orgAxesOrderCopy.begin(), orgAxesOrderCopy.end());
+
+      if (std::adjacent_find(orgAxesOrderCopy.begin(), orgAxesOrderCopy.end()) != orgAxesOrderCopy.end())
+      {
+        throw std::invalid_argument("Axes order must not contain duplicates");
+      }
+
+      if (std::any_of(orgAxesOrderCopy.begin(),
+                      orgAxesOrderCopy.end(),
+                      [size = axes.size()](std::size_t axis) { return axis >= size; }))
+      {
+        throw std::invalid_argument("Axes order must not contain out-of-range values");
+      }
+    };
+
+    if (orgAxesOrder.size() == 0)
+    {
+      return makeStrides(resultShape, fastestAxisStride);
+    }
+    else if (orgAxesOrder.size() != shape.size())
+    {
+      throw std::invalid_argument("Axes order must have the same size as the shape");
+    }
+
+    checkAxes(orgAxesOrder);
+
+    ReturnT strides{};
+
+    if constexpr (extent == dynamicExtent)
+    {
+      strides.resize(resultShape.size());
+    }
+
+    if (const std::size_t size = resultShape.size(); size > 0)
+    {
+      strides[orgAxesOrder[size - 1]] = fastestAxisStride;
+
+      for (std::size_t i = size - 1; i > 0; --i)
+      {
+        strides[orgAxesOrder[i - 1]] = resultShape[i] * strides[orgAxesOrder[i]];
+      }
+    }
+
+    return strides;
+  }
 } // namespace afft
 
 #endif /* AFFT_UTILS_HPP */
