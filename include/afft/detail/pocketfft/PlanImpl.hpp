@@ -22,26 +22,19 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
+#define AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
 
-#include <array>
-#include <algorithm>
-#include <cstddef>
-#include <functional>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include <pocketfft_hdronly.h>
+#include "../common.hpp"
+#include "../cxx.hpp"
+#include "../error.hpp"
+#include "../PlanImpl.hpp"
 
-#include "../../common.hpp"
-#include "../../cxx.hpp"
-#include "../../error.hpp"
-#include "../../PlanImpl.hpp"
-#include "../../Config.hpp"
-
-namespace afft::detail::cpu::pocketfft
+namespace afft::detail::pocketfft
 {
   // Check the types
   static_assert(std::is_same_v<::pocketfft::shape_t::value_type, std::size_t>,
@@ -387,6 +380,6 @@ namespace afft::detail::cpu::pocketfft
       throw makeException<std::runtime_error>("Unsupported precision");
     }
   }
-} // namespace afft::detail::cpu::pocketfft
+} // namespace afft::detail::pocketfft
 
-#endif /* AFFT_DETAIL_CPU_POCKETFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP */
