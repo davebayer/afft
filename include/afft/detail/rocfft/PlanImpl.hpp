@@ -22,20 +22,19 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_ROCFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_GPU_ROCFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_ROCFFT_PLAN_IMPL_HPP
+#define AFFT_DETAIL_ROCFFT_PLAN_IMPL_HPP
 
-#include <cstddef>
-#include <memory>
-
-#include <rocfft/rocfft.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "../../common.hpp"
-#include "../../cxx.hpp"
-#include "../../PlanImpl.hpp"
+#include "../common.hpp"
+#include "../cxx.hpp"
+#include "../PlanImpl.hpp"
 
-namespace afft::detail::gpu::rocfft
+namespace afft::detail::rocfft
 {
   /// @brief Rocfft size type
   using SizeT = std::size_t;
@@ -323,6 +322,6 @@ namespace afft::detail::gpu::rocfft
 
     return std::make_unique<PlanImpl>(config);
   }
-} // namespace afft::detail::gpu::rocfft
+} // namespace afft::detail::rocfft
 
-#endif /* AFFT_DETAIL_GPU_ROCFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_ROCFFT_PLAN_IMPL_HPP */

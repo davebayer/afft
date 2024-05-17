@@ -22,17 +22,17 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_ROCFFT_INIT_HPP
-#define AFFT_DETAIL_GPU_ROCFFT_INIT_HPP
+#ifndef AFFT_DETAIL_ROCFFT_INIT_HPP
+#define AFFT_DETAIL_ROCFFT_INIT_HPP
 
-#include <cstdlib>
-
-#include <rocfft/rocfft.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "../../../gpu.hpp"
+#include "../../gpu.hpp"
 
-namespace afft::detail::gpu::rocfft
+namespace afft::detail::rocfft
 {
   /// @brief Initialize the rocFFT library.
   inline void init(const afft::gpu::rocfft::InitParameters& initParams)
@@ -62,6 +62,6 @@ namespace afft::detail::gpu::rocfft
   {
     Error::check(rocfft_cleanup());
   }
-} // namespace afft::detail::gpu::rocfft
+} // namespace afft::detail::rocfft
 
-#endif /* AFFT_DETAIL_GPU_ROCFFT_INIT_HPP */
+#endif /* AFFT_DETAIL_ROCFFT_INIT_HPP */
