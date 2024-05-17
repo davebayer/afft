@@ -22,43 +22,46 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_MKL_ERROR_HPP
-#define AFFT_DETAIL_CPU_MKL_ERROR_HPP
+#ifndef AFFT_DETAIL_MKL_ERROR_HPP
+#define AFFT_DETAIL_MKL_ERROR_HPP
 
-#include <string>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include <mkl_dfti.h>
+#include "../error.hpp"
+#include "../utils.hpp"
 
-#include "../../error.hpp"
-#include "../../utils.hpp"
-
-/**
- * @brief Specialization of isOk method for MKL_LONG.
- * @param result MKL error.
- * @return True if result is DFTI_NO_ERROR, false otherwise.
- */
-template<>
-[[nodiscard]] constexpr bool afft::detail::Error::isOk(MKL_LONG result)
+namespace afft::detail
 {
-  return (result == DFTI_NO_ERROR);
-}
-
-/**
- * @brief Specialization of makeErrorMessage method for MKL_LONG.
- * @param result MKL error.
- * @return Error message.
- */
-template<>
-[[nodiscard]] std::string afft::detail::Error::makeErrorMessage(MKL_LONG result)
-{
-  auto get = [=]()
+  /**
+   * @brief Specialization of isOk method for MKL_LONG.
+   * @param result MKL error.
+   * @return True if result is DFTI_NO_ERROR, false otherwise.
+   */
+  template<>
+  [[nodiscard]] inline constexpr bool Error::isOk(MKL_LONG result)
   {
-    const char* msg = DftiErrorMessage(result);
+    return (result == DFTI_NO_ERROR);
+  }
 
-    return (msg != nullptr) ? msg : "Unknown error";
-  };
+  /**
+   * @brief Specialization of makeErrorMessage method for MKL_LONG.
+   * @param result MKL error.
+   * @return Error message.
+   */
+  template<>
+  [[nodiscard]] inline std::string Error::makeErrorMessage(MKL_LONG result)
+  {
+    auto get = [=]()
+    {
+      const char* msg = DftiErrorMessage(result);
 
-  return cformat("[MKL error] %s", get());
-}
+      return (msg != nullptr) ? msg : "Unknown error";
+    };
 
-#endif /* AFFT_DETAIL_CPU_MKL_ERROR_HPP */
+    return cformat("[MKL error] %s", get());
+  }
+} // namespace afft::detail
+
+#endif /* AFFT_DETAIL_MKL_ERROR_HPP */

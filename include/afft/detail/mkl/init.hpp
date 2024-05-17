@@ -22,12 +22,12 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_MKL_INIT_HPP
-#define AFFT_DETAIL_CPU_MKL_INIT_HPP
+#ifndef AFFT_DETAIL_MKL_INIT_HPP
+#define AFFT_DETAIL_MKL_INIT_HPP
 
-#include "../../../cpu.hpp"
+#include "../../cpu.hpp"
 
-namespace afft::detail::cpu::mkl
+namespace afft::detail::mkl
 {
   /// @brief Initialize the MKL library.
   inline void init(const afft::cpu::mkl::InitParameters&)
@@ -40,6 +40,6 @@ namespace afft::detail::cpu::mkl
   {
     // Do nothing
   }
-} // namespace afft::detail::cpu::mkl
+} // namespace afft::detail::mkl
 
-#endif /* AFFT_DETAIL_CPU_MKL_INIT_HPP */
+#endif /* AFFT_DETAIL_MKL_INIT_HPP */

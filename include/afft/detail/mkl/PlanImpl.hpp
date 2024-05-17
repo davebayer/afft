@@ -22,23 +22,19 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_MKL_PLAN_IMPL_HPP
-#define AFFT_DETAIL_CPU_MKL_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_MKL_PLAN_IMPL_HPP
+#define AFFT_DETAIL_MKL_PLAN_IMPL_HPP
 
-#include <algorithm>
-#include <array>
-#include <memory>
-#include <stdexcept>
-
-#include <mkl_dfti.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "../../common.hpp"
-#include "../../cxx.hpp"
-#include "../../PlanImpl.hpp"
-#include "../../Config.hpp"
+#include "../common.hpp"
+#include "../cxx.hpp"
+#include "../PlanImpl.hpp"
 
-namespace afft::detail::cpu::mkl
+namespace afft::detail::mkl
 {
   /// @brief Alias for MKL_LONG.
   using Long = MKL_LONG;
@@ -255,6 +251,6 @@ namespace afft::detail::cpu::mkl
 
     return std::make_unique<PlanImpl>(config);
   }
-} // namespace afft::detail::cpu::mkl
+} // namespace afft::detail::mkl
 
-#endif /* AFFT_DETAIL_CPU_MKL_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_MKL_PLAN_IMPL_HPP */
