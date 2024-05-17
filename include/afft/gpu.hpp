@@ -37,11 +37,11 @@
 
 // Include the appropriate GPU backend
 #if AFFT_GPU_BACKEND_IS(CUDA)
-# include "detail/gpu/cuda/cuda.hpp"
+# include "detail/cuda/cuda.hpp"
 #elif AFFT_GPU_BACKEND_IS(HIP)
-# include "detail/gpu/hip/hip.hpp"
+# include "detail/hip/hip.hpp"
 #elif AFFT_GPU_BACKEND_IS(OPENCL)
-# include "detail/gpu/opencl/opencl.hpp"
+# include "detail/opencl/opencl.hpp"
 #endif
 
 AFFT_EXPORT namespace afft
@@ -98,9 +98,9 @@ namespace spst::gpu
     bool            preserveSource{true};                          ///< preserve source data
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int             device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+    int             device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int             device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+    int             device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
     cl_context      context{};                                     ///< OpenCL context
     cl_device_id    device{};                                      ///< OpenCL device
@@ -222,11 +222,11 @@ namespace mpst::gpu
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
     WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-    MultiProcessParameters multiProcessParameters{};                 ///< multi-process parameters
+    MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
 # if AFFT_GPU_BACKEND_IS_CUDA
-    int                    device{detail::gpu::cuda::getCurrentDevice()}; ///< CUDA device, defaults to current device
+    int                    device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS_HIP
-    int                    device{detail::gpu::hip::getCurrentDevice()};  ///< HIP device, defaults to current device
+    int                    device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS_OPENCL
     cl_context             context{};                                     ///< OpenCL context
     cl_device_id           device{};                                      ///< OpenCL device
