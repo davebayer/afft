@@ -147,6 +147,82 @@ namespace afft::detail
   };
 
   /**
+   * @struct IsZero
+   * @brief Function object that checks if a value is zero.
+   * @tparam T Type of the value.
+   */
+  template<typename T>
+  struct IsZero
+  {
+    static_assert(std::is_arithmetic_v<T>, "IsZero can only be used with arithmetic types.");
+
+    /**
+     * @brief Checks if a value is zero.
+     * @param value Value to check.
+     * @return True if the value is zero, false otherwise.
+     */
+    [[nodiscard]] constexpr bool operator()(const T& value) const noexcept
+    {
+      return (value == T{});
+    }
+  };
+
+  /// @brief Specialization for void type. Allows to use IsZero<void> with any type.
+  template<>
+  struct IsZero<void>
+  {
+    /**
+     * @brief Checks if a value is zero.
+     * @tparam T Type of the value.
+     * @param value Value to check.
+     * @return True if the value is zero, false otherwise.
+     */
+    template<typename T>
+    [[nodiscard]] constexpr bool operator()(T&& value) const noexcept
+    {
+      return IsZero<T>{}(std::forward<T>(value));
+    }
+  };
+
+  /**
+   * @struct IsNotZero
+   * @brief Function object that checks if a value is not zero.
+   * @tparam T Type of the value.
+   */
+  template<typename T>
+  struct IsNotZero
+  {
+    static_assert(std::is_arithmetic_v<T>, "IsNotZero can only be used with arithmetic types.");
+
+    /**
+     * @brief Checks if a value is not zero.
+     * @param value Value to check.
+     * @return True if the value is not zero, false otherwise.
+     */
+    [[nodiscard]] constexpr bool operator()(const T& value) const noexcept
+    {
+      return (value != T{});
+    }
+  };
+
+  /// @brief Specialization for void type. Allows to use IsNotZero<void> with any type.
+  template<>
+  struct IsNotZero<void>
+  {
+    /**
+     * @brief Checks if a value is not zero.
+     * @tparam T Type of the value.
+     * @param value Value to check.
+     * @return True if the value is not zero, false otherwise.
+     */
+    template<typename T>
+    [[nodiscard]] constexpr bool operator()(T&& value) const noexcept
+    {
+      return IsNotZero<T>{}(std::forward<T>(value));
+    }
+  };
+
+  /**
    * @brief Safely casts a value to a different integral type.
    * @tparam T Target integral type.
    * @tparam U Source integral type.

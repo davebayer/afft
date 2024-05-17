@@ -283,6 +283,44 @@ inline namespace cxx20
   }
 
   /**
+   * @brief Finds the first element in the range [first, last) for which the predicate p returns false. Taken from https://en.cppreference.com/w/cpp/algorithm/find
+   * @tparam InputIt Iterator type.
+   * @tparam UnaryPred Predicate type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param q Unary predicate which returns false for the required element.
+   * @return Iterator to the first element for which the predicate returns false, or last if no such element is found.
+   */
+  template<class InputIt, class UnaryPred>
+  constexpr InputIt find_if_not(InputIt first, InputIt last, UnaryPred q)
+  {
+    for (; first != last; ++first)
+    {
+      if (!q(*first))
+      {
+        return first;
+      }
+    }
+
+    return last;
+  }  
+
+  /**
+   * @brief Checks if all elements in the range [first, last) satisfy the predicate p. Taken from https://en.cppreference.com/w/cpp/algorithm/all_of
+   * @tparam InputIt Iterator type.
+   * @tparam UnaryPred Predicate type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param p Unary predicate which returns true for the required element. Default is std::equal_to<>.
+   * @return true if all elements in the range satisfy the predicate, false otherwise.
+   */
+  template<class InputIt, class UnaryPred>
+  constexpr bool all_of(InputIt first, InputIt last, UnaryPred p)
+  {
+    return std::find_if_not(first, last, p) == last;
+  }
+
+  /**
    * @brief Checks if any element in the range [first, last) satisfies the predicate p. Taken from https://en.cppreference.com/w/cpp/algorithm/any_of
    * @tparam InputIt Iterator type.
    * @tparam UnaryPred Predicate type.
@@ -295,6 +333,21 @@ inline namespace cxx20
   constexpr bool any_of(InputIt first, InputIt last, UnaryPred p = std::equal_to<>{})
   {
     return find_if(first, last, p) != last;
+  }
+
+  /**
+   * @brief Checks if no element in the range [first, last) satisfies the predicate p. Taken from https://en.cppreference.com/w/cpp/algorithm/none_of
+   * @tparam InputIt Iterator type.
+   * @tparam UnaryPred Predicate type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param p Unary predicate which returns true for the required element. Default is std::equal_to<>.
+   * @return true if no element in the range satisfies the predicate, false otherwise.
+   */
+  template<class InputIt, class UnaryPred>
+  constexpr bool none_of(InputIt first, InputIt last, UnaryPred p)
+  {
+    return std::find_if(first, last, p) == last;
   }
 } // namespace cxx20
 

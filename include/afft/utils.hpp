@@ -30,6 +30,7 @@
 #endif
 
 #include "common.hpp"
+#include "detail/utils.hpp"
 
 AFFT_EXPORT namespace afft
 {
@@ -113,7 +114,7 @@ AFFT_EXPORT namespace afft
   [[nodiscard]] constexpr auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
     -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::array<std::size_t, extent>), extent != dynamicExtent)
   {
-    if (detail::cxx::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
+    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {
       throw std::invalid_argument("Shape must not contain zeros");
     }
@@ -144,7 +145,7 @@ AFFT_EXPORT namespace afft
   [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
     -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::vector<std::size_t>), extent == dynamicExtent)
   {
-    if (detail::cxx::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
+    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {
       throw std::invalid_argument("Shape must not contain zeros");
     }
@@ -193,7 +194,7 @@ AFFT_EXPORT namespace afft
     }
 
     // Check if the shape contains zeros
-    if (detail::cxx::any_of(resultShape.begin(), resultShape.end(), [](std::size_t size) { return size == 0; }))
+    if (detail::cxx::any_of(resultShape.begin(), resultShape.end(), detail::IsZero<>{}))
     {
       throw std::invalid_argument("Shape must not contain zeros");
     }
