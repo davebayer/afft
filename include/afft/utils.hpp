@@ -104,33 +104,52 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make strides.
+   * @tparam extent Extent of the shape
    * @param shape Shape
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t extent = dynamicExtent>
-  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
+  template<std::size_t extent>
+  [[nodiscard]] constexpr auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::array<std::size_t, extent>), extent != dynamicExtent)
   {
-    using ReturnT = std::conditional_t<(extent == dynamicExtent),
-                                       std::array<std::size_t, extent>,
-                                       std::vector<std::size_t>>;
-
-    auto checkShape = [](View<std::size_t> shape)
+    if (detail::cxx::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
     {
-      if (std::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
-      {
-        throw std::invalid_argument("Shape must not contain zeros");
-      }
-    };
-
-    checkShape(shape);
-
-    ReturnT strides{};
-
-    if constexpr (extent == dynamicExtent)
-    {
-      strides.resize(resultShape.size());
+      throw std::invalid_argument("Shape must not contain zeros");
     }
+
+    std::array<std::size_t, extent> strides{};
+
+    if (!shape.empty())
+    {
+      strides[shape.size() - 1] = fastestAxisStride;
+
+      for (std::size_t i = shape.size() - 1; i > 0; --i)
+      {
+        strides[i - 1] = shape[i] * strides[i];
+      }
+    }
+
+    return strides;
+  }
+
+  /**
+   * @brief Make strides.
+   * @tparam extent Extent of the shape
+   * @param shape Shape
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */
+  template<std::size_t extent>
+  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::vector<std::size_t>), extent == dynamicExtent)
+  {
+    if (detail::cxx::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
+    {
+      throw std::invalid_argument("Shape must not contain zeros");
+    }
+
+    std::vector<std::size_t> strides(resultShape.size());
 
     if (!shape.empty())
     {
@@ -147,6 +166,7 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make transposed strides.
+   * @tparam extent Extent of the shape
    * @param resultShape Shape of the result
    * @param orgAxesOrder Original axes order
    * @param fastestAxisStride Stride of the fastest axis
@@ -161,58 +181,49 @@ AFFT_EXPORT namespace afft
                                        std::array<std::size_t, extent>,
                                        std::vector<std::size_t>>;
 
-    auto checkShape = [](View<std::size_t> shape)
-    {
-      if (std::any_of(shape.begin(), shape.end(), [](std::size_t size) { return size == 0; }))
-      {
-        throw std::invalid_argument("Shape must not contain zeros");
-      }
-    };
-
-    auto checkAxes = [](View<std::size_t> axes)
-    {
-      ReturnT orgAxesOrderCopy{};
-
-      if constexpr (extent == dynamicExtent)
-      {
-        orgAxesOrderCopy.resize(orgAxesOrder.size());
-      }
-
-      std::copy(orgAxesOrder.begin(), orgAxesOrder.end(), orgAxesOrderCopy.begin());
-      std::sort(orgAxesOrderCopy.begin(), orgAxesOrderCopy.end());
-
-      if (std::adjacent_find(orgAxesOrderCopy.begin(), orgAxesOrderCopy.end()) != orgAxesOrderCopy.end())
-      {
-        throw std::invalid_argument("Axes order must not contain duplicates");
-      }
-
-      if (std::any_of(orgAxesOrderCopy.begin(),
-                      orgAxesOrderCopy.end(),
-                      [size = axes.size()](std::size_t axis) { return axis >= size; }))
-      {
-        throw std::invalid_argument("Axes order must not contain out-of-range values");
-      }
-    };
-
+    // If the axes order is empty, then the result axes order is the same as the original axes order
     if (orgAxesOrder.empty())
     {
       return makeStrides(resultShape, fastestAxisStride);
     }
+    // Check if the axes size matches the shape size
     else if (orgAxesOrder.size() != shape.size())
     {
       throw std::invalid_argument("Axes order must have the same size as the shape");
     }
 
-    checkShape(resultShape);
-    checkAxes(orgAxesOrder);
+    // Check if the shape contains zeros
+    if (detail::cxx::any_of(resultShape.begin(), resultShape.end(), [](std::size_t size) { return size == 0; }))
+    {
+      throw std::invalid_argument("Shape must not contain zeros");
+    }
+    
+    // Check if the axes order contains out-of-range values or duplicates
+    for (std::size_t i{}; i < orgAxesOrder.size(); ++i)
+    {
+      if (orgAxesOrder[i] >= orgAxesOrder.size())
+      {
+        throw std::invalid_argument("Axes order must not contain out-of-range values");
+      }
+
+      for (std::size_t j{i + 1}; j < axes.size(); ++j)
+      {
+        if (orgAxesOrder[i] == orgAxesOrder[j])
+        {
+          throw std::invalid_argument("Axes order must not contain duplicates");
+        }
+      }
+    }
 
     ReturnT strides{};
 
+    // Resize the strides if the extent is dynamic
     if constexpr (extent == dynamicExtent)
     {
       strides.resize(resultShape.size());
     }
 
+    // Calculate the strides
     if (const std::size_t size = resultShape.size(); size > 0)
     {
       strides[orgAxesOrder[size - 1]] = fastestAxisStride;
