@@ -22,20 +22,17 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_RTC_RTC_HPP
-#define AFFT_DETAIL_GPU_CUDA_RTC_RTC_HPP
+#ifndef AFFT_DETAIL_CUDA_RTC_RTC_HPP
+#define AFFT_DETAIL_CUDA_RTC_RTC_HPP
 
-#include <array>
-#include <string>
-#include <string_view>
-#include <vector>
-
-#include <nvrtc.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../../include.hpp"
+#endif
 
 #include "error.hpp"
 #include "../enviroment.hpp"
 
-namespace afft::detail::gpu::cuda::rtc
+namespace afft::detail::cuda::rtc
 {
   /**
    * @struct CSymbolName
@@ -505,6 +502,6 @@ namespace afft::detail::gpu::cuda::rtc
   {
     return "-G";
   }
-} // namespace afft::detail::gpu::cuda::rtc
+} // namespace afft::detail::cuda::rtc
 
-#endif /* AFFT_DETAIL_GPU_CUDA_RTC_RTC_HPP */
+#endif /* AFFT_DETAIL_CUDA_RTC_RTC_HPP */

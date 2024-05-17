@@ -22,21 +22,17 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_MODULE_HPP
-#define AFFT_DETAIL_GPU_CUDA_MODULE_HPP
+#ifndef AFFT_DETAIL_CUDA_MODULE_HPP
+#define AFFT_DETAIL_CUDA_MODULE_HPP
 
-#include <cstddef>
-#include <memory>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
-#include <cuda.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
 #include "rtc/rtc.hpp"
 
-namespace afft::detail::gpu::cuda
+namespace afft::detail::cuda
 {
   /**
    * @class Module
@@ -201,6 +197,6 @@ namespace afft::detail::gpu::cuda
 
       std::shared_ptr<std::remove_pointer_t<CUmodule>> mModule{}; ///< The CUDA module.
   };
-} // afft::detail::gpu::cuda
+} // afft::detail::cuda
 
-#endif /* AFFT_DETAIL_GPU_CUDA_MODULE_HPP */
+#endif /* AFFT_DETAIL_CUDA_MODULE_HPP */

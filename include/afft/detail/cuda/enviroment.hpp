@@ -22,36 +22,37 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_RTC_ERROR_HPP
-#define AFFT_DETAIL_GPU_CUDA_RTC_ERROR_HPP
+#ifndef AFFT_DETAIL_CUDA_ENVIROMENT_HPP
+#define AFFT_DETAIL_CUDA_ENVIROMENT_HPP
 
-#include <string>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include <nvrtc.h>
+// Check if the CUDA Toolkit root directory is defined
+#ifndef AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
+# error "CUDA Toolkit root directory is not defined"
+#endif
 
-#include "../../../error.hpp"
-#include "../../../utils.hpp"
-
-/**
- * @brief Specialization of isOk method for nvrtcResult.
- * @param result NVRTC result.
- * @return True if result is NVRTC_SUCCESS, false otherwise.
- */
-template<>
-[[nodiscard]] constexpr bool afft::detail::Error::isOk(nvrtcResult result)
+namespace afft::detail::cuda
 {
-  return (result == NVRTC_SUCCESS);
-}
+  /**
+   * @brief Get the root directory of the CUDA Toolkit.
+   * @return The root directory of the CUDA Toolkit.
+   */
+  [[nodiscard]] inline constexpr std::string_view getRootDir()
+  {
+    return {AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR};
+  }
 
-/**
- * @brief Specialization of makeErrorMessage method for nvrtcResult.
- * @param result NVRTC result.
- * @return Error message.
- */
-template<>
-[[nodiscard]] std::string afft::detail::Error::makeErrorMessage(nvrtcResult result)
-{
-  return cformat("[CUDA RTC error] %s", nvrtcGetErrorString(result));
-}
+  /**
+   * @brief Get the path to the CUDA Toolkit include directory.
+   * @return The path to the CUDA Toolkit include directory.
+   */
+  [[nodiscard]] inline constexpr std::string_view getIncludePath()
+  {
+    return {AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR "/include"};
+  }
+} // namespace afft::detail::cuda
 
-#endif /* AFFT_DETAIL_GPU_CUDA_RTC_ERROR_HPP */
+#endif /* AFFT_DETAIL_CUDA_ENVIROMENT_HPP */

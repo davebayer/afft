@@ -22,11 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_CUDA_HPP
-#define AFFT_DETAIL_GPU_CUDA_CUDA_HPP
-
-#include <cuda.h>
-#include <cuda_runtime.h>
+#ifndef AFFT_DETAIL_CUDA_CUDA_HPP
+#define AFFT_DETAIL_CUDA_CUDA_HPP
 
 #include "device.hpp"
 #include "enviroment.hpp"
@@ -35,9 +32,9 @@
 #include "Module.hpp"
 #include "rtc/rtc.hpp"
 
-namespace afft::detail::gpu::cuda
+namespace afft::detail::cuda
 {
 
-} // namespace afft::detail::gpu::cuda
+} // namespace afft::detail::cuda
 
-#endif /* AFFT_DETAIL_GPU_CUDA_CUDA_HPP */
+#endif /* AFFT_DETAIL_CUDA_CUDA_HPP */

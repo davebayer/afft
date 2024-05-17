@@ -22,15 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_DEVICE_HPP
-#define AFFT_DETAIL_GPU_CUDA_DEVICE_HPP
+#ifndef AFFT_DETAIL_CUDA_DEVICE_HPP
+#define AFFT_DETAIL_CUDA_DEVICE_HPP
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
 
-namespace afft::detail::gpu::cuda
+namespace afft::detail::cuda
 {
   /**
    * @brief Get the number of CUDA devices.
@@ -101,6 +102,6 @@ namespace afft::detail::gpu::cuda
     private:
       int mPrevDevice{}; ///< The previous device.
   };
-} // namespace afft::detail::gpu::cuda
+} // namespace afft::detail::cuda
 
-#endif /* AFFT_DETAIL_GPU_CUDA_DEVICE_HPP */
+#endif /* AFFT_DETAIL_CUDA_DEVICE_HPP */

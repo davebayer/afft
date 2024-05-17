@@ -22,15 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUDA_INIT_HPP
-#define AFFT_DETAIL_GPU_CUDA_INIT_HPP
+#ifndef AFFT_DETAIL_CUDA_INIT_HPP
+#define AFFT_DETAIL_CUDA_INIT_HPP
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
 
-namespace afft::detail::gpu::cuda
+namespace afft::detail::cuda
 {
   /// @brief Initialize the CUDA driver and runtime APIs.
   inline void init()
@@ -44,6 +45,6 @@ namespace afft::detail::gpu::cuda
   {
     // Do nothing
   }
-} // namespace afft::detail::gpu::cuda
+} // namespace afft::detail::cuda
 
-#endif /* AFFT_DETAIL_GPU_CUDA_INIT_HPP */
+#endif /* AFFT_DETAIL_CUDA_INIT_HPP */
