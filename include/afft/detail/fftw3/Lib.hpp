@@ -22,19 +22,21 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_FFTW3_LIB_HPP
-#define AFFT_DETAIL_CPU_FFTW3_LIB_HPP
+#ifndef AFFT_DETAIL_FFTW3_LIB_HPP
+#define AFFT_DETAIL_FFTW3_LIB_HPP
 
-#include "../../../distrib.hpp"
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include <fftw3.h>
-#if AFFT_DISTRIB_IMPL_IS(MPI)
+#if AFFT_MP_BACKEND_IS(MPI)
 # include <fftw3-mpi.h>
 #endif
 
-#include "../../common.hpp"
+#include "../common.hpp"
 
-namespace afft::detail::cpu::fftw3
+namespace afft::detail::fftw3
 {
   /**
    * @brief FFTW3 library precision-specific types and functions.
@@ -76,7 +78,7 @@ namespace afft::detail::cpu::fftw3
 
     static constexpr auto cleanUpThreads         = fftwf_cleanup_threads;
 
-# if AFFT_DISTRIB_IMPL_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI)
     using MpiDDim                                = fftwf_mpi_ddim;
 
     static constexpr auto mpiInit                = fftwf_mpi_init;
@@ -128,7 +130,7 @@ namespace afft::detail::cpu::fftw3
 
     static constexpr auto cleanUpThreads         = fftw_cleanup_threads;
 
-# if AFFT_DISTRIB_IMPL_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI)
     using MpiDDim                                = fftw_mpi_ddim;
 
     static constexpr auto mpiInit                = fftw_mpi_init;
@@ -181,7 +183,7 @@ namespace afft::detail::cpu::fftw3
 
     static constexpr auto cleanUpThreads         = fftwl_cleanup_threads;
 
-# if AFFT_DISTRIB_IMPL_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI)
     using MpiDDim                                = fftwl_mpi_ddim;
 
     static constexpr auto mpiInit                = fftwl_mpi_init;
@@ -236,6 +238,6 @@ namespace afft::detail::cpu::fftw3
     static constexpr auto cleanUpThreads         = fftwq_cleanup_threads;
   };
 #endif
-} // namespace afft::detail::cpu::fftw3
+} // namespace afft::detail::fftw3
 
-#endif /* AFFT_DETAIL_CPU_FFTW3_LIB_HPP */
+#endif /* AFFT_DETAIL_FFTW3_LIB_HPP */

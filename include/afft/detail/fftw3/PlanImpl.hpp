@@ -22,16 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_FFTW3_PLAN_IMPL_HPP
-#define AFFT_DETAIL_CPU_FFTW3_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_FFTW3_PLAN_IMPL_HPP
+#define AFFT_DETAIL_FFTW3_PLAN_IMPL_HPP
 
-#include <algorithm>
-#include <new>
-#include <memory>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "Lib.hpp"
-#include "../../cxx.hpp"
-#include "../../PlanImpl.hpp"
+#include "../cxx.hpp"
+#include "../PlanImpl.hpp"
 
 namespace afft::detail::cpu::fftw3
 {
@@ -516,6 +516,6 @@ namespace afft::detail::cpu::fftw3
       throw std::runtime_error("[FFTW3 error] Unsupported precision");
     }
   }
-} // namespace afft::detail::cpu::fftw3
+} // namespace afft::detail::fftw3
 
-#endif /* AFFT_DETAIL_CPU_FFTW3_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_FFTW3_PLAN_IMPL_HPP */

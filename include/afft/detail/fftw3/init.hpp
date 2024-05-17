@@ -22,16 +22,19 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CPU_FFTW3_INIT_HPP
-#define AFFT_DETAIL_CPU_FFTW3_INIT_HPP
+#ifndef AFFT_DETAIL_FFTW3_INIT_HPP
+#define AFFT_DETAIL_FFTW3_INIT_HPP
+
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "Lib.hpp"
-#include "../../error.hpp"
-#include "../../../type.hpp"
+#include "../error.hpp"
+#include "../../cpu.hpp"
+#include "../../type.hpp"
 
-#include "../../../cpu.hpp"
-
-namespace afft::detail::cpu::fftw3
+namespace afft::detail::fftw3
 {
   /// @brief Initialize the FFTW3 library.
   inline void init(const afft::cpu::fftw3::InitParameters& initParams)
@@ -104,6 +107,6 @@ namespace afft::detail::cpu::fftw3
     Lib<Precision::f128>::cleanUpThreads();
 # endif
   }
-} // namespace afft::detail::cpu::fftw3
+} // namespace afft::detail::fftw3
 
-#endif /* AFFT_DETAIL_CPU_FFTW3_INIT_HPP */
+#endif /* AFFT_DETAIL_FFTW3_INIT_HPP */
