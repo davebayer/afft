@@ -22,14 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUFFT_HANDLE_HPP
-#define AFFT_DETAIL_GPU_CUFFT_HANDLE_HPP
+#ifndef AFFT_DETAIL_CUFFT_HANDLE_HPP
+#define AFFT_DETAIL_CUFFT_HANDLE_HPP
 
-#include <cufft.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
 
-namespace afft::detail::gpu::cufft
+namespace afft::detail::cufft
 {
   /**
    * @class Handle
@@ -73,6 +75,6 @@ namespace afft::detail::gpu::cufft
     private:
       cufftHandle mHandle{}; ///< cuFFT handle.
   };
-} // namespace afft::detail::gpu::cufft
+} // namespace afft::detail::cufft
 
-#endif /* AFFT_DETAIL_GPU_CUFFT_HANDLE_HPP */
+#endif /* AFFT_DETAIL_CUFFT_HANDLE_HPP */

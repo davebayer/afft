@@ -22,22 +22,18 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_GPU_CUFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_CUFFT_PLAN_IMPL_HPP
+#define AFFT_DETAIL_CUFFT_PLAN_IMPL_HPP
 
-#include <array>
-#include <cstddef>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-
-#include <cufftXt.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
 #include "Handle.hpp"
-#include "../../cxx.hpp"
-#include "../../PlanImpl.hpp"
-#include "../../../gpu.hpp"
+#include "../cxx.hpp"
+#include "../PlanImpl.hpp"
+#include "../../gpu.hpp"
 
 namespace afft::detail::gpu::cufft
 {
@@ -71,7 +67,31 @@ namespace afft::detail::gpu::cufft
 # error "SCALE must be defined"
 #endif
 
-#include <cufftXt.h>
+/**********************************************************************************************************************/
+/* Copied from cufft.h and cufftXt.h to prevent include                                                               */
+/**********************************************************************************************************************/
+// cufftReal is a single-precision, floating-point real data type.
+// cufftDoubleReal is a double-precision, real data type.
+typedef float cufftReal;
+typedef double cufftDoubleReal;
+
+// cufftComplex is a single-precision, floating-point complex data type that
+// consists of interleaved real and imaginary components.
+// cufftDoubleComplex is the double-precision equivalent.
+typedef cuComplex cufftComplex;
+typedef cuDoubleComplex cufftDoubleComplex;
+
+typedef cufftComplex (*cufftCallbackLoadC)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+typedef cufftDoubleComplex (*cufftCallbackLoadZ)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+typedef cufftReal (*cufftCallbackLoadR)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+typedef cufftDoubleReal(*cufftCallbackLoadD)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+
+typedef void (*cufftCallbackStoreC)(void *dataOut, size_t offset, cufftComplex element, void *callerInfo, void *sharedPointer);
+typedef void (*cufftCallbackStoreZ)(void *dataOut, size_t offset, cufftDoubleComplex element, void *callerInfo, void *sharedPointer);
+typedef void (*cufftCallbackStoreR)(void *dataOut, size_t offset, cufftReal element, void *callerInfo, void *sharedPointer);
+typedef void (*cufftCallbackStoreD)(void *dataOut, size_t offset, cufftDoubleReal element, void *callerInfo, void *sharedPointer);
+
+/**********************************************************************************************************************/
 
 #if PRECISION == PRECISION_F32
 constexpr cufftReal scale{SCALE};
@@ -430,6 +450,6 @@ extern "C" __device__ __constant__
 
     return std::make_unique<PlanImpl>(config);
   }
-} // namespace afft::detail::gpu::cufft
+} // namespace afft::detail::cufft
 
-#endif /* AFFT_DETAIL_GPU_CUFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_CUFFT_PLAN_IMPL_HPP */

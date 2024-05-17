@@ -22,12 +22,12 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CUFFT_INIT_HPP
-#define AFFT_DETAIL_GPU_CUFFT_INIT_HPP
+#ifndef AFFT_DETAIL_CUFFT_INIT_HPP
+#define AFFT_DETAIL_CUFFT_INIT_HPP
 
-#include "../../../gpu.hpp"
+#include "../../gpu.hpp"
 
-namespace afft::detail::gpu::cufft
+namespace afft::detail::cufft
 {
   /// @brief Initialize the cuFFT library.
   inline void init(const afft::gpu::cufft::InitParameters&)
@@ -40,6 +40,6 @@ namespace afft::detail::gpu::cufft
   {
     // Do nothing
   }
-} // namespace afft::detail::gpu::cufft
+} // namespace afft::detail::cufft
 
-#endif /* AFFT_DETAIL_GPU_CUFFT_INIT_HPP */
+#endif /* AFFT_DETAIL_CUFFT_INIT_HPP */
