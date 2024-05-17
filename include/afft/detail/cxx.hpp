@@ -258,6 +258,44 @@ inline namespace cxx20
 
     return x && !(x & (x - 1));
   }
+
+  /**
+   * @brief Finds the first element in the range [first, last) for which the predicate p returns true. Taken from https://en.cppreference.com/w/cpp/algorithm/find
+   * @tparam InputIt Iterator type.
+   * @tparam UnaryPred Predicate type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param p Unary predicate which returns true for the required element. Default is std::equal_to<>.
+   * @return Iterator to the first element for which the predicate returns true, or last if no such element is found.
+   */
+  template<class InputIt, class UnaryPred>
+  constexpr InputIt find_if(InputIt first, InputIt last, UnaryPred p = std::equal_to<>{})
+  {
+    for (; first != last; ++first)
+    {
+      if (p(*first))
+      {
+        return first;
+      }
+    }
+
+    return last;
+  }
+
+  /**
+   * @brief Checks if any element in the range [first, last) satisfies the predicate p. Taken from https://en.cppreference.com/w/cpp/algorithm/any_of
+   * @tparam InputIt Iterator type.
+   * @tparam UnaryPred Predicate type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param p Unary predicate which returns true for the required element. Default is std::equal_to<>.
+   * @return true if any element in the range satisfies the predicate, false otherwise.
+   */
+  template<class InputIt, class UnaryPred>
+  constexpr bool any_of(InputIt first, InputIt last, UnaryPred p = std::equal_to<>{})
+  {
+    return find_if(first, last, p) != last;
+  }
 } // namespace cxx20
 
 // C++23 backport
