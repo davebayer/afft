@@ -33,37 +33,17 @@
 
 namespace afft::detail
 {
-#if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
   /**
-   * @brief Creates an exception with source location information. Only available in debug mode when C++20
-   *        source_location is supported.
-   * @tparam E Exception type.
-   * @param msg Message.
-   * @param loc Source location.
-   * @return Exception.
-   */
-  template<typename E>
-  [[nodiscard]] E makeException(std::string_view msg, std::source_location loc = std::source_location::current())
-  {
-    static_assert(std::is_base_of_v<std::exception, E>, "E must be derived from std::exception");
-
-    return E{cformat("%s (%s:" PRIuLEAST32 ")", msg.data(), loc.file_name(), loc.line())};
-  }
-#else
-  /**
-   * @brief Creates an exception.
+   * @brief Creates an exception. Currently just forwards the arguments to the exception constructor.
    * @tparam E Exception type.
    * @param msg Message.
    * @return Exception.
    */
-  template<typename E>
-  [[nodiscard]] E makeException(std::string_view msg)
+  template<typename E, typename... Args>
+  [[nodiscard]] E makeException(Args&&... args)
   {
-    static_assert(std::is_base_of_v<std::exception, E>, "E must be derived from std::exception");
-
-    return E{msg.data()};
+    return E{std::forward<Args>(args)...};
   }
-#endif
 
   /**
    * @struct Error
@@ -71,23 +51,6 @@ namespace afft::detail
    */
   struct Error
   {
-# if defined(AFFT_DEBUG) && defined(__cpp_lib_source_location)
-    /**
-     * @brief Checks the return value and throws an exception if it is not OK. Only available in debug mode when C++20
-     *        source_location is supported.
-     * @tparam R Checked return type.
-     * @param result Return value.
-     * @param loc Source location.
-     */
-    template<typename R>
-    static void check(R result, std::source_location loc = std::source_location::current())
-    {
-      if (!isOk(result))
-      {
-        throw makeException<std::runtime_error>(makeErrorMessage(result), loc);
-      }
-    }
-# else
     /**
      * @brief Checks the return value and throws an exception if it is not OK.
      * @tparam R Checked return type.
@@ -101,7 +64,6 @@ namespace afft::detail
         throw makeException<std::runtime_error>(makeErrorMessage(result));
       }
     }
-# endif
 
     /**
      * @brief Checks the return value. Should be implemented by each backend.
