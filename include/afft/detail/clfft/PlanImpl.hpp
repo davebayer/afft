@@ -22,20 +22,18 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CLFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_GPU_CLFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_CLFFT_PLAN_IMPL_HPP
+#define AFFT_DETAIL_CLFFT_PLAN_IMPL_HPP
 
-#include <cstddef>
-#include <optional>
-#include <stdexcept>
-
-#include <clFFT.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "../../common.hpp"
-#include "../../PlanImpl.hpp"
+#include "../common.hpp"
+#include "../PlanImpl.hpp"
 
-namespace afft::detail::gpu::clfft
+namespace afft::detail::clfft
 {
   /// @brief clFFT size type
   using SizeT = std::size_t;
@@ -270,6 +268,6 @@ namespace afft::detail::gpu::clfft
 
     return std::make_unique<PlanImpl>(config);
   }
-} // namespace afft::detail::gpu::clfft
+} // namespace afft::detail::clfft
 
-#endif /* AFFT_DETAIL_GPU_CLFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_CLFFT_PLAN_IMPL_HPP */

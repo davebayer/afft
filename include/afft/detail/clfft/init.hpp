@@ -22,14 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_CLFFT_INIT_HPP
-#define AFFT_DETAIL_GPU_CLFFT_INIT_HPP
+#ifndef AFFT_DETAIL_CLFFT_INIT_HPP
+#define AFFT_DETAIL_CLFFT_INIT_HPP
 
-#include <clFFT.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include "../../../gpu.hpp"
+#include "../../gpu.hpp"
 
-namespace afft::detail::gpu::clfft
+namespace afft::detail::clfft
 {
   /// @brief Initialize the clFFT library.
   inline void init(const afft::gpu::clfft::InitParameters&)
@@ -45,6 +47,6 @@ namespace afft::detail::gpu::clfft
   {
     Error::check(clfftTeardown());
   }
-} // namespace afft::detail::gpu::clfft
+} // namespace afft::detail::clfft
 
-#endif /* AFFT_DETAIL_GPU_CLFFT_INIT_HPP */
+#endif /* AFFT_DETAIL_CLFFT_INIT_HPP */
