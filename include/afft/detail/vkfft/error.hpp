@@ -22,24 +22,39 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_VKFFT_INIT_HPP
-#define AFFT_DETAIL_GPU_VKFFT_INIT_HPP
+#ifndef AFFT_DETAIL_VKFFT_ERROR_HPP
+#define AFFT_DETAIL_VKFFT_ERROR_HPP
 
-#include "../../../gpu.hpp"
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-namespace afft::detail::gpu::vkfft
+#include "../error.hpp"
+#include "../utils.hpp"
+
+namespace afft::detail
 {
-  /// @brief Initialize the vkFFT library.
-  inline void init(const afft::gpu::vkfft::InitParameters&)
+  /**
+   * @brief Specialization of isOk method for VkFFTResult.
+   * @param result VkFFT result.
+   * @return True if result is VKFFT_SUCCESS, false otherwise.
+   */
+  template<>
+  [[nodiscard]] inline constexpr bool Error::isOk(VkFFTResult result)
   {
-    // Do nothing
+    return (result == VKFFT_SUCCESS);
   }
 
-  /// @brief Finalize the vkFFT library.
-  inline void finalize()
+  /**
+   * @brief Specialization of makeErrorMessage method for VkFFTResult.
+   * @param result VkFFT result.
+   * @return Error message.
+   */
+  template<>
+  [[nodiscard]] inline std::string Error::makeErrorMessage(VkFFTResult result)
   {
-    // Do nothing
+    return cformat("[VkFFT error] %s", getVkFFTErrorString(result));
   }
-} // namespace afft::detail::gpu::vkfft
+} // namespace afft::detail
 
-#endif /* AFFT_DETAIL_GPU_VKFFT_INIT_HPP */
+#endif /* AFFT_DETAIL_VKFFT_ERROR_HPP */

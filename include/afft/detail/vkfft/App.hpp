@@ -22,15 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_VKFFT_APP_HPP
-#define AFFT_DETAIL_GPU_VKFFT_APP_HPP
+#ifndef AFFT_DETAIL_VKFFT_APP_HPP
+#define AFFT_DETAIL_VKFFT_APP_HPP
 
-#include <utility>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include "include.hpp"
 #include "error.hpp"
 
-namespace afft::detail::gpu::vkfft
+namespace afft::detail::vkfft
 {
   /**
    * @class App
@@ -118,6 +119,6 @@ namespace afft::detail::gpu::vkfft
       bool             mValid{}; ///< Flag to check if VkFFTApplication is valid
       VkFFTApplication mApp{};   ///< VkFFTApplication
   };
-} // namespace afft::detail::gpu::vkfft
+} // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_GPU_VKFFT_APP_HPP */
+#endif /* AFFT_DETAIL_VKFFT_APP_HPP */

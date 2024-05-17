@@ -22,20 +22,18 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_VKFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_GPU_VKFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_VKFFT_PLAN_IMPL_HPP
+#define AFFT_DETAIL_VKFFT_PLAN_IMPL_HPP
 
-#include <algorithm>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "App.hpp"
 #include "error.hpp"
-#include "include.hpp"
-#include "../../PlanImpl.hpp"
+#include "../PlanImpl.hpp"
 
-namespace afft::detail::gpu::vkfft
+namespace afft::detail::vkfft
 {
   /// @brief VkFFT's unsigned integer type
   using UInt = pfUINT;
@@ -175,7 +173,7 @@ namespace afft::detail::gpu::vkfft
           case dft::Type::complexToReal:
             if (getConfig().getTransformAxes().back() != 0)
             {
-              throw makeException<std::runtime_error>("Vkfft supports only last axis for rfft");
+              throw std::runtime_error{"Vkfft supports only last axis for rfft"};
             }
 
             vkfftConfig.performR2C = 1;
@@ -366,11 +364,11 @@ namespace afft::detail::gpu::vkfft
     case ComplexFormat::interleaved:
       break;
     default:
-      throw makeException<std::runtime_error>("vkfft supports only interleaved complex format");
+      throw std::runtime_error{"vkfft supports only interleaved complex format"};
     }
 
     return std::make_unique<PlanImpl>(config);
   }
-} // namespace afft::detail::gpu::vkfft
+} // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_GPU_VKFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_VKFFT_PLAN_IMPL_HPP */
