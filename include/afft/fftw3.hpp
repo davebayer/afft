@@ -193,6 +193,44 @@ AFFT_EXPORT namespace afft::fftw3
     }
 # endif
   }
+
+#if AFFT_MP_BACKEND_IS(MPI)
+namespace mpi
+{
+  /**
+   * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
+   * @tparam prec Precision of the FFTW3 library.
+   * @param comm MPI communicator.
+   */
+  template<Precision prec>
+  void broadcastWisdom(MPI_Comm comm)
+  {
+# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+    if constexpr (detail::hasPrecision<prec>())
+    {
+      detail::fftw3::Lib<prec>::broadcastWisdom(comm);
+    }
+# endif
+  }
+
+  /**
+   * @brief Gather FFTW3 wisdom from all MPI processes to the root process.
+   * @tparam prec Precision of the FFTW3 library.
+   * @param comm MPI communicator.
+   */
+  template<Precision prec>
+  void gatherWisdom(MPI_Comm comm)
+  {
+# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+    if constexpr (detail::hasPrecision<prec>())
+    {
+      detail::fftw3::Lib<prec>::gatherWisdom(comm);
+    }
+# endif
+  }
+} // namespace mpi
+#endif
+
 } // namespace afft
 
 #endif /* AFFT_FFTW3_HPP */

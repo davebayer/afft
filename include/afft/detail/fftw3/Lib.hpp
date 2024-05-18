@@ -103,6 +103,9 @@ namespace afft::detail::fftw3
     static constexpr auto mpiExecuteR2R            = fftwf_mpi_execute_r2r;
 
     static constexpr auto mpiCleanUp               = fftwf_mpi_cleanup;
+
+    static constexpr auto mpiBroadcastWisdom       = fftwf_mpi_broadcast_wisdom;
+    static constexpr auto mpiGatherWisdom          = fftwf_mpi_gather_wisdom;
 # endif
   };
 
@@ -164,6 +167,9 @@ namespace afft::detail::fftw3
     static constexpr auto mpiExecuteR2R            = fftw_mpi_execute_r2r;
 
     static constexpr auto mpiCleanUp               = fftw_mpi_cleanup;
+
+    static constexpr auto mpiBroadcastWisdom       = fftw_mpi_broadcast_wisdom;
+    static constexpr auto mpiGatherWisdom          = fftw_mpi_gather_wisdom;
 # endif
   };
 
@@ -226,6 +232,9 @@ namespace afft::detail::fftw3
     static constexpr auto mpiExecuteR2R            = fftwl_mpi_execute_r2r;
 
     static constexpr auto mpiCleanUp               = fftwl_mpi_cleanup;
+
+    static constexpr auto mpiBroadcastWisdom       = fftwl_mpi_broadcast_wisdom;
+    static constexpr auto mpiGatherWisdom          = fftwl_mpi_gather_wisdom;
 # endif
   };
 #endif

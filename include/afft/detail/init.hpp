@@ -44,7 +44,7 @@
 # include "cufft/init.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(FFTW3)
-# include "fftw/init.hpp"
+# include "fftw3/init.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(HIPFFT)
 # include "hipfft/init.hpp"
