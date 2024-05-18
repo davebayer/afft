@@ -31,6 +31,7 @@
 
 // Include all public headers.
 #include "cpu.hpp"
+#include "fftw3.hpp"
 #include "gpu.hpp"
 #include "common.hpp"
 #include "init.hpp"
