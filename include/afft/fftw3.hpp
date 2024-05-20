@@ -35,16 +35,16 @@ AFFT_EXPORT namespace afft::fftw3
 {
   /**
    * @brief Export FFTW3 wisdom to a file.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param filename Name of the file to export the wisdom to.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void exportWisdomToFilename([[maybe_unused]] std::string_view filename)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::fftw3::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::Lib<prec>::exportWisdomToFilename(filename.data()))
+      if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
       {
         throw std::runtime_error("Failed to export FFTW3 wisdom to file");
       }
@@ -54,16 +54,16 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Export FFTW3 wisdom to a file.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param file File to export the wisdom to.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void exportWisdomToFile([[maybe_unused]] FILE* file)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::fftw3::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::Lib<prec>::exportWisdomToFile(file))
+      if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
       {
         throw std::runtime_error("Failed to export FFTW3 wisdom to file");
       }
@@ -73,16 +73,16 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Export FFTW3 wisdom to a string.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @return String containing the wisdom.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   [[nodiscard]] std::string exportWisdom()
   {
     std::string wisdom{};
 
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::fftw3::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       struct FreeDeleter
       {
@@ -92,7 +92,7 @@ AFFT_EXPORT namespace afft::fftw3
         }
       };
 
-      std::unique_ptr<char, FreeDeleter> orgWisdom{detail::fftw3::Lib<prec>::exportWisdomToString()};
+      std::unique_ptr<char, FreeDeleter> orgWisdom{detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToString()};
 
       if (orgWisdom)
       {
@@ -106,15 +106,15 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Import FFTW3 wisdom from the system. Only on Unix and GNU systems.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void importSystemWisdom()
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::fftw3::hasMpiPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::MpiLib<prec>::importSystemWisdom())
+      if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
       {
         throw std::runtime_error("Failed to import FFTW3 system wisdom");
       }
@@ -124,16 +124,16 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Import FFTW3 wisdom from a file.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param filename Name of the file to import the wisdom from.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void importWisdomFromFilename([[maybe_unused]] std::string_view filename)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::fftw3::hasMpiPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::MpiLib<prec>::importWisdomFromFilename(filename.data()))
+      if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
       {
         throw std::runtime_error("Failed to import FFTW3 wisdom from file");
       }
@@ -143,16 +143,16 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Import FFTW3 wisdom from a file.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param file File to import the wisdom from.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void importWisdomFromFile([[maybe_unused]] FILE* file)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::Lib<prec>::importWisdomFromFile(file))
+      if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
       {
         throw std::runtime_error("Failed to import FFTW3 wisdom from file");
       }
@@ -162,16 +162,16 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Import FFTW3 wisdom from a string.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param wisdom String containing the wisdom.
    */
-  template<Precision prec>
+  template<typeanme PrecT>
   void importWisdom([[maybe_unused]] std::string_view wisdom)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      if (!detail::fftw3::Lib<prec>::importWisdomFromString(wisdom.data()))
+      if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
       {
         throw std::runtime_error("Failed to import FFTW3 wisdom");
       }
@@ -181,15 +181,15 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Forget all FFTW3 wisdom.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    */
-  template<Precision prec>
+  template<typename PrecT>
   void forgetWisdom()
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
-      detail::fftw3::Lib<prec>::forgetWisdom();
+      detail::fftw3::Lib<typePrecision<PrecT>>::forgetWisdom();
     }
 # endif
   }
@@ -199,38 +199,32 @@ namespace mpi
 {
   /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param comm MPI communicator.
    */
-  template<Precision prec>
+  template<typename PrecT>
   void broadcastWisdom([[maybe_unused]] MPI_Comm comm)
   {
-    static_assert((prec == Precision::f32 || prec == Precision::f64 || prec == Precision::f80),
-                  "Unsupported precision for FFTW3 mpi wisdom broadcast");
-
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
-      detail::fftw3::Lib<prec>::broadcastWisdom(comm);
+      detail::fftw3::MpiLib<typePrecision<PrecT>>::broadcastWisdom(comm);
     }
 # endif
   }
 
   /**
    * @brief Gather FFTW3 wisdom from all MPI processes to the root process.
-   * @tparam prec Precision of the FFTW3 library.
+   * @tparam PrecT Precision of the FFTW3 library.
    * @param comm MPI communicator.
    */
-  template<Precision prec>
+  template<typename PrecT>
   void gatherWisdom([[maybe_unused]] MPI_Comm comm)
   {
-    static_assert((prec == Precision::f32 || prec == Precision::f64 || prec == Precision::f80),
-                  "Unsupported precision for FFTW3 mpi wisdom gather");
-
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
-      detail::fftw3::Lib<prec>::gatherWisdom(comm);
+      detail::fftw3::MpiLib<typePrecision<PrecT>>::gatherWisdom(comm);
     }
 # endif
   }
