@@ -42,22 +42,6 @@
 
 namespace afft::detail::fftw3
 {
-  /**
-   * @brief Does the given precision have FFTW3 support?
-   * @tparam prec Precision.
-   * @return True if the precision has FFTW3 support.
-   */
-  [[nodiscard]] inline constexpr bool hasPrecision(Precision prec)
-  {
-    return (prec == Precision::f32)
-           || (prec == Precision::f64)
-           || (prec == typePrecision<long double>)
-# ifdef AFFT_FFTW3_HAS_QUAD
-           || (prec == Precision::f128)
-# endif
-           ;
-  }
-
   /// @brief FFTW3 library for single precision.
   struct FloatLib
   {
@@ -98,27 +82,6 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftwf_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftwf_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftwf_forget_wisdom;
-
-# if AFFT_MP_BACKEND_IS(MPI)
-    using MpiDDim                                  = fftwf_mpi_ddim;
-
-    static constexpr auto mpiInit                  = fftwf_mpi_init;
-
-    static constexpr auto mpiPlanManyC2C           = fftwf_mpi_plan_many_dft;
-    static constexpr auto mpiPlanManyR2C           = fftwf_mpi_plan_many_dft_r2c;
-    static constexpr auto mpiPlanManyC2R           = fftwf_mpi_plan_many_dft_c2r;
-    static constexpr auto mpiPlanManyR2R           = fftwf_mpi_plan_many_r2r;
-
-    static constexpr auto mpiExecuteC2C            = fftwf_mpi_execute_dft;
-    static constexpr auto mpiExecuteR2C            = fftwf_mpi_execute_dft_r2c;
-    static constexpr auto mpiExecuteC2R            = fftwf_mpi_execute_dft_c2r;
-    static constexpr auto mpiExecuteR2R            = fftwf_mpi_execute_r2r;
-
-    static constexpr auto mpiCleanUp               = fftwf_mpi_cleanup;
-
-    static constexpr auto mpiBroadcastWisdom       = fftwf_mpi_broadcast_wisdom;
-    static constexpr auto mpiGatherWisdom          = fftwf_mpi_gather_wisdom;
-# endif
   };
 
   /// @brief FFTW3 library for double precision.
@@ -161,27 +124,6 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftw_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftw_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftw_forget_wisdom;
-
-# if AFFT_MP_BACKEND_IS(MPI)
-    using MpiDDim                                  = fftw_mpi_ddim;
-
-    static constexpr auto mpiInit                  = fftw_mpi_init;
-
-    static constexpr auto mpiPlanManyC2C           = fftw_mpi_plan_many_dft;
-    static constexpr auto mpiPlanManyR2C           = fftw_mpi_plan_many_dft_r2c;
-    static constexpr auto mpiPlanManyC2R           = fftw_mpi_plan_many_dft_c2r;
-    static constexpr auto mpiPlanManyR2R           = fftw_mpi_plan_many_r2r;
-
-    static constexpr auto mpiExecuteC2C            = fftw_mpi_execute_dft;
-    static constexpr auto mpiExecuteR2C            = fftw_mpi_execute_dft_r2c;
-    static constexpr auto mpiExecuteC2R            = fftw_mpi_execute_dft_c2r;
-    static constexpr auto mpiExecuteR2R            = fftw_mpi_execute_r2r;
-
-    static constexpr auto mpiCleanUp               = fftw_mpi_cleanup;
-
-    static constexpr auto mpiBroadcastWisdom       = fftw_mpi_broadcast_wisdom;
-    static constexpr auto mpiGatherWisdom          = fftw_mpi_gather_wisdom;
-# endif
   };
 
   /// @brief FFTW3 library for long double precision.
@@ -224,27 +166,6 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftwl_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftwl_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftwl_forget_wisdom;
-
-# if AFFT_MP_BACKEND_IS(MPI)
-    using MpiDDim                                  = fftwl_mpi_ddim;
-
-    static constexpr auto mpiInit                  = fftwl_mpi_init;
-
-    static constexpr auto mpiPlanManyC2C           = fftwl_mpi_plan_many_dft;
-    static constexpr auto mpiPlanManyR2C           = fftwl_mpi_plan_many_dft_r2c;
-    static constexpr auto mpiPlanManyC2R           = fftwl_mpi_plan_many_dft_c2r;
-    static constexpr auto mpiPlanManyR2R           = fftwl_mpi_plan_many_r2r;
-
-    static constexpr auto mpiExecuteC2C            = fftwl_mpi_execute_dft;
-    static constexpr auto mpiExecuteR2C            = fftwl_mpi_execute_dft_r2c;
-    static constexpr auto mpiExecuteC2R            = fftwl_mpi_execute_dft_c2r;
-    static constexpr auto mpiExecuteR2R            = fftwl_mpi_execute_r2r;
-
-    static constexpr auto mpiCleanUp               = fftwl_mpi_cleanup;
-
-    static constexpr auto mpiBroadcastWisdom       = fftwl_mpi_broadcast_wisdom;
-    static constexpr auto mpiGatherWisdom          = fftwl_mpi_gather_wisdom;
-# endif
   };
 
   /// @brief FFTW3 library for quadruple precision.
@@ -291,6 +212,78 @@ namespace afft::detail::fftw3
 # endif
   };
 
+  struct MpiFloatLib
+  {
+# if AFFT_MP_BACKEND_IS(MPI)
+    using DDim                            = fftwf_mpi_ddim;
+
+    static constexpr auto init            = fftwf_mpi_init;
+
+    static constexpr auto planManyC2C     = fftwf_mpi_plan_many_dft;
+    static constexpr auto planManyR2C     = fftwf_mpi_plan_many_dft_r2c;
+    static constexpr auto planManyC2R     = fftwf_mpi_plan_many_dft_c2r;
+    static constexpr auto planManyR2R     = fftwf_mpi_plan_many_r2r;
+
+    static constexpr auto executeC2C      = fftwf_mpi_execute_dft;
+    static constexpr auto executeR2C      = fftwf_mpi_execute_dft_r2c;
+    static constexpr auto executeC2R      = fftwf_mpi_execute_dft_c2r;
+    static constexpr auto executeR2R      = fftwf_mpi_execute_r2r;
+
+    static constexpr auto cleanUp         = fftwf_mpi_cleanup;
+
+    static constexpr auto broadcastWisdom = fftwf_mpi_broadcast_wisdom;
+    static constexpr auto gatherWisdom    = fftwf_mpi_gather_wisdom;
+# endif
+  };
+
+  struct MpiDoubleLib
+  {
+# if AFFT_MP_BACKEND_IS(MPI)
+    using DDim                            = fftw_mpi_ddim;
+
+    static constexpr auto init            = fftw_mpi_init;
+
+    static constexpr auto planManyC2C     = fftw_mpi_plan_many_dft;
+    static constexpr auto planManyR2C     = fftw_mpi_plan_many_dft_r2c;
+    static constexpr auto planManyC2R     = fftw_mpi_plan_many_dft_c2r;
+    static constexpr auto planManyR2R     = fftw_mpi_plan_many_r2r;
+
+    static constexpr auto executeC2C      = fftw_mpi_execute_dft;
+    static constexpr auto executeR2C      = fftw_mpi_execute_dft_r2c;
+    static constexpr auto executeC2R      = fftw_mpi_execute_dft_c2r;
+    static constexpr auto executeR2R      = fftw_mpi_execute_r2r;
+
+    static constexpr auto cleanUp         = fftw_mpi_cleanup;
+
+    static constexpr auto broadcastWisdom = fftw_mpi_broadcast_wisdom;
+    static constexpr auto gatherWisdom    = fftw_mpi_gather_wisdom;
+# endif
+  };
+
+  struct LongMpiLib
+  {
+# if AFFT_MP_BACKEND_IS(MPI)
+    using DDim                            = fftwl_mpi_ddim;
+
+    static constexpr auto init            = fftwl_mpi_init;
+
+    static constexpr auto planManyC2C     = fftwl_mpi_plan_many_dft;
+    static constexpr auto planManyR2C     = fftwl_mpi_plan_many_dft_r2c;
+    static constexpr auto planManyC2R     = fftwl_mpi_plan_many_dft_c2r;
+    static constexpr auto planManyR2R     = fftwl_mpi_plan_many_r2r;
+
+    static constexpr auto executeC2C      = fftwl_mpi_execute_dft;
+    static constexpr auto executeR2C      = fftwl_mpi_execute_dft_r2c;
+    static constexpr auto executeC2R      = fftwl_mpi_execute_dft_c2r;
+    static constexpr auto executeR2R      = fftwl_mpi_execute_r2r;
+
+    static constexpr auto cleanUp         = fftwl_mpi_cleanup;
+
+    static constexpr auto broadcastWisdom = fftwl_mpi_broadcast_wisdom;
+    static constexpr auto gatherWisdom    = fftwl_mpi_gather_wisdom;
+# endif
+  };
+
   /**
    * @brief Selects the FFTW3 library for the given precision.
    * @tparam prec Precision.
@@ -301,20 +294,29 @@ namespace afft::detail::fftw3
     using Type = void;
   }
 
+#ifdef AFFT_FFTW3_HAS_FLOAT
   /// @brief Specialization of LibSelect for Precision::f32.
   template<>
   struct LibSelect<Precision::f32>
   {
     using Type = FloatLib;
   };
+#endif
 
   /// @brief Specialization of LibSelect for Precision::f64.
   template<>
   struct LibSelect<Precision::f64>
   {
+#if defined(AFFT_FFTW3_HAS_DOUBLE)
     using Type = DoubleLib;
+#elif defined(AFFT_FFTW3_HAS_LONG)
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f64), LongDoubleLib, void>;
+#else
+    using Type = void;
+#endif
   };
 
+#ifdef AFFT_FFTW3_HAS_LONG
   /// @brief Specialization of LibSelect for Precision::f80.
   template<>
   struct LibSelect<Precision::f80>
@@ -328,27 +330,109 @@ namespace afft::detail::fftw3
   {
     using Type = std::conditional_t<(typePrecision<long double> == Precision::f64f64), LongDoubleLib, void>;
   };
+#endif
 
   /// @brief Specialization of LibSelect for Precision::f128. Prefer long double if possible.
   template<>
   struct LibSelect<Precision::f128>
   {
-    using Type = std::conditional_t<(typePrecision<long double> == Precision::f128),
-                                    LongDoubleLib,
-#   ifdef AFFT_FFTW3_HAS_QUAD
-                                    QuadLib
+# ifdef AFFT_FFTW3_HAS_QUAD
+#   ifdef AFFT_FFTW3_HAS_LONG
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f128), LongDoubleLib, QuadLib>;
 #   else
-                                    void
+    using Type = QuadLib;
 #   endif
-                                   >;
+# else
+#   ifdef AFFT_FFTW3_HAS_LONG
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f128), LongDoubleLib, void>;
+#   else
+    using Type = void;
+#   endif
+# endif
   };
+
+  /**
+   * @brief Selects the MPI FFTW3 library for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  struct MpiLibSelect
+  {
+    using Type = void;
+  };
+
+  /// @brief Specialization of MpiLibSelect for Precision::f32.
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_FLOAT)
+  template<>
+  struct MpiLibSelect<Precision::f32>
+  {
+    using Type = MpiFloatLib;
+  };
+#endif
+
+  /// @brief Specialization of MpiLibSelect for Precision::f64.
+  template<>
+  struct MpiLibSelect<Precision::f64>
+  {
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_DOUBLE)
+    using Type = MpiDoubleLib;
+#elif AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_LONG)
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f64), LongMpiLib, void>;
+#else
+    using Type = void;
+#endif
+  };
+
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_LONG)
+  /// @brief Specialization of MpiLibSelect for Precision::f80.
+  template<>
+  struct MpiLibSelect<Precision::f80>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f80), LongMpiLib, void>;
+  };
+
+  /// @brief Specialization of MpiLibSelect for Precision::f64f64.
+  template<>
+  struct MpiLibSelect<Precision::f64f64>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f64f64), LongMpiLib, void>;
+  };
+
+  /// @brief Specialization of MpiLibSelect for Precision::f128.
+  template<>
+  struct MpiLibSelect<Precision::f128>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f128), LongMpiLib, void>;
+  };
+#endif
+
+  /**
+   * @brief Determines if the FFTW3 library is available for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  inline constexpr bool hasPrecision = !std::is_void_v<typename LibSelect<prec>::Type>;
+
+  /**
+   * @brief Determines if the MPI FFTW3 library is available for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  inline constexpr bool hasMpiPrecision = !std::is_void_v<typename MpiLibSelect<prec>::Type>;
 
   /**
    * @brief FFTW3 library type alias for the given precision.
    * @tparam prec Precision.
    */
   template<Precision prec>
-  using Lib = std::enable_if_t<hasPrecision(prec), typename LibSelect<prec>::Type>;
+  using Lib = std::enable_if_t<hasPrecision<prec>, typename LibSelect<prec>::Type>;
+
+  /**
+   * @brief MPI FFTW3 library type alias for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  using MpiLib = std::enable_if_t<hasMpiPrecision<prec>, typename MpiLibSelect<prec>::Type>;
 } // namespace afft::detail::fftw3
 
 #endif /* AFFT_DETAIL_FFTW3_LIB_HPP */

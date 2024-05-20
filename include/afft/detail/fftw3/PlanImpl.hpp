@@ -43,7 +43,7 @@ namespace afft::detail::cpu::fftw3
   template<Precision prec>
   class PlanImpl : public detail::PlanImpl
   {
-    static_assert(hasPrecision(prec), "Unsupported precision");
+    static_assert(hasPrecision<prec>, "Unsupported precision");
 
     private:
       /// @brief Alias for the parent class.
