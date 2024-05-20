@@ -29,25 +29,37 @@
 # include "../include.hpp"
 #endif
 
-#include <fftw3.h>
-#if AFFT_MP_BACKEND_IS(MPI)
-# include <fftw3-mpi.h>
-#endif
-
 #include "../common.hpp"
+
+// Check if the compiler supports quad precision. If not, disable it.
+#if !((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) \
+      && !(defined(__ICC) || defined(__INTEL_COMPILER) || defined(__CUDACC__) || defined(__PGI)) \
+      && (defined(__i386__) || defined(__x86_64__) || defined(__ia64__)))
+# ifdef AFFT_FFTW3_HAS_QUAD
+#   undef AFFT_FFTW3_HAS_QUAD
+# endif
+#endif
 
 namespace afft::detail::fftw3
 {
   /**
-   * @brief FFTW3 library precision-specific types and functions.
+   * @brief Does the given precision have FFTW3 support?
    * @tparam prec Precision.
+   * @return True if the precision has FFTW3 support.
    */
-  template<Precision prec>
-  struct Lib;
+  [[nodiscard]] inline constexpr bool hasPrecision(Precision prec)
+  {
+    return (prec == Precision::f32)
+           || (prec == Precision::f64)
+           || (prec == typePrecision<long double>)
+# ifdef AFFT_FFTW3_HAS_QUAD
+           || (prec == Precision::f128)
+# endif
+           ;
+  }
 
-  /// @brief Library specialization for single precision.
-  template<>
-  struct Lib<Precision::f32>
+  /// @brief FFTW3 library for single precision.
+  struct FloatLib
   {
     using Plan                                     = fftwf_plan;
     using R2RKind                                  = fftwf_r2r_kind;
@@ -109,9 +121,8 @@ namespace afft::detail::fftw3
 # endif
   };
 
-  /// @brief Library specialization for double precision.
-  template<>
-  struct Lib<Precision::f64>
+  /// @brief FFTW3 library for double precision.
+  struct DoubleLib
   {
     using Plan                                     = fftw_plan;
     using R2RKind                                  = fftw_r2r_kind;
@@ -173,10 +184,8 @@ namespace afft::detail::fftw3
 # endif
   };
 
-#if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-  /// @brief Library specialization for long float precision.
-  template<>
-  struct Lib<Precision::f80>
+  /// @brief FFTW3 library for long double precision.
+  struct LongDoubleLib
   {
     using Plan                                     = fftwl_plan;
     using R2RKind                                  = fftwl_r2r_kind;
@@ -237,13 +246,11 @@ namespace afft::detail::fftw3
     static constexpr auto mpiGatherWisdom          = fftwl_mpi_gather_wisdom;
 # endif
   };
-#endif
 
-#if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
-  /// @brief Library specialization for quad precision.
-  template<>
-  struct Lib<Precision::f128>
+  /// @brief FFTW3 library for quadruple precision.
+  struct QuadLib
   {
+# ifdef AFFT_FFTW3_HAS_QUAD
     using Plan                                     = fftwq_plan;
     using R2RKind                                  = fftwq_r2r_kind;
     using Complex                                  = fftwq_complex;
@@ -281,8 +288,67 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftwq_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftwq_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftwq_forget_wisdom;
+# endif
   };
-#endif
+
+  /**
+   * @brief Selects the FFTW3 library for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  struct LibSelect
+  {
+    using Type = void;
+  }
+
+  /// @brief Specialization of LibSelect for Precision::f32.
+  template<>
+  struct LibSelect<Precision::f32>
+  {
+    using Type = FloatLib;
+  };
+
+  /// @brief Specialization of LibSelect for Precision::f64.
+  template<>
+  struct LibSelect<Precision::f64>
+  {
+    using Type = DoubleLib;
+  };
+
+  /// @brief Specialization of LibSelect for Precision::f80.
+  template<>
+  struct LibSelect<Precision::f80>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f80), LongDoubleLib, void>;
+  };
+
+  /// @brief Specialization of LibSelect for Precision::f64f64.
+  template<>
+  struct LibSelect<Precision::f64f64>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f64f64), LongDoubleLib, void>;
+  };
+
+  /// @brief Specialization of LibSelect for Precision::f128. Prefer long double if possible.
+  template<>
+  struct LibSelect<Precision::f128>
+  {
+    using Type = std::conditional_t<(typePrecision<long double> == Precision::f128),
+                                    LongDoubleLib,
+#   ifdef AFFT_FFTW3_HAS_QUAD
+                                    QuadLib
+#   else
+                                    void
+#   endif
+                                   >;
+  };
+
+  /**
+   * @brief FFTW3 library type alias for the given precision.
+   * @tparam prec Precision.
+   */
+  template<Precision prec>
+  using Lib = std::enable_if_t<hasPrecision(prec), typename LibSelect<prec>::Type>;
 } // namespace afft::detail::fftw3
 
 #endif /* AFFT_DETAIL_FFTW3_LIB_HPP */
