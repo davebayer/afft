@@ -42,7 +42,7 @@ AFFT_EXPORT namespace afft::fftw3
   void exportWisdomToFilename([[maybe_unused]] std::string_view filename)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<prec>())
     {
       if (!detail::fftw3::Lib<prec>::exportWisdomToFilename(filename.data()))
       {
@@ -61,7 +61,7 @@ AFFT_EXPORT namespace afft::fftw3
   void exportWisdomToFile([[maybe_unused]] FILE* file)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<prec>())
     {
       if (!detail::fftw3::Lib<prec>::exportWisdomToFile(file))
       {
@@ -82,7 +82,7 @@ AFFT_EXPORT namespace afft::fftw3
     std::string wisdom{};
 
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasPrecision<prec>())
     {
       struct FreeDeleter
       {
@@ -112,9 +112,9 @@ AFFT_EXPORT namespace afft::fftw3
   void importSystemWisdom()
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasMpiPrecision<prec>())
     {
-      if (!detail::fftw3::Lib<prec>::importSystemWisdom())
+      if (!detail::fftw3::MpiLib<prec>::importSystemWisdom())
       {
         throw std::runtime_error("Failed to import FFTW3 system wisdom");
       }
@@ -131,9 +131,9 @@ AFFT_EXPORT namespace afft::fftw3
   void importWisdomFromFilename([[maybe_unused]] std::string_view filename)
   {
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
-    if constexpr (detail::hasPrecision<prec>())
+    if constexpr (detail::fftw3::hasMpiPrecision<prec>())
     {
-      if (!detail::fftw3::Lib<prec>::importWisdomFromFilename(filename.data()))
+      if (!detail::fftw3::MpiLib<prec>::importWisdomFromFilename(filename.data()))
       {
         throw std::runtime_error("Failed to import FFTW3 wisdom from file");
       }
@@ -203,8 +203,11 @@ namespace mpi
    * @param comm MPI communicator.
    */
   template<Precision prec>
-  void broadcastWisdom(MPI_Comm comm)
+  void broadcastWisdom([[maybe_unused]] MPI_Comm comm)
   {
+    static_assert((prec == Precision::f32 || prec == Precision::f64 || prec == Precision::f80),
+                  "Unsupported precision for FFTW3 mpi wisdom broadcast");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::hasPrecision<prec>())
     {
@@ -219,8 +222,11 @@ namespace mpi
    * @param comm MPI communicator.
    */
   template<Precision prec>
-  void gatherWisdom(MPI_Comm comm)
+  void gatherWisdom([[maybe_unused]] MPI_Comm comm)
   {
+    static_assert((prec == Precision::f32 || prec == Precision::f64 || prec == Precision::f80),
+                  "Unsupported precision for FFTW3 mpi wisdom gather");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::hasPrecision<prec>())
     {
