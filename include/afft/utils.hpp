@@ -62,9 +62,9 @@ AFFT_EXPORT namespace afft
   {
     static_assert(isKnownType<PrecT>, "Precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cv_t<PrecT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cv_t<PrecT>>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<PrecT>::precision,
+                          /* .source      = */ typePrecision<PrecT>::precision,
+                          /* .destination = */ typePrecision<PrecT>::precision};
   }
 
   /**
@@ -79,9 +79,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<ExecT>, "Execution precision type must be a known type");
     static_assert(isKnownType<MemoryT>, "Memory precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cv_t<MemoryT>>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>::precision,
+                          /* .source      = */ typePrecision<MemoryT>::precision,
+                          /* .destination = */ typePrecision<MemoryT>::precision};
   }
 
   /**
@@ -98,9 +98,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<SrcT>, "Source precision type must be a known type");
     static_assert(isKnownType<DstT>, "Destination precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ TypeProperties<std::remove_cv_t<ExecT>>::precision,
-                          /* .source      = */ TypeProperties<std::remove_cv_t<SrcT>>::precision,
-                          /* .destination = */ TypeProperties<std::remove_cv_t<DstT>>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>::precision,
+                          /* .source      = */ typePrecision<SrcT>::precision,
+                          /* .destination = */ typePrecision<DstT>::precision};
   }
 
   /**
