@@ -55,6 +55,9 @@ import std;
 #     include <tcb/span.hpp>
 #   endif
 #   include <stdexcept>
+#   if (AFFT_CXX_VERSION >= 202002L) && __has_include(<stdfloat>)
+#     include <stdfloat>
+#   endif
 #   include <string>
 #   include <string_view>
 #   include <tuple>
