@@ -122,10 +122,12 @@ AFFT_EXPORT namespace afft
   /// @brief Initialization parameters
   struct InitParameters
   {
-    BackendMask    backendMask{BackendMask::all};         ///< backend mask
-    View<Backend>  backendInitOrder{};                    ///< backend initialization order, empty view means default order for the target
-    SelectStrategy selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    InitEffort     initEffort{InitEffort::med};           ///< plan initialization effort
+    BackendMask                   backendMask{BackendMask::all};         ///< backend mask
+    View<Backend>                 backendInitOrder{};                    ///< backend initialization order, empty view means default order for the target
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    InitEffort                    initEffort{InitEffort::med};           ///< plan initialization effort
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
   };
 
   /// @brief Normalization
