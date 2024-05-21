@@ -31,20 +31,12 @@
 
 #include "../common.hpp"
 
-// Check if the compiler supports quad precision. If not, disable it.
-#if !((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) \
-      && !(defined(__ICC) || defined(__INTEL_COMPILER) || defined(__CUDACC__) || defined(__PGI)) \
-      && (defined(__i386__) || defined(__x86_64__) || defined(__ia64__)))
-# ifdef AFFT_FFTW3_HAS_QUAD
-#   undef AFFT_FFTW3_HAS_QUAD
-# endif
-#endif
-
 namespace afft::detail::fftw3
 {
   /// @brief FFTW3 library for single precision.
   struct FloatLib
   {
+# ifdef AFFT_FFTW3_HAS_FLOAT
     using Plan                                     = fftwf_plan;
     using R2RKind                                  = fftwf_r2r_kind;
     using Complex                                  = fftwf_complex;
@@ -82,11 +74,13 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftwf_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftwf_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftwf_forget_wisdom;
+# endif
   };
 
   /// @brief FFTW3 library for double precision.
   struct DoubleLib
   {
+# ifdef AFFT_FFTW3_HAS_DOUBLE
     using Plan                                     = fftw_plan;
     using R2RKind                                  = fftw_r2r_kind;
     using Complex                                  = fftw_complex;
@@ -124,11 +118,13 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftw_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftw_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftw_forget_wisdom;
+# endif
   };
 
   /// @brief FFTW3 library for long double precision.
   struct LongDoubleLib
   {
+# ifdef AFFT_FFTW3_HAS_LONG
     using Plan                                     = fftwl_plan;
     using R2RKind                                  = fftwl_r2r_kind;
     using Complex                                  = fftwl_complex;
@@ -166,6 +162,7 @@ namespace afft::detail::fftw3
     static constexpr auto importWisdomFromFile     = fftwl_import_wisdom_from_file;
     static constexpr auto importWisdomFromString   = fftwl_import_wisdom_from_string;
     static constexpr auto forgetWisdom             = fftwl_forget_wisdom;
+# endif
   };
 
   /// @brief FFTW3 library for quadruple precision.
@@ -214,7 +211,7 @@ namespace afft::detail::fftw3
 
   struct MpiFloatLib
   {
-# if AFFT_MP_BACKEND_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
     using DDim                            = fftwf_mpi_ddim;
 
     static constexpr auto init            = fftwf_mpi_init;
@@ -238,7 +235,7 @@ namespace afft::detail::fftw3
 
   struct MpiDoubleLib
   {
-# if AFFT_MP_BACKEND_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
     using DDim                            = fftw_mpi_ddim;
 
     static constexpr auto init            = fftw_mpi_init;
@@ -262,7 +259,7 @@ namespace afft::detail::fftw3
 
   struct LongMpiLib
   {
-# if AFFT_MP_BACKEND_IS(MPI)
+# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
     using DDim                            = fftwl_mpi_ddim;
 
     static constexpr auto init            = fftwl_mpi_init;
@@ -362,7 +359,7 @@ namespace afft::detail::fftw3
   };
 
   /// @brief Specialization of MpiLibSelect for Precision::f32.
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_FLOAT)
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
   template<>
   struct MpiLibSelect<Precision::f32>
   {
@@ -374,16 +371,16 @@ namespace afft::detail::fftw3
   template<>
   struct MpiLibSelect<Precision::f64>
   {
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_DOUBLE)
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
     using Type = MpiDoubleLib;
-#elif AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_LONG)
+#elif AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
     using Type = std::conditional_t<(typePrecision<long double> == Precision::f64), LongMpiLib, void>;
 #else
     using Type = void;
 #endif
   };
 
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_MPI_HAS_LONG)
+#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
   /// @brief Specialization of MpiLibSelect for Precision::f80.
   template<>
   struct MpiLibSelect<Precision::f80>
