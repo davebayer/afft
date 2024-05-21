@@ -100,17 +100,31 @@ import std;
 // Include cuFFT header
 #if AFFT_BACKEND_IS_ENABLED(CUFFT)
 # if AFFT_GPU_BACKEND_IS(CUDA)
-#   include <cufftXt.h>
-#   if AFFT_MP_BACKEND_IS(MPI)
+#   ifdef AFFT_CUFFT_HAS_MP
 #     include <cufftMp.h>
+#   else
+#     include <cufftXt.h>
 #   endif
 # endif
 #endif
 
 // Include FFTW3 header
 #if AFFT_BACKEND_IS_ENABLED(FFTW3)
-# include <fftw3.h>
-# if AFFT_MP_BACKEND_IS(MPI)
+// Check if the compiler supports quad precision. If not, disable it.
+# if !((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) \
+      && !(defined(__ICC) || defined(__INTEL_COMPILER) || defined(__CUDACC__) || defined(__PGI)) \
+      && (defined(__i386__) || defined(__x86_64__) || defined(__ia64__)))
+#   ifdef AFFT_FFTW3_HAS_QUAD
+#     undef AFFT_FFTW3_HAS_QUAD
+#   endif
+# endif
+// Include FFTW3 header
+# if (defined(AFFT_FFTW3_HAS_FLOAT) || defined(AFFT_FFTW3_HAS_DOUBLE) || defined(AFFT_FFTW3_HAS_LONG) || defined(AFFT_FFTW3_HAS_QUAD))
+#   include <fftw3.h>
+# endif
+// Include FFTW3 MPI header
+# if AFFT_MP_BACKEND_IS(MPI) &&
+     (defined(AFFT_FFTW3_HAS_MPI_FLOAT) || defined(AFFT_FFTW3_HAS_MPI_DOUBLE) || defined(AFFT_FFTW3_HAS_MPI_LONG))
 #   include <fftw3-mpi.h>
 # endif
 #endif
