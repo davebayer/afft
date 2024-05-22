@@ -25,9 +25,9 @@
 #ifndef AFFT_DETAIL_MPI_INIT_HPP
 #define AFFT_DETAIL_MPI_INIT_HPP
 
-#include <stdexcept>
-
-#include <mpi.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 namespace afft::detail::mpi
 {

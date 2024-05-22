@@ -29,12 +29,12 @@
 # include "../include.hpp"
 #endif
 
-#include "../../gpu.hpp"
+#include "error.hpp"
 
 namespace afft::detail::clfft
 {
   /// @brief Initialize the clFFT library.
-  inline void init(const afft::gpu::clfft::InitParameters&)
+  inline void init()
   {
     clfftSetupData clfftSetupData{};
 

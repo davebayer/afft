@@ -31,13 +31,11 @@
 
 #include "Lib.hpp"
 #include "../error.hpp"
-#include "../../cpu.hpp"
-#include "../../type.hpp"
 
 namespace afft::detail::fftw3
 {
   /// @brief Initialize the FFTW3 library.
-  inline void init(const afft::cpu::fftw3::InitParameters& initParams)
+  inline void init()
   {
     auto check = [](int result)
     {
@@ -47,43 +45,29 @@ namespace afft::detail::fftw3
       }
     };
 
-    check(Lib<Precision::f32>::initThreads());
-    check(Lib<Precision::f64>::initThreads());
-# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-    check(Lib<Precision::f80>::initThreads());
+# ifdef AFFT_FFTW3_HAS_FLOAT
+    check(Lib<typePrecision<float>>::initThreads());
 # endif
-# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
-    check(Lib<Precision::f128>::initThreads());
+# ifdef AFFT_FFTW3_HAS_DOUBLE
+    check(Lib<typePrecision<double>>::initThreads());
+# endif
+# ifdef AFFT_FFTW3_HAS_LONG
+    check(Lib<typePrecision<long double>>::initThreads());
+# endif
+# ifdef AFFT_FFTW3_HAS_QUAD
+    check(Lib<Precision::f128>::initThreads()); // fixme: precision
 # endif
 
 # if AFFT_DISTRIB_IMPL_IS(MPI)
-    Lib<Precision::f32>::mpiInit();
-    Lib<Precision::f64>::mpiInit();
-#   if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-    Lib<Precision::f80>::mpiInit();
+#   ifdef AFFT_FFTW3_HAS_MPI_FLOAT
+    MpiLib<typePrecision<float>>::init();
 #   endif
-# endif
-
-    if (!initParams.floatWisdom.empty())
-    {
-      check(Lib<Precision::f32>::importWisdomFromString(initParams.floatWisdom.data()));
-    }
-
-    if (!initParams.doubleWisdom.empty())
-    {
-      check(Lib<Precision::f64>::importWisdomFromString(initParams.doubleWisdom.data()));
-    }
-# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-    if (!initParams.longDoubleWisdom.empty())
-    {
-      check(Lib<Precision::f80>::importWisdomFromString(initParams.longDoubleWisdom.data()));
-    }
-# endif
-# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
-    if (!initParams.quadWisdom.empty())
-    {
-      check(Lib<Precision::f128>::importWisdomFromString(initParams.quadWisdom.data()));
-    }
+#   ifdef AFFT_FFTW3_HAS_MPI_DOUBLE
+    MpiLib<typePrecision<double>>::init();
+#   endif
+#   ifdef AFFT_FFTW3_HAS_MPI_LONG
+    MpiLib<typePrecision<long double>>::init();
+#   endif
 # endif
   }
 
@@ -91,20 +75,28 @@ namespace afft::detail::fftw3
   inline void finalize()
   {
 # if AFFT_DISTRIB_IMPL_IS(MPI)
-    Lib<Precision::f32>::mpiCleanUp();
-    Lib<Precision::f64>::mpiCleanUp();
-#   if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-    Lib<Precision::f80>::mpiCleanUp();
+#   ifdef AFFT_FFTW3_HAS_MPI_FLOAT
+    MpiLib<typePrecision<float>>::cleanUp();
+#   endif
+#   ifdef AFFT_FFTW3_HAS_MPI_DOUBLE
+    MpiLib<typePrecision<double>>::cleanUp();
+#   endif
+#   ifdef AFFT_FFTW3_HAS_MPI_LONG
+    MpiLib<typePrecision<long double>>::cleanUp();
 #   endif
 # endif
 
-    Lib<Precision::f32>::cleanUpThreads();
-    Lib<Precision::f64>::cleanUpThreads();
-# if defined(AFFT_HAS_F80) && defined(AFFT_CPU_FFTW3_LONG_FOUND)
-    Lib<Precision::f80>::cleanUpThreads();
+# ifdef AFFT_FFTW3_HAS_FLOAT
+    Lib<typePrecision<float>>::cleanUpThreads();
 # endif
-# if defined(AFFT_HAS_F128) && defined(AFFT_CPU_FFTW3_QUAD_FOUND)
-    Lib<Precision::f128>::cleanUpThreads();
+# ifdef AFFT_FFTW3_HAS_DOUBLE
+    Lib<typePrecision<double>>::cleanUpThreads();
+# endif
+# ifdef AFFT_FFTW3_HAS_LONG
+    Lib<typePrecision<long double>>::cleanUpThreads();
+# endif
+# ifdef AFFT_FFTW3_HAS_QUAD
+    Lib<Precision::f128>::cleanUpThreads(); // fixme: precision
 # endif
   }
 } // namespace afft::detail::fftw3

@@ -25,12 +25,10 @@
 #ifndef AFFT_DETAIL_MKL_INIT_HPP
 #define AFFT_DETAIL_MKL_INIT_HPP
 
-#include "../../cpu.hpp"
-
 namespace afft::detail::mkl
 {
   /// @brief Initialize the MKL library.
-  inline void init(const afft::cpu::mkl::InitParameters&)
+  inline void init()
   {
     // Do nothing
   }

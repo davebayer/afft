@@ -30,31 +30,13 @@
 #endif
 
 #include "error.hpp"
-#include "../../gpu.hpp"
 
 namespace afft::detail::rocfft
 {
   /// @brief Initialize the rocFFT library.
-  inline void init(const afft::gpu::rocfft::InitParameters& initParams)
+  inline void init()
   {
     Error::check(rocfft_setup());
-
-    if (!initParams.rtcCachePath.empty())
-    {
-      static constexpr std::string_view rtcCachePathEnvVar{"ROCFFT_RTC_CACHE_PATH"};
-
-#   ifdef _WIN32
-      if (_putenv_s(rtcCachePathEnvVar.data(), initParams.rtcCachePath.data()) != 0)
-      {
-        throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
-      }
-#   else
-      if (setenv(rtcCachePathEnvVar.data(), initParams.rtcCachePath.data(), 1) != 0)
-      {
-        throw std::runtime_error("Failed to set ROCFFT_RTC_CACHE_PATH environment variable.");
-      }
-#   endif
-    }
   }
 
   /// @brief Finalize the rocFFT library.
