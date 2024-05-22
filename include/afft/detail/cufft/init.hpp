@@ -25,6 +25,10 @@
 #ifndef AFFT_DETAIL_CUFFT_INIT_HPP
 #define AFFT_DETAIL_CUFFT_INIT_HPP
 
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
+
 #include "error.hpp"
 
 namespace afft::detail::cufft
