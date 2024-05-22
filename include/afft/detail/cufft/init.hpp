@@ -25,14 +25,23 @@
 #ifndef AFFT_DETAIL_CUFFT_INIT_HPP
 #define AFFT_DETAIL_CUFFT_INIT_HPP
 
-#include "../../gpu.hpp"
+#include "error.hpp"
 
 namespace afft::detail::cufft
 {
   /// @brief Initialize the cuFFT library.
-  inline void init(const afft::gpu::cufft::InitParameters&)
+  inline void init()
   {
-    // Do nothing
+    int version{};
+
+    // Get the version of the cuFFT library
+    Error::check(cufftGetVersion(&version));
+
+    // Check the version of the cuFFT library
+    if (version != CUFFT_VERSION)
+    {
+      throw std::runtime_error("cuFFT library version mismatch");
+    }
   }
 
   /// @brief Finalize the cuFFT library.
