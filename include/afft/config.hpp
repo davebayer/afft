@@ -119,7 +119,7 @@
 # define AFFT_MP_BACKEND        NONE
 #endif
 
-// Define the C++ version macro
+// Define the AFFT_CXX_VERSION version macro
 #ifdef _MSVC_LANG
 #  define AFFT_CXX_VERSION      _MSVC_LANG
 #else
@@ -152,6 +152,11 @@
 // Check if C++23 import std is supported
 #if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
 # define AFFT_CXX_HAS_IMPORT_STD
+#endif
+
+// Check if C++23 <stdfloat> is implemented
+#if (AFFT_CXX_VERSION >= 202002L) && __has_include(<stdfloat>)
+# define AFFT_CXX_HAS_STD_FLOAT
 #endif
 
 #endif /* AFFT_CONFIG_HPP */

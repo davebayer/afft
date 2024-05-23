@@ -55,7 +55,7 @@ import std;
 #     include <tcb/span.hpp>
 #   endif
 #   include <stdexcept>
-#   if (AFFT_CXX_VERSION >= 202002L) && __has_include(<stdfloat>)
+#   ifdef AFFT_CXX_HAS_STD_FLOAT
 #     include <stdfloat>
 #   endif
 #   include <string>
