@@ -194,9 +194,9 @@ AFFT_EXPORT namespace afft::fftw3
 # endif
   }
 
-#if AFFT_MP_BACKEND_IS(MPI)
-namespace mpi
+namespace mpst
 {
+#if AFFT_MP_BACKEND_IS(MPI)
   /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
    * @tparam PrecT Precision of the FFTW3 library.
@@ -228,9 +228,11 @@ namespace mpi
     }
 # endif
   }
-} // namespace mpi
 #endif
+} // namespace mpst
 
+  /// @brief Namespace alias for mpst namespace
+  namespace mpi = mpst;
 } // namespace afft
 
 #endif /* AFFT_FFTW3_HPP */
