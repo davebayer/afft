@@ -105,6 +105,18 @@ AFFT_EXPORT namespace afft
     gpu, ///< GPU target
   };
 
+  /// @brief Distribution type
+  enum class Distribution : std::uint8_t
+  {
+    spst,           ///< single process, single target
+    spmt,           ///< single process, multiple targets
+    mpst,           ///< multiple processes, single target
+    
+    single = spst,  ///< alias for single process, single target
+    multi  = spmt,  ///< alias for single process, multiple targets
+    mpi    = mpst,  ///< alias for multiple processes, single target
+  };
+
   /// @brief Initialization effort
   enum class InitEffort : std::uint8_t
   {
@@ -157,7 +169,8 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Named constant representing all axes (is empty view)
-  inline constexpr View<std::size_t> allAxes{};
+  template<std::size_t tRank = dynamicExtent>
+  inline constexpr View<std::size_t, tRank> allAxes{};
 
   /// @brief Namespace for discrete Fourier transform
   namespace dft
@@ -174,31 +187,51 @@ AFFT_EXPORT namespace afft
       c2r = complexToReal,    ///< alias for complex-to-real transform
     };
 
-    /// @brief DFT parameters
+    /**
+     * @brief DFT Parameters
+     * @tparam sRank Rank of the shape, dynamic by default
+     * @tparam tRank Rank of the transform, dynamic by default
+     */
+    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent>
     struct Parameters
     {
-      Direction         direction{};                        ///< direction of the transform
-      PrecisionTriad    precision{};                        ///< precision triad
-      View<std::size_t> shape{};                            ///< shape of the transform
-      View<std::size_t> axes{allAxes};                      ///< axes of the transform
-      Normalization     normalization{Normalization::none}; ///< normalization
-      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
-      Type              type{Type::complexToComplex};       ///< type of the transform
+      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+                    "transform rank must be less than or equal to shape rank");
+
+      Direction                direction{};                        ///< direction of the transform
+      PrecisionTriad           precision{};                        ///< precision triad
+      View<std::size_t, sRank> shape{};                            ///< shape of the transform
+      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
+      Normalization            normalization{Normalization::none}; ///< normalization
+      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
+      Type                     type{Type::complexToComplex};       ///< type of the transform
     };
   } // namespace dft
 
   /// @brief Namespace for discrete Hartley transform
   namespace dht
   {
-    /// @brief DHT transform type
+    /**
+     * @brief DHT Parameters
+     * @tparam sRank Rank of the shape, dynamic by default
+     * @tparam tRank Rank of the transform, dynamic by default
+     */
+    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent>
     struct Parameters
     {
-      Direction         direction{};                        ///< direction of the transform
-      PrecisionTriad    precision{};                        ///< precision triad
-      View<std::size_t> shape{};                            ///< shape of the transform
-      View<std::size_t> axes{allAxes};                      ///< axes of the transform
-      Normalization     normalization{Normalization::none}; ///< normalization
-      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
+      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+                    "transform rank must be less than or equal to shape rank");
+
+      Direction                direction{};                        ///< direction of the transform
+      PrecisionTriad           precision{};                        ///< precision triad
+      View<std::size_t, sRank> shape{};                            ///< shape of the transform
+      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
+      Normalization            normalization{Normalization::none}; ///< normalization
+      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
     };
   } // namespace dht
 
@@ -222,16 +255,29 @@ AFFT_EXPORT namespace afft
       dst = dst2, ///< default DST type
     };
 
-    /// @brief DTT parameters
+    /**
+     * @brief DTT Parameters
+     * @tparam sRank Rank of the shape, dynamic by default
+     * @tparam tRank Rank of the transform, dynamic by default
+     * @tparam ttRank Rank of the types, dynamic by default
+     */
+    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent, std::size_t ttRank = dynamicExtent>
     struct Parameters
     {
-      Direction         direction{};                        ///< direction of the transform
-      PrecisionTriad    precision{};                        ///< precision triad
-      View<std::size_t> shape{};                            ///< shape of the transform
-      View<std::size_t> axes{allAxes};                      ///< axes of the transform
-      Normalization     normalization{Normalization::none}; ///< normalization
-      Placement         placement{Placement::outOfPlace};   ///< placement of the transform
-      View<Type>        types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
+      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+                    "transform rank must be less than or equal to shape rank");
+      static_assert((ttRank == dynamicExtent) || (ttRank == 1) || (tRank == dynamicExtent || ttRank == tRank),
+                    "types rank must be 1 or equal to the number of axes");
+
+      Direction                direction{};                        ///< direction of the transform
+      PrecisionTriad           precision{};                        ///< precision triad
+      View<std::size_t, sRank> shape{};                            ///< shape of the transform
+      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
+      Normalization            normalization{Normalization::none}; ///< normalization
+      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
+      View<Type, ttRank>       types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
     };
   } // namespace dtt
 

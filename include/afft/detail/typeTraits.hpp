@@ -61,21 +61,21 @@ namespace afft::detail
   template<>
   struct TransformParametersSelect<Transform::dft>
   {
-    using Type = dft::Parameters;
+    using Type = dft::Parameters<>;
   };
 
   /// @brief Specialization for dht transform.
   template<>
   struct TransformParametersSelect<Transform::dht>
   {
-    using Type = dht::Parameters;
+    using Type = dht::Parameters<>;
   };
 
   /// @brief Specialization for dtt transform.
   template<>
   struct TransformParametersSelect<Transform::dtt>
   {
-    using Type = dtt::Parameters;
+    using Type = dtt::Parameters<>;
   };
 
   /**
@@ -86,54 +86,58 @@ namespace afft::detail
   struct IsTransformParameters : std::false_type {};
 
   /// @brief Specialization for dft transform parameters.
-  template<>
-  struct IsTransformParameters<afft::dft::Parameters> : std::true_type {};
+  template<std::size_t sRank, std::size_t tRank>
+  struct IsTransformParameters<afft::dft::Parameters<sRank, tRank>> : std::true_type {};
+
+  /// @brief Specialization for dht transform parameters.
+  template<std::size_t sRank, std::size_t tRank>
+  struct IsTransformParameters<afft::dht::Parameters<sRank, tRank>> : std::true_type {};
 
   /// @brief Specialization for dtt transform parameters.
-  template<>
-  struct IsTransformParameters<afft::dtt::Parameters> : std::true_type {};
+  template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
+  struct IsTransformParameters<afft::dtt::Parameters<sRank, tRank, ttRank>> : std::true_type {};
 
   /**
    * @brief Transform backend type for given target.
    * @tparam target The target type.
-   * @tparam distribType The distribution type.
+   * @tparam distrib The distribution type.
    */
-  template<Target target, distrib::Type distribType>
+  template<Target target, Distribution distrib>
   struct TargetParametersSelect;
 
   /// @brief Specialization for cpu target.
   template<>
-  struct TargetParametersSelect<Target::cpu, distrib::Type::spst>
+  struct TargetParametersSelect<Target::cpu, Distribution::spst>
   {
-    using Type = afft::cpu::Parameters;
+    using Type = afft::cpu::Parameters<>;
   };
 
   /// @brief Specialization for gpu target.
   template<>
-  struct TargetParametersSelect<Target::gpu, distrib::Type::spst>
+  struct TargetParametersSelect<Target::gpu, Distribution::spst>
   {
-    using Type = afft::gpu::Parameters;
+    using Type = afft::gpu::Parameters<>;
   };
 
   /// @brief Specialization for distributed spmt gpu target.
   template<>
-  struct TargetParametersSelect<Target::gpu, distrib::Type::spmt>
+  struct TargetParametersSelect<Target::gpu, Distribution::spmt>
   {
-    using Type = afft::spmt::gpu::Parameters;
+    using Type = afft::spmt::gpu::Parameters<>;
   };
 
   /// @brief Specialization for distributed mpst cpu target.
   template<>
-  struct TargetParametersSelect<Target::cpu, distrib::Type::mpst>
+  struct TargetParametersSelect<Target::cpu, Distribution::mpst>
   {
-    using Type = afft::mpst::cpu::Parameters;
+    using Type = afft::mpst::cpu::Parameters<>;
   };
 
   /// @brief Specialization for distributed mpst gpu target.
   template<>
-  struct TargetParametersSelect<Target::gpu, distrib::Type::mpst>
+  struct TargetParametersSelect<Target::gpu, Distribution::mpst>
   {
-    using Type = afft::mpst::gpu::Parameters;
+    using Type = afft::mpst::gpu::Parameters<>;
   };
 
   /**
@@ -144,64 +148,64 @@ namespace afft::detail
   struct IsTargetParameters : std::false_type {};
 
   /// @brief Specialization for cpu target parameters.
-  template<>
-  struct IsTargetParameters<afft::spst::cpu::Parameters> : std::true_type {};
+  template<std::size_t sRank>
+  struct IsTargetParameters<afft::spst::cpu::Parameters<sRank>> : std::true_type {};
 
   /// @brief Specialization for gpu target parameters.
-  template<>
-  struct IsTargetParameters<afft::spst::gpu::Parameters> : std::true_type {};
+  template<std::size_t sRank>
+  struct IsTargetParameters<afft::spst::gpu::Parameters<sRank>> : std::true_type {};
 
   /// @brief Specialization for distributed spmt gpu target parameters.
-  template<>
-  struct IsTargetParameters<afft::spmt::gpu::Parameters> : std::true_type {};
+  template<std::size_t sRank>
+  struct IsTargetParameters<afft::spmt::gpu::Parameters<sRank>> : std::true_type {};
 
   /// @brief Specialization for distributed mpst cpu target parameters.
-  template<>
-  struct IsTargetParameters<afft::mpst::cpu::Parameters> : std::true_type {};
+  template<std::size_t sRank>
+  struct IsTargetParameters<afft::mpst::cpu::Parameters<sRank>> : std::true_type {};
 
   /// @brief Specialization for distributed cpu target parameters.
-  template<>
-  struct IsTargetParameters<afft::mpst::gpu::Parameters> : std::true_type {};
+  template<std::size_t sRank>
+  struct IsTargetParameters<afft::mpst::gpu::Parameters<sRank>> : std::true_type {};
 
   /**
    * @brief ExecutionParameters type for given target.
    * @tparam target The target type.
-   * @tparam distribType The distribution type.
+   * @tparam distrib The distribution type.
    */
-  template<Target target, distrib::Type distribType>
+  template<Target target, Distribution distrib>
   struct TargetExecutionParametersSelect;
 
   /// @brief Specialization for cpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::spst>
+  struct TargetExecutionParametersSelect<Target::cpu, Distribution::spst>
   {
     using Type = afft::cpu::ExecutionParameters;
   };
 
   /// @brief Specialization for gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::spst>
+  struct TargetExecutionParametersSelect<Target::gpu, Distribution::spst>
   {
     using Type = afft::gpu::ExecutionParameters;
   };
 
   /// @brief Specialization for distributed spmt gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::spmt>
+  struct TargetExecutionParametersSelect<Target::gpu, Distribution::spmt>
   {
     using Type = afft::spmt::gpu::ExecutionParameters;
   };
 
   /// @brief Specialization for distributed mpst cpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::cpu, distrib::Type::mpst>
+  struct TargetExecutionParametersSelect<Target::cpu, Distribution::mpst>
   {
     using Type = afft::mpst::cpu::ExecutionParameters;
   };
 
   /// @brief Specialization for distributed mpst gpu target.
   template<>
-  struct TargetExecutionParametersSelect<Target::gpu, distrib::Type::mpst>
+  struct TargetExecutionParametersSelect<Target::gpu, Distribution::mpst>
   {
     using Type = afft::mpst::gpu::ExecutionParameters;
   };

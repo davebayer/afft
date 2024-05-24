@@ -100,17 +100,18 @@ namespace spst::cpu
   inline constexpr unsigned allThreads{}; ///< All threads for CPU transform
   
   /**
-   * @struct Parameters
    * @brief Parameters for CPU transform
+   * @tparam sRank Rank of the shape
    */
+  template<std::size_t sRank = dynamicRank>
   struct Parameters
   {
-    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
-    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
-    Alignment       alignment{afft::cpu::alignments::defaultNew};  ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned        threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
+    MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
+    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    Alignment           alignment{afft::cpu::alignments::defaultNew};  ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    unsigned            threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Execution parameters for CPU transform
@@ -129,11 +130,15 @@ namespace mpst::cpu
     Backend::fftw3, // if mkl cannot create plan, fallback fftw3
   };
 
-  /// @brief Parameters for mpi cpu transform
+  /**
+   * @brief Multi-process parameters for mpi cpu transform
+   * @tparam sRank Rank of the shape
+   */
+  template<std::size_t sRank = dynamicRank>
   struct Parameters
 #if AFFT_MP_IS_ENABLED
   {
-    MemoryLayout           memoryLayout{};                                ///< memory layout for cpu transform
+    MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
     WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
@@ -145,7 +150,7 @@ namespace mpst::cpu
    ;
 
   /// @brief Execution parameters for mpi cpu transform
-  using ExecutionParameters = std::conditional_t<AFFT_MP_IS_ENABLED, afft::mpst::cpu::ExecutionParameters, void>;
+  using ExecutionParameters = std::conditional_t<AFFT_MP_IS_ENABLED, afft::spst::cpu::ExecutionParameters, void>;
 } // namespace mpst::cpu
 
 namespace cpu

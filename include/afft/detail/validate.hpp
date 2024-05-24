@@ -326,17 +326,17 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the distrib::Type enum class.
+  /// @brief Validator for the Distribution enum class.
   template<>
-  struct Validator<distrib::Type>
+  struct Validator<Distribution>
   {
-    constexpr bool operator()(distrib::Type distribType) const noexcept
+    constexpr bool operator()(Distribution distrib) const noexcept
     {
-      switch (distribType)
+      switch (distrib)
       {
-      case distrib::Type::spst:
-      case distrib::Type::spmt:
-      case distrib::Type::mpst:
+      case Distribution::spst:
+      case Distribution::spmt:
+      case Distribution::mpst:
         return true;
       default:
         return false;

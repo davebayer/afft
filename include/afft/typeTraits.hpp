@@ -80,10 +80,10 @@ AFFT_EXPORT namespace afft
   /**
    * @brief Target Parameters type for given target.
    * @tparam target The target type.
-   * @tparam distribType The distribution type.
+   * @tparam distrib The distribution type.
    */
-  template<Target target, distrib::Type distribType = distrib::Type::spst>
-  using TargetParameters = typename detail::TargetParametersSelect<target, distribType>::Type;
+  template<Target target, Distribution distrib = Distribution::spst>
+  using TargetParameters = typename detail::TargetParametersSelect<target, distrib>::Type;
 
   /**
    * @brief Check if the type is TargetParameters.
@@ -95,10 +95,10 @@ AFFT_EXPORT namespace afft
   /**
    * @brief ExecutionParameters type for given target.
    * @tparam target The target type.
-   * @tparam distribType The distribution type.
+   * @tparam distrib The distribution type.
    */
-  template<Target target, distrib::Type distribType = distrib::Type::spst>
-  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target, distribType>::Type;
+  template<Target target, Distribution distrib = Distribution::spst>
+  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target, distrib>::Type;
 
   /**
    * @brief Check if the type is ExecutionParameters.

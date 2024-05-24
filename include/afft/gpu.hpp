@@ -88,24 +88,26 @@ namespace spst::gpu
 
   /**
    * @struct Parameters
-   * @brief Parameters for GPU backend
+   * @brief Parameters for gpu target
+   * @tparam sRank Rank of the shape
    */
+  template<std::size_t sRank = dynamicRank>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED
   {
-    MemoryLayout    memoryLayout{};                                ///< Memory layout for CPU transform
-    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
+    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int             device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
+    int                 device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int             device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
+    int                 device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
-    cl_context      context{};                                     ///< OpenCL context
-    cl_device_id    device{};                                      ///< OpenCL device
+    cl_context          context{};                                     ///< OpenCL context
+    cl_device_id        device{};                                      ///< OpenCL device
 # endif
-    bool            externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+    bool                externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
   }
 #endif
    ;
@@ -161,20 +163,24 @@ namespace spmt::gpu
 # endif
   });
 
-  /// @brief Parameters for multi gpu target
+  /**
+   * @brief Parameters for multi gpu target
+   * @tparam sRank Rank of the shape
+   */
+  template<std::size_t sRank = dynamicRank>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
   {
-    MemoryLayout    memoryLayout{};                                ///< memory layout
-    ComplexFormat   complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool            preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    MemoryLayout<sRank> memoryLayout{};                                ///< memory layout
+    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
+    bool                preserveSource{true};                          ///< preserve source data
+    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    View<int>       devices{};                                     ///< list of CUDA devices
+    View<int>           devices{};                                     ///< list of CUDA devices
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    View<int>       devices{};                                     ///< list of HIP devices
+    View<int>           devices{};                                     ///< list of HIP devices
 # endif
-    bool            externalWorkspace{false};                      ///< use external workspace, defaults to `false`
+    bool                externalWorkspace{false};                      ///< use external workspace, defaults to `false`
   }
 #endif
    ;
@@ -214,11 +220,15 @@ namespace mpst::gpu
 # endif
   });
 
-  /// @brief Parameters for multi process gpu target
+  /**
+   * @brief Parameters for multi process gpu target
+   * @tparam sRank Rank of the shape
+   */
+  template<std::size_t sRank = dynamicRank>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && AFFT_MP_IS_ENABLED
   {
-    MemoryLayout           memoryLayout{};                                ///< memory layout
+    MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
     WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy

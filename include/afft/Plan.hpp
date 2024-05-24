@@ -124,14 +124,14 @@ AFFT_EXPORT namespace afft
       }
 
       /**
-       * @brief Get the distribution implementation
-       * @return Distribution implementation
+       * @brief Get the distribution
+       * @return Distribution
        */
-      [[nodiscard]] distrib::Implementation getDistribImpl() const
+      [[nodiscard]] Distribution getDistribution() const
       {
         checkInitialized();
 
-        return mImpl->getConfig().getDistribImpl();
+        return mImpl->getConfig().getDistribType();
       }
 
       /**
@@ -139,11 +139,11 @@ AFFT_EXPORT namespace afft
        * @tparam target Target type
        * @return Target parameters
        */
-      template<Target target, distrib::Implementation distribImpl = distrib::Implementation::none>
+      template<Target target, Distribution distrib = Distribution::spst>
       [[nodiscard]] TargetParameters<target> getTargetParameters() const
       {
         static_assert(detail::isValidTarget(target), "Invalid target type");
-        static_assert(detail::isValidDistribImpl(distribImpl), "Invalid distribution implementation");
+        static_assert(detail::isValidDistribution(distrib), "Invalid distribution");
 
         checkInitialized();
 
@@ -152,12 +152,23 @@ AFFT_EXPORT namespace afft
           throw std::runtime_error("Plan target does not match requested target");
         }
 
-        if (distribImpl != getDistribImpl())
+        if (distrib != getDistribution())
         {
-          throw std::runtime_error("Plan distribution implementation does not match requested distribution implementation");
+          throw std::runtime_error("Plan distribution does not match requested distribution");
         }
 
-        return mImpl->getConfig().getTargetParameters<target, distribImpl>();
+        return mImpl->getConfig().getTargetParameters<target, distrib>();
+      }
+
+      /**
+       * @brief Get plan backend.
+       * @return Backend.
+       */
+      [[nodiscard]] Backend getBackend() const
+      {
+        checkInitialized();
+
+        return mImpl->getBackend();
       }
 
       /**

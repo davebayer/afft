@@ -34,66 +34,65 @@
 
 AFFT_EXPORT namespace afft
 {
-namespace distrib
-{
-  /**
-   * @enum Type
-   * @brief Distribution type
-   */
-  enum class Type
-  {
-    spst,           ///< single process, single target
-    spmt,           ///< single process, multiple targets
-    mpst,           ///< multiple processes, single target
-    
-    single = spst,  ///< alias for single process, single target
-    multi  = spmt,  ///< alias for single process, multiple targets
-    mpi    = mpst,  ///< alias for multiple processes, single target
-  };
-
   /**
    * @struct MemoryBlock
+   * @tparam rank Rank of the memory block, dynamic by default
    * @brief Memory block
    */
+  template<std::size_t rank = dynamicExtent>
   struct MemoryBlock
   {
-    View<std::size_t> starts{};  ///< starts of the memory block
-    View<std::size_t> sizes{};   ///< sizes of the memory block
-    View<std::size_t> strides{}; ///< strides of the memory block
+    View<std::size_t, rank> starts{};  ///< starts of the memory block
+    View<std::size_t, rank> sizes{};   ///< sizes of the memory block
+    View<std::size_t, rank> strides{}; ///< strides of the memory block
   };
-} // namespace distrib
 
 namespace spst
 {
-  /// @brief Memory layout
+  /**
+   * @struct MemoryLayout
+   * @tparam rank Rank of the memory layout, dynamic by default
+   * @brief Memory layout
+   */
+  template<std::size_t rank = dynamicExtent>
   struct MemoryLayout
   {
-    View<std::size_t> srcStrides{}; ///< stride of the source data
-    View<std::size_t> dstStrides{}; ///< stride of the destination data
+    View<std::size_t, rank> srcStrides{}; ///< stride of the source data
+    View<std::size_t, rank> dstStrides{}; ///< stride of the destination data
   };
 } // namespace spst
 
 namespace spmt
 {
-  /// @brief Memory layout
+  /**
+   * @struct MemoryLayout
+   * @tparam rank Rank of the memory layout, dynamic by default
+   * @brief Memory layout
+   */
+  template<std::size_t rank = dynamicExtent>
   struct MemoryLayout
   {
-    View<distrib::MemoryBlock> srcBlocks{};    ///< source memory blocks
-    View<distrib::MemoryBlock> dstBlocks{};    ///< destination memory blocks
-    View<std::size_t>          srcAxesOrder{}; ///< order of the source axes
-    View<std::size_t>          dstAxesOrder{}; ///< order of the destination axes
+    View<MemoryBlock<rank>, rank> srcBlocks{};    ///< source memory blocks
+    View<MemoryBlock<rank>, rank> dstBlocks{};    ///< destination memory blocks
+    View<std::size_t, rank>       srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t, rank>       dstAxesOrder{}; ///< order of the destination axes
   };
 } // namespace spmt
 
 namespace mpst
 {
-  /// @brief Memory layout
+  /**
+   * @struct MemoryLayout
+   * @tparam rank Rank of the memory layout, dynamic by default
+   * @brief Memory layout
+   */
+  template<std::size_t rank = dynamicExtent>
   struct MemoryLayout
   {
-    distrib::MemoryBlock srcBlock{};     ///< source memory block
-    distrib::MemoryBlock dstBlock{};     ///< destination memory block
-    View<std::size_t>    srcAxesOrder{}; ///< order of the source axes
-    View<std::size_t>    dstAxesOrder{}; ///< order of the destination axes
+    MemoryBlock<rank>       srcBlock{};     ///< source memory block
+    MemoryBlock<rank>       dstBlock{};     ///< destination memory block
+    View<std::size_t, rank> srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t, rank> dstAxesOrder{}; ///< order of the destination axes
   };
 } // namespace mpst
 
