@@ -39,6 +39,7 @@ namespace afft::detail::fftw3
 # ifdef AFFT_FFTW3_HAS_FLOAT
     using Plan                                     = fftwf_plan;
     using R2RKind                                  = fftwf_r2r_kind;
+    using Real                                     = float;
     using Complex                                  = fftwf_complex;
     using IoDim                                    = fftwf_iodim64;
 
@@ -83,6 +84,7 @@ namespace afft::detail::fftw3
 # ifdef AFFT_FFTW3_HAS_DOUBLE
     using Plan                                     = fftw_plan;
     using R2RKind                                  = fftw_r2r_kind;
+    using Real                                     = double;
     using Complex                                  = fftw_complex;
     using IoDim                                    = fftw_iodim64;
 
@@ -127,6 +129,7 @@ namespace afft::detail::fftw3
 # ifdef AFFT_FFTW3_HAS_LONG
     using Plan                                     = fftwl_plan;
     using R2RKind                                  = fftwl_r2r_kind;
+    using Real                                     = long double;
     using Complex                                  = fftwl_complex;
     using IoDim                                    = fftwl_iodim64;
 
@@ -171,6 +174,7 @@ namespace afft::detail::fftw3
 # ifdef AFFT_FFTW3_HAS_QUAD
     using Plan                                     = fftwq_plan;
     using R2RKind                                  = fftwq_r2r_kind;
+    using Real                                     = __float128;
     using Complex                                  = fftwq_complex;
     using IoDim                                    = fftwq_iodim64;
 

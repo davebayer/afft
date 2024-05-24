@@ -47,7 +47,7 @@ namespace afft::detail::cpu::fftw3
 
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::PlanImpl;
+      using Parent  = detail::PlanImpl;
 
       /// @brief Alias for the FFTW library plan.
       using Plan    = typename Lib<prec>::Plan;
@@ -56,7 +56,7 @@ namespace afft::detail::cpu::fftw3
       using R2RKind = typename Lib<prec>::R2RKind;
 
       /// @brief Alias for the FFTW library real type.
-      using R       = Real<prec>;
+      using R       = typename Lib<prec>::Real;
 
       /// @brief Alias for the FFTW library complex type.
       using C       = typename Lib<prec>::Complex;
