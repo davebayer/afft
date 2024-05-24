@@ -158,7 +158,12 @@
     std::enable_if_t<requiredExpr, retType>
 #endif
 
-// Check if C++23 import std is supported
+// Check if C++20 <span> is supported
+#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
+# define AFFT_CXX_HAS_SPAN
+#endif
+
+// Check if C++23 `import std` is supported
 #if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
 # define AFFT_CXX_HAS_IMPORT_STD
 #endif

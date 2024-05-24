@@ -31,7 +31,7 @@
 
 AFFT_EXPORT namespace afft
 {
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
+#ifdef AFFT_CXX_HAS_SPAN
   /// @brief The dynamic extent value for Span.
   inline constexpr std::size_t dynamicExtent = std::dynamic_extent;
 
