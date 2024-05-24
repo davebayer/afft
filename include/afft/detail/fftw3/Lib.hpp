@@ -33,6 +33,23 @@
 
 namespace afft::detail::fftw3
 {
+  template<Precision prec>
+  struct IsSupportedPrecision
+    : std::conditional_t<(prec == Precision::f32 ||
+                          prec == Precision::f64 ||
+                          prec == Precision::_longDouble ||
+                          prec == Precision::f128),
+                         std::true_type,
+                         std::false_type> {};
+
+  template<Precision prec>
+  struct IsMpiSupportedPrecision
+    : std::conditional_t<(prec == Precision::f32 ||
+                          prec == Precision::f64 ||
+                          prec == Precision::_longDouble),
+                         std::true_type,
+                         std::false_type> {};
+
   /// @brief FFTW3 library for single precision.
   struct FloatLib
   {

@@ -34,13 +34,22 @@
 AFFT_EXPORT namespace afft::fftw3
 {
   /**
+   * @brief Does the FFTW3 library support the given precision?
+   * @tparam prec Precision of the FFTW3 library.
+   */
+  template<Precision prec>
+  inline constexpr bool isSupportedPrecision = detail::fftw3::IsSupportedPrecision<prec>::value;
+
+  /**
    * @brief Export FFTW3 wisdom to a file.
    * @tparam PrecT Precision of the FFTW3 library.
    * @param filename Name of the file to export the wisdom to.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void exportWisdomToFilename([[maybe_unused]] std::string_view filename)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -57,9 +66,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @tparam PrecT Precision of the FFTW3 library.
    * @param file File to export the wisdom to.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void exportWisdomToFile([[maybe_unused]] FILE* file)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -76,9 +87,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @tparam PrecT Precision of the FFTW3 library.
    * @return String containing the wisdom.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   [[nodiscard]] std::string exportWisdom()
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
     std::string wisdom{};
 
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
@@ -108,9 +121,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @brief Import FFTW3 wisdom from the system. Only on Unix and GNU systems.
    * @tparam PrecT Precision of the FFTW3 library.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void importSystemWisdom()
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -127,9 +142,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @tparam PrecT Precision of the FFTW3 library.
    * @param filename Name of the file to import the wisdom from.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void importWisdomFromFilename([[maybe_unused]] std::string_view filename)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -146,9 +163,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @tparam PrecT Precision of the FFTW3 library.
    * @param file File to import the wisdom from.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void importWisdomFromFile([[maybe_unused]] FILE* file)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -165,9 +184,11 @@ AFFT_EXPORT namespace afft::fftw3
    * @tparam PrecT Precision of the FFTW3 library.
    * @param wisdom String containing the wisdom.
    */
-  template<typeanme PrecT>
+  template<typename PrecT>
   void importWisdom([[maybe_unused]] std::string_view wisdom)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -186,6 +207,8 @@ AFFT_EXPORT namespace afft::fftw3
   template<typename PrecT>
   void forgetWisdom()
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -198,6 +221,13 @@ AFFT_EXPORT namespace afft::fftw3
 namespace mpst
 {
   /**
+   * @brief Does the FFTW3 MPI library support the given precision?
+   * @tparam prec Precision of the FFTW3 MPI library.
+   */
+  template<Precision prec>
+  inline constexpr bool isSupportedPrecision = detail::fftw3::IsMpiSupportedPrecision<prec>::value;
+
+  /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
    * @tparam PrecT Precision of the FFTW3 library.
    * @param comm MPI communicator.
@@ -205,6 +235,8 @@ namespace mpst
   template<typename PrecT>
   void broadcastWisdom([[maybe_unused]] MPI_Comm comm)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
 # if AFFT_BACKEND_IS_ENABLED(FFTW3)
     if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {

@@ -48,13 +48,14 @@ AFFT_EXPORT namespace afft
   /// @brief Precision of a floating-point number
   enum class Precision : std::uint8_t
   {
-    bf16   = 0, ///< Google Brain's brain floating-point format
-    f16    = 1, ///< IEEE 754 half-precision binary floating-point format
-    f32    = 2, ///< IEEE 754 single-precision binary floating-point format
-    f64    = 3, ///< IEEE 754 double-precision binary floating-point format
-    f64f64 = 4, ///< double double precision (f128 simulated with two f64)
-    f80    = 5, ///< x86 80-bit extended precision format
-    f128   = 6, ///< IEEE 754 quadruple-precision binary floating-point format
+    bf16,        ///< Google Brain's brain floating-point format
+    f16,         ///< IEEE 754 half-precision binary floating-point format
+    f32,         ///< IEEE 754 single-precision binary floating-point format
+    f64,         ///< IEEE 754 double-precision binary floating-point format
+    f64f64,      ///< double double precision (f128 simulated with two f64)
+    f80,         ///< x86 80-bit extended precision format
+    f128,        ///< IEEE 754 quadruple-precision binary floating-point format
+    _longDouble, ///< Precision of long double, only for internal use
   };
 
   /// @brief Alignment of a data type
