@@ -82,7 +82,7 @@ namespace afft::detail
    * @brief Check if the type is TransformParameters.
    * @tparam T The type.
    */
-  template<typename>
+  template<typename T>
   struct IsTransformParameters : std::false_type {};
 
   /// @brief Specialization for dft transform parameters.
@@ -96,6 +96,38 @@ namespace afft::detail
   /// @brief Specialization for dtt transform parameters.
   template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
   struct IsTransformParameters<afft::dtt::Parameters<sRank, tRank, ttRank>> : std::true_type {};
+
+  /**
+   * @brief TransformParameters template ranks.
+   * @tparam T The transform parameters type.
+   */
+  template<typename T>
+  struct TransformParametersTemplateRanks;
+
+  /// @brief Specialization for dft transform parameters.
+  template<std::size_t sRank, std::size_t tRank>
+  struct TransformParametersTemplateRanks<afft::dft::Parameters<sRank, tRank>>
+  {
+    static constexpr std::size_t shape     = sRank;
+    static constexpr std::size_t transform = tRank;
+  };
+  
+  /// @brief Specialization for dht transform parameters.
+  template<std::size_t sRank, std::size_t tRank>
+  struct TransformParametersTemplateRanks<afft::dht::Parameters<sRank, tRank>>
+  {
+    static constexpr std::size_t shape     = sRank;
+    static constexpr std::size_t transform = tRank;
+  };
+
+  /// @brief Specialization for dtt transform parameters.
+  template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
+  struct TransformParametersTemplateRanks<afft::dtt::Parameters<sRank, tRank, ttRank>>
+  {
+    static constexpr std::size_t shape         = sRank;
+    static constexpr std::size_t transform     = tRank;
+    static constexpr std::size_t transformType = ttRank;
+  };
 
   /**
    * @brief Transform backend type for given target.
@@ -144,7 +176,7 @@ namespace afft::detail
    * @brief Check if the type is TargetParameters.
    * @tparam T The type.
    */
-  template<typename>
+  template<typename T>
   struct IsTargetParameters : std::false_type {};
 
   /// @brief Specialization for cpu target parameters.
@@ -166,6 +198,48 @@ namespace afft::detail
   /// @brief Specialization for distributed cpu target parameters.
   template<std::size_t sRank>
   struct IsTargetParameters<afft::mpst::gpu::Parameters<sRank>> : std::true_type {};
+
+  /**
+   * @brief TargetParameters template ranks.
+   * @tparam T The target parameters type.
+   */
+  template<typename T>
+  struct TargetParametersTemplateRanks;
+
+  /// @brief Specialization for cpu target parameters.
+  template<std::size_t sRank>
+  struct TargetParametersTemplateRanks<afft::spst::cpu::Parameters<sRank>>
+  {
+    static constexpr std::size_t shape = sRank;
+  };
+
+  /// @brief Specialization for gpu target parameters.
+  template<std::size_t sRank>
+  struct TargetParametersTemplateRanks<afft::spst::gpu::Parameters<sRank>>
+  {
+    static constexpr std::size_t shape = sRank;
+  };
+
+  /// @brief Specialization for distributed spmt gpu target parameters.
+  template<std::size_t sRank>
+  struct TargetParametersTemplateRanks<afft::spmt::gpu::Parameters<sRank>>
+  {
+    static constexpr std::size_t shape = sRank;
+  };
+
+  /// @brief Specialization for distributed mpst cpu target parameters.
+  template<std::size_t sRank>
+  struct TargetParametersTemplateRanks<afft::mpst::cpu::Parameters<sRank>>
+  {
+    static constexpr std::size_t shape = sRank;
+  };
+
+  /// @brief Specialization for distributed mpst gpu target parameters.
+  template<std::size_t sRank>
+  struct TargetParametersTemplateRanks<afft::mpst::gpu::Parameters<sRank>>
+  {
+    static constexpr std::size_t shape = sRank;
+  };  
 
   /**
    * @brief ExecutionParameters type for given target.
@@ -214,7 +288,7 @@ namespace afft::detail
    * @brief Check if the type is ExecutionParameters.
    * @tparam T The type.
    */
-  template<typename>
+  template<typename T>
   struct IsExecutionParameters : std::false_type {};
 
   /// @brief Specialization for cpu ExecutionParameters.

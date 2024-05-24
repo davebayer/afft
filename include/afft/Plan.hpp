@@ -599,6 +599,14 @@ AFFT_EXPORT namespace afft
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
 
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
+    static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
+
+    static_assert((transformParamsShapeRank == dynamicExtent) ||
+                  (targetParamsShapeRank == dynamicExtent) ||
+                  (transformParamsShapeRank == targetParamsShapeRank),
+                  "Transform and target parameters must have the same shape rank");
+
     return Plan{detail::makePlanImpl(detail::Config(transformParams, targetParams), initParams)};
   }
 } // namespace afft
