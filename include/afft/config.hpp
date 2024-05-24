@@ -56,6 +56,15 @@
 #define AFFT_BACKEND_IS_ENABLED(bckndName) \
   (((AFFT_BACKEND_MASK) & AFFT_BACKEND_##bckndName) != 0)
 
+// Disable FFTW3 quad precision if the compiler is not supported
+#if !((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) \
+      && !(defined(__ICC) || defined(__INTEL_COMPILER) || defined(__CUDACC__) || defined(__PGI)) \
+      && (defined(__i386__) || defined(__x86_64__) || defined(__ia64__)))
+# ifdef AFFT_FFTW3_HAS_QUAD
+#   undef AFFT_FFTW3_HAS_QUAD
+# endif
+#endif
+
 /// @brief Macro for disabling GPU support
 #define AFFT_GPU_BACKEND_NONE   0
 /// @brief Macro for CUDA GPU backend
