@@ -47,6 +47,11 @@ AFFT_EXPORT namespace afft
                 TargetParamsT&          targetParams,
                 const InitParameters&   initParams = {});
 
+  template<typename TransformParamsT, typename TargetParamsT>
+  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
+                                                              TargetParamsT&          targetParams,
+                                                              const InitParameters&   initParams = {});
+
   /**
    * @class Plan
    * @brief Plan class
@@ -558,6 +563,12 @@ AFFT_EXPORT namespace afft
                            TargetParamsT&          targetParams,
                            const InitParameters&   initParams);
 
+      // Allow makePlanWithFeedback to create Plan objects
+      template<typename TransformParamsT, typename TargetParamsT>
+      std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
+                                                                  TargetParamsT&          targetParams,
+                                                                  const InitParameters&   initParams);
+
       // Allow PlanCache to create Plan objects
       friend class PlanCache;
 
@@ -607,7 +618,38 @@ AFFT_EXPORT namespace afft
                   (transformParamsShapeRank == targetParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
-    return Plan{detail::makePlanImpl(detail::Config(transformParams, targetParams), initParams)};
+    return Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams), initParams)};
+  }
+
+  /**
+   * @brief Create a plan for the given transform parameters
+   * @tparam TransformParamsT Transform parameters type
+   * @tparam TargetParamsT Target parameters type
+   * @param transformParams Transform parameters
+   * @param targetParams Target parameters
+   * @return Plan
+   */
+  template<typename TransformParamsT, typename TargetParamsT>
+  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
+                                                              TargetParamsT&          targetParams,
+                                                              const InitParameters&   initParams)
+  {
+    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
+    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
+
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
+    static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
+
+    static_assert((transformParamsShapeRank == dynamicExtent) ||
+                  (targetParamsShapeRank == dynamicExtent) ||
+                  (transformParamsShapeRank == targetParamsShapeRank),
+                  "Transform and target parameters must have the same shape rank");
+
+    std::pair<Plan, std::vector<Feedback>> result{};
+
+    result.first = Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams), initParams, &result.second)};
+
+    return result;
   }
 } // namespace afft
 

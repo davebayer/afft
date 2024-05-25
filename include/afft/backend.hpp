@@ -66,6 +66,16 @@ AFFT_EXPORT namespace afft
   };
 
   /**
+   * @brief Feedback from the backend initialization.
+   */
+  struct Feedback
+  {
+    Backend                       backend{};      ///< Backend that was initialized
+    std::string                   message{};      ///< Message from the backend
+    std::chrono::duration<double> measuredTime{}; ///< Measured time of the backend's transformation (if available)
+  };
+
+  /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
    * @tparam T Type of the value (Backend or BackendMask).
    * @param value Value to apply the operation to.
