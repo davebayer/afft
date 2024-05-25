@@ -22,13 +22,22 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_OPENCL_INCLUDE_HPP
-#define AFFT_DETAIL_GPU_OPENCL_INCLUDE_HPP
+#ifndef AFFT_DETAIL_OPENCL_INIT_HPP
+#define AFFT_DETAIL_OPENCL_INIT_HPP
 
-#ifdef __APPLE__
-# include <OpenCL/opencl.h>
-#else
-# include <CL/cl.h>
-#endif
+namespace afft::detail::opencl
+{
+  /// @brief Initialize OpenCL.
+  inline void init()
+  {
+    // Do nothing
+  }
 
-#endif /* AFFT_DETAIL_GPU_OPENCL_INCLUDE_HPP */
+  /// @brief Finalize OPENCL.
+  inline void finalize()
+  {
+    // Do nothing
+  }
+} // namespace afft::detail::opencl
+
+#endif /* AFFT_DETAIL_OPENCL_INIT_HPP */

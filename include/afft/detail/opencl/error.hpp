@@ -22,25 +22,39 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_OPENCL_INIT_HPP
-#define AFFT_DETAIL_GPU_OPENCL_INIT_HPP
+#ifndef AFFT_DETAIL_OPENCL_ERROR_HPP
+#define AFFT_DETAIL_OPENCL_ERROR_HPP
 
-#include "error.hpp"
-#include "include.hpp"
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-namespace afft::detail::gpu::opencl
+#include "../error.hpp"
+#include "../utils.hpp"
+
+namespace afft::detail
 {
-  /// @brief Initialize OpenCL.
-  inline void init()
+  /**
+   * @brief Specialization of isOk method for cl_int.
+   * @param error OpenCL error.
+   * @return True if error is CL_SUCCESS, false otherwise.
+   */
+  template<>
+  [[nodiscard]] inline constexpr bool Error::isOk(cl_int error)
   {
-    // Do nothing
+    return (error == CL_SUCCESS);
   }
 
-  /// @brief Finalize OPENCL.
-  inline void finalize()
+  /**
+   * @brief Specialization of makeErrorMessage method for cl_int.
+   * @param error OpenCL error.
+   * @return Error message.
+   */
+  template<>
+  [[nodiscard]] inline std::string Error::makeErrorMessage(cl_int error)
   {
-    // Do nothing
+    return cformat("[OpenCL error] error code #%d", error);
   }
-} // namespace afft::detail::gpu::opencl
+} // namespace afft::detail
 
-#endif /* AFFT_DETAIL_GPU_OPENCL_INIT_HPP */
+#endif /* AFFT_DETAIL_OPENCL_ERROR_HPP */

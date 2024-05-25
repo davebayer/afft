@@ -22,16 +22,17 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_OPENCL_OPENCL_HPP
-#define AFFT_DETAIL_GPU_OPENCL_OPENCL_HPP
+#ifndef AFFT_DETAIL_OPENCL_OPENCL_HPP
+#define AFFT_DETAIL_OPENCL_OPENCL_HPP
 
-#include <memory>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "include.hpp"
 #include "init.hpp"
 
-namespace afft::detail::gpu::opencl
+namespace afft::detail::opencl
 {
   static_assert(std::is_pointer_v<cl_mem>, "afft relies on cl_mem being a pointer type");
 
@@ -59,7 +60,8 @@ namespace afft::detail::gpu::opencl
    * @return std::unique_ptr<std::remove_pointer_t<cl_mem>, MemDeleter> Unique pointer to the buffer
    */
   template<typename T>
-  std::unique_ptr<std::remove_pointer_t<cl_mem>, MemDeleter> makeBufferFromPtr(cl_context context, T* svmBuffer, std::size_t size)
+  std::unique_ptr<std::remove_pointer_t<cl_mem>, MemDeleter>
+  makeBufferFromPtr(cl_context context, T* svmBuffer, std::size_t size)
   {
     cl_int       error{};
     cl_mem_flags flags  = CL_MEM_USE_HOST_PTR | ((std::is_const_v<T>) ? CL_MEM_READ_ONLY : CL_MEM_READ_WRITE);
@@ -95,6 +97,6 @@ namespace afft::detail::gpu::opencl
 
     return flags & CL_MEM_READ_WRITE;
   }
-} // namespace afft::detail::gpu::opencl
+} // namespace afft::detail::opencl
 
-#endif /* AFFT_DETAIL_GPU_OPENCL_OPENCL_HPP */
+#endif /* AFFT_DETAIL_OPENCL_OPENCL_HPP */
