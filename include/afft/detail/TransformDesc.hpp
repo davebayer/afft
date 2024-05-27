@@ -138,14 +138,7 @@ namespace afft::detail
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        MaxDimArray<std::size_t> shape{};
-
-        for (std::size_t i{}; i < getShapeRank(); ++i)
-        {
-          shape[i] = safeIntCast<I>(mShape[i]);
-        }
-
-        return shape;
+        return shape.cast<I>();
       }
 
       /**
@@ -464,36 +457,46 @@ namespace afft::detail
 
       /**
        * @brief Make the transform variant.
+       * @tparam sRank Rank of the shape.
+       * @tparam tRank Rank of the transform.
        * @param dftParams DFT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
+      template<std::size_t sRank, std::size_t tRank>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dft::Parameters& dftParams, std::size_t)
+      makeTransformVariant(const dft::Parameters<sRank, tRank>& dftParams, std::size_t)
       {
         return DftDesc{validateAndReturn(dftParams.type)};
       }
 
       /**
        * @brief Make the transform variant.
+       * @tparam sRank Rank of the shape.
+       * @tparam tRank Rank of the transform.
        * @param dhtParams DHT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
+      template<std::size_t sRank, std::size_t tRank>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dht::Parameters&, std::size_t)
+      makeTransformVariant(const dht::Parameters<sRank, tRank>&, std::size_t)
       {
         return DhtDesc{};
       }
 
       /**
        * @brief Make the transform variant.
+       * @tparam sRank Rank of the shape.
+       * @tparam tRank Rank of the transform.
+       * @tparam ttRank Rank of the transform type.
        * @param dttParams DTT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
+      template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dtt::Parameters& dttParams, std::size_t transformRank)
+      makeTransformVariant(const dtt::Parameters<sRank, tRank, ttRank>& dttParams, std::size_t transformRank)
       {
         if ((transformRank != 1) && (dttParams.types.size() != transformRank))
         {
