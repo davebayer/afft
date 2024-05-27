@@ -29,6 +29,7 @@
 # include "include.hpp"
 #endif
 
+#include "utils.hpp"
 #include "validate.hpp"
 #include "../common.hpp"
 #include "../cpu.hpp"
@@ -38,11 +39,32 @@
 namespace afft::detail
 {
   /**
-   * @brief std::array with size equal to the maximum number of dimensions.
-   * @tparam T Type of the elements.
+   * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxDimCount.
+   * @tparam T The type of the elements.
    */
   template<typename T>
-  using MaxDimArray = std::array<T, maxDimCount>;
+  struct MaxDimArray : std::array<T, maxDimCount>
+  {
+    /**
+     * @brief Safely casts the elements of the array to a different type.
+     * @tparam U The type to cast to.
+     * @return A new MaxDimArray with the elements cast to the new type.
+     */
+    template<typename U>
+    [[nodiscard]] constexpr MaxDimArray<U> cast() const
+    {
+      static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Both types must be integral.");
+
+      MaxDimArray<U> result{};
+
+      for (std::size_t i{}; i < size(); ++i)
+      {
+        result[i] = safeIntCast<U>((*this)[i]);
+      }
+
+      return result;
+    }
+  };
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_COMMON_HPP */
