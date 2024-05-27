@@ -51,18 +51,25 @@ namespace afft::detail
      * @return A new MaxDimArray with the elements cast to the new type.
      */
     template<typename U>
-    [[nodiscard]] constexpr MaxDimArray<U> cast() const
+    [[nodiscard]] constexpr MaxDimArray<U> cast() const noexcept(std::is_same_v<T, U>)
     {
       static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Both types must be integral.");
 
-      MaxDimArray<U> result{};
-
-      for (std::size_t i{}; i < size(); ++i)
+      if constexpr (std::is_same_v<T, U>)
       {
-        result[i] = safeIntCast<U>((*this)[i]);
+        return *this;
       }
+      else
+      {
+        MaxDimArray<U> result{};
 
-      return result;
+        for (std::size_t i{}; i < size(); ++i)
+        {
+          result[i] = safeIntCast<U>((*this)[i]);
+        }
+
+        return result;
+      }
     }
   };
 } // namespace afft::detail
