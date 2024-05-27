@@ -118,6 +118,9 @@ AFFT_EXPORT namespace afft
     mpi    = mpst,  ///< alias for multiple processes, single target
   };
 
+  /// @brief Maxium number of multi-targets
+  inline constexpr std::size_t maxMultiTargetCount{16};
+
   /// @brief Initialization effort
   enum class InitEffort : std::uint8_t
   {

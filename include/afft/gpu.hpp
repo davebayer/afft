@@ -133,9 +133,6 @@ namespace spst::gpu
 
 namespace spmt::gpu
 {
-  /// @brief Maximum number of multi devices
-  inline constexpr std::size_t maxDevices{16}; ///< maximum number of devices
-
   /// @brief Backend mask for multi gpu target
   inline constexpr BackendMask backendMask
   {
