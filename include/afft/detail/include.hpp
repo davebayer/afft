@@ -42,6 +42,11 @@ import std;
 #   include <cstddef>
 #   include <cstdint>
 #   include <cstdio>
+#   ifdef AFFT_CXX_HAS_EXPECTED
+#     include <expected>
+#   else
+#     include <tl/expected.hpp>
+#   endif
 #   include <functional>
 #   include <limits>
 #   include <list>
