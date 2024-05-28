@@ -10,3 +10,6 @@
 [submodule "3rdparty/span"]
 	path = 3rdparty/span
 	url = https://github.com/tcbrindle/span.git
+[submodule "3rdparty/expected"]
+	path = 3rdparty/expected
+	url = https://github.com/TartanLlama/expected.git
