@@ -163,8 +163,22 @@
 # include <version>
 #endif
 
-// implement C++20 requires clause for older C++ versions, should be used as:
-// auto func() -> AFFT_RET_REQUIRES(returnType, requirements) { ... }
+// implementation of C++20 requires clause for older C++ versions, should be used as:
+// AFFT_TEMPL_REQUIRES(typename T, std::is_integral_v<T>)
+// auto func(...) { ...}
+#if defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
+  /// @brief Macro for requires clause
+# define AFFT_TEMPL_REQUIRES(templParam, requiredExpr) \
+    template<templParam> requires(requiredExpr)
+#else
+  /// @brief Macro for requires clause, using std::enable_if_t for older C++ versions
+# define AFFT_TEMPL_REQUIRES(templParam, requiredExpr) \
+    template<templParam, std::enable_if_t<requiredExpr, int> = 0>
+#endif
+
+// implementation of C++20 requires clause for older C++ versions, should be used as:
+// template<typename T>
+// auto func() -> AFFT_RET_REQUIRES(returnType, std::is_integral_v<T>) { ... }
 #if defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
   /// @brief Macro for requires clause
 # define AFFT_RET_REQUIRES(retType, requiredExpr) \
