@@ -76,6 +76,36 @@ AFFT_EXPORT namespace afft
   };
 
   /**
+   * @brief Converts a Backend to a string.
+   * @param backend Backend to convert.
+   * @return String representation of the backend.
+   */
+  [[nodiscard]] inline constexpr std::string_view toString(Backend backend)
+  {
+    switch (backend)
+    {
+    case Backend::clfft:
+      return "clFFT";
+    case Backend::cufft:
+      return "cuFFT";
+    case Backend::fftw3:
+      return "FFTW3";
+    case Backend::hipfft:
+      return "hipFFT";
+    case Backend::mkl:
+      return "Intel MKL";
+    case Backend::pocketfft:
+      return "PocketFFT";
+    case Backend::rocfft:
+      return "rocFFT";
+    case Backend::vkfft:
+      return "VkFFT";
+    default:
+      return "<Invalid backend>";
+    }
+  }
+
+  /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
    * @tparam T Type of the value (Backend or BackendMask).
    * @param value Value to apply the operation to.
