@@ -29,57 +29,57 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::cufft
 {
   /**
-   * @brief Specialization of isOk method for cufftResult.
+   * @brief Check if cuFFT result is ok.
    * @param result cuFFT result.
-   * @return True if result is CUFFT_SUCCESS, false otherwise.
+   * @return True if result is ok, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(cufftResult result)
+  [[nodiscard]] inline constexpr bool isOk(cufftResult result)
   {
     return (result == CUFFT_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for cufftResult.
+   * @brief Check if cuFFT result is valid.
    * @param result cuFFT result.
-   * @return Error message.
+   * @throw BackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(cufftResult result)
+  inline void checkError(cufftResult result)
   {
-    auto get = [=]()
+    auto getErrorMsg = [](cufftResult result) constexpr -> std::string_view
     {
       switch (result)
       {
-      case CUFFT_SUCCESS:                   return "CUFFT_SUCCESS";
-      case CUFFT_INVALID_PLAN:              return "CUFFT_INVALID_PLAN";
-      case CUFFT_ALLOC_FAILED:              return "CUFFT_ALLOC_FAILED";
-      case CUFFT_INVALID_TYPE:              return "CUFFT_INVALID_TYPE";
-      case CUFFT_INVALID_VALUE:             return "CUFFT_INVALID_VALUE";
-      case CUFFT_INTERNAL_ERROR:            return "CUFFT_INTERNAL_ERROR";
-      case CUFFT_EXEC_FAILED:               return "CUFFT_EXEC_FAILED";
-      case CUFFT_SETUP_FAILED:              return "CUFFT_SETUP_FAILED";
-      case CUFFT_INVALID_SIZE:              return "CUFFT_INVALID_SIZE";
-      case CUFFT_UNALIGNED_DATA:            return "CUFFT_UNALIGNED_DATA";
-      case CUFFT_INCOMPLETE_PARAMETER_LIST: return "CUFFT_INCOMPLETE_PARAMETER_LIST";
-      case CUFFT_INVALID_DEVICE:            return "CUFFT_INVALID_DEVICE";
-      case CUFFT_PARSE_ERROR:               return "CUFFT_PARSE_ERROR";
-      case CUFFT_NO_WORKSPACE:              return "CUFFT_NO_WORKSPACE";
-      case CUFFT_NOT_IMPLEMENTED:           return "CUFFT_NOT_IMPLEMENTED";
-      case CUFFT_LICENSE_ERROR:             return "CUFFT_LICENSE_ERROR";
-      case CUFFT_NOT_SUPPORTED:             return "CUFFT_NOT_SUPPORTED";
-      default:                              return "Unknown error";
+      case CUFFT_SUCCESS:                   return "no error";
+      case CUFFT_INVALID_PLAN:              return "invalid plan handle";
+      case CUFFT_ALLOC_FAILED:              return "allocation of memory failed";
+      case CUFFT_INVALID_TYPE:              return "invalid type";
+      case CUFFT_INVALID_VALUE:             return "invalid value";
+      case CUFFT_INTERNAL_ERROR:            return "internal error";
+      case CUFFT_EXEC_FAILED:               return "plan execution failed";
+      case CUFFT_SETUP_FAILED:              return "setup failed";
+      case CUFFT_INVALID_SIZE:              return "invalid size";
+      case CUFFT_UNALIGNED_DATA:            return "invalid data alignment";
+      case CUFFT_INCOMPLETE_PARAMETER_LIST: return "incomplete parameter list";
+      case CUFFT_INVALID_DEVICE:            return "invalid device";
+      case CUFFT_PARSE_ERROR:               return "parse error";
+      case CUFFT_NO_WORKSPACE:              return "no workspace";
+      case CUFFT_NOT_IMPLEMENTED:           return "unimplemented feature";
+      case CUFFT_LICENSE_ERROR:             return "license error";
+      case CUFFT_NOT_SUPPORTED:             return "unsupported functionality";
+      default:                              return "unknown error";
       }
     };
 
-    return cformat("[cuFFT error] %s", get());
+    if (!isOk(result))
+    {
+      throw makeException<BackendException>(Backend::cufft, getErrorMsg(result));
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::cufft
 
 #endif /* AFFT_DETAIL_CUFFT_ERROR_HPP */

@@ -29,32 +29,32 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::opencl
 {
   /**
-   * @brief Specialization of isOk method for cl_int.
+   * @brief Check if OpenCL error is ok.
    * @param error OpenCL error.
    * @return True if error is CL_SUCCESS, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(cl_int error)
+  [[nodiscard]] inline constexpr bool isOk(cl_int error)
   {
     return (error == CL_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for cl_int.
+   * @brief Check if OpenCL error is valid.
    * @param error OpenCL error.
-   * @return Error message.
+   * @throw GpuBackendException if error is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(cl_int error)
+  inline void checkError(cl_int error)
   {
-    return cformat("[OpenCL error] error code #%d", error);
+    if (!isOk(error))
+    {
+      throw GpuBackendException{cformatNothrow("error no %d", error)};
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::opencl
 
 #endif /* AFFT_DETAIL_OPENCL_ERROR_HPP */

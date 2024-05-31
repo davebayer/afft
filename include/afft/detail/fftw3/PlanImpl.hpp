@@ -32,8 +32,9 @@
 #include "Lib.hpp"
 #include "../cxx.hpp"
 #include "../PlanImpl.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail::cpu::fftw3
+namespace afft::detail::fftw3
 {
   using namespace afft::cpu;
 
@@ -248,7 +249,7 @@ namespace afft::detail::cpu::fftw3
 
         if (plan == nullptr)
         {
-          throw makeException<std::runtime_error>("[FFTW3 error] Could not create FFTW plan");
+          throw BackendException{Backend::fftw3, "failed to create plan"};
         }
 
         mPlan.reset(plan);

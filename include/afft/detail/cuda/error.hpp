@@ -29,51 +29,49 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::cuda
 {
   /**
-   * @brief Specialization of isOk method for cudaError_t.
+   * @brief Check if CUDA error is ok.
    * @param error CUDA error.
    * @return True if error is cudaSuccess, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(cudaError_t error)
+  [[nodiscard]] inline constexpr bool isOk(cudaError_t error)
   {
     return (error == cudaSuccess);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for cudaError_t.
+   * @brief Check if CUDA error is valid.
    * @param error CUDA error.
-   * @return Error message.
+   * @throw GpuBackendException if error is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(cudaError_t error)
+  inline void checkError(cudaError_t error)
   {
-    return cformat("[CUDA Runtime error] %s - %s", cudaGetErrorName(error), cudaGetErrorString(error));
+    if (!isOk(error))
+    {
+      throw GpuBackendException(cformatNothrow("%s - %s", cudaGetErrorName(error), cudaGetErrorString(error)));
+    }
   }
 
   /**
-   * @brief Specialization of isOk method for CUresult.
+   * @brief Check if CUDA error is ok.
    * @param result CUDA driver error.
    * @return True if result is CUDA_SUCCESS, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(CUresult result)
+  [[nodiscard]] inline constexpr bool isOk(CUresult result)
   {
     return (result == CUDA_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for CUresult.
+   * @brief Check if CUDA error is valid.
    * @param result CUDA driver error.
-   * @return Error message.
+   * @throw GpuBackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(CUresult result)
+  inline void checkError(CUresult result)
   {
     const char* errorName{};
     const char* errorStr{};
@@ -81,9 +79,12 @@ namespace afft::detail
     cuGetErrorName(result, &errorName);
     cuGetErrorString(result, &errorStr);
 
-    return cformat("[CUDA Driver error] %s - %s", (errorName != nullptr) ? errorName : "Unnamed error",
-                                                  (errorStr != nullptr) ? errorName : "No description");
+    if (!isOk(result))
+    {
+      throw GpuBackendException{cformatNothrow("%s - %s", (errorName != nullptr) ? errorName : "unnamed error",
+                                                          (errorStr != nullptr) ? errorName : "no description")};
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::cuda
 
 #endif /* AFFT_DETAIL_GPU_CUDA_ERROR_HPP */

@@ -31,8 +31,8 @@
 
 #include "../common.hpp"
 #include "../cxx.hpp"
-#include "../error.hpp"
 #include "../PlanImpl.hpp"
+#include "../../exception.hpp"
 
 namespace afft::detail::pocketfft
 {
@@ -57,7 +57,7 @@ namespace afft::detail::pocketfft
     }
     catch (const std::exception& e)
     {
-      throw makeException<std::runtime_error>(cformat("[PocketFFT error] %s", e.what()));
+      throw BackendException{Backend::pocketfft, e.what()};
     }
   }
 

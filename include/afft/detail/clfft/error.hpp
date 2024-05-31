@@ -29,96 +29,153 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::clfft
 {
   /**
-   * @brief Specialization of isOk method for clfftStatus.
-   * @param result clFFT result.
+   * @brief Check if clFFT status is ok.
+   * @param result clFFT status.
    * @return True if result is CLFFT_SUCCESS, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(clfftStatus result)
+  [[nodiscard]] inline constexpr bool isOk(clfftStatus result)
   {
     return (result == CLFFT_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for clfftStatus.
-   * @param result clFFT result.
-   * @return Error message.
+   * @brief Check if clFFT status is valid.
+   * @param result clFFT status.
+   * @throw BackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(clfftStatus result)
+  inline void checkError(clfftStatus result)
   {
-    auto get = [=]()
+    auto getErrorMsg = [](clfftStatus result)
     {
       switch (result)
       {
-      case CLFFT_INVALID_GLOBAL_WORK_SIZE:        return "CLFFT_INVALID_GLOBAL_WORK_SIZE";
-      case CLFFT_INVALID_MIP_LEVEL:               return "CLFFT_INVALID_MIP_LEVEL";
-      case CLFFT_INVALID_BUFFER_SIZE:             return "CLFFT_INVALID_BUFFER_SIZE";
-      case CLFFT_INVALID_GL_OBJECT:               return "CLFFT_INVALID_GL_OBJECT";
-      case CLFFT_INVALID_OPERATION:               return "CLFFT_INVALID_OPERATION";
-      case CLFFT_INVALID_EVENT:                   return "CLFFT_INVALID_EVENT";
-      case CLFFT_INVALID_EVENT_WAIT_LIST:         return "CLFFT_INVALID_EVENT_WAIT_LIST";
-      case CLFFT_INVALID_GLOBAL_OFFSET:           return "CLFFT_INVALID_GLOBAL_OFFSET";
-      case CLFFT_INVALID_WORK_ITEM_SIZE:          return "CLFFT_INVALID_WORK_ITEM_SIZE";
-      case CLFFT_INVALID_WORK_GROUP_SIZE:         return "CLFFT_INVALID_WORK_GROUP_SIZE";
-      case CLFFT_INVALID_WORK_DIMENSION:          return "CLFFT_INVALID_WORK_DIMENSION";
-      case CLFFT_INVALID_KERNEL_ARGS:             return "CLFFT_INVALID_KERNEL_ARGS";
-      case CLFFT_INVALID_ARG_SIZE:                return "CLFFT_INVALID_ARG_SIZE";
-      case CLFFT_INVALID_ARG_VALUE:               return "CLFFT_INVALID_ARG_VALUE";
-      case CLFFT_INVALID_ARG_INDEX:               return "CLFFT_INVALID_ARG_INDEX";
-      case CLFFT_INVALID_KERNEL:                  return "CLFFT_INVALID_KERNEL";
-      case CLFFT_INVALID_KERNEL_DEFINITION:       return "CLFFT_INVALID_KERNEL_DEFINITION";
-      case CLFFT_INVALID_KERNEL_NAME:             return "CLFFT_INVALID_KERNEL_NAME";
-      case CLFFT_INVALID_PROGRAM_EXECUTABLE:      return "CLFFT_INVALID_PROGRAM_EXECUTABLE";
-      case CLFFT_INVALID_PROGRAM:                 return "CLFFT_INVALID_PROGRAM";
-      case CLFFT_INVALID_BUILD_OPTIONS:           return "CLFFT_INVALID_BUILD_OPTIONS";
-      case CLFFT_INVALID_BINARY:                  return "CLFFT_INVALID_BINARY";
-      case CLFFT_INVALID_SAMPLER:                 return "CLFFT_INVALID_SAMPLER";
-      case CLFFT_INVALID_IMAGE_SIZE:              return "CLFFT_INVALID_IMAGE_SIZE";
-      case CLFFT_INVALID_IMAGE_FORMAT_DESCRIPTOR: return "CLFFT_INVALID_IMAGE_FORMAT_DESCRIPTOR";
-      case CLFFT_INVALID_MEM_OBJECT:              return "CLFFT_INVALID_MEM_OBJECT";
-      case CLFFT_INVALID_HOST_PTR:                return "CLFFT_INVALID_HOST_PTR";
-      case CLFFT_INVALID_COMMAND_QUEUE:           return "CLFFT_INVALID_COMMAND_QUEUE";
-      case CLFFT_INVALID_QUEUE_PROPERTIES:        return "CLFFT_INVALID_QUEUE_PROPERTIES";
-      case CLFFT_INVALID_CONTEXT:                 return "CLFFT_INVALID_CONTEXT";
-      case CLFFT_INVALID_DEVICE:                  return "CLFFT_INVALID_DEVICE";
-      case CLFFT_INVALID_PLATFORM:                return "CLFFT_INVALID_PLATFORM";
-      case CLFFT_INVALID_DEVICE_TYPE:             return "CLFFT_INVALID_DEVICE_TYPE";
-      case CLFFT_INVALID_VALUE:                   return "CLFFT_INVALID_VALUE";
-      case CLFFT_MAP_FAILURE:                     return "CLFFT_MAP_FAILURE";
-      case CLFFT_BUILD_PROGRAM_FAILURE:           return "CLFFT_BUILD_PROGRAM_FAILURE";
-      case CLFFT_IMAGE_FORMAT_NOT_SUPPORTED:      return "CLFFT_IMAGE_FORMAT_NOT_SUPPORTED";
-      case CLFFT_IMAGE_FORMAT_MISMATCH:           return "CLFFT_IMAGE_FORMAT_MISMATCH";
-      case CLFFT_MEM_COPY_OVERLAP:                return "CLFFT_MEM_COPY_OVERLAP";
-      case CLFFT_PROFILING_INFO_NOT_AVAILABLE:    return "CLFFT_PROFILING_INFO_NOT_AVAILABLE";
-      case CLFFT_OUT_OF_HOST_MEMORY:              return "CLFFT_OUT_OF_HOST_MEMORY";
-      case CLFFT_OUT_OF_RESOURCES:                return "CLFFT_OUT_OF_RESOURCES";
-      case CLFFT_MEM_OBJECT_ALLOCATION_FAILURE:   return "CLFFT_MEM_OBJECT_ALLOCATION_FAILURE";
-      case CLFFT_COMPILER_NOT_AVAILABLE:          return "CLFFT_COMPILER_NOT_AVAILABLE";
-      case CLFFT_DEVICE_NOT_AVAILABLE:            return "CLFFT_DEVICE_NOT_AVAILABLE";
-      case CLFFT_DEVICE_NOT_FOUND:                return "CLFFT_DEVICE_NOT_FOUND";
-      case CLFFT_SUCCESS:                         return "CLFFT_SUCCESS";
-      case CLFFT_BUGCHECK:                        return "CLFFT_BUGCHECK";
-      case CLFFT_NOTIMPLEMENTED:                  return "CLFFT_NOTIMPLEMENTED";
-      case CLFFT_TRANSPOSED_NOTIMPLEMENTED:       return "CLFFT_TRANSPOSED_NOTIMPLEMENTED";
-      case CLFFT_FILE_NOT_FOUND:                  return "CLFFT_FILE_NOT_FOUND";
-      case CLFFT_FILE_CREATE_FAILURE:             return "CLFFT_FILE_CREATE_FAILURE";
-      case CLFFT_VERSION_MISMATCH:                return "CLFFT_VERSION_MISMATCH";
-      case CLFFT_INVALID_PLAN:                    return "CLFFT_INVALID_PLAN";
-      case CLFFT_DEVICE_NO_DOUBLE:                return "CLFFT_DEVICE_NO_DOUBLE";
-      case CLFFT_DEVICE_MISMATCH:                 return "CLFFT_DEVICE_MISMATCH";
-      default:                                    return "Unknown error";
+      case CLFFT_INVALID_GLOBAL_WORK_SIZE:
+        return "invalid global work size";
+      case CLFFT_INVALID_MIP_LEVEL:
+        return "invalid mip level";
+      case CLFFT_INVALID_BUFFER_SIZE:
+        return "invalid buffer size";
+      case CLFFT_INVALID_GL_OBJECT:
+        return "invalid gl object";
+      case CLFFT_INVALID_OPERATION:
+        return "invalid operation";
+      case CLFFT_INVALID_EVENT:
+        return "invalid event";
+      case CLFFT_INVALID_EVENT_WAIT_LIST:
+        return "invalid even wait list";
+      case CLFFT_INVALID_GLOBAL_OFFSET:
+        return "invalid global offset";
+      case CLFFT_INVALID_WORK_ITEM_SIZE:
+        return "invalid work item size";
+      case CLFFT_INVALID_WORK_GROUP_SIZE:
+        return "invalid work group size";
+      case CLFFT_INVALID_WORK_DIMENSION:
+        return "invalid work dimension";
+      case CLFFT_INVALID_KERNEL_ARGS:
+        return "invalid kernel argumentss";
+      case CLFFT_INVALID_ARG_SIZE:
+        return "invalid argument size";
+      case CLFFT_INVALID_ARG_VALUE:
+        return "invalid argument value";
+      case CLFFT_INVALID_ARG_INDEX:
+        return "invalid argument index";
+      case CLFFT_INVALID_KERNEL:
+        return "invalid kernel";
+      case CLFFT_INVALID_KERNEL_DEFINITION:
+        return "invalid kernel definition";
+      case CLFFT_INVALID_KERNEL_NAME:
+        return "invalid kernel name";
+      case CLFFT_INVALID_PROGRAM_EXECUTABLE:
+        return "invalid program executable";
+      case CLFFT_INVALID_PROGRAM:
+        return "invalid program";
+      case CLFFT_INVALID_BUILD_OPTIONS:
+        return "invalid build options";
+      case CLFFT_INVALID_BINARY:
+        return "invalid binary";
+      case CLFFT_INVALID_SAMPLER:
+        return "invalid sampler";
+      case CLFFT_INVALID_IMAGE_SIZE:
+        return "invalid image size";
+      case CLFFT_INVALID_IMAGE_FORMAT_DESCRIPTOR:
+        return "invalid image format description";
+      case CLFFT_INVALID_MEM_OBJECT:
+        return "invalid memory object";
+      case CLFFT_INVALID_HOST_PTR:
+        return "invalid host pointer";
+      case CLFFT_INVALID_COMMAND_QUEUE:
+        return "invalid command queue";
+      case CLFFT_INVALID_QUEUE_PROPERTIES:
+        return "invalid queue properties";
+      case CLFFT_INVALID_CONTEXT:
+        return "invalid context";
+      case CLFFT_INVALID_DEVICE:
+        return "invalid device";
+      case CLFFT_INVALID_PLATFORM:
+        return "invalid platform";
+      case CLFFT_INVALID_DEVICE_TYPE:
+        return "invalid device type";
+      case CLFFT_INVALID_VALUE:
+        return "invalid value";
+      case CLFFT_MAP_FAILURE:
+        return "map failure";
+      case CLFFT_BUILD_PROGRAM_FAILURE:
+        return "failed to build program";
+      case CLFFT_IMAGE_FORMAT_NOT_SUPPORTED:
+        return "unsupported image format";
+      case CLFFT_IMAGE_FORMAT_MISMATCH:
+        return "image format mismatch";
+      case CLFFT_MEM_COPY_OVERLAP:
+        return "overlap of memory copy";
+      case CLFFT_PROFILING_INFO_NOT_AVAILABLE:
+        return "unavailable profiling information";
+      case CLFFT_OUT_OF_HOST_MEMORY:
+        return "out of host memory";
+      case CLFFT_OUT_OF_RESOURCES:
+        return "out of resources";
+      case CLFFT_MEM_OBJECT_ALLOCATION_FAILURE:
+        return "memory object allocation failed";
+      case CLFFT_COMPILER_NOT_AVAILABLE:
+        return "unavailable compiler";
+      case CLFFT_DEVICE_NOT_AVAILABLE:
+        return "unavailable device";
+      case CLFFT_DEVICE_NOT_FOUND:
+        return "device not found";
+      case CLFFT_SUCCESS:
+        return "no error";
+      case CLFFT_BUGCHECK:
+        return "bugcheck";
+      case CLFFT_NOTIMPLEMENTED:
+        return "unimplemented feature";
+      case CLFFT_TRANSPOSED_NOTIMPLEMENTED:
+        return "unimplemented transposed";
+      case CLFFT_FILE_NOT_FOUND:
+        return "file not found";
+      case CLFFT_FILE_CREATE_FAILURE:
+        return "failed to create file";
+      case CLFFT_VERSION_MISMATCH:
+        return "version mismatch";
+      case CLFFT_INVALID_PLAN:
+        return "invalid plan";
+      case CLFFT_DEVICE_NO_DOUBLE:
+        return "device does not support double precision";
+      case CLFFT_DEVICE_MISMATCH:
+        return "device mismatch";
+      default:
+        return "unknown error";
       }
     };
 
-    return cformat("[clFFT error] %s", get());
+    if (!isOk(result))
+    {
+      throw BackendException{Backend::clfft, getErrorMsg(result)};
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::clfft
 
 #endif /* AFFT_DETAIL_CLFFT_ERROR_HPP */

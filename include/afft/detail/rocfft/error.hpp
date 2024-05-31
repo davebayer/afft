@@ -29,49 +29,59 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::rocfft
 {
   /**
-   * @brief Specialization of isOk method for rocfft_status.
+   * @brief Check if rocFFT status is ok.
    * @param status rocFFT status.
    * @return True if status is rocfft_status_success, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(rocfft_status status)
+  [[nodiscard]] inline constexpr bool isOk(rocfft_status status)
   {
     return (status == rocfft_status_success);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for rocfft_status.
+   * @brief Check if rocFFT status is valid.
    * @param status rocFFT status.
-   * @return Error message.
+   * @throw BackendException if status is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(rocfft_status status)
+  inline void checkError(rocfft_status status)
   {
-    auto get = [=]()
+    auto getErrorMsg = [](rocfft_status status)
     {
       switch(status)
       {
-      case rocfft_status_success:             return "rocfft_status_success";
-      case rocfft_status_failure:             return "rocfft_status_failure";
-      case rocfft_status_invalid_arg_value:   return "rocfft_status_invalid_arg_value";
-      case rocfft_status_invalid_dimensions:  return "rocfft_status_invalid_dimensions";
-      case rocfft_status_invalid_array_type:  return "rocfft_status_invalid_array_type";
-      case rocfft_status_invalid_strides:     return "rocfft_status_invalid_strides";
-      case rocfft_status_invalid_distance:    return "rocfft_status_invalid_distance";
-      case rocfft_status_invalid_offset:      return "rocfft_status_invalid_offset";
-      case rocfft_status_invalid_work_buffer: return "rocfft_status_invalid_work_buffer";
-      default:                                return "Unknown error";
+      case rocfft_status_success:
+        return "no error";
+      case rocfft_status_failure:
+        return "failure";
+      case rocfft_status_invalid_arg_value:
+        return "invalid argument value";
+      case rocfft_status_invalid_dimensions:
+        return "invalid dimensions";
+      case rocfft_status_invalid_array_type:
+        return "invalid array type";
+      case rocfft_status_invalid_strides:
+        return "invalid strides";
+      case rocfft_status_invalid_distance:
+        return "invalid distance";
+      case rocfft_status_invalid_offset:
+        return "invalid offset";
+      case rocfft_status_invalid_work_buffer:
+        return "invalid work buffer";
+      default:
+        return "unknown error";
       }
     };
 
-    return cformat("[rocFFT error] %s", get());
+    if (!isOk(status))
+    {
+      throw BackendException{Backend::rocfft, getErrorMsg(status)};
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::rocfft
 
 #endif /* AFFT_DETAIL_ROCFFT_ERROR_HPP */

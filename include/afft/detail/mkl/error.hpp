@@ -29,39 +29,39 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::mkl
 {
   /**
-   * @brief Specialization of isOk method for MKL_LONG.
+   * @brief Check if MKL error is ok.
    * @param result MKL error.
    * @return True if result is DFTI_NO_ERROR, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(MKL_LONG result)
+  [[nodiscard]] inline constexpr bool isOk(MKL_LONG result)
   {
     return (result == DFTI_NO_ERROR);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for MKL_LONG.
+   * @brief Check if MKL error is valid.
    * @param result MKL error.
-   * @return Error message.
+   * @throw BackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(MKL_LONG result)
+  inline void checkError(MKL_LONG result)
   {
-    auto get = [=]()
+    auto getErrorMsg = [](MKL_LONG result)
     {
       const char* msg = DftiErrorMessage(result);
 
-      return (msg != nullptr) ? msg : "Unknown error";
+      return (msg != nullptr) ? msg : "unknown error";
     };
 
-    return cformat("[MKL error] %s", get());
+    if (!isOk(result))
+    {
+      throw BackendException{Backend::mkl, getErrorMsg(result)};
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::mkl
 
 #endif /* AFFT_DETAIL_MKL_ERROR_HPP */

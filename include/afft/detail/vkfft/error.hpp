@@ -29,32 +29,32 @@
 # include "../include.hpp"
 #endif
 
-#include "../error.hpp"
-#include "../utils.hpp"
+#include "../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::vkfft
 {
   /**
-   * @brief Specialization of isOk method for VkFFTResult.
+   * @brief Check if VkFFT result is ok.
    * @param result VkFFT result.
    * @return True if result is VKFFT_SUCCESS, false otherwise.
    */
-  template<>
-  [[nodiscard]] inline constexpr bool Error::isOk(VkFFTResult result)
+  [[nodiscard]] inline constexpr bool isOk(VkFFTResult result)
   {
     return (result == VKFFT_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for VkFFTResult.
+   * @brief Check if VkFFT result is valid.
    * @param result VkFFT result.
-   * @return Error message.
+   * @throw BackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] inline std::string Error::makeErrorMessage(VkFFTResult result)
+  inline void checkError(VkFFTResult result)
   {
-    return cformat("[VkFFT error] %s", getVkFFTErrorString(result));
+    if (!isOk(result))
+    {
+      throw BackendException(Backend::vkfft, getVkFFTErrorString(result));
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::vkfft
 
 #endif /* AFFT_DETAIL_VKFFT_ERROR_HPP */

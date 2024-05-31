@@ -29,32 +29,32 @@
 # include "../../include.hpp"
 #endif
 
-#include "../../error.hpp"
-#include "../../utils.hpp"
+#include "../../../exception.hpp"
 
-namespace afft::detail
+namespace afft::detail::cuda::rtc
 {
   /**
-   * @brief Specialization of isOk method for nvrtcResult.
-   * @param result NVRTC result.
+   * @brief Check if CUDA RTC error is ok.
+   * @param result CUDA RTC result.
    * @return True if result is NVRTC_SUCCESS, false otherwise.
    */
-  template<>
-  [[nodiscard]] constexpr bool Error::isOk(nvrtcResult result)
+  [[nodiscard]] inline constexpr bool isOk(nvrtcResult result)
   {
     return (result == NVRTC_SUCCESS);
   }
 
   /**
-   * @brief Specialization of makeErrorMessage method for nvrtcResult.
-   * @param result NVRTC result.
-   * @return Error message.
+   * @brief Check if CUDA RTC error is valid.
+   * @param result CUDA RTC result.
+   * @throw GpuBackendException if result is not valid.
    */
-  template<>
-  [[nodiscard]] std::string Error::makeErrorMessage(nvrtcResult result)
+  inline void checkError(nvrtcResult result)
   {
-    return cformat("[CUDA RTC error] %s", nvrtcGetErrorString(result));
+    if (!isOk(result))
+    {
+      throw GpuBackendException(cformatNothrow("real-time compilation failed - %s", nvrtcGetErrorString(result)));
+    }
   }
-} // namespace afft::detail
+} // namespace afft::detail::cuda::rtc
 
 #endif /* AFFT_DETAIL_CUDA_RTC_ERROR_HPP */
