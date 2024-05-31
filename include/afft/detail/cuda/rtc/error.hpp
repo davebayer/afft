@@ -46,13 +46,13 @@ namespace afft::detail::cuda::rtc
   /**
    * @brief Check if CUDA RTC error is valid.
    * @param result CUDA RTC result.
-   * @throw GpuBackendException if result is not valid.
+   * @throw GpuBackendError if result is not valid.
    */
   inline void checkError(nvrtcResult result)
   {
     if (!isOk(result))
     {
-      throw GpuBackendException(cformatNothrow("real-time compilation failed - %s", nvrtcGetErrorString(result)));
+      throw GpuBackendError(cformatNothrow("real-time compilation failed - %s", nvrtcGetErrorString(result)));
     }
   }
 } // namespace afft::detail::cuda::rtc

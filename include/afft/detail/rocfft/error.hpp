@@ -46,7 +46,7 @@ namespace afft::detail::rocfft
   /**
    * @brief Check if rocFFT status is valid.
    * @param status rocFFT status.
-   * @throw BackendException if status is not valid.
+   * @throw BackendError if status is not valid.
    */
   inline void checkError(rocfft_status status)
   {
@@ -79,7 +79,7 @@ namespace afft::detail::rocfft
 
     if (!isOk(status))
     {
-      throw BackendException{Backend::rocfft, getErrorMsg(status)};
+      throw BackendError{Backend::rocfft, getErrorMsg(status)};
     }
   }
 } // namespace afft::detail::rocfft

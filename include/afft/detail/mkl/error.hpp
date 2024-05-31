@@ -46,7 +46,7 @@ namespace afft::detail::mkl
   /**
    * @brief Check if MKL error is valid.
    * @param result MKL error.
-   * @throw BackendException if result is not valid.
+   * @throw BackendError if result is not valid.
    */
   inline void checkError(MKL_LONG result)
   {
@@ -59,7 +59,7 @@ namespace afft::detail::mkl
 
     if (!isOk(result))
     {
-      throw BackendException{Backend::mkl, getErrorMsg(result)};
+      throw BackendError{Backend::mkl, getErrorMsg(result)};
     }
   }
 } // namespace afft::detail::mkl

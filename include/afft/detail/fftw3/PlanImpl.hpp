@@ -249,7 +249,7 @@ namespace afft::detail::fftw3
 
         if (plan == nullptr)
         {
-          throw BackendException{Backend::fftw3, "failed to create plan"};
+          throw BackendError{Backend::fftw3, "failed to create plan"};
         }
 
         mPlan.reset(plan);

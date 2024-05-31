@@ -56,7 +56,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
       {
-        throw BackendException{Backend::fftw3, "failed to export wisdom to file"};
+        throw BackendError{Backend::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -77,7 +77,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
       {
-        throw BackendException{Backend::fftw3, "failed to export wisdom to file"};
+        throw BackendError{Backend::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -132,7 +132,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
       {
-        throw BackendException{Backend::fftw3, "failed to import system wisdom"};
+        throw BackendError{Backend::fftw3, "failed to import system wisdom"};
       }
     }
 # endif
@@ -153,7 +153,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
       {
-        throw BackendException{Backend::fftw3, "failed to import wisdom from file"};
+        throw BackendError{Backend::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -174,7 +174,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
       {
-        throw BackendException{Backend::fftw3, "failed to import wisdom from file"};
+        throw BackendError{Backend::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -195,7 +195,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
       {
-        throw BackendException{Backend::fftw3, "failed to import wisdom"};
+        throw BackendError{Backend::fftw3, "failed to import wisdom"};
       }
     }
 # endif

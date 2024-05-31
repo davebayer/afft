@@ -57,7 +57,7 @@ namespace afft::detail::pocketfft
     }
     catch (const std::exception& e)
     {
-      throw BackendException{Backend::pocketfft, e.what()};
+      throw BackendError{Backend::pocketfft, e.what()};
     }
   }
 

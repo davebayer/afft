@@ -46,13 +46,13 @@ namespace afft::detail::vkfft
   /**
    * @brief Check if VkFFT result is valid.
    * @param result VkFFT result.
-   * @throw BackendException if result is not valid.
+   * @throw BackendError if result is not valid.
    */
   inline void checkError(VkFFTResult result)
   {
     if (!isOk(result))
     {
-      throw BackendException(Backend::vkfft, getVkFFTErrorString(result));
+      throw BackendError(Backend::vkfft, getVkFFTErrorString(result));
     }
   }
 } // namespace afft::detail::vkfft

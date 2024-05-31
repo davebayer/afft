@@ -46,7 +46,7 @@ namespace afft::detail::cufft
   /**
    * @brief Check if cuFFT result is valid.
    * @param result cuFFT result.
-   * @throw BackendException if result is not valid.
+   * @throw BackendError if result is not valid.
    */
   inline void checkError(cufftResult result)
   {
@@ -77,7 +77,7 @@ namespace afft::detail::cufft
 
     if (!isOk(result))
     {
-      throw makeException<BackendException>(Backend::cufft, getErrorMsg(result));
+      throw makeException<BackendError>(Backend::cufft, getErrorMsg(result));
     }
   }
 } // namespace afft::detail::cufft

@@ -46,13 +46,13 @@ namespace afft::detail::opencl
   /**
    * @brief Check if OpenCL error is valid.
    * @param error OpenCL error.
-   * @throw GpuBackendException if error is not valid.
+   * @throw GpuBackendError if error is not valid.
    */
   inline void checkError(cl_int error)
   {
     if (!isOk(error))
     {
-      throw GpuBackendException{cformatNothrow("error no %d", error)};
+      throw GpuBackendError{cformatNothrow("error no %d", error)};
     }
   }
 } // namespace afft::detail::opencl

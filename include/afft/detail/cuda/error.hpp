@@ -46,13 +46,13 @@ namespace afft::detail::cuda
   /**
    * @brief Check if CUDA error is valid.
    * @param error CUDA error.
-   * @throw GpuBackendException if error is not valid.
+   * @throw GpuBackendError if error is not valid.
    */
   inline void checkError(cudaError_t error)
   {
     if (!isOk(error))
     {
-      throw GpuBackendException(cformatNothrow("%s - %s", cudaGetErrorName(error), cudaGetErrorString(error)));
+      throw GpuBackendError(cformatNothrow("%s - %s", cudaGetErrorName(error), cudaGetErrorString(error)));
     }
   }
 
@@ -69,7 +69,7 @@ namespace afft::detail::cuda
   /**
    * @brief Check if CUDA error is valid.
    * @param result CUDA driver error.
-   * @throw GpuBackendException if result is not valid.
+   * @throw GpuBackendError if result is not valid.
    */
   inline void checkError(CUresult result)
   {
@@ -81,7 +81,7 @@ namespace afft::detail::cuda
 
     if (!isOk(result))
     {
-      throw GpuBackendException{cformatNothrow("%s - %s", (errorName != nullptr) ? errorName : "unnamed error",
+      throw GpuBackendError{cformatNothrow("%s - %s", (errorName != nullptr) ? errorName : "unnamed error",
                                                           (errorStr != nullptr) ? errorName : "no description")};
     }
   }

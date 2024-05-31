@@ -47,35 +47,35 @@ namespace afft
   /**
    * @brief Exception thrown when a backend error occurs.
    */
-  class BackendException : public Exception
+  class BackendError : public Exception
   {
     public:
       /// @brief Default constructor (deleted)
-      BackendException() = delete;
+      BackendError() = delete;
 
       /**
        * @brief Constructor.
        * @param backend Backend that caused the exception.
        * @param msg Message of the exception.
        */
-      explicit BackendException(Backend backend, std::string_view msg)
+      explicit BackendError(Backend backend, std::string_view msg)
       : mBackend{backend}, mMessage{makeMessage(backend, msg)}
       {}
 
       /// @brief Copy constructor
-      BackendException(const BackendException&) = default;
+      BackendError(const BackendError&) = default;
 
       /// @brief Move constructor
-      BackendException(BackendException&&) = default;
+      BackendError(BackendError&&) = default;
 
       /// @brief Destructor
-      virtual ~BackendException() override = default;
+      virtual ~BackendError() override = default;
 
       /// @brief Copy assignment operator
-      BackendException& operator=(const BackendException&) = default;
+      BackendError& operator=(const BackendError&) = default;
 
       /// @brief Move assignment operator
-      BackendException& operator=(BackendException&&) = default;
+      BackendError& operator=(BackendError&&) = default;
 
       /**
        * @brief Gets the message of the exception.
@@ -110,34 +110,34 @@ namespace afft
       std::string mMessage{}; ///< Message of the exception
   };
 
-  class GpuBackendException : public Exception
+  class GpuBackendError : public Exception
   {
     public:
       /// @brief Default constructor (deleted)
-      GpuBackendException() = delete;
+      GpuBackendError() = delete;
 
       /**
        * @brief Constructor.
        * @param msg Message of the exception.
        */
-      explicit GpuBackendException(std::string_view msg)
+      explicit GpuBackendError(std::string_view msg)
       : mMessage{makeMessage(msg)}
       {}
 
       /// @brief Copy constructor
-      GpuBackendException(const GpuBackendException&) = default;
+      GpuBackendError(const GpuBackendError&) = default;
 
       /// @brief Move constructor
-      GpuBackendException(GpuBackendException&&) = default;
+      GpuBackendError(GpuBackendError&&) = default;
 
       /// @brief Destructor
-      virtual ~GpuBackendException() override = default;
+      virtual ~GpuBackendError() override = default;
 
       /// @brief Copy assignment operator
-      GpuBackendException& operator=(const GpuBackendException&) = default;
+      GpuBackendError& operator=(const GpuBackendError&) = default;
 
       /// @brief Move assignment operator
-      GpuBackendException& operator=(GpuBackendException&&) = default;
+      GpuBackendError& operator=(GpuBackendError&&) = default;
 
       /**
        * @brief Gets the message of the exception.
@@ -171,34 +171,34 @@ namespace afft
       std::string mMessage{}; ///< Message of the exception  
   };
 
-  class MpBackendException : public Exception
+  class MpBackendError : public Exception
   {
     public:
       /// @brief Default constructor (deleted)
-      MpBackendException() = delete;
+      MpBackendError() = delete;
 
       /**
        * @brief Constructor.
        * @param msg Message of the exception.
        */
-      explicit MpBackendException(std::string_view msg)
+      explicit MpBackendError(std::string_view msg)
       : mMessage{makeMessage(msg)}
       {}
 
       /// @brief Copy constructor
-      MpBackendException(const MpBackendException&) = default;
+      MpBackendError(const MpBackendError&) = default;
 
       /// @brief Move constructor
-      MpBackendException(MpBackendException&&) = default;
+      MpBackendError(MpBackendError&&) = default;
 
       /// @brief Destructor
-      virtual ~MpBackendException() override = default;
+      virtual ~MpBackendError() override = default;
 
       /// @brief Copy assignment operator
-      MpBackendException& operator=(const MpBackendException&) = default;
+      MpBackendError& operator=(const MpBackendError&) = default;
 
       /// @brief Move assignment operator
-      MpBackendException& operator=(MpBackendException&&) = default;
+      MpBackendError& operator=(MpBackendError&&) = default;
 
       /**
        * @brief Gets the message of the exception.
