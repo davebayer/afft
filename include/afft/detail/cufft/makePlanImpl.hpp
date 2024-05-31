@@ -41,22 +41,22 @@ namespace afft::detail::cufft
    * @param initParams The initialization parameters.
    * @return The plan implementation or an error message.
    */
-  [[nodiscard]] inline cxx::expected<std::unique_ptr<detail::PlanImpl>, std::string>
+  [[nodiscard]] inline std::unique_ptr<detail::PlanImpl>
   makePlanImpl(const Desc& desc, const InitParams& initParams)
   {
     if (desc.getTransformRank() == 0 || desc.getTransformRank() > 3)
     {
-      return cxx::unexpected("cuFFT only supports 1D, 2D, and 3D transforms");
+      throw BackendError{Backend::cufft, "only 1D, 2D, and 3D transforms are supported"};
     }
 
     if (desc.getTransformHowManyRank() > 1)
     {
-      return cxx::unexpected("cuFFT does not support omiting multiple dimensions");
+      throw BackendError{Backend::cufft, "omitting more than one dimension is not supported"};
     }
 
     if (desc.getComplexFormat() != ComplexFormat::interleaved)
     {
-      return cxx::unexpected("cuFFT only supports interleaved complex format");
+      throw BackendError{Backend::cufft, "only interleaved complex format is supported"};
     }
 
     if (desc.getTransform() == Transform::dft)
@@ -65,22 +65,22 @@ namespace afft::detail::cufft
 
       if (dftDesc.type == dft::Type::complexToReal && desc.getPreserveSource())
       {
-        return cxx::unexpected("cuFFT does not support preserving the source for complex-to-real transforms");
+        throw BackendError{Backend::cufft, "preserving the source for complex-to-real transforms is not supported"};
       }
     }
     else
     {
-      return cxx::unexpected("cuFFT only supports DFT transforms");
+      throw BackendError{Backend::cufft, "only DFT transforms are supported"};
     }
 
     if (const auto& prec = desc.getPrecision(); prec.execution != prec.source || prec.execution != prec.destination)
     {
-      return cxx::unexpected("cuFFT only supports the same precision for execution, source and destination");
+      throw BackendError{Backend::cufft, "execution, source and destination must precision match"};
     }
 
     if (desc.getNormalize() != Normalize::none)
     {
-      return cxx::unexpected("cuFFT does not support normalization");
+      throw BackendError{Backend::cufft, "normalization is not supported"};
     }
 
     switch (desc.getTarget())
@@ -95,11 +95,11 @@ namespace afft::detail::cufft
       case Distribution::mpst:
         return mpst::gpu::PlanImpl::make(desc, initParams.initEffort);
       default:
-        return cxx::unexpected("Unsupported distribution");
+        throw BackendError{Backend::cufft, "only SPST, SPMT, and MPST distributions are supported"};
       }
       break;
     default:
-      return cxx::unexpected("Unsupported target");
+      return cxx::unexpected("only gpu target is supported");
     }
   }
 } // namespace afft::detail::cufft
