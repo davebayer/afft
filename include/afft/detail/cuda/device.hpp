@@ -40,7 +40,7 @@ namespace afft::detail::cuda
   int getDeviceCount()
   {
     int count{};
-    Error::check(cudaGetDeviceCount(&count));
+    checkError(cudaGetDeviceCount(&count));
     return count;
   }
 
@@ -61,7 +61,7 @@ namespace afft::detail::cuda
   int getCurrentDevice()
   {
     int device{};
-    Error::check(cudaGetDevice(&device));
+    checkError(cudaGetDevice(&device));
     return device;
   }
 
@@ -79,7 +79,7 @@ namespace afft::detail::cuda
       explicit ScopedDevice(int device)
       : mPrevDevice{getCurrentDevice()}
       {
-        Error::check(cudaSetDevice(device));
+        checkError(cudaSetDevice(device));
       }
 
       /**
@@ -87,7 +87,7 @@ namespace afft::detail::cuda
        */
       ~ScopedDevice()
       {
-        Error::check(cudaSetDevice(mPrevDevice));
+        checkError(cudaSetDevice(mPrevDevice));
       }
 
       /**

@@ -256,12 +256,12 @@ namespace afft::detail::cuda::rtc
 
         nvrtcProgram program{};
 
-        Error::check(nvrtcCreateProgram(&program,
-                                        srcCode.data(),
-                                        programName.data(),
-                                        static_cast<int>(headers.size()),
-                                        headerSrcCodePtrs.data(),
-                                        headerIncludeNamePtrs.data()));
+        checkError(nvrtcCreateProgram(&program,
+                                       srcCode.data(),
+                                       programName.data(),
+                                       static_cast<int>(headers.size()),
+                                       headerSrcCodePtrs.data(),
+                                       headerIncludeNamePtrs.data()));
 
         mProgram.reset(program, Deleter{});
       }
@@ -311,15 +311,15 @@ namespace afft::detail::cuda::rtc
           throw makeException<std::runtime_error>("The program is already compiled");
         }
 
-        bool ok = Error::isOk(nvrtcCompileProgram(mProgram.get(), static_cast<int>(options.size()), options.data()));
+        bool ok = isOk(nvrtcCompileProgram(mProgram.get(), static_cast<int>(options.size()), options.data()));
 
         std::size_t logSize{};
 
-        Error::check(nvrtcGetProgramLogSize(mProgram.get(), &logSize));
+        checkError(nvrtcGetProgramLogSize(mProgram.get(), &logSize));
 
         mCompilationLog.resize(logSize);
 
-        Error::check(nvrtcGetProgramLog(mProgram.get(), mCompilationLog.data()));
+        checkError(nvrtcGetProgramLog(mProgram.get(), mCompilationLog.data()));
 
         return ok;
       }
@@ -338,7 +338,7 @@ namespace afft::detail::cuda::rtc
 
         const char* loweredName{};
 
-        Error::check(nvrtcGetLoweredName(mProgram.get(), cppSymbolName.data(), &loweredName));
+        checkError(nvrtcGetLoweredName(mProgram.get(), cppSymbolName.data(), &loweredName));
 
         return CppLoweredSymbolName(loweredName, mProgram, CppLoweredSymbolName::PriviledgeToken{});
       }
@@ -358,10 +358,10 @@ namespace afft::detail::cuda::rtc
         std::size_t size{};
         switch (codeType)
         {
-        case CodeType::PTX:     Error::check(nvrtcGetPTXSize(mProgram.get(), &size));     break;
-        case CodeType::CUBIN:   Error::check(nvrtcGetCUBINSize(mProgram.get(), &size));   break;
-        case CodeType::LTOIR:   Error::check(nvrtcGetLTOIRSize(mProgram.get(), &size));   break;
-        case CodeType::OptixIR: Error::check(nvrtcGetOptiXIRSize(mProgram.get(), &size)); break;
+        case CodeType::PTX:     checkError(nvrtcGetPTXSize(mProgram.get(), &size));     break;
+        case CodeType::CUBIN:   checkError(nvrtcGetCUBINSize(mProgram.get(), &size));   break;
+        case CodeType::LTOIR:   checkError(nvrtcGetLTOIRSize(mProgram.get(), &size));   break;
+        case CodeType::OptixIR: checkError(nvrtcGetOptiXIRSize(mProgram.get(), &size)); break;
         default:
           throw makeException<std::runtime_error>("Invalid code type");
         }
@@ -369,10 +369,10 @@ namespace afft::detail::cuda::rtc
         Code code(codeType, size, Code::PrivilegedToken{});
         switch (codeType)
         {
-        case CodeType::PTX:     Error::check(nvrtcGetPTX(mProgram.get(), code.data()));     break;
-        case CodeType::CUBIN:   Error::check(nvrtcGetCUBIN(mProgram.get(), code.data()));   break;
-        case CodeType::LTOIR:   Error::check(nvrtcGetLTOIR(mProgram.get(), code.data()));   break;
-        case CodeType::OptixIR: Error::check(nvrtcGetOptiXIR(mProgram.get(), code.data())); break;
+        case CodeType::PTX:     checkError(nvrtcGetPTX(mProgram.get(), code.data()));     break;
+        case CodeType::CUBIN:   checkError(nvrtcGetCUBIN(mProgram.get(), code.data()));   break;
+        case CodeType::LTOIR:   checkError(nvrtcGetLTOIR(mProgram.get(), code.data()));   break;
+        case CodeType::OptixIR: checkError(nvrtcGetOptiXIR(mProgram.get(), code.data())); break;
         default:
           throw makeException<std::runtime_error>("Invalid code type");
         }
@@ -397,7 +397,7 @@ namespace afft::detail::cuda::rtc
           throw makeException<std::runtime_error>("The program is already compiled");
         }
 
-        Error::check(nvrtcAddNameExpression(mProgram.get(), symbolName.data()));
+        checkError(nvrtcAddNameExpression(mProgram.get(), symbolName.data()));
       }
 
       /**
@@ -432,11 +432,11 @@ namespace afft::detail::cuda::rtc
   {
     int size{};
 
-    Error::check(nvrtcGetNumSupportedArchs(&size));
+    checkError(nvrtcGetNumSupportedArchs(&size));
 
     std::vector<int> archs(static_cast<std::size_t>(size));
 
-    Error::check(nvrtcGetSupportedArchs(archs.data()));
+    checkError(nvrtcGetSupportedArchs(archs.data()));
 
     return archs;
   }
@@ -454,10 +454,10 @@ namespace afft::detail::cuda::rtc
     }
 
     int ccMajor{};
-    Error::check(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
+    checkError(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
 
     int ccMinor{};
-    Error::check(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
+    checkError(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
 
     return cformat("-arch=sm_%d%d", ccMajor, ccMinor);
   }

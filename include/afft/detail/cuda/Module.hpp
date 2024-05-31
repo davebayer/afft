@@ -85,7 +85,7 @@ namespace afft::detail::cuda
       {
         CUmodule mod{};
 
-        Error::check(cuModuleLoadData(&mod, code.data()));
+        checkError(cuModuleLoadData(&mod, code.data()));
 
         mModule.reset(mod, Deleter{});
       }
@@ -102,7 +102,7 @@ namespace afft::detail::cuda
         CUdeviceptr ptr{};
         std::size_t size{};
 
-        Error::check(cuModuleGetGlobal(&ptr, &size, mModule.get(), name.data()));
+        checkError(cuModuleGetGlobal(&ptr, &size, mModule.get(), name.data()));
 
         return std::make_tuple(ptr, size);
       }
@@ -119,7 +119,7 @@ namespace afft::detail::cuda
         CUdeviceptr ptr{};
         std::size_t size{};
 
-        Error::check(cuModuleGetGlobal(&ptr, &size, mModule.get(), name.data()));
+        checkError(cuModuleGetGlobal(&ptr, &size, mModule.get(), name.data()));
 
         return std::make_tuple(ptr, size);
       }
@@ -135,7 +135,7 @@ namespace afft::detail::cuda
 
         CUfunction function{};
 
-        Error::check(cuModuleGetFunction(&function, mModule.get(), name.data()));
+        checkError(cuModuleGetFunction(&function, mModule.get(), name.data()));
 
         return function;
       }
@@ -151,7 +151,7 @@ namespace afft::detail::cuda
 
         CUfunction function{};
 
-        Error::check(cuModuleGetFunction(&function, mModule.get(), name.data()));
+        checkError(cuModuleGetFunction(&function, mModule.get(), name.data()));
 
         return function;
       }

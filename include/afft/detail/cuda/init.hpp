@@ -36,8 +36,8 @@ namespace afft::detail::cuda
   /// @brief Initialize the CUDA driver and runtime APIs.
   inline void init()
   {
-    Error::check(cuInit(0));         // Initialize the CUDA driver API
-    Error::check(cudaFree(nullptr)); // Initialize the CUDA runtime API
+    checkError(cuInit(0));         // Initialize the CUDA driver API
+    checkError(cudaFree(nullptr)); // Initialize the CUDA runtime API
   }
 
   /// @brief Finalize the CUDA driver and runtime APIs.
