@@ -112,7 +112,7 @@ AFFT_EXPORT namespace afft
    */
   template<std::size_t extent>
   [[nodiscard]] constexpr auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::array<std::size_t, extent>), extent != dynamicExtent)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<std::size_t, extent>), extent != dynamicExtent)
   {
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {
@@ -143,7 +143,7 @@ AFFT_EXPORT namespace afft
    */
   template<std::size_t extent>
   [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_DETAIL_EXPAND(std::vector<std::size_t>), extent == dynamicExtent)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<std::size_t>), extent == dynamicExtent)
   {
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {

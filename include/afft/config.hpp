@@ -25,11 +25,22 @@
 #ifndef AFFT_CONFIG_HPP
 #define AFFT_CONFIG_HPP
 
-#include "detail/macro.hpp"
-
 #define AFFT_VERSION_MAJOR      0 ///< Major version.
 #define AFFT_VERSION_MINOR      1 ///< Minor version.
 #define AFFT_VERSION_PATCH      0 ///< Patch version.
+
+/**
+ * @brief Expand and concatenate two tokens.
+ * @param a First token.
+ * @param b Second token.
+ * @return Concatenated tokens.
+ */
+#define AFFT_EXPAND_AND_CONCAT(a, b) \
+  AFFT_EXPAND_AND_CONCAT_HELPER(a, b)
+
+// Helper macro for AFFT_EXPAND_AND_CONCAT
+#define AFFT_EXPAND_AND_CONCAT_HELPER(a, b) \
+  a##b
 
 /// @brief clFFT backend id
 #define AFFT_BACKEND_CLFFT      (1 << 0)
@@ -83,7 +94,7 @@
  * @return True zero if the backend is selected, false otherwise
  */
 #define AFFT_GPU_BACKEND_IS(bckndName) \
-  (AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_GPU_BACKEND_, AFFT_GPU_BACKEND) == AFFT_GPU_BACKEND_##bckndName)
+  (AFFT_EXPAND_AND_CONCAT(AFFT_GPU_BACKEND_, AFFT_GPU_BACKEND) == AFFT_GPU_BACKEND_##bckndName)
 
 /// @brief Disable multi-process backend
 #define AFFT_MP_BACKEND_NONE    0
@@ -99,7 +110,7 @@
  * @return true if multi-process backend is enabled, false otherwise
  */
 #define AFFT_MP_BACKEND_IS(bckndName) \
-  (AFFT_DETAIL_EXPAND_AND_CONCAT(AFFT_MP_BACKEND_, AFFT_MP_BACKEND) == AFFT_MP_BACKEND_##bckndName)
+  (AFFT_EXPAND_AND_CONCAT(AFFT_MP_BACKEND_, AFFT_MP_BACKEND) == AFFT_MP_BACKEND_##bckndName)
 
 // If max dimension count is not defined, use 4 as default
 #ifdef AFFT_MAX_DIM_COUNT
@@ -139,6 +150,12 @@
 #ifndef AFFT_EXPORT
 # define AFFT_EXPORT
 #endif
+
+/**
+ * @brief Define AFFT_PARAM macro to enable passing parameters containing commas
+ * @param ... Parameter
+ */
+#define AFFT_PARAM(...)         __VA_ARGS__
 
 // If C++ version is 20, try to include <version> header
 #if (AFFT_CXX_VERSION >= 202002L) && __has_include(<version>)
