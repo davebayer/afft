@@ -110,6 +110,9 @@ import std;
 #   else
 #     include <cufftXt.h>
 #   endif
+#   if CUFFT_VERSION < 8000
+#     error "cuFFT version 8.0 or higher is required"
+#   endif
 # endif
 #endif
 
