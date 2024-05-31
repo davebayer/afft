@@ -431,25 +431,31 @@ namespace afft::detail
       {
         MaxDimArray<std::size_t> axes{};
 
-        if (axesView.size() > shapeRank)
+        if (axesView.empty())
+        {
+          std::iota(axes.begin(), axes.begin() + shapeRank, 0);
+        }
+        else if (axesView.size() <= shapeRank)
+        {
+          std::bitset<maxDimCount> seenAxes{};
+          
+          for (const auto& axis : axes)
+          {
+            if (axis >= shapeRank)
+            {
+              throw std::invalid_argument("Transform axis out of bounds");
+            }
+            else if (seenAxes.test(axis))
+            {
+              throw std::invalid_argument("Transform axes must be unique");
+            }
+
+            seenAxes.set(axis);
+          }
+        }
+        else
         {
           throw std::invalid_argument("Too many transform axes");
-        }
-
-        std::bitset<maxDimCount> seenAxes{};
-        
-        for (const auto& axis : axes)
-        {
-          if (axis >= shapeRank)
-          {
-            throw std::invalid_argument("Transform axis out of bounds");
-          }
-          else if (seenAxes.test(axis))
-          {
-            throw std::invalid_argument("Transform axes must be unique");
-          }
-
-          seenAxes.set(axis);
         }
 
         return axes;
