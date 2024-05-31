@@ -29,6 +29,7 @@
 # include "detail/include.hpp"
 #endif
 
+#include "exception.hpp"
 #include "detail/fftw3/Lib.hpp"
 
 AFFT_EXPORT namespace afft::fftw3
@@ -55,7 +56,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
       {
-        throw std::runtime_error("Failed to export FFTW3 wisdom to file");
+        throw BackendException{Backend::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -76,7 +77,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
       {
-        throw std::runtime_error("Failed to export FFTW3 wisdom to file");
+        throw BackendException{Backend::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -131,7 +132,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
       {
-        throw std::runtime_error("Failed to import FFTW3 system wisdom");
+        throw BackendException{Backend::fftw3, "failed to import system wisdom"};
       }
     }
 # endif
@@ -152,7 +153,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
       {
-        throw std::runtime_error("Failed to import FFTW3 wisdom from file");
+        throw BackendException{Backend::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -173,7 +174,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
       {
-        throw std::runtime_error("Failed to import FFTW3 wisdom from file");
+        throw BackendException{Backend::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -194,7 +195,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
       {
-        throw std::runtime_error("Failed to import FFTW3 wisdom");
+        throw BackendException{Backend::fftw3, "failed to import wisdom"};
       }
     }
 # endif
