@@ -264,7 +264,11 @@ namespace afft::detail
   {
     const auto size = std::snprintf(nullptr, 0, format.data(), args...);
 
-    if (size >= 0)
+    if (size == 0)
+    {
+      return std::string{};
+    }
+    else if (size > 0)
     {
       std::string result(static_cast<std::size_t>(size), '\0');
 
@@ -275,6 +279,29 @@ namespace afft::detail
     }
 
     throw std::runtime_error("Failed to format string");
+  }
+
+  /**
+   * @brief Formats a string using C-style format without throwing exceptions.
+   * @param format Format string.
+   * @param args Arguments to format.
+   * @return Formatted string.
+   */
+  template<typename... Args>
+  [[nodiscard]] std::string cformatNothrow(std::string_view format, const Args&... args) noexcept
+  {
+    std::string result{};
+
+    const auto size = std::snprintf(nullptr, 0, format.data(), args...);
+
+    if (size > 0)
+    {
+      result.resize(static_cast<std::size_t>(size));
+
+      std::snprintf(result.data(), result.size() + 1, format.data(), args...);
+    }
+
+    return result;
   }
 
   /**
