@@ -1,6 +1,3 @@
-[submodule "3rdparty/mdspan"]
-	path = 3rdparty/mdspan
-	url = https://github.com/kokkos/mdspan.git
 [submodule "3rdparty/pocketfft"]
 	path = 3rdparty/pocketfft
 	url = https://github.com/mreineck/pocketfft.git
@@ -10,6 +7,4 @@
 [submodule "3rdparty/span"]
 	path = 3rdparty/span
 	url = https://github.com/tcbrindle/span.git
-[submodule "3rdparty/expected"]
-	path = 3rdparty/expected
-	url = https://github.com/TartanLlama/expected.git
+	
