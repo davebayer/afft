@@ -31,6 +31,12 @@
 
 #include "detail/backend.hpp"
 
+#include "common.hpp"
+
+#include "clfft.hpp"
+#include "cufft.hpp"
+#include "fftw3.hpp"
+
 AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
@@ -64,6 +70,140 @@ AFFT_EXPORT namespace afft
     first, ///< select the first available backend
     best,  ///< select the best available backend
   };
+
+inline namespace spst
+{
+namespace cpu
+{
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
+                                                      Backend::mkl |
+                                                      Backend::pocketfft;
+
+  /// @brief Backend initialization parameters
+  struct InitParameters
+  {
+    fftw3::spst::InitParameters fftw3{};
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask                   mask{supportedBackendMask};            ///< backend mask
+    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
+    InitParameters                initParameters{};                      ///< backend initialization parameters
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+  };
+} // namespace cpu
+
+namespace gpu
+{
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::clfft |
+                                                      Backend::cufft |
+                                                      Backend::hipfft |
+                                                      Backend::rocfft |
+                                                      Backend::vkfft;
+
+  /// @brief Backend initialization parameters
+  struct InitParameters
+  {
+    clfft::spst::InitParameters clfft{};
+    cufft::spst::InitParameters cufft{};
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask                   mask{supportedBackendMask};            ///< backend mask
+    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
+    InitParameters                initParameters{};                      ///< backend initialization parameters
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+  };
+} // namespace gpu
+} // inline namespace spst
+
+namespace spmt
+{
+namespace gpu
+{
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::cufft |
+                                                      Backend::hipfft |
+                                                      Backend::rocfft;
+
+  /// @brief Backend initialization parameters
+  struct InitParameters
+  {
+    cufft::spmt::InitParameters cufft{};
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask                   mask{supportedBackendMask};            ///< backend mask
+    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
+    InitParameters                initParameters{};                      ///< backend initialization parameters
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+  };
+} // namespace gpu
+} // namespace spmt
+
+namespace mpst
+{
+namespace cpu
+{
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
+                                                      Backend::mkl;
+
+  /// @brief Backend initialization parameters
+  struct InitParameters
+  {
+    fftw3::mpst::InitParameters fftw3{};
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask                   mask{supportedBackendMask};            ///< backend mask
+    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
+    InitParameters                initParameters{};                      ///< backend initialization parameters
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+  };
+} // namespace cpu
+
+namespace gpu
+{
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = BackendMask::empty | Backend::cufft;
+
+  /// @brief Backend initialization parameters
+  struct InitParameters
+  {
+    cufft::mpst::InitParameters cufft{};
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask                   mask{supportedBackendMask};            ///< backend mask
+    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
+    InitParameters                initParameters{};                      ///< backend initialization parameters
+    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
+    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+  };
+} // namespace gpu
+} // namespace mpst
 
   /**
    * @brief Feedback from the backend initialization.

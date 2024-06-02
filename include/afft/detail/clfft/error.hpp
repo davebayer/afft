@@ -46,7 +46,7 @@ namespace afft::detail::clfft
   /**
    * @brief Check if clFFT status is valid.
    * @param result clFFT status.
-   * @throw BackendException if result is not valid.
+   * @throw BackendError if result is not valid.
    */
   inline void checkError(clfftStatus result)
   {
@@ -173,7 +173,7 @@ namespace afft::detail::clfft
 
     if (!isOk(result))
     {
-      throw BackendException{Backend::clfft, getErrorMsg(result)};
+      throw BackendError{Backend::clfft, getErrorMsg(result)};
     }
   }
 } // namespace afft::detail::clfft

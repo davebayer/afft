@@ -34,6 +34,18 @@
 
 AFFT_EXPORT namespace afft::fftw3
 {
+  /// @brief FFTW3 planner flags
+  enum class PlannerFlag
+  {
+    estimate,        ///< Estimate plan flag
+    measure,         ///< Measure plan flag
+    patient,         ///< Patient plan flag
+    exhaustive,      ///< Exhaustive planner flag
+    estimatePatient, ///< Estimate and patient plan flag
+  };
+
+inline namespace spst
+{
   /**
    * @brief Does the FFTW3 library support the given precision?
    * @tparam prec Precision of the FFTW3 library.
@@ -218,9 +230,27 @@ AFFT_EXPORT namespace afft::fftw3
 # endif
   }
 
+  /**
+   * @brief Initialization parameters for the FFTW3 plan.
+   */
+  struct InitParameters
+  {
+    PlannerFlag plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+  };
+} // inline namespace spst
+
 #if AFFT_MP_BACKEND_IS(MPI)
 namespace mpst
 {
+  /**
+   * @brief Initialization parameters for the FFTW3 MPI plan.
+   */
+  struct InitParameters
+  {
+    PlannerFlag plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::size_t blockSize{};                       ///< Decomposition block size
+  };
+
   /**
    * @brief Does the FFTW3 MPI library support the given precision?
    * @tparam prec Precision of the FFTW3 MPI library.

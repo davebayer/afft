@@ -54,24 +54,42 @@ namespace afft::detail::cufft
     {
       switch (result)
       {
-      case CUFFT_SUCCESS:                   return "no error";
-      case CUFFT_INVALID_PLAN:              return "invalid plan handle";
-      case CUFFT_ALLOC_FAILED:              return "allocation of memory failed";
-      case CUFFT_INVALID_TYPE:              return "invalid type";
-      case CUFFT_INVALID_VALUE:             return "invalid value";
-      case CUFFT_INTERNAL_ERROR:            return "internal error";
-      case CUFFT_EXEC_FAILED:               return "plan execution failed";
-      case CUFFT_SETUP_FAILED:              return "setup failed";
-      case CUFFT_INVALID_SIZE:              return "invalid size";
-      case CUFFT_UNALIGNED_DATA:            return "invalid data alignment";
-      case CUFFT_INCOMPLETE_PARAMETER_LIST: return "incomplete parameter list";
-      case CUFFT_INVALID_DEVICE:            return "invalid device";
-      case CUFFT_PARSE_ERROR:               return "parse error";
-      case CUFFT_NO_WORKSPACE:              return "no workspace";
-      case CUFFT_NOT_IMPLEMENTED:           return "unimplemented feature";
-      case CUFFT_LICENSE_ERROR:             return "license error";
-      case CUFFT_NOT_SUPPORTED:             return "unsupported functionality";
-      default:                              return "unknown error";
+      case CUFFT_SUCCESS:
+        return "no error";
+      case CUFFT_INVALID_PLAN:
+        return "invalid plan handle";
+      case CUFFT_ALLOC_FAILED:
+        return "allocation of memory failed";
+      case CUFFT_INVALID_TYPE:
+        return "invalid type";
+      case CUFFT_INVALID_VALUE:
+        return "invalid value";
+      case CUFFT_INTERNAL_ERROR:
+        return "internal error";
+      case CUFFT_EXEC_FAILED:
+        return "plan execution failed";
+      case CUFFT_SETUP_FAILED:
+        return "setup failed";
+      case CUFFT_INVALID_SIZE:
+        return "invalid size";
+      case CUFFT_UNALIGNED_DATA:
+        return "invalid data alignment";
+      case CUFFT_INCOMPLETE_PARAMETER_LIST:
+        return "incomplete parameter list";
+      case CUFFT_INVALID_DEVICE:
+        return "invalid device";
+      case CUFFT_PARSE_ERROR:
+        return "parse error";
+      case CUFFT_NO_WORKSPACE:
+        return "no workspace";
+      case CUFFT_NOT_IMPLEMENTED:
+        return "unimplemented feature";
+      case CUFFT_LICENSE_ERROR:
+        return "license error";
+      case CUFFT_NOT_SUPPORTED:
+        return "unsupported functionality";
+      default:
+        return "unknown error";
       }
     };
 

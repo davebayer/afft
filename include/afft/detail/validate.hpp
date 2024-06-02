@@ -219,25 +219,6 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the InitEffort enum class.
-  template<>
-  struct Validator<InitEffort>
-  {
-    constexpr bool operator()(InitEffort effort) const noexcept
-    {
-      switch (effort)
-      {
-      case InitEffort::low:
-      case InitEffort::med:
-      case InitEffort::high:
-      case InitEffort::max:
-        return true;
-      default:
-        return false;
-      }
-    }
-  };
-
   /// @brief Validator for the Normalization enum class.
   template<>
   struct Validator<Normalization>
@@ -249,23 +230,6 @@ namespace afft::detail
       case Normalization::none:
       case Normalization::orthogonal:
       case Normalization::unitary:
-        return true;
-      default:
-        return false;
-      }
-    }
-  };
-
-  /// @brief Validator for the WorkspacePolicy enum class.
-  template<>
-  struct Validator<WorkspacePolicy>
-  {
-    constexpr bool operator()(WorkspacePolicy policy) const noexcept
-    {
-      switch (policy)
-      {
-      case WorkspacePolicy::minimal:
-      case WorkspacePolicy::performance:
         return true;
       default:
         return false;
@@ -337,6 +301,44 @@ namespace afft::detail
       case Distribution::spst:
       case Distribution::spmt:
       case Distribution::mpst:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
+  /// @brief Validator for the afft::cufft::WorkspacePolicy enum class.
+  template<>
+  struct Validator<afft::cufft::WorkspacePolicy>
+  {
+    constexpr bool operator()(afft::cufft::WorkspacePolicy policy) const noexcept
+    {
+      switch (policy)
+      {
+      case afft::cufft::WorkspacePolicy::performance:
+      case afft::cufft::WorkspacePolicy::minimal:
+      case afft::cufft::WorkspacePolicy::user:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
+  /// @brief Validator for the afft::fftw3::PlannerFlag enum class.
+  template<>
+  struct Validator<afft::fftw3::PlannerFlag>
+  {
+    constexpr bool operator()(afft::fftw3::PlannerFlag flag) const noexcept
+    {
+      switch (flag)
+      {
+      case afft::fftw3::PlannerFlag::estimate:
+      case afft::fftw3::PlannerFlag::measure:
+      case afft::fftw3::PlannerFlag::patient:
+      case afft::fftw3::PlannerFlag::exhaustive:
+      case afft::fftw3::PlannerFlag::estimatePatient:
         return true;
       default:
         return false;

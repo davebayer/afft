@@ -118,47 +118,12 @@ AFFT_EXPORT namespace afft
     mpi    = mpst,  ///< alias for multiple processes, single target
   };
 
-  /// @brief Maxium number of multi-targets
-  inline constexpr std::size_t maxMultiTargetCount{16};
-
-  /// @brief Initialization effort
-  enum class InitEffort : std::uint8_t
-  {
-    low,               ///< low effort initialization
-    med,               ///< medium effort initialization
-    high,              ///< high effort initialization
-    max,               ///< maximum effort initialization
-    
-    estimate   = low,  ///< alias for low effort initialization in FFTW style
-    measure    = med,  ///< alias for medium effort initialization in FFTW style
-    patient    = high, ///< alias for high effort initialization in FFTW style
-    exhaustive = max,  ///< alias for maximum effort initialization in FFTW style
-  };
-
-  /// @brief Initialization parameters
-  struct InitParameters
-  {
-    BackendMask                   backendMask{BackendMask::all};         ///< backend mask
-    View<Backend>                 backendInitOrder{};                    ///< backend initialization order, empty view means default order for the target
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    InitEffort                    initEffort{InitEffort::med};           ///< plan initialization effort
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
-  };
-
   /// @brief Normalization
   enum class Normalization : std::uint8_t
   {
     none,       ///< no normalization
     orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
     unitary,    ///< 1/N normalization applied to inverse transform
-  };
-
-  /// @brief Workspace policy
-  enum class WorkspacePolicy : std::uint8_t
-  {
-    minimal,     ///< use as little workspace as possible
-    performance, ///< perfer performance over workspace minimization
   };
 
   /**
