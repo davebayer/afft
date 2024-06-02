@@ -29,8 +29,6 @@
 # include "../include.hpp"
 #endif
 
-#include "../common.hpp"
-
 namespace afft::detail::fftw3
 {
   template<Precision prec>
