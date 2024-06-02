@@ -31,49 +31,203 @@
 
 #include "common.hpp"
 #include "PlanImpl.hpp"
-#include "cpu/makePlanImpl.hpp"
-#if AFFT_GPU_IS_ENABLED
-# include "gpu/makePlanImpl.hpp"
+#if AFFT_BACKEND_IS_ENABLED(CLFFT)
+# include "clfft/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(CUFFT)
+# include "cufft/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# include "fftw3/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(MKL)
+# include "mkl/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+# include "pocketfft/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+# include "rocfft/makePlanImpl.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(VKFFT)
+# include "vkfft/makePlanImpl.hpp"
 #endif
 
 namespace afft::detail
 {
-  /**
-   * @brief Create a PlanImpl object based on the given configuration.
-   * @tparam ConfigT The configuration type.
-   * @param config The configuration to use.
-   * @param backendSelectParams The parameters for the transform backend selection.
-   * @return std::unique_ptr<PlanImpl> The created PlanImpl object.
-   */
-  template<typename BackendSelectParametersT>
-  [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makePlanImpl(const Config& config, const BackendSelectParametersT& backendSelectParams)
+  
+
+  template<typename Fn>
+  auto forEachBackend(BackendMask backendMask, Fn&& fn)
+    -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
   {
-    constexpr auto target = backendSelectParametersTarget<BackendSelectParametersT>;
+    for (BackendUnderlyingType i{}; i < cxx::to_underlying(Backend::_count); ++i)
+    {
+      const Backend backend = static_cast<Backend>(i);
+
+      if (backendMask & backend)
+      {
+        fn(backend);
+      }
+    }
+  }
+
+  template<typename Fn>
+  auto forEachBackend(BackendMask backendMask, View<Backend> backendOrder, Fn&& fn)
+    -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
+  {
+    for (const Backend backend : backendOrder)
+    {
+      if (backendMask & backend)
+      {
+        fn(backend);
+      }
+
+      backendMask &= ~backend;
+    }
+
+    if (cxx::to_underlying(backendMask))
+    {
+      forEachBackend(backendMask, std::forward<Fn>(fn));
+    }
+  }
+
+  template<Target target, Distribution distrib>
+  [[nodiscard]] std::unique_ptr<PlanImpl>
+  makePlanImpl(Backend                                  backend,
+               const Desc&                              desc,
+               const SelectParameters<target, distrib>& selectParams,
+               std::string*                             feedbackMessage)
+  {
+    auto assignFeedbackMessage = [&](auto&& message)
+    {
+      if (feedbackMessage != nullptr)
+      {
+        *feedbackMessage = std::forward<decltype(message)>(message);
+      }
+    };
+
+    std::unique_ptr<PlanImpl> planImpl{};
+    
+    if (!(backend & supportedBackendMask<target, distrib>))
+    {
+      assignFeedbackMessage("Backend not supported for target and distribution");
+    }
+    else
+    {
+      try
+      {
+        switch (backend)
+        {
+#       if AFFT_BACKEND_IS_ENABLED(CLFFT)
+        case Backend::clfft:
+          planImpl = clfft::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(CUFFT)
+        case Backend::cufft:
+          planImpl = cufft::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(FFTW3)
+        case Backend::fftw3:
+          planImpl = fftw3::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(MKL)
+        case Backend::mkl:
+          planImpl = mkl::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+        case Backend::pocketfft:
+          planImpl = pocketfft::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+        case Backend::rocfft:
+          planImpl = rocfft::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(VKFFT)
+        case Backend::vkfft:
+          planImpl = vkfft::makePlanImpl(desc, selectParams);
+          break;
+#       endif
+        default:
+          assignFeedbackMessage("Backend is disabled");
+          break;
+        }
+      }
+      catch (const std::exception& e)
+      {
+        assignFeedbackMessage(e.what());
+      }
+      catch (...)
+      {
+        assignFeedbackMessage("Unknown error");
+      }
+    }
+
+    return planImpl;
+  }
+
+  template<typename SelectParametersT>
+  [[nodiscard]] inline std::unique_ptr<PlanImpl>
+  makeFirstPlanImpl(const Desc& desc, const SelectParametersT& selectParams, std::vector<Feedback>* feedbacks)
+  {
+    std::unique_ptr<PlanImpl> planImpl{};
+
+    forEachBackend(selectParams.mask, selectParams.order, [&](Backend backend)
+    {
+      if (!planImpl)
+      {
+        std::string* feedbackMessage{};
+
+        if (feedbacks != nullptr)
+        {
+          auto& feedback = feedbacks->emplace_back();
+          feedback.backend = backend;
+
+          feedbackMessage = &feedback.message;
+        }
+        
+        planImpl = makePlanImpl(backend, desc, selectParams, feedbackMessage);
+      }
+    });
+
+    return planImpl;
+  }
+
+  [[nodiscard]] inline std::unique_ptr<PlanImpl>
+  makeBestPlanImpl(const Desc& desc, const InitParameters& initParams, std::vector<Feedback>* feedbacks)
+  {
+    return {}
+  }
+
+  template<typename SelectParametersT>
+  [[nodiscard]] inline std::unique_ptr<PlanImpl>
+  makePlanImpl(const Desc& desc, const SelectParametersT& selectParams, std::vector<Feedback>* feedbacks = nullptr)
+  {
+    validate(selectParams.strategy);
 
     std::unique_ptr<PlanImpl> planImpl{};
 
-    if (config.getTarget() != target)
+    switch (initParams.selectStrategy)
     {
-      throw makeException<std::runtime_error>("Invalid target");
-    }
-
-    if constexpr (target == Target::cpu)
-    {
-      planImpl = cpu::makePlanImpl(config, backendSelectParams);
-    }
-    else if constexpr (target == Target::gpu)
-    {
-#   if AFFT_GPU_IS_ENABLED
-      planImpl = gpu::makePlanImpl(config, backendSelectParams);
-#   else
-      throw makeException<std::runtime_error>("GPU support is disabled");
-#   endif
+    case SelectStrategy::first:
+      planImpl = makeFirstPlanImpl(desc, selectParams, feedbacks);
+      break;
+    case SelectStrategy::best:
+      planImpl = makeBestPlanImpl(desc, selectParams, feedbacks);
+      break;
+    default:
+      cxx::unreachable();
     }
 
     if (!planImpl)
     {
-      throw makeException<std::runtime_error>("Failed to create PlanImpl object");
+      throw makeException<std::runtime_error>("Failed to create plan implementation");
     }
 
     return planImpl;

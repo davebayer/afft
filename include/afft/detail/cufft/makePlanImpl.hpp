@@ -41,14 +41,10 @@ namespace afft::detail::cufft
    * @param initParams The initialization parameters.
    * @return The plan implementation or an error message.
    */
-  [[nodiscard]] inline std::unique_ptr<detail::PlanImpl>
-  makePlanImpl(const Desc& desc, const InitParams& initParams)
+  template<Target target, Distribution distrib>
+  [[nodiscard]] std::unique_ptr<detail::PlanImpl>
+  makePlanImpl(const Desc& desc, const SelectParameters<target, distrib>& selectParams)
   {
-    if (desc.getTransformRank() == 0 || desc.getTransformRank() > 3)
-    {
-      throw BackendError{Backend::cufft, "only 1D, 2D, and 3D transforms are supported"};
-    }
-
     if (desc.getTransformHowManyRank() > 1)
     {
       throw BackendError{Backend::cufft, "omitting more than one dimension is not supported"};
@@ -83,23 +79,28 @@ namespace afft::detail::cufft
       throw BackendError{Backend::cufft, "normalization is not supported"};
     }
 
-    switch (desc.getTarget())
+    if constexpr (target == Target::gpu)
     {
-    case Target::gpu:
-      switch (desc.getDistribution())
+      if constexpr (distrib == Distribution::spst)
       {
-      case Distribution::spst:
-        return spst::gpu::PlanImpl::make(desc, initParams.initEffort);
-      case Distribution::spmt:
-        return spmt::gpu::PlanImpl::make(desc, initParams.initEffort);
-      case Distribution::mpst:
-        return mpst::gpu::PlanImpl::make(desc, initParams.initEffort);
-      default:
+        return spst::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+      }
+      else if constexpr (distrib == Distribution::spmt)
+      {
+        return spmt::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+      }
+      else if constexpr (distrib == Distribution::mpst)
+      {
+        return mpst::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+      }
+      else
+      {
         throw BackendError{Backend::cufft, "only SPST, SPMT, and MPST distributions are supported"};
       }
-      break;
-    default:
-      return BackendError{Backend::cufft, "only gpu target is supported"};
+    }
+    else
+    {
+      throw BackendError{Backend::cufft, "only gpu target is supported"};
     }
   }
 } // namespace afft::detail::cufft

@@ -54,7 +54,7 @@ namespace afft::detail::cufft::spst
        * @throw BackendError if an error occurs or the plan cannot be created.
        */
       [[nodiscard]] static std::unique_ptr<PlanImpl>
-      make(const Desc& desc, const InitEffort initEffort)
+      make(const Desc& desc, const afft::cufft::spst::gpu::Parameters cufftParams)
       try
       {
         const auto& precision = desc.getTransformPrecision();
@@ -91,7 +91,7 @@ namespace afft::detail::cufft::spst
 
         auto planImpl = std::make_unique<PlanImpl>();
 
-        if (initEffort >= InitEffort::med)
+        if (cufftParams.usePatientJIT)
         {
 #       if CUFFT_VERSION >= 11200
           checkError(cufftSetPlanPropertyInt64(planImpl->mHandle, NVFFT_PLAN_PROPERTY_INT64_PATIENT_JIT, 1));
@@ -113,7 +113,9 @@ namespace afft::detail::cufft::spst
         if (dftDesc.type == dft::Type::complexToComplex && std::all_of(n.begin(), n.end(), [](auto size){ return size <= 4096}))
         {
 #       if CUFFT_VERSION >= 9200
-          checkError(cufftXtSetWorkAreaPolicy(planImpl->mHandle, makeWorkAreaPolicy(desc.getWorkspacePolicy())));
+          checkError(cufftXtSetWorkAreaPolicy(planImpl->mHandle,
+                                              makeWorkAreaPolicy(cufftParams.workspacePolicy)),
+                                              &cufftParams.userWorkspaceSize);
 #       endif
         }
 
