@@ -61,9 +61,12 @@ namespace afft::detail::cufft::spst
         const auto& dftDesc   = desc.getTransformDesc<Transform::dft>();
         const auto& gpuDesc   = desc.getTargetDesc<Target::gpu, Distribution::spst>();
 
-        cuda::ScopedDevice device{gpuDesc.device};
+        const auto rank = static_cast<int>(desc.getTransformRank());
 
-        auto rank               = static_cast<int>(desc.getTransformRank());
+        if (rank < 1 || rank > 3)
+        {
+          throw BackendError{Backend::cufft, "cuFFT supports only 1D, 2D, and 3D transforms"};
+        }
 
         auto n                  = desc.getTransformDims<SizeT>();
         auto [inembed, istride] = desc.getTransformSrcNembedAndStride<SizeT>();
@@ -83,6 +86,8 @@ namespace afft::detail::cufft::spst
         auto batch              = (config.getTransformHowManyRank() == 1)
                                     ? desc.getTransformHowManyDims<SizeT>().front() : SizeT{1};
         auto executionType      = makeCudaDatatype(precision.execution, Complexity::complex);
+
+        cuda::ScopedDevice device{gpuDesc.device};
 
         auto planImpl = std::make_unique<PlanImpl>();
 
@@ -123,6 +128,24 @@ namespace afft::detail::cufft::spst
         throw BackendError{Backend::cufft, e.what()};
       }
 
+      /// @brief Deleted copy constructor.
+      PlanImpl(const PlanImpl&) = delete;
+
+      /// @brief Default move constructor.
+      PlanImpl(PlanImpl&&) = default;
+
+      /// @brief Deleted copy assignment operator.
+      PlanImpl& operator=(const PlanImpl&) = delete;
+
+      /// @brief Default move assignment operator.
+      PlanImpl& operator=(PlanImpl&&) = default;
+
+      /// @brief Destructor.
+      ~PlanImpl() override
+      {
+        cufftDestroy(mHandle);
+      }
+
       /**
        * @brief Implementation of the executeImpl method.
        * @param src View of the source data pointers.
@@ -150,25 +173,7 @@ namespace afft::detail::cufft::spst
           checkError(cufftSetWorkArea(mHandle, execParams.workspace)); 
         }
 
-        checkError(cufftXtExecDescriptor(mHandle, src.front(), dst.front(), direction));
-      }
-
-      /// @brief Deleted copy constructor.
-      PlanImpl(const PlanImpl&) = delete;
-
-      /// @brief Default move constructor.
-      PlanImpl(PlanImpl&&) = default;
-
-      /// @brief Deleted copy assignment operator.
-      PlanImpl& operator=(const PlanImpl&) = delete;
-
-      /// @brief Default move assignment operator.
-      PlanImpl& operator=(PlanImpl&&) = default;
-
-      /// @brief Destructor.
-      ~PlanImpl() override
-      {
-        cufftDestroy(mHandle);
+        checkError(cufftXtExec(mHandle, src.front(), dst.front(), direction));
       }
     private:
       /// @brief Constructor.

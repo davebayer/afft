@@ -29,9 +29,9 @@
 # include "../include.hpp"
 #endif
 
-#include "spst.hpp"
-#include "spmt.hpp"
 #include "mpst.hpp"
+#include "spmt.hpp"
+#include "spst.hpp"
 
 namespace afft::detail::cufft
 {
@@ -99,7 +99,7 @@ namespace afft::detail::cufft
       }
       break;
     default:
-      return cxx::unexpected("only gpu target is supported");
+      return BackendError{Backend::cufft, "only gpu target is supported"};
     }
   }
 } // namespace afft::detail::cufft
