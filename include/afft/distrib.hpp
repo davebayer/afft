@@ -47,7 +47,7 @@ AFFT_EXPORT namespace afft
     View<std::size_t, rank> strides{}; ///< strides of the memory block
   };
 
-namespace spst
+inline namespace spst
 {
   /**
    * @struct MemoryLayout
@@ -60,7 +60,7 @@ namespace spst
     View<std::size_t, rank> srcStrides{}; ///< stride of the source data
     View<std::size_t, rank> dstStrides{}; ///< stride of the destination data
   };
-} // namespace spst
+} // inline namespace spst
 
 namespace spmt
 {
@@ -95,9 +95,6 @@ namespace mpst
     View<std::size_t, rank> dstAxesOrder{}; ///< order of the destination axes
   };
 } // namespace mpst
-
-  /// @brief Introduce single process, single target memory layout to the namespace
-  using spst::MemoryLayout;
 
   /// @brief Alias for single process, single target namespace
   namespace single = spst;

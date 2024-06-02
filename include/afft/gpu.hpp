@@ -46,7 +46,9 @@
 
 AFFT_EXPORT namespace afft
 {
-namespace spst::gpu
+inline namespace spst
+{
+namespace gpu
 {
   /// @brief Backend mask for single process, single target GPU target
   inline constexpr BackendMask backendMask
@@ -131,7 +133,8 @@ namespace spst::gpu
     cl_mem           workspace{};
 # endif
   };
-} // namespace spst
+} // namespace gpu
+} // inline namespace spst
 
 namespace spmt::gpu
 {
@@ -257,18 +260,6 @@ namespace mpst::gpu
 
 namespace gpu
 {
-  /// @brief Introduce single process, single target backend mask to the cpu namespace
-  using spst::gpu::backendMask;
-
-  /// @brief Introduce single process, single target default backend initialization order to the cpu namespace
-  using spst::gpu::defaultBackendInitOrder;
-
-  /// @brief Introduce single process, single target parameters to the cpu namespace
-  using Parameters = spst::gpu::Parameters;
-
-  /// @brief Introduce single process, single target execution parameters to the cpu namespace
-  using ExecutionParameters = spst::gpu::ExecutionParameters;
-
   /**
    * @class UnifiedMemoryAllocator
    * @brief Allocator named concept implementation implementation for unified GPU memory to be used with std::vector and

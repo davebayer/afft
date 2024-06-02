@@ -84,7 +84,9 @@ namespace cpu
 #endif
 }
 
-namespace spst::cpu
+inline namespace spst
+{
+namespace cpu
 {
   /// @brief Backend mask for CPU transform
   inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl | Backend::pocketfft};
@@ -118,7 +120,8 @@ namespace spst::cpu
 
   /// @brief Execution parameters for CPU transform
   struct ExecutionParameters {};
-} // namespace spst::cpu
+} // namespace cpu
+} // inline namespace spst
 
 namespace mpst::cpu
 {
@@ -159,18 +162,6 @@ namespace mpst::cpu
 
 namespace cpu
 {
-  /// @brief Introduce single process, single target backend mask to the cpu namespace
-  using spst::cpu::backendMask;
-
-  /// @brief Introduce single process, single target default backend initialization order to the cpu namespace
-  using spst::cpu::defaultBackendInitOrder;
-
-  /// @brief Introduce single process, single target parameters to the cpu namespace
-  using Parameters = spst::cpu::Parameters;
-
-  /// @brief Introduce single process, single target execution parameters to the cpu namespace
-  using ExecutionParameters = spst::cpu::ExecutionParameters;
-
   /**
    * @brief Aligned memory deleter
    * @tparam T Type of the memory
