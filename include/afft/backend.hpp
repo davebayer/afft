@@ -89,12 +89,10 @@ namespace cpu
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask                   mask{supportedBackendMask};            ///< backend mask
-    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
-    InitParameters                initParameters{};                      ///< backend initialization parameters
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask    mask{supportedBackendMask};      ///< backend mask
+    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
+    InitParameters initParameters{};                ///< backend initialization parameters
   };
 } // namespace cpu
 
@@ -117,12 +115,10 @@ namespace gpu
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask                   mask{supportedBackendMask};            ///< backend mask
-    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
-    InitParameters                initParameters{};                      ///< backend initialization parameters
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask    mask{supportedBackendMask};      ///< backend mask
+    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
+    InitParameters initParameters{};                ///< backend initialization parameters
   };
 } // namespace gpu
 } // inline namespace spst
@@ -145,12 +141,10 @@ namespace gpu
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask                   mask{supportedBackendMask};            ///< backend mask
-    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
-    InitParameters                initParameters{};                      ///< backend initialization parameters
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask    mask{supportedBackendMask};      ///< backend mask
+    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
+    InitParameters initParameters{};                ///< backend initialization parameters
   };
 } // namespace gpu
 } // namespace spmt
@@ -172,12 +166,10 @@ namespace cpu
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask                   mask{supportedBackendMask};            ///< backend mask
-    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
-    InitParameters                initParameters{};                      ///< backend initialization parameters
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask    mask{supportedBackendMask};      ///< backend mask
+    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
+    InitParameters initParameters{};                ///< backend initialization parameters
   };
 } // namespace cpu
 
@@ -195,12 +187,10 @@ namespace gpu
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy                selectStrategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask                   mask{supportedBackendMask};            ///< backend mask
-    View<Backend>                 order{};                               ///< backend initialization order, empty view means default order for the target
-    InitParameters                initParameters{};                      ///< backend initialization parameters
-    std::chrono::duration<double> overallTimeLimit{0.0};                 ///< time limit in seconds
-    std::chrono::duration<double> perBackendTimeLimit{0.0};              ///< time limit in seconds per backend
+    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask    mask{supportedBackendMask};      ///< backend mask
+    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
+    InitParameters initParameters{};                ///< backend initialization parameters
   };
 } // namespace gpu
 } // namespace mpst

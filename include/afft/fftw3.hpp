@@ -47,6 +47,15 @@ AFFT_EXPORT namespace afft::fftw3
 inline namespace spst
 {
   /**
+   * @brief Initialization parameters for the FFTW3 plan.
+   */
+  struct InitParameters
+  {
+    PlannerFlag          plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::chrono::seconds timeLimit{};                       ///< Time limit for the planner
+  };
+
+  /**
    * @brief Does the FFTW3 library support the given precision?
    * @tparam prec Precision of the FFTW3 library.
    */
@@ -229,14 +238,6 @@ inline namespace spst
     }
 # endif
   }
-
-  /**
-   * @brief Initialization parameters for the FFTW3 plan.
-   */
-  struct InitParameters
-  {
-    PlannerFlag plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-  };
 } // inline namespace spst
 
 #if AFFT_MP_BACKEND_IS(MPI)
@@ -247,8 +248,9 @@ namespace mpst
    */
   struct InitParameters
   {
-    PlannerFlag plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    std::size_t blockSize{};                       ///< Decomposition block size
+    PlannerFlag          plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::chrono::seconds timeLimit{};                       ///< Time limit for the planner
+    std::size_t          blockSize{};                       ///< Decomposition block size
   };
 
   /**
