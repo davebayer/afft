@@ -101,7 +101,7 @@ namespace spst::gpu
     MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    bool                externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
     int                 device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
@@ -110,7 +110,6 @@ namespace spst::gpu
     cl_context          context{};                                     ///< OpenCL context
     cl_device_id        device{};                                      ///< OpenCL device
 # endif
-    bool                externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
   }
 #endif
    ;
@@ -177,13 +176,12 @@ namespace spmt::gpu
     MemoryLayout<sRank> memoryLayout{};                                ///< memory layout
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    bool                externalWorkspace{false};                      ///< use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
     View<int>           devices{};                                     ///< list of CUDA devices
 # elif AFFT_GPU_BACKEND_IS(HIP)
     View<int>           devices{};                                     ///< list of HIP devices
 # endif
-    bool                externalWorkspace{false};                      ///< use external workspace, defaults to `false`
   }
 #endif
    ;
@@ -237,7 +235,7 @@ namespace mpst::gpu
     MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
+    bool                   externalWorkspace{false};                      ///< use external workspace, defaults to `false`
     MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
 # if AFFT_GPU_BACKEND_IS_CUDA
     int                    device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
@@ -247,7 +245,6 @@ namespace mpst::gpu
     cl_context             context{};                                     ///< OpenCL context
     cl_device_id           device{};                                      ///< OpenCL device
 # endif
-    bool                   externalWorkspace{false};                      ///< use external workspace, defaults to `false`
   }
 #endif
    ;

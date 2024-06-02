@@ -112,7 +112,6 @@ namespace spst::cpu
     MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy     workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     Alignment           alignment{afft::cpu::alignments::defaultNew};  ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
     unsigned            threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
   };
@@ -147,7 +146,6 @@ namespace mpst::cpu
     MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
-    WorkspacePolicy        workspacePolicy{WorkspacePolicy::performance}; ///< workspace policy
     MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
     Alignment              alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
     unsigned               threadLimit{1};                                ///< thread limit for cpu transform
