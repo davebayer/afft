@@ -45,6 +45,9 @@ AFFT_EXPORT namespace afft
   template<typename T, std::size_t extent = dynamicExtent>
   using View = Span<const T, extent>;
 
+  /// @brief Dynamic rank
+  inline constexpr std::size_t dynamicRank{dynamicExtent};
+
   /// @brief Precision of a floating-point number
   enum class Precision : std::uint8_t
   {
@@ -138,7 +141,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Named constant representing all axes (is empty view)
-  template<std::size_t tRank = dynamicExtent>
+  template<std::size_t tRank = dynamicRank>
   inline constexpr View<std::size_t, tRank> allAxes{};
 
   /// @brief Namespace for discrete Fourier transform
@@ -161,12 +164,12 @@ AFFT_EXPORT namespace afft
      * @tparam sRank Rank of the shape, dynamic by default
      * @tparam tRank Rank of the transform, dynamic by default
      */
-    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent>
+    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank>
     struct Parameters
     {
-      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
                     "transform rank must be less than or equal to shape rank");
 
       Direction                direction{};                        ///< direction of the transform
@@ -187,12 +190,12 @@ AFFT_EXPORT namespace afft
      * @tparam sRank Rank of the shape, dynamic by default
      * @tparam tRank Rank of the transform, dynamic by default
      */
-    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent>
+    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank>
     struct Parameters
     {
-      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
                     "transform rank must be less than or equal to shape rank");
 
       Direction                direction{};                        ///< direction of the transform
@@ -230,14 +233,14 @@ AFFT_EXPORT namespace afft
      * @tparam tRank Rank of the transform, dynamic by default
      * @tparam ttRank Rank of the types, dynamic by default
      */
-    template<std::size_t sRank = dynamicExtent, std::size_t tRank = dynamicExtent, std::size_t ttRank = dynamicExtent>
+    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank, std::size_t ttRank = dynamicRank>
     struct Parameters
     {
-      static_assert((sRank == dynamicExtent) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicExtent) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicExtent) || (tRank == dynamicExtent) || (tRank <= sRank),
+      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
+      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
+      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
                     "transform rank must be less than or equal to shape rank");
-      static_assert((ttRank == dynamicExtent) || (ttRank == 1) || (tRank == dynamicExtent || ttRank == tRank),
+      static_assert((ttRank == dynamicRank) || (ttRank == 1) || (tRank == dynamicRank || ttRank == tRank),
                     "types rank must be 1 or equal to the number of axes");
 
       Direction                direction{};                        ///< direction of the transform

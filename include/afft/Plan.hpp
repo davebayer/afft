@@ -624,8 +624,8 @@ AFFT_EXPORT namespace afft
     static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
     static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
 
-    static_assert((transformParamsShapeRank == dynamicExtent) ||
-                  (targetParamsShapeRank == dynamicExtent) ||
+    static_assert((transformParamsShapeRank == dynamicRank) ||
+                  (targetParamsShapeRank == dynamicRank) ||
                   (transformParamsShapeRank == targetParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
@@ -677,8 +677,8 @@ AFFT_EXPORT namespace afft
     static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
     static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
 
-    static_assert((transformParamsShapeRank == dynamicExtent) ||
-                  (targetParamsShapeRank == dynamicExtent) ||
+    static_assert((transformParamsShapeRank == dynamicRank) ||
+                  (targetParamsShapeRank == dynamicRank) ||
                   (transformParamsShapeRank == targetParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 

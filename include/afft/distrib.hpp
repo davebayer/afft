@@ -39,7 +39,7 @@ AFFT_EXPORT namespace afft
    * @tparam rank Rank of the memory block, dynamic by default
    * @brief Memory block
    */
-  template<std::size_t rank = dynamicExtent>
+  template<std::size_t rank = dynamicRank>
   struct MemoryBlock
   {
     View<std::size_t, rank> starts{};  ///< starts of the memory block
@@ -54,7 +54,7 @@ inline namespace spst
    * @tparam rank Rank of the memory layout, dynamic by default
    * @brief Memory layout
    */
-  template<std::size_t rank = dynamicExtent>
+  template<std::size_t rank = dynamicRank>
   struct MemoryLayout
   {
     View<std::size_t, rank> srcStrides{}; ///< stride of the source data
@@ -69,7 +69,7 @@ namespace spmt
    * @tparam rank Rank of the memory layout, dynamic by default
    * @brief Memory layout
    */
-  template<std::size_t rank = dynamicExtent>
+  template<std::size_t rank = dynamicRank>
   struct MemoryLayout
   {
     View<MemoryBlock<rank>, rank> srcBlocks{};    ///< source memory blocks
@@ -86,7 +86,7 @@ namespace mpst
    * @tparam rank Rank of the memory layout, dynamic by default
    * @brief Memory layout
    */
-  template<std::size_t rank = dynamicExtent>
+  template<std::size_t rank = dynamicRank>
   struct MemoryLayout
   {
     MemoryBlock<rank>       srcBlock{};     ///< source memory block

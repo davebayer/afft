@@ -105,21 +105,21 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make strides.
-   * @tparam extent Extent of the shape
+   * @tparam rank Rank of the shape
    * @param shape Shape
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t extent>
-  [[nodiscard]] constexpr auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<std::size_t, extent>), extent != dynamicExtent)
+  template<std::size_t rank>
+  [[nodiscard]] constexpr auto makeStrides(View<std::size_t, rank> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<std::size_t, rank>), rank != dynamicRank)
   {
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {
       throw std::invalid_argument("Shape must not contain zeros");
     }
 
-    std::array<std::size_t, extent> strides{};
+    std::array<std::size_t, rank> strides{};
 
     if (!shape.empty())
     {
@@ -136,14 +136,14 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make strides.
-   * @tparam extent Extent of the shape
+   * @tparam rank Rank of the shape
    * @param shape Shape
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t extent>
-  [[nodiscard]] auto makeStrides(View<std::size_t, extent> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<std::size_t>), extent == dynamicExtent)
+  template<std::size_t rank>
+  [[nodiscard]] auto makeStrides(View<std::size_t, rank> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<std::size_t>), rank == dynamicRank)
   {
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
     {
@@ -167,19 +167,19 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make transposed strides.
-   * @tparam extent Extent of the shape
+   * @tparam rank Rank of the shape
    * @param resultShape Shape of the result
    * @param orgAxesOrder Original axes order
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t extent = dynamicExtent>
-  [[nodiscard]] auto makeTransposedStrides(View<std::size_t, extent> resultShape,
-                                           View<std::size_t>         orgAxesOrder,
-                                           std::size_t               fastestAxisStride = 1)
+  template<std::size_t rank = dynamicRank>
+  [[nodiscard]] auto makeTransposedStrides(View<std::size_t, rank> resultShape,
+                                           View<std::size_t>       orgAxesOrder,
+                                           std::size_t             fastestAxisStride = 1)
   {
-    using ReturnT = std::conditional_t<(extent == dynamicExtent),
-                                       std::array<std::size_t, extent>,
+    using ReturnT = std::conditional_t<(rank == dynamicRank),
+                                       std::array<std::size_t, rank>,
                                        std::vector<std::size_t>>;
 
     // If the axes order is empty, then the result axes order is the same as the original axes order
@@ -218,8 +218,8 @@ AFFT_EXPORT namespace afft
 
     ReturnT strides{};
 
-    // Resize the strides if the extent is dynamic
-    if constexpr (extent == dynamicExtent)
+    // Resize the strides if the rank is dynamic
+    if constexpr (rank == dynamicRank)
     {
       strides.resize(resultShape.size());
     }
