@@ -93,6 +93,14 @@ AFFT_EXPORT namespace afft
   inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
+   * @brief Select Parameters type for given target.
+   * @tparam target The target type.
+   * @tparam distrib The distribution type.
+   */
+  template<Target target, Distribution distrib = Distribution::spst>
+  using SelectParameters = typename detail::SelectParametersSelect<target, distrib>::Type;
+
+  /**
    * @brief Is the type SelectParameters.
    * @tparam T The type.
    */

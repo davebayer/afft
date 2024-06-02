@@ -95,6 +95,9 @@ namespace spst::gpu
   struct Parameters
 #if AFFT_GPU_IS_ENABLED
   {
+    static constexpr Target       target{Target::gpu};              ///< Target
+    static constexpr Distribution distribution{Distribution::spst}; ///< Distribution
+
     MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
@@ -168,6 +171,9 @@ namespace spmt::gpu
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
   {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
+
     MemoryLayout<sRank> memoryLayout{};                                ///< memory layout
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
@@ -225,6 +231,9 @@ namespace mpst::gpu
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && AFFT_MP_IS_ENABLED
   {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+
     MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data

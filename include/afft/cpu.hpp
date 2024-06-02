@@ -106,6 +106,9 @@ namespace spst::cpu
   template<std::size_t sRank = dynamicRank>
   struct Parameters
   {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+
     MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
@@ -138,6 +141,9 @@ namespace mpst::cpu
   struct Parameters
 #if AFFT_MP_IS_ENABLED
   {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+
     MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
