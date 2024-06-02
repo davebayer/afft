@@ -22,26 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_HIP_INIT_HPP
-#define AFFT_DETAIL_GPU_HIP_INIT_HPP
+#ifndef AFFT_DETAIL_HIP_HIP_HPP
+#define AFFT_DETAIL_HIP_HIP_HPP
 
+#include "device.hpp"
 #include "error.hpp"
-#include "include.hpp"
+#include "init.hpp"
 
-namespace afft::detail::gpu::hip
+namespace afft::detail::hip
 {
-  /// @brief Initialize the HIP driver and runtime APIs.
-  inline void init()
-  {
-    Error::check(hipInit(0));       // Initialize the HIP driver API
-    Error::check(hipFree(nullptr)); // Initialize the HIP runtime API
-  }
+  
+} // namespace afft::detail::hip
 
-  /// @brief Finalize the HIP driver and runtime APIs.
-  inline void finalize()
-  {
-    // Do nothing
-  }
-} // namespace afft::detail::gpu::hip
-
-#endif /* AFFT_DETAIL_GPU_HIP_INIT_HPP */
+#endif /* AFFT_DETAIL_HIP_HIP_HPP */

@@ -22,13 +22,16 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_HIP_DEVICE_HPP
-#define AFFT_DETAIL_GPU_HIP_DEVICE_HPP
+#ifndef AFFT_DETAIL_HIP_DEVICE_HPP
+#define AFFT_DETAIL_HIP_DEVICE_HPP
+
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
 #include "error.hpp"
-#include "include.hpp"
 
-namespace afft::detail::gpu::hip
+namespace afft::detail::hip
 {
   /**
    * @brief Get the number of HIP devices.
@@ -37,7 +40,7 @@ namespace afft::detail::gpu::hip
   int getDeviceCount()
   {
     int count{};
-    Error::check(hipGetDeviceCount(&count));
+    checkError(hipGetDeviceCount(&count));
     return count;
   }
 
@@ -58,7 +61,7 @@ namespace afft::detail::gpu::hip
   int getCurrentDevice()
   {
     int device{};
-    Error::check(hipGetDevice(&device));
+    checkError(hipGetDevice(&device));
     return device;
   }
 
@@ -76,7 +79,7 @@ namespace afft::detail::gpu::hip
       explicit ScopedDevice(int device)
       : mPrevDevice{getCurrentDevice()}
       {
-        Error::check(hipSetDevice(device));
+        checkError(hipSetDevice(device));
       }
 
       /**
@@ -84,7 +87,7 @@ namespace afft::detail::gpu::hip
        */
       ~ScopedDevice()
       {
-        Error::check(hipSetDevice(mPrevDevice));
+        checkError(hipSetDevice(mPrevDevice));
       }
 
       /**
@@ -99,6 +102,6 @@ namespace afft::detail::gpu::hip
     private:
       int mPrevDevice{}; ///< The previous device.
   };
-} // namespace afft::detail::gpu::hip
+} // namespace afft::detail::hip
 
-#endif /* AFFT_DETAIL_GPU_HIP_DEVICE_HPP */
+#endif /* AFFT_DETAIL_HIP_DEVICE_HPP */

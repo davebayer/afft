@@ -22,35 +22,29 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_HIP_ERROR_HPP
-#define AFFT_DETAIL_GPU_HIP_ERROR_HPP
+#ifndef AFFT_DETAIL_HIP_INIT_HPP
+#define AFFT_DETAIL_HIP_INIT_HPP
 
-#include <string>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include "include.hpp"
-#include "../../error.hpp"
-#include "../../utils.hpp"
+#include "error.hpp"
 
-/**
- * @brief Specialization of isOk method for hipError_t.
- * @param error HIP error.
- * @return True if error is hipSuccess, false otherwise.
- */
-template<>
-[[nodiscard]] constexpr bool afft::detail::Error::isOk(hipError_t error)
+namespace afft::detail::hip
 {
-  return (error == hipSuccess);
-}
+  /// @brief Initialize the HIP driver and runtime APIs.
+  inline void init()
+  {
+    checkError(hipInit(0));       // Initialize the HIP driver API
+    checkError(hipFree(nullptr)); // Initialize the HIP runtime API
+  }
 
-/**
- * @brief Specialization of makeErrorMessage method for hipError_t.
- * @param error HIP error.
- * @return Error message.
- */
-template<>
-[[nodiscard]] std::string afft::detail::Error::makeErrorMessage(hipError_t error)
-{
-  return cformat("[HIP error] %s - %s", hipGetErrorName(error), hipGetErrorString(error));
-}
+  /// @brief Finalize the HIP driver and runtime APIs.
+  inline void finalize()
+  {
+    // Do nothing
+  }
+} // namespace afft::detail::hip
 
-#endif /* AFFT_DETAIL_GPU_HIP_ERROR_HPP */
+#endif /* AFFT_DETAIL_HIP_INIT_HPP */

@@ -194,11 +194,6 @@
 # define AFFT_CXX_HAS_SPAN
 #endif
 
-// Check if C++23 <expected> is supported
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_expected) && (__cpp_lib_expected >= 202211L)
-# define AFFT_CXX_HAS_EXPECTED
-#endif
-
 // Check if C++23 `import std` is supported
 #if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
 # define AFFT_CXX_HAS_IMPORT_STD
