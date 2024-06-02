@@ -285,6 +285,33 @@ namespace afft::detail
   };
 
   /**
+   * @brief Check if the type is SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsSelectParameters : std::false_type {};
+
+  /// @brief Specialization for spst cpu SelectParameters.
+  template<>
+  struct IsSelectParameters<afft::spst::cpu::SelectParameters> : std::true_type {};
+
+  /// @brief Specialization for spst gpu SelectParameters.
+  template<>
+  struct IsSelectParameters<afft::spst::gpu::SelectParameters> : std::true_type {};
+
+  /// @brief Specialization for spmt gpu SelectParameters.
+  template<>
+  struct IsSelectParameters<afft::spmt::gpu::SelectParameters> : std::true_type {};
+
+  /// @brief Specialization for mpst cpu SelectParameters.
+  template<>
+  struct IsSelectParameters<afft::mpst::cpu::SelectParameters> : std::true_type {};
+
+  /// @brief Specialization for mpst gpu SelectParameters.
+  template<>
+  struct IsSelectParameters<afft::mpst::gpu::SelectParameters> : std::true_type {};
+
+  /**
    * @brief Check if the type is ExecutionParameters.
    * @tparam T The type.
    */
