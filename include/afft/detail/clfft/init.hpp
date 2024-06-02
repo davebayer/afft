@@ -38,14 +38,14 @@ namespace afft::detail::clfft
   {
     clfftSetupData clfftSetupData{};
 
-    Error::check(clfftInitSetupData(&clfftSetupData));
-    Error::check(clfftSetup(&clfftSetupData));
+    checkError(clfftInitSetupData(&clfftSetupData));
+    checkError(clfftSetup(&clfftSetupData));
   }
 
   /// @brief Finalize the clFFT library.
   inline void finalize()
   {
-    Error::check(clfftTeardown());
+    checkError(clfftTeardown());
   }
 } // namespace afft::detail::clfft
 

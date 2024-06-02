@@ -162,7 +162,7 @@ extern "C" __device__
 }
 
 // Define the callback function pointer if not using JIT callbacks
-extern "C" __device__ __constant__
+extern "C" __constant__
 #ifndef USE_JIT_CALLBACKS
 # if PRECISION == PRECISION_F32
 #   if COMPLEXITY == COMPLEXITY_REAL
@@ -182,6 +182,24 @@ extern "C" __device__ __constant__
   
   /// @brief cuFFT callback function pointer name
   inline constexpr cuda::rtc::CSymbolName storeCallbackPtrName{"cufftCallbackStoreFnPtr"};
+
+  /**
+   * @brief Make the cuFFT direction.
+   * @param dir The direction.
+   * @return The cuFFT direction.
+   */
+  [[nodiscard]] inline constexpr int makeDirection(const Direction dir)
+  {
+    switch (dir)
+    {
+    case Direction::forward:
+      return CUFFT_FORWARD;
+    case Direction::inverse:
+      return CUFFT_INVERSE;
+    default:
+      cxx::unreachable();
+    }
+  }
 
   /**
    * @brief Get the cuFFT data type.
@@ -215,25 +233,28 @@ extern "C" __device__ __constant__
     case Precision::f64:
       return pickType(CUDA_R_64F,  CUDA_C_64F);
     default:
-      throw std::runtime_error("cuFFT does not support given precision");
+      throw BackendError{Backend::cufft, "unsupported precision"};
     }
   }
 
   /**
-   * @brief Get the cuFFT workspace policy.
+   * @brief Make the cuFFT workspace policy.
    * @param policy The workspace policy.
    * @return The cuFFT workspace policy.
    */
-  [[nodiscard]] constexpr cufftXtWorkAreaPolicy getWorkspacePolicy(WorkspacePolicy policy)
+  [[nodiscard]] constexpr cufftXtWorkAreaPolicy makeWorkAreaPolicy(afft::cufft::WorkspacePolicy policy)
   {
     switch (policy)
     {
-      case WorkspacePolicy::minimal:
+#   if CUFFT_VERSION >= 9200
+      case afft::cufft::WorkspacePolicy::minimal:
         return CUFFT_WORKAREA_MINIMAL;
-      case WorkspacePolicy::performance:
-        return CUFFT_WORKAREA_PERFORMANCE;
+      case afft::cufft::WorkspacePolicy::user:
+        return CUFFT_WORKAREA_USER;
+#   endif
+      case afft::cufft::WorkspacePolicy::performance:
       default:
-        throw std::runtime_error("cuFFT does not support given workspace policy");
+        return CUFFT_WORKAREA_PERFORMANCE;
     }
   }
 
@@ -252,7 +273,7 @@ extern "C" __device__ __constant__
     case Precision::f64:
       return (comp == Complexity::real) ? CUFFT_CB_ST_REAL_DOUBLE : CUFFT_CB_ST_COMPLEX_DOUBLE;
     default:
-      throw std::runtime_error("cuFFT does not support given precision");
+      throw BackendError{Backend::cufft, "unsupported precision for callback"};
     }
   }
 } // namespace afft::detail::cufft
