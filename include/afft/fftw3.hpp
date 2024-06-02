@@ -51,8 +51,8 @@ inline namespace spst
    */
   struct InitParameters
   {
-    PlannerFlag          plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    std::chrono::seconds timeLimit{};                       ///< Time limit for the planner
+    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
   };
 
   /**
@@ -248,9 +248,9 @@ namespace mpst
    */
   struct InitParameters
   {
-    PlannerFlag          plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    std::chrono::seconds timeLimit{};                       ///< Time limit for the planner
-    std::size_t          blockSize{};                       ///< Decomposition block size
+    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
+    std::size_t                   blockSize{};                       ///< Decomposition block size
   };
 
   /**
