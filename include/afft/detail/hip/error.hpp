@@ -52,7 +52,7 @@ namespace afft::detail::hip
   {
     if (!isOk(error))
     {
-      throw GpuBackendError(cformatNothrow("%s - %s", hipGetErrorName(error), hipGetErrorString(error)));
+      throw GpuBackendError{cformatNothrow("%s - %s", hipGetErrorName(error), hipGetErrorString(error))};
     }
   }
 } // namespace afft::detail::hip

@@ -39,12 +39,12 @@ namespace afft::detail::cufft
     int version{};
 
     // Get the version of the cuFFT library
-    Error::check(cufftGetVersion(&version));
+    checkError(cufftGetVersion(&version));
 
     // Check the version of the cuFFT library
     if (version != CUFFT_VERSION)
     {
-      throw std::runtime_error("cuFFT library version mismatch");
+      throw BackendError{Backend::cufft, "library version mismatch"};
     }
   }
 

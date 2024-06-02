@@ -22,17 +22,19 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_GPU_HIPFFT_INIT_HPP
-#define AFFT_DETAIL_GPU_HIPFFT_INIT_HPP
+#ifndef AFFT_DETAIL_HIPFFT_INIT_HPP
+#define AFFT_DETAIL_HIPFFT_INIT_HPP
 
-#include <hipfft/hipfft.h>
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
 
-#include "../../../gpu.hpp"
+#include "error.hpp"
 
-namespace afft::detail::gpu::hipfft
+namespace afft::detail::hipfft
 {
   /// @brief Initialize the hipFFT library.
-  inline void init(const afft::gpu::hipfft::InitParameters&)
+  inline void init()
   {
     // Do nothing
   }
@@ -42,6 +44,6 @@ namespace afft::detail::gpu::hipfft
   {
     // Do nothing
   }
-} // namespace afft::detail::gpu::hipfft
+} // namespace afft::detail::hipfft
 
-#endif /* AFFT_DETAIL_GPU_HIPFFT_INIT_HPP */
+#endif /* AFFT_DETAIL_HIPFFT_INIT_HPP */
