@@ -36,11 +36,11 @@ namespace afft::detail::clfft
   /**
    * @brief Create a plan implementation for clFFT.
    * @param desc The descriptor of the plan.
-   * @param initParams The initialization parameters.
+   * @param backendParams The initialization parameters.
    * @return The plan implementation or an error message.
    */
   [[nodiscard]] inline cxx::expected<std::unique_ptr<detail::PlanImpl>, std::string>
-  makePlanImpl(const Desc& desc, const InitParams& initParams)
+  makePlanImpl(const Desc& desc, const backendParams& backendParams)
   {
     if (desc.getTransformRank() == 0 || desc.getTransformRank() > 3)
     {
@@ -85,7 +85,7 @@ namespace afft::detail::clfft
       switch (desc.getDistribution())
       {
       case Distribution::spst:
-        return spst::gpu::PlanImpl::make(desc, initParams.initEffort);
+        return spst::gpu::PlanImpl::make(desc, backendParams.initEffort);
       default:
         return cxx::unexpected("Unsupported distribution");
       }

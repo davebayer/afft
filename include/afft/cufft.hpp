@@ -42,7 +42,7 @@ namespace afft::cufft
 inline namespace spst
 {
   /// @brief cuFFT initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
     std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
@@ -53,7 +53,7 @@ inline namespace spst
 namespace spmt
 {
   /// @brief cuFFT initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
     bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
@@ -62,7 +62,7 @@ namespace spmt
 namespace mpst
 {
   /// @brief cuFFT initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
     bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };

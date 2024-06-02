@@ -34,7 +34,7 @@ namespace afft::clfft
 inline namespace spst
 {
   /// @brief clFFT 
-  struct InitParameters
+  struct BackendParameters
   {
     bool useFastMath{true}; ///< Use fast math.
   };

@@ -38,7 +38,7 @@ namespace afft::detail::cufft
   /**
    * @brief Create a plan implementation for cuFFT.
    * @param desc The descriptor of the plan.
-   * @param initParams The initialization parameters.
+   * @param backendParams The initialization parameters.
    * @return The plan implementation or an error message.
    */
   template<Target target, Distribution distrib>
@@ -83,15 +83,15 @@ namespace afft::detail::cufft
     {
       if constexpr (distrib == Distribution::spst)
       {
-        return spst::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+        return spst::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
       }
       else if constexpr (distrib == Distribution::spmt)
       {
-        return spmt::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+        return spmt::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
       }
       else if constexpr (distrib == Distribution::mpst)
       {
-        return mpst::gpu::PlanImpl::make(desc, selectParams.initParameters.cufft);
+        return mpst::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
       }
       else
       {

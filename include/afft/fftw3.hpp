@@ -49,7 +49,7 @@ inline namespace spst
   /**
    * @brief Initialization parameters for the FFTW3 plan.
    */
-  struct InitParameters
+  struct BackendParameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
     std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
@@ -246,7 +246,7 @@ namespace mpst
   /**
    * @brief Initialization parameters for the FFTW3 MPI plan.
    */
-  struct InitParameters
+  struct BackendParameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
     std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner

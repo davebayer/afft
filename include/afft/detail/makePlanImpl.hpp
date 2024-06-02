@@ -200,9 +200,9 @@ namespace afft::detail
   }
 
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeBestPlanImpl(const Desc& desc, const InitParameters& initParams, std::vector<Feedback>* feedbacks)
+  makeBestPlanImpl(const Desc& desc, const BackendParameters& backendParams, std::vector<Feedback>* feedbacks)
   {
-    return {}
+    return {};
   }
 
   template<typename SelectParametersT>
@@ -213,7 +213,7 @@ namespace afft::detail
 
     std::unique_ptr<PlanImpl> planImpl{};
 
-    switch (initParams.selectStrategy)
+    switch (selectParams.selectStrategy)
     {
     case SelectStrategy::first:
       planImpl = makeFirstPlanImpl(desc, selectParams, feedbacks);

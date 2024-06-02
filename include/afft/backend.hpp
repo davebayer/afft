@@ -80,19 +80,19 @@ namespace cpu
                                                       Backend::mkl |
                                                       Backend::pocketfft;
 
-  /// @brief Backend initialization parameters
-  struct InitParameters
+  /// @brief Backend parameters
+  struct BackendParameters
   {
-    fftw3::spst::InitParameters fftw3{};
+    fftw3::spst::BackendParameters fftw3{};
   };
 
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask    mask{supportedBackendMask};      ///< backend mask
-    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
-    InitParameters initParameters{};                ///< backend initialization parameters
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    BackendParameters backendParameters{};             ///< backend initialization parameters
   };
 } // namespace cpu
 
@@ -106,19 +106,19 @@ namespace gpu
                                                       Backend::vkfft;
 
   /// @brief Backend initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
-    clfft::spst::InitParameters clfft{};
-    cufft::spst::InitParameters cufft{};
+    clfft::spst::BackendParameters clfft{};
+    cufft::spst::BackendParameters cufft{};
   };
 
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask    mask{supportedBackendMask};      ///< backend mask
-    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
-    InitParameters initParameters{};                ///< backend initialization parameters
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    BackendParameters backendParameters{};             ///< backend initialization parameters
   };
 } // namespace gpu
 } // inline namespace spst
@@ -133,18 +133,18 @@ namespace gpu
                                                       Backend::rocfft;
 
   /// @brief Backend initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
-    cufft::spmt::InitParameters cufft{};
+    cufft::spmt::BackendParameters cufft{};
   };
 
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask    mask{supportedBackendMask};      ///< backend mask
-    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
-    InitParameters initParameters{};                ///< backend initialization parameters
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    BackendParameters backendParameters{};             ///< backend initialization parameters
   };
 } // namespace gpu
 } // namespace spmt
@@ -158,18 +158,18 @@ namespace cpu
                                                       Backend::mkl;
 
   /// @brief Backend initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
-    fftw3::mpst::InitParameters fftw3{};
+    fftw3::mpst::BackendParameters fftw3{};
   };
 
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask    mask{supportedBackendMask};      ///< backend mask
-    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
-    InitParameters initParameters{};                ///< backend initialization parameters
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    BackendParameters backendParameters{};             ///< backend initialization parameters
   };
 } // namespace cpu
 
@@ -179,18 +179,18 @@ namespace gpu
   inline constexpr BackendMask supportedBackendMask = BackendMask::empty | Backend::cufft;
 
   /// @brief Backend initialization parameters
-  struct InitParameters
+  struct BackendParameters
   {
-    cufft::mpst::InitParameters cufft{};
+    cufft::mpst::BackendParameters cufft{};
   };
 
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask    mask{supportedBackendMask};      ///< backend mask
-    View<Backend>  order{};                         ///< backend initialization order, empty view means default order for the target
-    InitParameters initParameters{};                ///< backend initialization parameters
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    BackendParameters backendParameters{};             ///< backend initialization parameters
   };
 } // namespace gpu
 } // namespace mpst
