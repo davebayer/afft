@@ -38,12 +38,12 @@ namespace afft::detail::cufft
   /**
    * @brief Create a plan implementation for cuFFT.
    * @param desc The descriptor of the plan.
-   * @param backendParams The initialization parameters.
+   * @param backendParams The backend parameters.
    * @return The plan implementation or an error message.
    */
   template<Target target, Distribution distrib>
   [[nodiscard]] std::unique_ptr<detail::PlanImpl>
-  makePlanImpl(const Desc& desc, const SelectParameters<target, distrib>& selectParams)
+  makePlanImpl(const Desc& desc, const BackendParameters<target, distrib>& backendParams)
   {
     if (desc.getTransformHowManyRank() > 1)
     {
@@ -83,15 +83,15 @@ namespace afft::detail::cufft
     {
       if constexpr (distrib == Distribution::spst)
       {
-        return spst::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
+        return spst::gpu::PlanImpl::make(desc, backendParams.cufft);
       }
       else if constexpr (distrib == Distribution::spmt)
       {
-        return spmt::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
+        return spmt::gpu::PlanImpl::make(desc, backendParams.cufft);
       }
       else if constexpr (distrib == Distribution::mpst)
       {
-        return mpst::gpu::PlanImpl::make(desc, selectParams.backendParameters.cufft);
+        return mpst::gpu::PlanImpl::make(desc, backendParams.cufft);
       }
       else
       {

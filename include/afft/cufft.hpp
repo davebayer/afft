@@ -29,7 +29,9 @@
 # include "detail/include.hpp"
 #endif
 
-namespace afft::cufft
+namespace afft
+{
+namespace cufft
 {
   /// @brief cuFFT Workspace policy
   enum class WorkspacePolicy : std::uint8_t
@@ -38,35 +40,45 @@ namespace afft::cufft
     minimal,     ///< Use the minimal workspace.
     user,        ///< Use the user-defined workspace size.
   };
+} // namespace cufft
 
 inline namespace spst
 {
+namespace gpu::cufft
+{
+  using namespace afft::cufft;
+
   /// @brief cuFFT initialization parameters
-  struct BackendParameters
+  struct Parameters
   {
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
-    std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
     bool            usePatientJIT{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+    std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
   };
+} // namespace gpu::cufft
 } // inline namespace spst
 
-namespace spmt
+namespace spmt::gpu::cufft
 {
-  /// @brief cuFFT initialization parameters
-  struct BackendParameters
-  {
-    bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
-  };
-} // namespace spmt
+  using namespace afft::cufft;
 
-namespace mpst
-{
   /// @brief cuFFT initialization parameters
-  struct BackendParameters
+  struct Parameters
   {
     bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
-} // namespace mpst
-} // namespace afft::cufft
+} // namespace spmt::gpu::cufft
+
+namespace mpst::gpu::cufft
+{
+  using namespace afft::cufft;
+  
+  /// @brief cuFFT initialization parameters
+  struct Parameters
+  {
+    bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+  };
+} // namespace mpst::gpu::cufft
+} // namespace afft
 
 #endif /* AFFT_CUFFT_HPP */

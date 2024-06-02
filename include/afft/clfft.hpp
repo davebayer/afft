@@ -29,16 +29,19 @@
 # include "detail/include.hpp"
 #endif
 
-namespace afft::clfft
+namespace afft
 {
 inline namespace spst
 {
-  /// @brief clFFT 
-  struct BackendParameters
+namespace gpu::clfft
+{
+  /// @brief clFFT initialization parameters
+  struct Parameters
   {
     bool useFastMath{true}; ///< Use fast math.
   };
+} // namespace gpu::clfft
 } // inline namespace spst
-} // namespace afft::clfft
+} // namespace afft
 
 #endif /* AFFT_CLFFT_HPP */

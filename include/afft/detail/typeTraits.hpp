@@ -242,74 +242,74 @@ namespace afft::detail
   };
 
   /**
-   * @brief SelectParameters type for given target.
+   * @brief BackendParameters type for given target.
    * @tparam target The target type.
    * @tparam distrib The distribution type.
    */
   template<Target target, Distribution distrib>
-  struct SelectParametersSelect;
+  struct BackendParametersSelect;
 
   /// @brief Specialization for spst cpu target.
   template<>
-  struct SelectParametersSelect<Target::cpu, Distribution::spst>
+  struct BackendParametersSelect<Target::cpu, Distribution::spst>
   {
-    using Type = afft::spst::cpu::SelectParameters;
+    using Type = afft::spst::cpu::BackendParameters;
   };
 
   /// @brief Specialization for spst gpu target.
   template<>
-  struct SelectParametersSelect<Target::gpu, Distribution::spst>
+  struct BackendParametersSelect<Target::gpu, Distribution::spst>
   {
-    using Type = afft::spst::gpu::SelectParameters;
+    using Type = afft::spst::gpu::BackendParameters;
   };
 
   /// @brief Specialization for spmt gpu target.
   template<>
-  struct SelectParametersSelect<Target::gpu, Distribution::spmt>
+  struct BackendParametersSelect<Target::gpu, Distribution::spmt>
   {
-    using Type = afft::spmt::gpu::SelectParameters;
+    using Type = afft::spmt::gpu::BackendParameters;
   };
 
   /// @brief Specialization for mpst cpu target.
   template<>
-  struct SelectParametersSelect<Target::cpu, Distribution::mpst>
+  struct BackendParametersSelect<Target::cpu, Distribution::mpst>
   {
-    using Type = afft::mpst::cpu::SelectParameters;
+    using Type = afft::mpst::cpu::BackendParameters;
   };
 
   /// @brief Specialization for mpst gpu target.
   template<>
-  struct SelectParametersSelect<Target::gpu, Distribution::mpst>
+  struct BackendParametersSelect<Target::gpu, Distribution::mpst>
   {
-    using Type = afft::mpst::gpu::SelectParameters;
+    using Type = afft::mpst::gpu::BackendParameters;
   };
 
   /**
-   * @brief Check if the type is SelectParameters.
+   * @brief Check if the type is BackendParametersSelect.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsSelectParameters : std::false_type {};
+  struct IsBackendParameters : std::false_type {};
 
-  /// @brief Specialization for spst cpu SelectParameters.
+  /// @brief Specialization for spst cpu BackendParameters.
   template<>
-  struct IsSelectParameters<afft::spst::cpu::SelectParameters> : std::true_type {};
+  struct IsBackendParameters<afft::spst::cpu::BackendParameters> : std::true_type {};
 
-  /// @brief Specialization for spst gpu SelectParameters.
+  /// @brief Specialization for spst gpu BackendParameters.
   template<>
-  struct IsSelectParameters<afft::spst::gpu::SelectParameters> : std::true_type {};
+  struct IsBackendParameters<afft::spst::gpu::BackendParameters> : std::true_type {};
 
-  /// @brief Specialization for spmt gpu SelectParameters.
+  /// @brief Specialization for spmt gpu BackendParameters.
   template<>
-  struct IsSelectParameters<afft::spmt::gpu::SelectParameters> : std::true_type {};
+  struct IsBackendParameters<afft::spmt::gpu::BackendParameters> : std::true_type {};
 
-  /// @brief Specialization for mpst cpu SelectParameters.
+  /// @brief Specialization for mpst cpu BackendParameters.
   template<>
-  struct IsSelectParameters<afft::mpst::cpu::SelectParameters> : std::true_type {};
+  struct IsBackendParameters<afft::mpst::cpu::BackendParameters> : std::true_type {};
 
-  /// @brief Specialization for mpst gpu SelectParameters.
+  /// @brief Specialization for mpst gpu BackendParameters.
   template<>
-  struct IsSelectParameters<afft::mpst::gpu::SelectParameters> : std::true_type {};
+  struct IsBackendParameters<afft::mpst::gpu::BackendParameters> : std::true_type {};
 
   /**
    * @brief ExecutionParameters type for given target.

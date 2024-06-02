@@ -32,7 +32,9 @@
 #include "exception.hpp"
 #include "detail/fftw3/Lib.hpp"
 
-AFFT_EXPORT namespace afft::fftw3
+AFFT_EXPORT namespace afft
+{
+namespace fftw3
 {
   /// @brief FFTW3 planner flags
   enum class PlannerFlag
@@ -42,17 +44,6 @@ AFFT_EXPORT namespace afft::fftw3
     patient,         ///< Patient plan flag
     exhaustive,      ///< Exhaustive planner flag
     estimatePatient, ///< Estimate and patient plan flag
-  };
-
-inline namespace spst
-{
-  /**
-   * @brief Initialization parameters for the FFTW3 plan.
-   */
-  struct BackendParameters
-  {
-    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
   };
 
   /**
@@ -238,20 +229,41 @@ inline namespace spst
     }
 # endif
   }
+} // namespace fftw3
+
+inline namespace spst
+{
+namespace cpu::fftw3
+{
+  using namespace afft::fftw3;
+
+  /**
+   * @brief Initialization parameters for the FFTW3 plan.
+   */
+  struct Parameters
+  {
+    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
+  };
+} // namespace cpu::fftw3
 } // inline namespace spst
 
-#if AFFT_MP_BACKEND_IS(MPI)
 namespace mpst
 {
+namespace cpu::fftw3
+{
+  using namespace afft::fftw3;
+
   /**
    * @brief Initialization parameters for the FFTW3 MPI plan.
    */
-  struct BackendParameters
+  struct Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
     std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
     std::size_t                   blockSize{};                       ///< Decomposition block size
   };
+} // namespace cpu::fftw3
 
   /**
    * @brief Does the FFTW3 MPI library support the given precision?
@@ -260,6 +272,7 @@ namespace mpst
   template<Precision prec>
   inline constexpr bool isSupportedPrecision = detail::fftw3::IsMpiSupportedPrecision<prec>::value;
 
+#if AFFT_MP_BACKEND_IS(MPI)
   /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
    * @tparam PrecT Precision of the FFTW3 library.
@@ -293,11 +306,11 @@ namespace mpst
     }
 # endif
   }
+#endif
 } // namespace mpst
 
   /// @brief Namespace alias for mpst namespace
   namespace mpi = mpst;
-#endif
 } // namespace afft
 
 #endif /* AFFT_FFTW3_HPP */

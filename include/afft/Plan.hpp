@@ -548,13 +548,13 @@ AFFT_EXPORT namespace afft
       template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
       friend Plan makePlan(const TransformParamsT& transformParams,
                            TargetParamsT&          targetParams,
-                           const SelectParamsT&    selectParams);
+                           const SelectParamsT&    backendParams);
 
       // Allow makePlanWithFeedback to create Plan objects
       template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
       friend std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
                                                                          TargetParamsT&          targetParams,
-                                                                         const SelectParamsT&    selectParams);
+                                                                         const SelectParamsT&    backendParams);
 
       // Allow PlanCache to create Plan objects
       friend class PlanCache;
@@ -596,29 +596,29 @@ AFFT_EXPORT namespace afft
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
 
-    return makePlan(transformParams, targetParams, SelectParameters<TargetParamsT::target, TargetParamsT::distrib>{});
+    return makePlan(transformParams, targetParams, BackendParameters<TargetParamsT::target, TargetParamsT::distrib>{});
   }
 
   /**
    * @brief Create a plan for the given transform parameters
    * @tparam TransformParamsT Transform parameters type
    * @tparam TargetParamsT Target parameters type
-   * @tparam SelectParamsT Select parameters type
+   * @tparam BackendParamsT Backend parameters type
    * @param transformParams Transform parameters
    * @param targetParams Target parameters
-   * @param selectParams Select parameters
+   * @param backendParams Backend parameters
    * @return Plan
    */
-  template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
+  template<typename TransformParamsT, typename TargetParamsT, typename BackendParamsT>
   Plan makePlan(const TransformParamsT& transformParams,
                 TargetParamsT&          targetParams,
-                const SelectParamsT&    selectParams)
+                const BackendParamsT&   backendParams)
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
-    static_assert(isSelectParameters<SelectParamsT>, "Invalid select parameters type");
+    static_assert(isBackendParameters<BackendParamsT>, "Invalid backend parameters type");
 
-    static_assert(detail::isCompatible<TargetParamsT, SelectParamsT>,
+    static_assert(detail::isCompatible<TargetParamsT, BackendParamsT>,
                  "Target and select parameters must share the same target and distribution");
 
     static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
@@ -629,14 +629,13 @@ AFFT_EXPORT namespace afft
                   (transformParamsShapeRank == targetParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
-    return Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams), selectParams)};
+    return Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams), backendParams)};
   }
 
   /**
    * @brief Create a plan for the given transform parameters
    * @tparam TransformParamsT Transform parameters type
    * @tparam TargetParamsT Target parameters type
-   * @tparam SelectParamsT Select parameters type
    * @param transformParams Transform parameters
    * @param targetParams Target parameters
    * @return Plan
@@ -650,29 +649,29 @@ AFFT_EXPORT namespace afft
 
     return makePlanWithFeedback(transformParams,
                                 targetParams,
-                                SelectParameters<TargetParamsT::target, TargetParamsT::distrib>{});
+                                BackendParameters<TargetParamsT::target, TargetParamsT::distrib>{});
   }
 
   /**
    * @brief Create a plan for the given transform parameters
    * @tparam TransformParamsT Transform parameters type
    * @tparam TargetParamsT Target parameters type
-   * @tparam SelectParamsT Select parameters type
+   * @tparam BackendParamsT Select parameters type
    * @param transformParams Transform parameters
    * @param targetParams Target parameters
-   * @param selectParams Select parameters
+   * @param backendParams Backend parameters
    * @return Plan
    */
-  template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
+  template<typename TransformParamsT, typename TargetParamsT, typename BackendParamsT>
   std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
                                                               TargetParamsT&          targetParams,
-                                                              const SelectParamsT&    selectParams)
+                                                              const SelectParamsT&    backendParams)
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
-    static_assert(isSelectParameters<SelectParamsT>, "Invalid select parameters type");
+    static_assert(isBackendParameters<BackendParamsT>, "Invalid select parameters type");
 
-    static_assert(detail::isCompatible<TargetParamsT, SelectParamsT>,
+    static_assert(detail::isCompatible<TargetParamsT, BackendParamsT>,
                  "Target and select parameters must share the same target and distribution");
 
     static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
@@ -686,7 +685,7 @@ AFFT_EXPORT namespace afft
     std::pair<Plan, std::vector<Feedback>> result{};
 
     result.first = Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams),
-                                             selectParams,
+                                             backendParams,
                                              &result.second)};
 
     return result;
