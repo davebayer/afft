@@ -37,7 +37,7 @@ AFFT_EXPORT namespace afft
 namespace fftw3
 {
   /// @brief FFTW3 planner flags
-  enum class PlannerFlag
+  enum class PlannerFlag : std::uint8_t
   {
     estimate,        ///< Estimate plan flag
     measure,         ///< Measure plan flag
@@ -242,12 +242,12 @@ namespace cpu::fftw3
    */
   struct Parameters
   {
-    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    bool                          conserveMemory{false};             ///< Conserve memory flag
-    bool                          wisdomOnly{false};                 ///< Wisdom only flag
-    bool                          allowLargeGeneric{false};          ///< Allow large generic flag
-    bool                          allowPruning{false};               ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
+    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};              ///< Conserve memory flag
+    bool                          wisdomOnly{false};                  ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
+    bool                          allowPruning{false};                ///< Allow pruning flag
+    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
   };
 } // namespace cpu::fftw3
 } // inline namespace spst
@@ -263,13 +263,13 @@ namespace cpu::fftw3
    */
   struct Parameters
   {
-    PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
-    bool                          conserveMemory{false};             ///< Conserve memory flag
-    bool                          wisdomOnly{false};                 ///< Wisdom only flag
-    bool                          allowLargeGeneric{false};          ///< Allow large generic flag
-    bool                          allowPruning{false};               ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
-    std::size_t                   blockSize{};                       ///< Decomposition block size
+    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};              ///< Conserve memory flag
+    bool                          wisdomOnly{false};                  ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
+    bool                          allowPruning{false};                ///< Allow pruning flag
+    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
+    std::size_t                   blockSize{};                        ///< Decomposition block size
   };
 } // namespace cpu::fftw3
 
