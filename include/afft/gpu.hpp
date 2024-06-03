@@ -241,11 +241,11 @@ namespace mpst::gpu
 # if AFFT_MP_BACKEND_IS(MPI)
     MPI_Comm               communicator{MPI_COMM_WORLD};                  ///< MPI communicator
 # endif
-# if AFFT_GPU_BACKEND_IS_CUDA
+# if AFFT_GPU_BACKEND_IS(CUDA)
     int                    device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
-# elif AFFT_GPU_BACKEND_IS_HIP
+# elif AFFT_GPU_BACKEND_IS(HIP)
     int                    device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
-# elif AFFT_GPU_BACKEND_IS_OPENCL
+# elif AFFT_GPU_BACKEND_IS(OPENCL)
     cl_context             context{};                                     ///< OpenCL context
     cl_device_id           device{};                                      ///< OpenCL device
 # endif
