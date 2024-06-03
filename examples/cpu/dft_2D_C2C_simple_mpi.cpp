@@ -27,7 +27,7 @@ int main(void)
   dftParams.normalization    = afft::Normalization::orthogonal; // use orthogonal normalization
 
   afft::mpi::cpu::Parameters mpiCpuParams{}; // it will run on multiple CPUs using MPI implementation
-  mpiCpuParams.multiProcessParameters  = MPI_COMM_WORLD; // set up the communicator (unnecessary, MPI_COMM_WORLD is chosen as the default communicator)
+  mpiCpuParams.communicator  = MPI_COMM_WORLD; // set up the communicator (unnecessary, MPI_COMM_WORLD is chosen as the default communicator)
   mpiCpuParams.destroySource = true; // allow to destroy source data
   mpiCpuParams.alignment     = afft::cpu::AlignedAllocator<>{}.getAlignment(); // get alignment of the pointers
   mpiCpuParams.threadLimit   = 4; // we will use up to 4 threads per MPI process

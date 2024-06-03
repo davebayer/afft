@@ -239,7 +239,9 @@ namespace mpst::gpu
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
     bool                   externalWorkspace{false};                      ///< use external workspace, defaults to `false`
-    MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
+# if AFFT_MP_BACKEND_IS(MPI)
+    MPI_Comm               communicator{MPI_COMM_WORLD};                  ///< MPI communicator
+# endif
 # if AFFT_GPU_BACKEND_IS_CUDA
     int                    device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS_HIP

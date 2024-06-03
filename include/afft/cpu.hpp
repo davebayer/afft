@@ -149,7 +149,9 @@ namespace mpst::cpu
     MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                   preserveSource{true};                          ///< preserve source data
-    MultiProcessParameters multiProcessParameters{};                      ///< multi-process parameters
+# if AFFT_MP_BACKEND_IS(MPI)
+    MPI_Comm               communicator{MPI_COMM_WORLD};                  ///< communicator for mpi cpu transform
+# endif
     Alignment              alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
     unsigned               threadLimit{1};                                ///< thread limit for cpu transform
   }
