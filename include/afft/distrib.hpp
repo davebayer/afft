@@ -30,7 +30,6 @@
 #endif
 
 #include "common.hpp"
-#include "mp.hpp"
 
 AFFT_EXPORT namespace afft
 {

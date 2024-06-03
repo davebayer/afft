@@ -31,7 +31,6 @@
 
 #include "../backend.hpp"
 #include "../gpu.hpp"
-#include "../mp.hpp"
 
 #if AFFT_MP_BACKEND_IS(MPI)
 # include "mpi/init.hpp"

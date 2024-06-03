@@ -32,7 +32,6 @@
 #include "backend.hpp"
 #include "common.hpp"
 #include "distrib.hpp"
-#include "mp.hpp"
 #include "detail/cxx.hpp"
 
 // Include the appropriate GPU backend
