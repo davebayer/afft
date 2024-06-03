@@ -140,8 +140,8 @@ import std;
 # include <pocketfft_hdronly.h>
 #endif
 
+// Include rocFFT header
 #if AFFT_BACKEND_IS_ENABLED(ROCFFT)
-// rocFFT header
 # if AFFT_GPU_BACKEND_IS(HIP)
 #   include <rocfft/rocfft.h>
 # endif

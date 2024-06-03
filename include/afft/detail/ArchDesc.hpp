@@ -1116,19 +1116,36 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr Target getTarget() const
       {
-        if (std::holds_alternative<SpstCpuDesc>(mArchVariant) ||
-            std::holds_alternative<MpstCpuDesc>(mArchVariant))
+        switch (mArchVariant.index())
         {
+        case ArchVariantIdx::spstCpu:
+        case ArchVariantIdx::mpstCpu:
           return Target::cpu;
-        }
-        else if (std::holds_alternative<SpstGpuDesc>(mArchVariant) ||
-                 std::holds_alternative<SpmtGpuDesc>(mArchVariant) ||
-                 std::holds_alternative<MpstGpuDesc>(mArchVariant))
-        {
+        case ArchVariantIdx::spstGpu:
+        case ArchVariantIdx::spmtGpu:
+        case ArchVariantIdx::mpstGpu:
           return Target::gpu;
+        default:
+          cxx::unreachable();
         }
-        else
+      }
+
+      /**
+       * @brief Get the target count.
+       * @return Target count.
+       */
+      [[nodiscard]] constexpr std::size_t getTargetCount() const
+      {
+        switch (mArchVariant.index())
         {
+        case ArchVariantIdx::spstCpu:
+        case ArchVariantIdx::spstGpu:
+        case ArchVariantIdx::mpstCpu:
+        case ArchVariantIdx::mpstGpu:
+          return 1;
+        case ArchVariantIdx::spmtGpu:
+          return std::get<SpmtGpuDesc>(mArchVariant).devices.size();
+        default:
           cxx::unreachable();
         }
       }
@@ -1139,22 +1156,17 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr Distribution getDistribution() const
       {
-        if (std::holds_alternative<SpstCpuDesc>(mArchVariant) ||
-            std::holds_alternative<SpstGpuDesc>(mArchVariant))
+        switch (mArchVariant.index())
         {
+        case ArchVariantIdx::spstCpu:
+        case ArchVariantIdx::spstGpu:
           return Distribution::spst;
-        }
-        else if (std::holds_alternative<SpmtGpuDesc>(mArchVariant))
-        {
+        case ArchVariantIdx::spmtGpu:
           return Distribution::spmt;
-        }
-        else if (std::holds_alternative<MpstCpuDesc>(mArchVariant) ||
-                 std::holds_alternative<MpstGpuDesc>(mArchVariant))
-        {
+        case ArchVariantIdx::mpstCpu:
+        case ArchVariantIdx::mpstGpu:
           return Distribution::mpst;
-        }
-        else
-        {
+        default:
           cxx::unreachable();
         }
       }
@@ -1171,34 +1183,21 @@ namespace afft::detail
         static_assert(isValid(target), "Invalid target");
         static_assert(isValid(distrib), "Invalid distribution");
 
-        if constexpr (target == Target::cpu)
+        switch (mTargetVariant.index())
         {
-          if constexpr (distrib == Distribution::spst)
-          {
-            return std::get<SpstCpuDesc>(mTargetVariant);
-          }
-          else if constexpr (distrib == Distribution::mpst)
-          {
-            return std::get<MpstCpuDesc>(mTargetVariant);
-          }
+        case ArchVariantIdx::spstCpu:
+          return std::get<SpstCpuDesc>(mTargetVariant);
+        case ArchVariantIdx::spstGpu:
+          return std::get<SpstGpuDesc>(mTargetVariant);
+        case ArchVariantIdx::spmtGpu:
+          return std::get<SpmtGpuDesc>(mTargetVariant);
+        case ArchVariantIdx::mpstCpu:
+          return std::get<MpstCpuDesc>(mTargetVariant);
+        case ArchVariantIdx::mpstGpu:
+          return std::get<MpstGpuDesc>(mTargetVariant);
+        default:
+          cxx::unreachable();
         }
-        else if constexpr (target == Target::gpu)
-        {
-          if constexpr (distrib == Distribution::spst)
-          {
-            return std::get<SpstGpuDesc>(mArchVariant);
-          }
-          else if constexpr (distrib == Distribution::spmt)
-          {
-            return std::get<SpmtGpuDesc>(mArchVariant);
-          }
-          else if constexpr (distrib == Distribution::mpst)
-          {
-            return std::get<MpstGpuDesc>(mArchVariant);
-          }
-        }
-
-        cxx::unreachable();
       }
 
       /// @brief Get the external workspace flag.
@@ -1241,14 +1240,15 @@ namespace afft::detail
       {
         static_assert(isValid(distrib), "Invalid distribution");
 
-        switch (getTarget())
+        switch (mArchVariant.index())
         {
-        case Target::cpu:
+        case ArchVariantIdx::spstCpu:
+        case ArchVariantIdx::mpstCpu:
           return getTargetDesc<Target::cpu, distrib>().memoryLayout;
-          break;
-        case Target::gpu:
+        case ArchVariantIdx::spstGpu:
+        case ArchVariantIdx::spmtGpu:
+        case ArchVariantIdx::mpstGpu:
           return getTargetDesc<Target::gpu, distrib>().memoryLayout;
-          break;
         default:
           cxx::unreachable();
         }
@@ -1261,6 +1261,16 @@ namespace afft::detail
                                        SpmtGpuDesc,
                                        MpstCpuDesc,
                                        MpstGpuDesc>;
+
+      /// @brief Architecture variant indices.
+      struct ArchVariantIdx
+      {
+        static constexpr std::size_t spstCpu = 0;
+        static constexpr std::size_t spstGpu = 1;
+        static constexpr std::size_t spmtGpu = 2;
+        static constexpr std::size_t mpstCpu = 3;
+        static constexpr std::size_t mpstGpu = 4;
+      };
 
       /**
        * @brief Make architecture variant.
