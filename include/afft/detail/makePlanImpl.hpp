@@ -30,7 +30,10 @@
 #endif
 
 #include "common.hpp"
+#include "Desc.hpp"
 #include "PlanImpl.hpp"
+#include "../backend.hpp"
+
 #if AFFT_BACKEND_IS_ENABLED(CLFFT)
 # include "clfft/makePlanImpl.hpp"
 #endif
@@ -55,8 +58,12 @@
 
 namespace afft::detail
 {
-  
-
+  /**
+   * @brief For each backend in the backend mask, call the function.
+   * @tparam Fn Function type.
+   * @param backendMask Backend mask.
+   * @param fn Function to call for each backend.
+   */
   template<typename Fn>
   auto forEachBackend(BackendMask backendMask, Fn&& fn)
     -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
@@ -72,6 +79,13 @@ namespace afft::detail
     }
   }
 
+  /**
+   * @brief For each backend in the backend mask, call the function.
+   * @tparam Fn Function type.
+   * @param backendMask Backend mask.
+   * @param backendOrder Backend order.
+   * @param fn Function to call for each backend.
+   */
   template<typename Fn>
   auto forEachBackend(BackendMask backendMask, View<Backend> backendOrder, Fn&& fn)
     -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
@@ -92,12 +106,22 @@ namespace afft::detail
     }
   }
 
+  /**
+   * @brief Make plan implementation of the specified backend.
+   * @tparam target Target.
+   * @tparam distrib Distribution.
+   * @param backend Backend.
+   * @param desc Descriptor.
+   * @param backendParams Backend parameters.
+   * @param feedbackMessage Feedback message.
+   * @return Plan implementation.
+   */
   template<Target target, Distribution distrib>
   [[nodiscard]] std::unique_ptr<PlanImpl>
-  makePlanImpl(Backend                                  backend,
-               const Desc&                              desc,
-               const SelectParameters<target, distrib>& selectParams,
-               std::string*                             feedbackMessage)
+  makePlanImpl(Backend                                   backend,
+               const Desc&                               desc,
+               const BackendParameters<target, distrib>& backendParams,
+               std::string*                              feedbackMessage)
   {
     auto assignFeedbackMessage = [&](auto&& message)
     {
@@ -121,37 +145,37 @@ namespace afft::detail
         {
 #       if AFFT_BACKEND_IS_ENABLED(CLFFT)
         case Backend::clfft:
-          planImpl = clfft::makePlanImpl(desc, selectParams);
+          planImpl = clfft::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(CUFFT)
         case Backend::cufft:
-          planImpl = cufft::makePlanImpl(desc, selectParams);
+          planImpl = cufft::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(FFTW3)
         case Backend::fftw3:
-          planImpl = fftw3::makePlanImpl(desc, selectParams);
+          planImpl = fftw3::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(MKL)
         case Backend::mkl:
-          planImpl = mkl::makePlanImpl(desc, selectParams);
+          planImpl = mkl::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
         case Backend::pocketfft:
-          planImpl = pocketfft::makePlanImpl(desc, selectParams);
+          planImpl = pocketfft::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(ROCFFT)
         case Backend::rocfft:
-          planImpl = rocfft::makePlanImpl(desc, selectParams);
+          planImpl = rocfft::makePlanImpl(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(VKFFT)
         case Backend::vkfft:
-          planImpl = vkfft::makePlanImpl(desc, selectParams);
+          planImpl = vkfft::makePlanImpl(desc, backendParams);
           break;
 #       endif
         default:
@@ -172,13 +196,21 @@ namespace afft::detail
     return planImpl;
   }
 
-  template<typename SelectParametersT>
+  /**
+   * @brief Make the first plan implementation.
+   * @tparam BackendParametersT Backend parameters type.
+   * @param desc Descriptor.
+   * @param backendParams Backend parameters.
+   * @param feedbacks Feedbacks.
+   * @return Plan implementation.
+   */
+  template<typename BackendParametersT>
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeFirstPlanImpl(const Desc& desc, const SelectParametersT& selectParams, std::vector<Feedback>* feedbacks)
+  makeFirstPlanImpl(const Desc& desc, const BackendParametersT& backendParams, std::vector<Feedback>* feedbacks)
   {
     std::unique_ptr<PlanImpl> planImpl{};
 
-    forEachBackend(selectParams.mask, selectParams.order, [&](Backend backend)
+    forEachBackend(backendParams.mask, backendParams.order, [&](Backend backend)
     {
       if (!planImpl)
       {
@@ -192,34 +224,49 @@ namespace afft::detail
           feedbackMessage = &feedback.message;
         }
         
-        planImpl = makePlanImpl(backend, desc, selectParams, feedbackMessage);
+        planImpl = makePlanImpl(backend, desc, backendParams, feedbackMessage);
       }
     });
 
     return planImpl;
   }
 
+  /**
+   * @brief Make the best plan implementation.
+   * @param desc Descriptor.
+   * @param backendParams Backend parameters.
+   * @param feedbacks Feedbacks.
+   * @return Plan implementation.
+   */
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
   makeBestPlanImpl(const Desc& desc, const BackendParameters& backendParams, std::vector<Feedback>* feedbacks)
   {
     return {};
   }
 
-  template<typename SelectParametersT>
+  /**
+   * @brief Make plan implementation.
+   * @tparam BackendParametersT Backend parameters type.
+   * @param desc Descriptor.
+   * @param backendParams Backend parameters.
+   * @param feedbacks Feedbacks.
+   * @return Plan implementation.
+   */
+  template<typename BackendParametersT>
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makePlanImpl(const Desc& desc, const SelectParametersT& selectParams, std::vector<Feedback>* feedbacks = nullptr)
+  makePlanImpl(const Desc& desc, const BackendParametersT& backendParams, std::vector<Feedback>* feedbacks = nullptr)
   {
-    validate(selectParams.strategy);
+    validate(backendParams.strategy);
 
     std::unique_ptr<PlanImpl> planImpl{};
 
-    switch (selectParams.selectStrategy)
+    switch (backendParams.selectStrategy)
     {
     case SelectStrategy::first:
-      planImpl = makeFirstPlanImpl(desc, selectParams, feedbacks);
+      planImpl = makeFirstPlanImpl(desc, backendParams, feedbacks);
       break;
     case SelectStrategy::best:
-      planImpl = makeBestPlanImpl(desc, selectParams, feedbacks);
+      planImpl = makeBestPlanImpl(desc, backendParams, feedbacks);
       break;
     default:
       cxx::unreachable();
