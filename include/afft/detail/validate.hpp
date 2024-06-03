@@ -267,6 +267,22 @@ namespace afft::detail
     }
   };
 
+  /// @brief Validator for the dht::Type enum class.
+  template<>
+  struct Validator<dht::Type>
+  {
+    constexpr bool operator()(dht::Type dhtType) const noexcept
+    {
+      switch (dhtType)
+      {
+      case dht::Type::separable:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
   /// @brief Validator for the dtt::Type enum class.
   template<>
   struct Validator<dtt::Type>

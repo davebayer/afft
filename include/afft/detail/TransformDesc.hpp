@@ -42,7 +42,10 @@ namespace afft::detail
   };
 
   /// @brief Description of a DHT transform.
-  struct DhtDesc {};
+  struct DhtDesc
+  {
+    dht::Type type{}; ///< Type of the transform.
+  };
 
   /// @brief Description of a DTT transform.
   struct DttDesc
@@ -374,13 +377,11 @@ namespace afft::detail
         }
         else if constexpr (transform == Transform::dht)
         {
-          // Nothing to do.
+          transformParams.type = getTransformDesc<Transform::dht>().type;
         }
         else if constexpr (transform == Transform::dtt)
         {
-          const auto& dttDesc = getTransformDesc<Transform::dtt>();
-
-          transformParams.types = dttDesc.types;
+          transformParams.types = View<dtt::Type>{getTransformDesc<Transform::dtt>().types.data(), getTransformRank()};
         }
         
         return transformParams;
@@ -486,9 +487,9 @@ namespace afft::detail
        */
       template<std::size_t sRank, std::size_t tRank>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dht::Parameters<sRank, tRank>&, std::size_t)
+      makeTransformVariant(const dht::Parameters<sRank, tRank>& dhtParams, std::size_t)
       {
-        return DhtDesc{};
+        return DhtDesc{validateAndReturn(dhtParams.type)};
       }
 
       /**

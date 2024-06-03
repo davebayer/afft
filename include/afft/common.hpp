@@ -185,6 +185,12 @@ AFFT_EXPORT namespace afft
   /// @brief Namespace for discrete Hartley transform
   namespace dht
   {
+    /// @brief DHT transform type
+    enum class Type
+    {
+      separable, ///< separable DHT, computes the DHT along each axis independently
+    };
+
     /**
      * @brief DHT Parameters
      * @tparam sRank Rank of the shape, dynamic by default
@@ -204,6 +210,7 @@ AFFT_EXPORT namespace afft
       View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
       Normalization            normalization{Normalization::none}; ///< normalization
       Placement                placement{Placement::outOfPlace};   ///< placement of the transform
+      Type                     type{Type::separable};              ///< type of the transform
     };
   } // namespace dht
 

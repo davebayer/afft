@@ -47,6 +47,7 @@ import std;
 #   include <list>
 #   include <memory>
 #   include <new>
+#   include <numeric>
 #   include <optional>
 #   ifdef AFFT_CXX_HAS_SPAN
 #     include <span>
