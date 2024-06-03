@@ -64,7 +64,7 @@ AFFT_EXPORT namespace afft
   inline constexpr bool isRealType = isKnownType<T> && typeComplexity<T> == Complexity::real;
 
   /**
-   * @brief Target Parameters type for given transform.
+   * @brief TransformParameters type for given transform.
    * @tparam transform The transform type.
    */
   template<Transform transform>
@@ -78,22 +78,22 @@ AFFT_EXPORT namespace afft
   inline constexpr bool isTransformParameters = detail::IsTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
-   * @brief Target Parameters type for given target.
+   * @brief ArchitectureParameters type for given target and distribution.
    * @tparam target The target type.
    * @tparam distrib The distribution type.
    */
   template<Target target, Distribution distrib = Distribution::spst>
-  using TargetParameters = typename detail::TargetParametersSelect<target, distrib>::Type;
+  using ArchitectureParameters = typename detail::ArchParametersSelect<target, distrib>::Type;
 
   /**
-   * @brief Check if the type is TargetParameters.
+   * @brief Check if the type is ArchitectureParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isArchitectureParameters = detail::IsArchParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
-   * @brief Backend Parameters type for given target.
+   * @brief Backend Parameters type for given architecture.
    * @tparam target The target type.
    * @tparam distrib The distribution type.
    */
@@ -108,12 +108,12 @@ AFFT_EXPORT namespace afft
   inline constexpr bool isBackendParameters = detail::IsBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
-   * @brief ExecutionParameters type for given target.
+   * @brief ExecutionParameters type for given architecture.
    * @tparam target The target type.
    * @tparam distrib The distribution type.
    */
   template<Target target, Distribution distrib = Distribution::spst>
-  using ExecutionParameters = typename detail::TargetExecutionParametersSelect<target, distrib>::Type;
+  using ExecutionParameters = typename detail::ArchExecutionParametersSelect<target, distrib>::Type;
 
   /**
    * @brief Check if the type is ExecutionParameters.

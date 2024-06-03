@@ -545,16 +545,16 @@ AFFT_EXPORT namespace afft
     protected:
     private:
       // Allow makePlan to create Plan objects
-      template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
-      friend Plan makePlan(const TransformParamsT& transformParams,
-                           TargetParamsT&          targetParams,
-                           const SelectParamsT&    backendParams);
+      template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
+      friend Plan makePlan(const TransformParametersT& transformParams,
+                           ArchParametersT&            archParams,
+                           const BackendParametersT&   backendParams);
 
       // Allow makePlanWithFeedback to create Plan objects
-      template<typename TransformParamsT, typename TargetParamsT, typename SelectParamsT>
-      friend std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
-                                                                         TargetParamsT&          targetParams,
-                                                                         const SelectParamsT&    backendParams);
+      template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
+      friend std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
+                                                                         ArchParametersT&            archParams,
+                                                                         const BackendParametersT&   backendParams);
 
       // Allow PlanCache to create Plan objects
       friend class PlanCache;
@@ -582,100 +582,100 @@ AFFT_EXPORT namespace afft
   };
 
   /**
-   * @brief Create a plan for the given transform parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam TargetParamsT Target parameters type
+   * @brief Create a plan for the given transform and architecture parameters with default backend parameters
+   * @tparam TransformParametersT Transform parameters type
+   * @tparam ArchParametersT Architecture parameters type
    * @param transformParams Transform parameters
-   * @param targetParams Target parameters
+   * @param archParams Architecutre parameters
    * @return Plan
    */
-  template<typename TransformParamsT, typename TargetParamsT>
-  Plan makePlan(const TransformParamsT& transformParams,
-                TargetParamsT&          targetParams)
+  template<typename TransformParametersT, typename ArchParametersT>
+  Plan makePlan(const TransformParametersT& transformParams,
+                ArchParametersT&            archParams)
   {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
 
-    return makePlan(transformParams, targetParams, BackendParameters<TargetParamsT::target, TargetParamsT::distrib>{});
+    return makePlan(transformParams, archParams, BackendParameters<ArchParametersT::target, ArchParametersT::distrib>{});
   }
 
   /**
-   * @brief Create a plan for the given transform parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam TargetParamsT Target parameters type
-   * @tparam BackendParamsT Backend parameters type
+   * @brief Create a plan for the given transform, architecture and backend parameters
+   * @tparam TransformParametersT Transform parameters type
+   * @tparam ArchParametersT Architecture parameters type
+   * @tparam BackendParametersT Backend parameters type
    * @param transformParams Transform parameters
-   * @param targetParams Target parameters
+   * @param archParams Architecutre parameters
    * @param backendParams Backend parameters
    * @return Plan
    */
-  template<typename TransformParamsT, typename TargetParamsT, typename BackendParamsT>
-  Plan makePlan(const TransformParamsT& transformParams,
-                TargetParamsT&          targetParams,
-                const BackendParamsT&   backendParams)
+  template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
+  Plan makePlan(const TransformParametersT& transformParams,
+                ArchParametersT&            archParams,
+                const BackendParametersT&   backendParams)
   {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
-    static_assert(isBackendParameters<BackendParamsT>, "Invalid backend parameters type");
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
+    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
 
-    static_assert(detail::isCompatible<TargetParamsT, BackendParamsT>,
-                 "Target and select parameters must share the same target and distribution");
+    static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
+                 "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
-    static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>.shape;
+    static constexpr auto targetParamsShapeRank    = detail::ArchParametersTemplateRanks<ArchParametersT>.shape;
 
     static_assert((transformParamsShapeRank == dynamicRank) ||
                   (targetParamsShapeRank == dynamicRank) ||
                   (transformParamsShapeRank == targetParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
-    return Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams), backendParams)};
+    return Plan{detail::makePlanImpl(detail::Desc(transformParams, archParams), backendParams)};
   }
 
   /**
-   * @brief Create a plan for the given transform parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam TargetParamsT Target parameters type
+   * @brief Create a plan with feedback for the given transform and architecture parameters with default backend parameters
+   * @tparam TransformParametersT Transform parameters type
+   * @tparam ArchParametersT Architecture parameters type
    * @param transformParams Transform parameters
-   * @param targetParams Target parameters
-   * @return Plan
+   * @param archParams Architecutre parameters
+   * @return Plan and feedback
    */
-  template<typename TransformParamsT, typename TargetParamsT>
-  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
-                                                              TargetParamsT&          targetParams)
+  template<typename TransformParametersT, typename ArchParametersT>
+  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
+                                                              ArchParametersT&          archParams)
   {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
 
     return makePlanWithFeedback(transformParams,
-                                targetParams,
-                                BackendParameters<TargetParamsT::target, TargetParamsT::distrib>{});
+                                archParams,
+                                BackendParameters<ArchParametersT::target, ArchParametersT::distrib>{});
   }
 
   /**
-   * @brief Create a plan for the given transform parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam TargetParamsT Target parameters type
-   * @tparam BackendParamsT Select parameters type
+   * @brief Create a plan with feedback for the given transform, architecture and backend parameters
+   * @tparam TransformParametersT Transform parameters type
+   * @tparam ArchParametersT Architecture parameters type
+   * @tparam BackendParametersT Backend parameters type
    * @param transformParams Transform parameters
-   * @param targetParams Target parameters
+   * @param archParams Architecutre parameters
    * @param backendParams Backend parameters
-   * @return Plan
+   * @return Plan and feedback
    */
-  template<typename TransformParamsT, typename TargetParamsT, typename BackendParamsT>
-  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParamsT& transformParams,
-                                                              TargetParamsT&          targetParams,
-                                                              const SelectParamsT&    backendParams)
+  template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
+  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
+                                                              ArchParametersT&            archParams,
+                                                              const BackendParametersT&   backendParams)
   {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isTargetParameters<TargetParamsT>, "Invalid target parameters type");
-    static_assert(isBackendParameters<BackendParamsT>, "Invalid select parameters type");
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
+    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
 
-    static_assert(detail::isCompatible<TargetParamsT, BackendParamsT>,
-                 "Target and select parameters must share the same target and distribution");
+    static_assert(detail::isCompatible<ArchParametersT, BackendParamsT>,
+                 "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>.shape;
-    static constexpr auto targetParamsShapeRank    = detail::TargetParametersTemplateRanks<TargetParamsT>.shape;
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>.shape;
+    static constexpr auto targetParamsShapeRank    = detail::ArchParametersTemplateRanks<ArchParametersT>.shape;
 
     static_assert((transformParamsShapeRank == dynamicRank) ||
                   (targetParamsShapeRank == dynamicRank) ||
@@ -684,7 +684,7 @@ AFFT_EXPORT namespace afft
 
     std::pair<Plan, std::vector<Feedback>> result{};
 
-    result.first = Plan{detail::makePlanImpl(detail::Desc(transformParams, targetParams),
+    result.first = Plan{detail::makePlanImpl(detail::Desc(transformParams, archParams),
                                              backendParams,
                                              &result.second)};
 
