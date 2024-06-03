@@ -243,6 +243,10 @@ namespace cpu::fftw3
   struct Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};             ///< Conserve memory flag
+    bool                          wisdomOnly{false};                 ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};          ///< Allow large generic flag
+    bool                          allowPruning{false};               ///< Allow pruning flag
     std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
   };
 } // namespace cpu::fftw3
@@ -260,6 +264,10 @@ namespace cpu::fftw3
   struct Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::measure}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};             ///< Conserve memory flag
+    bool                          wisdomOnly{false};                 ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};          ///< Allow large generic flag
+    bool                          allowPruning{false};               ///< Allow pruning flag
     std::chrono::duration<double> timeLimit{};                       ///< Time limit for the planner
     std::size_t                   blockSize{};                       ///< Decomposition block size
   };
