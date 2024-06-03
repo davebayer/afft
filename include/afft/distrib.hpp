@@ -71,10 +71,10 @@ namespace spmt
   template<std::size_t rank = dynamicRank>
   struct MemoryLayout
   {
-    View<MemoryBlock<rank>, rank> srcBlocks{};    ///< source memory blocks
-    View<MemoryBlock<rank>, rank> dstBlocks{};    ///< destination memory blocks
-    View<std::size_t, rank>       srcAxesOrder{}; ///< order of the source axes
-    View<std::size_t, rank>       dstAxesOrder{}; ///< order of the destination axes
+    View<MemoryBlock<rank>> srcBlocks{};    ///< source memory blocks
+    View<MemoryBlock<rank>> dstBlocks{};    ///< destination memory blocks
+    View<std::size_t, rank> srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t, rank> dstAxesOrder{}; ///< order of the destination axes
   };
 } // namespace spmt
 
