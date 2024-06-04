@@ -22,61 +22,51 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP
+#define AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "common.hpp"
-#include "../PlanImpl.hpp"
+#include "PlanImpl.hpp"
+#include "spst.hpp"
 
 namespace afft::detail::pocketfft
 {
-  /// @brief The pocketfft plan implementation base class.
-  class PlanImpl : public detail::PlanImpl
+  /**
+   * @brief Create a plan implementation.
+   * @tparam BackendParametersT Backend parameters type.
+   * @param desc Plan description.
+   * @param backendParams Backend parameters.
+   * @return Plan implementation.
+   */
+  template<typename BackendParametersT>
+  [[nodiscard]] std::unique_ptr<PlanImpl>
+  makePlanImpl(const Desc& desc, const BackendParametersT& backendParams)
   {
-    private:
-      /// @brief Alias for the parent class.
-      using Parent = detail::PlanImpl;
-
-    public:
-      /// @brief Inherit constructor.
-      using Parent::Parent;
-
-      /// @brief Inherit assignment operator.
-      using Parent::operator=;
-
-      /// @brief Default destructor.
-      virtual ~PlanImpl() = default;
-
-      /**
-       * @brief Get the pocketfft backend.
-       * @return The pocketfft backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
+    if (desc.getComplexFormat() != ComplexFormat::interleaved)
+    {
+      throw BackendError{Backend::pocketfft, "only interleaved complex format is supported"};
+    }
+    
+    if constexpr (backendParams.target == Target::cpu)
+    {
+      if constexpr (backendParams.distribution == Distribution::spst)
       {
-        return Backend::pocketfft;
+        return spst::cpu::makePlanImpl(desc);
       }
-    protected:
-      /**
-       * @brief Get the pocketfft direction from the plan description.
-       * @return The pocketfft direction.
-       */
-      [[nodiscard]] auto getDirection() const noexcept
+      else
       {
-        switch (getDesc().getDirection())
-        {
-        case Direction::forward:
-          return ::pocketfft::FORWARD;
-        case Direction::backward:
-          return ::pocketfft::BACKWARD;
-        default:
-          cxx::unreachable();
-        }
+        throw BackendError{Backend::pocketfft, "only spst distribution is supported"};
       }
-  };
+    }
+    else
+    {
+      throw BackendError{Backend::pocketfft, "only cpu target is supported"};
+    }
+  }
 } // namespace afft::detail::pocketfft
 
-#endif /* AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP */
+
