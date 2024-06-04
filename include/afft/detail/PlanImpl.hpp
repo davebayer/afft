@@ -30,84 +30,10 @@
 #endif
 
 #include "cxx.hpp"
+#include "Desc.hpp"
 
 namespace afft::detail
 {
-  class ExecParam
-  {
-    public:
-      constexpr ExecParam() = default;
-      constexpr ExecParam(void* realOrRealImag, void* imag = nullptr) noexcept
-      {
-        mBuffers[0] = realOrRealImag;
-        mBuffers[1] = imag;
-      }
-      template<typename T>
-      constexpr ExecParam(PlanarComplex<T> planarComplex) noexcept
-      {
-        mBuffers[0] = planarComplex.real;
-        mBuffers[1] = planarComplex.imag;
-      }
-      constexpr ExecParam(const ExecParam&) = default;
-      constexpr ExecParam(ExecParam&&) = default;
-      ~ExecParam() = default;
-
-      constexpr ExecParam& operator=(const ExecParam&) = default;
-      constexpr ExecParam& operator=(ExecParam&&) = default;
-
-      [[nodiscard]] constexpr bool isSplit() const noexcept
-      {
-        return mBuffers[1] != nullptr;
-      }
-
-      [[nodiscard]] constexpr void* getReal() const noexcept
-      {
-        return mBuffers[0];
-      }
-
-      template<typename T>
-      [[nodiscard]] constexpr T* getRealAs() const noexcept
-      {
-        return static_cast<T*>(getReal());
-      }
-
-      [[nodiscard]] constexpr void* getRealImag() const noexcept
-      {
-        return mBuffers[0];
-      }
-
-      template<typename T>
-      [[nodiscard]] constexpr T* getRealImagAs() const noexcept
-      {
-        return static_cast<T*>(getRealImag());
-      }
-
-      [[nodiscard]] constexpr void* getImag() const noexcept
-      {
-        return mBuffers[1];
-      }
-
-      template<typename T>
-      [[nodiscard]] constexpr T* getImagAs() const noexcept
-      {
-        return static_cast<T*>(getImag());
-      }
-
-      [[nodiscard]] constexpr void** data() noexcept
-      {
-        return mBuffers.data();
-      }
-
-      template<typename T>
-      [[nodiscard]] constexpr T** dataAs() noexcept
-      {
-        return reinterpret_cast<T**>(mBuffers.data());
-      }
-    protected:
-    private:
-      std::array<void*, 2> mBuffers{};
-  };
-
   /**
    * @class PlanImpl
    * @brief The abstract base class for all plan implementations
@@ -134,34 +60,19 @@ namespace afft::detail
       PlanImpl& operator=(PlanImpl&&) = default;
 
       /**
-       * @brief Get the configuration of the plan
-       * @return const reference to the configuration of the plan
+       * @brief Get the description of the plan
+       * @return const reference to the description of the plan
        */
-      [[nodiscard]] constexpr const Config& getConfig() const noexcept
+      [[nodiscard]] constexpr const Desc& getDesc() const noexcept
       {
-        return mConfig;
+        return mDesc;
       }
 
       /**
-       * @brief Execute the plan with default target parameters
-       * @tparam ArgsT Argument types
-       * @param args Arguments
+       * @brief Get the backend of the plan
+       * @return Backend of the plan
        */
-      template<typename... Args>
-      void executeWithDefaultTargetParameters(Args&&... buffers)
-      {
-        switch (getConfig().getTarget())
-        {
-        case Target::cpu:
-          execute(std::forward<Args>(buffers)..., afft::cpu::ExecutionParameters{});
-          break;
-        case Target::gpu:
-          execute(std::forward<Args>(buffers)..., afft::gpu::ExecutionParameters{});
-          break;
-        default:
-          cxx::unreachable();
-        }
-      }
+      [[nodiscard]] virtual Backend getBackend() const = 0;
 
       /**
        * @brief Execute in-place plan
@@ -171,13 +82,13 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcDstT, typename ExecParamsT>
-      void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
+      void execute(View<SrcDstT*> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcDstT>, "A known type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         checkExecTypes(typePrecision<SrcDstT>, typeComplexity<SrcDstT>);
-        executeUnsafe(srcDst, execParams);
+        executeUnsafe(reinterpretViewCast<void*>(srcDst), execParams);
       }
 
       /**
@@ -188,13 +99,13 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcDstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
+      void execute(View<PlanarComplex<SrcDstT*>> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isRealType<SrcDstT>, "A real type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         checkExecTypes(typePrecision<SrcDstT>, Complexity::complex);
-        executeUnsafe(srcDst, execParams);
+        executeUnsafe(reinterpretViewCast<PlanarComplex<void*>>(srcDst), execParams);
       }
 
       /**
@@ -207,14 +118,16 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
+      void execute(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        using SrcVoidT = std::conditional_t<std::is_const_v<SrcT>, const void, void>;
+
         checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
-        executeUnsafe(src, dst, execParams);
+        executeUnsafe(reinterpretViewCast<SrcVoidT*>(src), reinterpretViewCast<void*>(dst), execParams);
       }
 
       /**
@@ -227,14 +140,16 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
+      void execute(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        using SrcVoidT = std::conditional_t<std::is_const_v<SrcT>, const void, void>;
+
         checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, typeComplexity<DstT>);
-        executeUnsafe(src, dst, execParams);
+        executeUnsafe(reinterpretViewCast<PlanarComplex<SrcVoidT*>>(src), reinterpretViewCast<void*>(dst), execParams);
       }
 
       /**
@@ -247,14 +162,16 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      void execute(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isRealType<DstT>, "A real type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        using SrcVoidT = std::conditional_t<std::is_const_v<SrcT>, const void, void>;
+
         checkExecTypes(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, Complexity::complex);
-        executeUnsafe(src, dst, execParams);
+        executeUnsafe(reinterpretViewCast<SrcVoidT*>(src), reinterpretViewCast<PlanarComplex<void*>>(dst), execParams);
       }
 
       /**
@@ -267,35 +184,18 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      void execute(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
       {
         static_assert(isRealType<SrcT>, "A real type is required");
         static_assert(isRealType<DstT>, "A real type is required");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
-        checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, Complexity::complex);
-        executeUnsafe(src, dst, execParams);
-      }
+        using SrcVoidT = std::conditional_t<std::is_const_v<SrcT>, const void, void>;
 
-      /**
-       * @brief Execute the plan with default target parameters
-       * @tparam ArgsT Argument types
-       * @param args Arguments
-       */
-      template<typename... Args>
-      void executeUnsafeWithDefaultTargetParameters(Args&&... args)
-      {
-        switch (getConfig().getTarget())
-        {
-        case Target::cpu:
-          executeUnsafe(std::forward<Args>(args)..., afft::cpu::Parameters{});
-          break;
-        case Target::gpu:
-          executeUnsafe(std::forward<Args>(args)..., afft::gpu::Parameters{});
-          break;
-        default:
-          cxx::unreachable();
-        }
+        checkExecTypes(typePrecision<SrcT>, Complexity::complex, typePrecision<DstT>, Complexity::complex);
+        executeUnsafe(reinterpretViewCast<PlanarComplex<SrcVoidT*>>(src),
+                      reinterpretViewCast<PlanarComplex<void*>>(dst),
+                      execParams);
       }
 
       /**
@@ -306,19 +206,19 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(void* srcDst, const ExecParamsT& execParams)
+      void executeUnsafe(View<void*> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkBuffers(srcDst);
         checkExecParameters(execParams);
         requireInPlaceTransform();
-        requireNotNull(srcDst);
 
 // #     if AFFT_GPU_BACKEND_IS(OPENCL)
 //         if (std::is_same_v<ExecParamsT, afft::gpu::Parameters>)
 //         {
-//           const auto& gpuConfig = getConfig().getTargetConfig<Target::gpu>();
-//           auto clSrcDst = gpu::opencl::makeBufferFromPtr(gpuConfig.context, srcDst, mConfig.getSrcShapeVolume());
+//           const auto& gpuConfig = getDesc().getTargetConfig<Target::gpu>();
+//           auto clSrcDst = gpu::opencl::makeBufferFromPtr(gpuConfig.context, srcDst, mDesc.getSrcShapeVolume());
 //           executeImpl(clSrcDst.get(), srcDst.get(), execParams);
 //         }
 //         else
@@ -336,13 +236,13 @@ namespace afft::detail
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<void*> srcDst, const ExecParamsT& execParams)
+      void executeUnsafe(View<PlanarComplex<void*>> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
+        checkBuffers(srcDst);
         checkExecParameters(execParams);
         requireInPlaceTransform();
-        requireNotNull(srcDst.real, srcDst.imag);
         executeImpl(srcDst, srcDst, execParams);
       }
 
@@ -351,16 +251,19 @@ namespace afft::detail
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
+       * @param src Source buffers
+       * @param dst Destination buffers
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(void* src, void* dst, const ExecParamsT& execParams)
+      void executeUnsafe(View<void*> src, View<void*> dst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
-        if (src == dst)
+        checkBuffers(src);
+        checkBuffers(dst);
+
+        if (std::equal(src.begin(), src.end(), dst.begin()))
         {
           executeUnsafe(src, execParams);
         }
@@ -368,7 +271,6 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src, dst);
           executeImpl(src, dst, execParams);
         }
       }
@@ -378,20 +280,22 @@ namespace afft::detail
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
+       * @param src Source buffers
+       * @param dst Destination buffers
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(const void* src, void* dst, const ExecParamsT& execParams)
+      void executeUnsafe(View<const void*> src, View<void*> dst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
 
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
-        requireNotNull(src, dst);
-        executeImpl(removeConstFromPtr(src), dst, execParams);
+        executeImpl(reinterpretViewCast<void*>(src), dst, execParams);
       }
 
       /**
@@ -399,113 +303,19 @@ namespace afft::detail
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type
        * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
+       * @param src Source buffers
+       * @param dst Destination buffers
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<void*> src, void* dst, const ExecParamsT& execParams)
+      void executeUnsafe(View<PlanarComplex<void*>> src, View<void*> dst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
-        if (src.real == dst)
-        {
-          executeUnsafe(src.real, execParams);
-        }
-        else
-        {
-          checkExecParameters(execParams);
-          requireOutOfPlaceTransform();
-          requireNotNull(src.real, src.imag, dst);
-          executeImpl(src, dst, execParams);
-        }
-      }
+        checkBuffers(src);
+        checkBuffers(dst);
 
-      /**
-       * @brief Execute the plan without type checking and with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams)
-      {
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
-
-        checkExecParameters(execParams);
-        requireNonDestructiveTransform();
-        requireOutOfPlaceTransform();
-        requireNotNull(src.real, src.imag, dst);
-        executeUnsafe(PlanarComplex<void*>{removeConstFromPtr(src.real),
-                                           removeConstFromPtr(src.imag)}, dst, execParams);
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<typename ExecParamsT>
-      void executeUnsafe(void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
-      {
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
-
-        if (src == dst.real)
-        {
-          executeUnsafe(dst, execParams);
-        }
-        else
-        {
-          checkExecParameters(execParams);
-          requireOutOfPlaceTransform();
-          requireNotNull(src, dst.real, dst.imag);
-          executeImpl(src, dst, execParams);
-        }
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<typename ExecParamsT>
-      void executeUnsafe(const void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
-      {
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
-
-        checkExecParameters(execParams);
-        requireNonDestructiveTransform();
-        requireOutOfPlaceTransform();
-        requireNotNull(src, dst.real, dst.imag);
-        executeUnsafe(removeConstFromPtr(src), dst, execParams);
-      }
-
-      /**
-       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
-       */
-      template<typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
-      {
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
-
-        if (src.real == dst.real && src.imag == dst.imag)
+        if (std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d){ return s.real == d; }))
         {
           executeUnsafe(src, execParams);
         }
@@ -513,7 +323,58 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src.real, src.imag, dst.real, dst.imag);
+          executeImpl(src, dst, execParams);
+        }
+      }
+
+      /**
+       * @brief Execute the plan without type checking and with source buffer as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename ExecParamsT>
+      void executeUnsafe(View<PlanarComplex<const void*>> src, View<void*> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
+
+        checkExecParameters(execParams);
+        requireNonDestructiveTransform();
+        requireOutOfPlaceTransform();
+        executeUnsafe(reinterpretViewCast<PlanarComplex<void*>>(src), dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename ExecParamsT>
+      void executeUnsafe(View<void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
+
+        if (std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d){ return s == d.real; }))
+        {
+          executeUnsafe(dst, execParams);
+        }
+        else
+        {
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
           executeImpl(src, dst, execParams);
         }
       }
@@ -523,21 +384,75 @@ namespace afft::detail
        * @tparam SrcT Source buffer type in PlanarComplex format
        * @tparam DstT Destination buffer type in PlanarComplex format
        * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
+       * @param src Source buffers
+       * @param dst Destination buffers
        * @param execParams Execution parameters
        */
       template<typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams)
+      void executeUnsafe(View<const void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams)
       {
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
 
         checkExecParameters(execParams);
         requireNonDestructiveTransform();
         requireOutOfPlaceTransform();
-        requireNotNull(src.real, src.imag, dst.real, dst.imag);
-        executeUnsafe(PlanarComplex<void*>{removeConstFromPtr(src.real),
-                                           removeConstFromPtr(src.imag)}, dst, execParams);
+        executeUnsafe(reinterpretViewCast<void*>(src), dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename ExecParamsT>
+      void executeUnsafe(View<PlanarComplex<void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
+
+        if (std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+                                                            { return s.real == d.real && s.imag == d.imag; }))
+        {
+          executeUnsafe(src, execParams);
+        }
+        else
+        {
+          checkExecParameters(execParams);
+          requireOutOfPlaceTransform();
+          executeImpl(src, dst, execParams);
+        }
+      }
+
+      /**
+       * @brief Execute the plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename ExecParamsT>
+      void executeUnsafe(View<PlanarComplex<const void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkBuffers(src);
+        checkBuffers(dst);
+
+        checkExecParameters(execParams);
+        requireNonDestructiveTransform();
+        requireOutOfPlaceTransform();
+        executeUnsafe(reinterpretViewCast<PlanarComplex<void*>>(src), dst, execParams);
       }
 
 #   if AFFT_GPU_BACKEND_IS(OPENCL)
@@ -548,11 +463,10 @@ namespace afft::detail
 
         checkExecParameters(execParams);
         requireInPlaceTransform();
-        requireNotNull(srcDst);
 
         if (gpu::opencl::isReadOnlyBuffer(srcDst))
         {
-          throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
+          throw std::invalid_argument{"Read-only buffer passed to in-place execute()"};
         }
 
         executeImpl(srcDst, srcDst, execParams);
@@ -565,16 +479,15 @@ namespace afft::detail
 
         checkExecParameters(execParams);
         requireInPlaceTransform();
-        requireNotNull(srcDst.real, srcDst.imag);
 
         if (gpu::opencl::isReadOnlyBuffer(srcDst.real))
         {
-          throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
+          throw std::invalid_argument{"Read-only buffer passed to in-place execute()"};
         }
 
         if (gpu::opencl::isReadOnlyBuffer(srcDst.imag))
         {
-          throw makeException<std::invalid_argument>("Read-only buffer passed to in-place execute()");
+          throw std::invalid_argument{"Read-only buffer passed to in-place execute()"};
         }
 
         executeImpl(srcDst, srcDst, execParams);
@@ -593,7 +506,6 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src, dst);
 
           if (gpu::opencl::isReadOnlyBuffer(src))
           {
@@ -602,7 +514,7 @@ namespace afft::detail
 
           if (gpu::opencl::isReadOnlyBuffer(dst))
           {
-            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+            throw std::invalid_argument{"Read-only buffer passed as destination to execute()"};
           }
 
           executeImpl(src, dst, execParams);
@@ -622,7 +534,6 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src.real, src.imag, dst);
 
           if (gpu::opencl::isReadOnlyBuffer(src.real) || gpu::opencl::isReadOnlyBuffer(src.imag))
           {
@@ -631,7 +542,7 @@ namespace afft::detail
 
           if (gpu::opencl::isReadOnlyBuffer(dst))
           {
-            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+            throw std::invalid_argument{"Read-only buffer passed as destination to execute()"};
           }
 
           executeImpl(src, dst, execParams);
@@ -651,7 +562,6 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src, dst.real, dst.imag);
 
           if (gpu::opencl::isReadOnlyBuffer(src))
           {
@@ -660,7 +570,7 @@ namespace afft::detail
 
           if (gpu::opencl::isReadOnlyBuffer(dst.real) || gpu::opencl::isReadOnlyBuffer(dst.imag))
           {
-            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+            throw std::invalid_argument{"Read-only buffer passed as destination to execute()"};
           }
 
           executeImpl(src, dst, execParams);
@@ -680,7 +590,6 @@ namespace afft::detail
         {
           checkExecParameters(execParams);
           requireOutOfPlaceTransform();
-          requireNotNull(src.real, src.imag, dst.real, dst.imag);
 
           if (gpu::opencl::isReadOnlyBuffer(src.real) || gpu::opencl::isReadOnlyBuffer(src.imag))
           {
@@ -689,7 +598,7 @@ namespace afft::detail
 
           if (gpu::opencl::isReadOnlyBuffer(dst.real) || gpu::opencl::isReadOnlyBuffer(dst.imag))
           {
-            throw makeException<std::invalid_argument>("Read-only buffer passed as destination to execute()");
+            throw std::invalid_argument{"Read-only buffer passed as destination to execute()"};
           }
 
           executeImpl(src, dst, execParams);
@@ -704,13 +613,71 @@ namespace afft::detail
       virtual std::size_t getWorkspaceSize() const { return {}; }
 
       /**
+       * @brief Check if the buffer count matches the target count and if any buffer is null
+       * @param count the buffer count
+       */
+      template<typename T>
+      void checkBuffers(View<T*> buffers) const
+      {
+        auto bufferIsNotNull = [](const auto& buffer){ return buffer != nullptr; };
+
+        if (buffers.size() != mDesc.getTargetCount())
+        {
+          throw std::invalid_argument{"Invalid number of buffers passed to execute()"};
+        }
+
+        if (std::any_of(buffers.begin(), buffers.end(), bufferIsNotNull))
+        {
+          throw std::invalid_argument{"Null pointer passed to execute()"};
+        }
+      }
+
+      /**
+       * @brief Check if the buffer count matches the target count and if any buffer is null
+       * @param count the buffer count
+       */
+      template<typename T>
+      void checkBuffers(View<PlanarComplex<T*>> buffers) const
+      {
+        auto bufferIsNotNull = [](const auto& buffer){ return buffer.real != nullptr && buffer.imag != nullptr; };
+
+        if (buffers.size() != mDesc.getTargetCount())
+        {
+          throw std::invalid_argument{"Invalid number of buffers passed to execute()"};
+        }
+
+        if (std::any_of(buffers.begin(), buffers.end(), bufferIsNotNull))
+        {
+          throw std::invalid_argument{"Null pointer passed to execute()"};
+        }
+      }
+
+      /// @brief Require interleaved complex format
+      void requireInterleavedComplex() const
+      {
+        if (mDesc.getComplexFormat() != ComplexFormat::interleaved)
+        {
+          throw std::runtime_error{"Plan expects interleaved complex format"};
+        }
+      }
+
+      /// @brief Require planar complex format
+      void requirePlanarComplex() const
+      {
+        if (mDesc.getComplexFormat() != ComplexFormat::planar)
+        {
+          throw std::runtime_error{"Plan expects planar complex format"};
+        }
+      }
+
+      /**
        * @brief Check if the non-destructive transform is configured
        */
       constexpr void requireNonDestructiveTransform() const
       {
-        if (mConfig.getCommonParameters().destroySource)
+        if (!mDesc.getPreserveSource())
         {
-          throw makeException<std::runtime_error>("Running a destructive transform on const input data.");
+          throw std::runtime_error{"Running a destructive transform on const input data."};
         }
       }
 
@@ -719,9 +686,9 @@ namespace afft::detail
        */
       constexpr void requireOutOfPlaceTransform() const
       {
-        if (mConfig.getCommonParameters().placement != Placement::outOfPlace)
+        if (mDesc.getPlacement() != Placement::outOfPlace)
         {
-          throw makeException<std::runtime_error>("Running an in-place transform with out-of-place data.");
+          throw std::runtime_error{"Running an in-place transform with out-of-place data."};
         }
       }
 
@@ -730,33 +697,28 @@ namespace afft::detail
        */
       constexpr void requireInPlaceTransform() const
       {
-        if (mConfig.getCommonParameters().placement != Placement::inPlace)
+        if (mDesc.getPlacement() != Placement::inPlace)
         {
-          throw makeException<std::runtime_error>("Running an out-of-place transform with in-place data.");
+          throw std::runtime_error{"Running an out-of-place transform with in-place data."};
         }
       }
 
       /**
        * @brief Check if the execution parameters are valid
+       * @tparam ExecutionParametersT the execution parameters type
        * @param execParams the execution parameters
        */
-      constexpr void checkExecParameters(const afft::cpu::ExecutionParameters&) const
+      template<typename ExecutionParametersT>
+      constexpr void checkExecParameters(const ExecutionParametersT& execParams) const
       {
-        if (mConfig.getTarget() != Target::cpu)
+        if (execParams.target != mDesc.getTarget())
         {
-          throw makeException<std::invalid_argument>("CPU execution parameters passed to a non-CPU plan");
+          throw std::invalid_argument{"Invalid target for transform"};
         }
-      }
 
-      /**
-       * @brief Check if the execution parameters are valid
-       * @param execParams the execution parameters
-       */
-      constexpr void checkExecParameters(const afft::gpu::ExecutionParameters&) const
-      {
-        if (mConfig.getTarget() != Target::gpu)
+        if (execParams.distribution != mDesc.getDistribution())
         {
-          throw makeException<std::invalid_argument>("GPU execution parameters passed to a non-GPU plan");
+          throw std::invalid_argument{"Invalid distribution for transform"};
         }
       }
 
@@ -767,18 +729,18 @@ namespace afft::detail
        */
       constexpr void checkExecTypes(Precision srcOrDstPrec, Complexity srcOrDstCmpl) const
       {
-        const auto& prec = mConfig.getTransformPrecision();
+        const auto& prec = mDesc.getPrecision();
 
         if (srcOrDstPrec != prec.source && srcOrDstPrec != prec.destination)
         {
-          throw makeException<std::invalid_argument>("Invalid precision for transform");
+          throw std::invalid_argument{"Invalid precision for transform"};
         }
 
-        const auto [refSrcCmpl, refDstCmpl] = mConfig.getSrcDstComplexity();
+        const auto [refSrcCmpl, refDstCmpl] = mDesc.getSrcDstComplexity();
 
         if (srcOrDstCmpl != refSrcCmpl && srcOrDstCmpl != refDstCmpl)
         {
-          throw makeException<std::invalid_argument>("Invalid complexity for transform");
+          throw std::invalid_argument{"Invalid complexity for transform"};
         }
       }
 
@@ -791,28 +753,28 @@ namespace afft::detail
        */
       constexpr void checkExecTypes(Precision srcPrec, Complexity srcCmpl, Precision dstPrec, Complexity dstCmpl) const
       {
-        const auto& prec = mConfig.getTransformPrecision();
+        const auto& prec = mDesc.getPrecision();
 
         if (srcPrec != prec.source)
         {
-          throw makeException<std::invalid_argument>("Invalid source precision for transform");
+          throw std::invalid_argument{"Invalid source precision for transform"};
         }
         
         if (dstPrec != prec.destination)
         {
-          throw makeException<std::invalid_argument>("Invalid destination precision for transform");
+          throw std::invalid_argument{"Invalid destination precision for transform"};
         }
 
-        const auto [refSrcCmpl, refDstCmpl] = mConfig.getSrcDstComplexity();
+        const auto [refSrcCmpl, refDstCmpl] = mDesc.getSrcDstComplexity();
 
         if (srcCmpl != refSrcCmpl)
         {
-          throw makeException<std::invalid_argument>("Invalid source complexity for transform");
+          throw std::invalid_argument{"Invalid source complexity for transform"};
         }
 
         if (dstCmpl != refDstCmpl)
         {
-          throw makeException<std::invalid_argument>("Invalid destination complexity for transform");
+          throw std::invalid_argument{"Invalid destination complexity for transform"};
         }
       }
     protected:
@@ -820,47 +782,67 @@ namespace afft::detail
        * @brief Construct a new PlanImpl object
        * @param config the configuration of the plan
        */
-      PlanImpl(const Config& config) noexcept
-      : mConfig(config)
+      PlanImpl(const Desc& desc)
+      : mDesc(desc)
       {}
 
       /**
-       * @brief Implementation of the plan execution on the CPU
+       * @brief Execute the plan
        * @param src the source buffer
        * @param dst the destination buffer
-       * @param execParams the CPU execution parameters
+       * @param execParams the execution parameters
        */
-      virtual void executeImpl(ExecParam, ExecParam, const afft::cpu::ExecutionParameters&)
+      virtual void executeImpl(View<void*>, View<void*>, const afft::spst::cpu::ExecutionParameters&)
       {
-        throw makeException<std::runtime_error>("CPU execution is by currently selected implementation");
+        throw std::runtime_error{"backend does not implement spst cpu execution"};
       }
 
       /**
-       * @brief Implementation of the plan execution on the GPU
+       * @brief Execute the plan
        * @param src the source buffer
        * @param dst the destination buffer
-       * @param execParams the GPU execution parameters
+       * @param execParams the execution parameters
        */
-      virtual void executeImpl(ExecParam, ExecParam, const afft::gpu::ExecutionParameters&)
+      virtual void executeImpl(View<void*>, View<void*>, const afft::spst::gpu::ExecutionParameters&)
       {
-        throw makeException<std::runtime_error>("GPU execution is by currently selected implementation");
+        throw std::runtime_error{"backend does not implement spst gpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan
+       * @param src the source buffer
+       * @param dst the destination buffer
+       * @param execParams the execution parameters
+       */
+      virtual void executeImpl(View<void*>, View<void*>, const afft::spmt::gpu::ExecutionParameters&)
+      {
+        throw std::runtime_error{"backend does not implement spmt gpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan
+       * @param src the source buffer
+       * @param dst the destination buffer
+       * @param execParams the execution parameters
+       */
+      virtual void executeImpl(View<void*>, View<void*>, const afft::mpst::cpu::ExecutionParameters&)
+      {
+        throw std::runtime_error{"backend does not implement mpst cpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan
+       * @param src the source buffer
+       * @param dst the destination buffer
+       * @param execParams the execution parameters
+       */
+      virtual void executeImpl(View<void*>, View<void*>, const afft::mpst::gpu::ExecutionParameters&)
+      {
+        throw std::runtime_error{"backend does not implement mpst gpu execution"};
       }
 
     private:
-      /**
-       * @brief Require that the pointers are not null
-       * @param ptrs the pointers to check
-       */
-      template<typename... T>
-      void requireNotNull(const T*... ptrs)
-      {
-        if ((false || ... || (ptrs == nullptr)))
-        {
-          throw makeException<std::invalid_argument>("Null pointer passed to execute()");
-        }
-      }
-
-      Config mConfig; ///< The configuration of the plan
+      Desc mDesc; ///< The description of the plan
   };
 } // namespace afft::detail
 
