@@ -46,15 +46,6 @@ namespace detail
 
   // Check that the BackendMask underlying type is unsigned
   static_assert(std::is_unsigned_v<BackendMaskUnderlyingType>);
-
-  /**
-   * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
-   * @return True if the BackendMask underlying type has sufficient size, false otherwise.
-   */
-  [[nodiscard]] inline constexpr bool backendMaskHasSufficientUnderlyingTypeSize(Backend backendCount)
-  {
-    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= cxx::to_underlying(backendCount);
-  }
 } // namespace detail
 
   // Forward declarations
@@ -63,6 +54,15 @@ namespace detail
 
 namespace detail
 {
+  /**
+   * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
+   * @return True if the BackendMask underlying type has sufficient size, false otherwise.
+   */
+  [[nodiscard]] inline constexpr bool backendMaskHasSufficientUnderlyingTypeSize(Backend backendCount)
+  {
+    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= cxx::to_underlying(backendCount);
+  }
+
   /**
    * @brief Converts Backend or BackednMask to a BackendMask.
    * @tparam T Type of the value.
@@ -77,7 +77,7 @@ namespace detail
 
     if constexpr (std::is_same_v<T, Backend>)
     {
-      return static_cast<BackendMask>(U{1} << detail::cxx::to_underlying(value));
+      return static_cast<BackendMask>(BackendMaskUnderlyingType{1} << detail::cxx::to_underlying(value));
     }
     else
     {
@@ -98,7 +98,7 @@ namespace detail
   {
     const auto val = detail::cxx::to_underlying(detail::toBackendMask(value));
 
-    return BackendMask{fn(val)};
+    return static_cast<BackendMask>(fn(val));
   }
 
   /**
@@ -117,7 +117,7 @@ namespace detail
     const auto left  = detail::cxx::to_underlying(detail::toBackendMask(lhs));
     const auto right = detail::cxx::to_underlying(detail::toBackendMask(rhs));
 
-    return BackendMask{fn(left, right)};
+    return static_cast<BackendMask>(fn(left, right));
   }
 } // namespace detail
 } // namespace afft

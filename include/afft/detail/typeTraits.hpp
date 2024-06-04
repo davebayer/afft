@@ -362,23 +362,23 @@ namespace afft::detail
   template<typename T>
   struct IsExecutionParameters : std::false_type {};
 
-  /// @brief Specialization for cpu ExecutionParameters.
+  /// @brief Specialization for spst cpu ExecutionParameters.
   template<>
-  struct IsExecutionParameters<afft::cpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters<afft::spst::cpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for gpu ExecutionParameters.
+  /// @brief Specialization for spst gpu ExecutionParameters.
   template<>
-  struct IsExecutionParameters<afft::gpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters<afft::spst::gpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed spmt gpu ExecutionParameters.
+  /// @brief Specialization for spmt gpu ExecutionParameters.
   template<>
   struct IsExecutionParameters<afft::spmt::gpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed mpst cpu ExecutionParameters.
+  /// @brief Specialization for mpst cpu ExecutionParameters.
   template<>
   struct IsExecutionParameters<afft::mpst::cpu::ExecutionParameters> : std::true_type {};
 
-  /// @brief Specialization for distributed mpst gpu ExecutionParameters.
+  /// @brief Specialization for mpst gpu ExecutionParameters.
   template<>
   struct IsExecutionParameters<afft::mpst::gpu::ExecutionParameters> : std::true_type {};
 } // namespace afft::detail

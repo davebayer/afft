@@ -34,6 +34,7 @@
 #include "../common.hpp"
 #include "../distrib.hpp"
 #include "../Span.hpp"
+#include "../transform.hpp"
 
 namespace afft::detail
 {
@@ -384,7 +385,7 @@ namespace afft::detail
   {
     if (!isValid(value))
     {
-      throw std::invalid_argument("Invalid value of type " + typeid(T).name());
+      throw std::invalid_argument{"Invalid value"};
     }
   }
 

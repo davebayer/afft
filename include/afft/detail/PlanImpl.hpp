@@ -29,7 +29,6 @@
 # include "include.hpp"
 #endif
 
-#include "Config.hpp"
 #include "cxx.hpp"
 
 namespace afft::detail

@@ -63,7 +63,7 @@ namespace afft::detail
       {
         MaxDimArray<U> result{};
 
-        for (std::size_t i{}; i < size(); ++i)
+        for (std::size_t i{}; i < this->size(); ++i)
         {
           result[i] = safeIntCast<U>((*this)[i]);
         }

@@ -141,7 +141,7 @@ namespace afft::detail
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        return shape.cast<I>();
+        return mShape.cast<I>();
       }
 
       /**
@@ -194,7 +194,7 @@ namespace afft::detail
 
         MaxDimArray<I> dims{};
 
-        const auto axes = getAxes();
+        const auto axes = getTransformAxes();
 
         for (std::size_t i{}, pos{}; i < getShapeRank(); ++i)
         {
@@ -265,7 +265,7 @@ namespace afft::detail
        * @return Transform description.
        */
       template<Transform transform>
-      [[nodiscard]] constexpr auto getTransformDesc()
+      [[nodiscard]] constexpr const auto& getTransformDesc() const
       {
         static_assert(isValid(transform), "Invalid transform type");
 
@@ -292,10 +292,10 @@ namespace afft::detail
        * @tparam prec Precision type.
        * @return Normalization factor.
        */
-      template<Precision prec>
-      [[nodiscard]] constexpr Real<prec> getNormalizationFactor() const
+      template<typename T>
+      [[nodiscard]] constexpr T getNormalizationFactor() const
       {
-        static_assert(isValid(prec), "Invalid precision type");
+        static_assert(std::is_floating_point_v<T>, "Floating-point type required");
 
         std::size_t logicalSize{1};
 
@@ -303,7 +303,7 @@ namespace afft::detail
         {
           case Transform::dft:
           case Transform::dht:
-            for (const auto& axis : getAxes())
+            for (const auto& axis : getTransformAxes())
             {
               logicalSize *= getShape()[axis];
             }
@@ -314,13 +314,13 @@ namespace afft::detail
 
             for (std::size_t i{}; i < getTransformRank(); ++i)
             {
-              switch (dttDesc.axisTypes[i])
+              switch (dttDesc.types[i])
               {
                 case dtt::Type::dct1:
-                  logicalSize *= 2 * (getShape()[getAxes()[i]] - 1);
+                  logicalSize *= 2 * (getShape()[getTransformAxes()[i]] - 1);
                   break;
                 case dtt::Type::dst1:
-                  logicalSize *= 2 * (getShape()[getAxes()[i]] + 1);
+                  logicalSize *= 2 * (getShape()[getTransformAxes()[i]] + 1);
                   break;
                 case dtt::Type::dct2:
                 case dtt::Type::dct3:
@@ -328,7 +328,7 @@ namespace afft::detail
                 case dtt::Type::dst2:
                 case dtt::Type::dst3:
                 case dtt::Type::dst4:
-                  logicalSize *= 2 * getShape()[getAxes()[i]];
+                  logicalSize *= 2 * getShape()[getTransformAxes()[i]];
                   break;
                 default:
                   cxx::unreachable();
@@ -343,13 +343,41 @@ namespace afft::detail
         switch (getNormalization())
         {
           case Normalization::none:
-            return Real<prec>{1};
+            return T{1};
           case Normalization::orthogonal:
-            return Real<prec>{1} / std::sqrt(static_cast<Real<prec>>(logicalSize));
+            return T{1} / std::sqrt(static_cast<T>(logicalSize));
           case Normalization::unitary:
-            return Real<prec>{1} / static_cast<Real<prec>>(logicalSize);
+            return T{1} / static_cast<T>(logicalSize);
           default:
             cxx::unreachable();
+        }
+      }
+
+      /**
+       * @brief Get the complexity of source and destination of the transform.
+       * @return Complexity of source and destination of the transform.
+       */
+      [[nodiscard]] constexpr std::pair<Complexity, Complexity> getSrcDstComplexity() const
+      {
+        switch (getTransform())
+        {
+        case Transform::dft:
+          switch (getTransformDesc<Transform::dft>().type)
+          {
+          case dft::Type::complexToComplex:
+            return {Complexity::complex, Complexity::complex};
+          case dft::Type::realToComplex:
+            return {Complexity::real, Complexity::complex};
+          case dft::Type::complexToReal:
+            return {Complexity::complex, Complexity::real};
+          default:
+            cxx::unreachable();
+          }
+        case Transform::dht:
+        case Transform::dtt:
+          return {Complexity::real, Complexity::real};
+        default:
+          cxx::unreachable();
         }
       }
 

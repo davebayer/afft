@@ -72,7 +72,7 @@ namespace afft::detail
     {
       const Backend backend = static_cast<Backend>(i);
 
-      if (backendMask & backend)
+      if ((backendMask & backend) != BackendMask::empty)
       {
         fn(backend);
       }
@@ -92,37 +92,80 @@ namespace afft::detail
   {
     for (const Backend backend : backendOrder)
     {
-      if (backendMask & backend)
+      if ((backendMask & backend) != BackendMask::empty)
       {
         fn(backend);
       }
 
-      backendMask &= ~backend;
+      backendMask = backendMask & (~backend);
     }
 
-    if (cxx::to_underlying(backendMask))
+    if (backendMask != BackendMask::empty)
     {
       forEachBackend(backendMask, std::forward<Fn>(fn));
     }
   }
 
   /**
-   * @brief Make plan implementation of the specified backend.
+   * @brief Get supported backend mask for the specified target and distribution.
    * @tparam target Target.
    * @tparam distrib Distribution.
+   * @return Supported backend mask.
+   */
+  template<Target target, Distribution distrib>
+  [[nodiscard]] constexpr BackendMask getSupportedBackendMask()
+  {
+    static_assert(isValid(target), "Invalid target");
+    static_assert(isValid(distrib), "Invalid distribution");
+
+    if constexpr (target == Target::cpu)
+    {
+      if constexpr (distrib == Distribution::spst)
+      {
+        return spst::gpu::supportedBackendMask;
+      }
+      else if constexpr (distrib == Distribution::mpst)
+      {
+        return mpst::gpu::supportedBackendMask;
+      }
+    }
+    else if constexpr (target == Target::gpu)
+    {
+      if constexpr (distrib == Distribution::spst)
+      {
+        return spst::gpu::supportedBackendMask;
+      }
+      else if constexpr (distrib == Distribution::spmt)
+      {
+        return spmt::gpu::supportedBackendMask;
+      }
+      else if constexpr (distrib == Distribution::mpst)
+      {
+        return mpst::gpu::supportedBackendMask;
+      }
+    }
+
+    cxx::unreachable();
+  }
+
+  /**
+   * @brief Make plan implementation of the specified backend.
+   * @tparam BackendParametersT Backend parameters type.
    * @param backend Backend.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbackMessage Feedback message.
    * @return Plan implementation.
    */
-  template<Target target, Distribution distrib>
+  template<typename BackendParametersT>
   [[nodiscard]] std::unique_ptr<PlanImpl>
-  makePlanImpl(Backend                                   backend,
-               const Desc&                               desc,
-               const BackendParameters<target, distrib>& backendParams,
-               std::string*                              feedbackMessage)
+  makePlanImpl(Backend                                    backend,
+               [[maybe_unused]] const Desc&               desc,
+               [[maybe_unused]] const BackendParametersT& backendParams,
+               std::string*                               feedbackMessage)
   {
+    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
+
     auto assignFeedbackMessage = [&](auto&& message)
     {
       if (feedbackMessage != nullptr)
@@ -133,7 +176,7 @@ namespace afft::detail
 
     std::unique_ptr<PlanImpl> planImpl{};
     
-    if (!(backend & supportedBackendMask<target, distrib>))
+    if ((backend & getSupportedBackendMask<BackendParametersT::target, BackendParametersT::distribution>()) == BackendMask::empty)
     {
       assignFeedbackMessage("Backend not supported for target and distribution");
     }
@@ -233,13 +276,17 @@ namespace afft::detail
 
   /**
    * @brief Make the best plan implementation.
+   * @tparam BackendParametersT Backend parameters type.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
+  template<typename BackendParametersT>
   [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeBestPlanImpl(const Desc& desc, const BackendParameters& backendParams, std::vector<Feedback>* feedbacks)
+  makeBestPlanImpl([[maybe_unused]] const Desc& desc,
+                   [[maybe_unused]] const BackendParametersT& backendParams,
+                   [[maybe_unused]] std::vector<Feedback>* feedbacks)
   {
     return {};
   }
@@ -260,7 +307,7 @@ namespace afft::detail
 
     std::unique_ptr<PlanImpl> planImpl{};
 
-    switch (backendParams.selectStrategy)
+    switch (backendParams.strategy)
     {
     case SelectStrategy::first:
       planImpl = makeFirstPlanImpl(desc, backendParams, feedbacks);
@@ -274,7 +321,7 @@ namespace afft::detail
 
     if (!planImpl)
     {
-      throw makeException<std::runtime_error>("Failed to create plan implementation");
+      throw std::runtime_error{"Failed to create plan implementation"};
     }
 
     return planImpl;

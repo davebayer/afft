@@ -35,11 +35,54 @@
 namespace afft::detail
 {
   /**
+   * @brief Creates a view over a single element.
+   * @tparam T Type of the element.
+   * @tparam extent Number of elements in the view.
+   * @param value Element to create the view from.
+   * @return View containing the element.
+   */
+  template<typename T, std::size_t extent = dynamicExtent>
+  [[nodiscard]] constexpr View<T, extent> makeView(const T& value) noexcept
+  {
+    return View<T, extent>{&value, 1};
+  }
+
+  /**
+   * @brief Creates an array from list of arguments
+   * @tparam T Resulting array type.
+   * @tparam Args Types of the arguments.
+   * @param args Arguments to create the array from.
+   * @return Array containing the arguments.
+   */
+  template<typename T, typename... Args>
+  [[nodiscard]] constexpr std::array<T, sizeof...(Args)> makeArray(Args&&... args)
+  {
+    static_assert(std::conjunction_v<std::is_convertible_v<Args, T>...>,
+                  "Arguments must be convertible to the array type");
+
+    return std::array<T, sizeof...(Args)>{std::forward<Args>(args)...};
+  }
+
+  /**
+   * @brief Reinterprets a span of elements as a span of a different type.
+   * @tparam T Target type.
+   * @tparam U Source type.
+   * @tparam extent Number of elements in the span.
+   * @param span Span to reinterpret.
+   * @return Reinterpreted span.
+   */
+  template<typename T, typename U, std::size_t extent>
+  View<T, extent> reinterpretViewCast(View<U, extent> span)
+  {
+    return View<T, extent>{reinterpret_cast<const T*>(span.data()), span.size()};
+  }
+
+  /**
    * @struct IsZero
    * @brief Function object that checks if a value is zero.
    * @tparam T Type of the value.
    */
-  template<typename T>
+  template<typename T = void>
   struct IsZero
   {
     static_assert(std::is_arithmetic_v<T>, "IsZero can only be used with arithmetic types.");
@@ -77,7 +120,7 @@ namespace afft::detail
    * @brief Function object that checks if a value is not zero.
    * @tparam T Type of the value.
    */
-  template<typename T>
+  template<typename T = void>
   struct IsNotZero
   {
     static_assert(std::is_arithmetic_v<T>, "IsNotZero can only be used with arithmetic types.");

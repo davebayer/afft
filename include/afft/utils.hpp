@@ -62,9 +62,9 @@ AFFT_EXPORT namespace afft
   {
     static_assert(isKnownType<PrecT>, "Precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<PrecT>::precision,
-                          /* .source      = */ typePrecision<PrecT>::precision,
-                          /* .destination = */ typePrecision<PrecT>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<PrecT>,
+                          /* .source      = */ typePrecision<PrecT>,
+                          /* .destination = */ typePrecision<PrecT>};
   }
 
   /**
@@ -79,9 +79,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<ExecT>, "Execution precision type must be a known type");
     static_assert(isKnownType<MemoryT>, "Memory precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>::precision,
-                          /* .source      = */ typePrecision<MemoryT>::precision,
-                          /* .destination = */ typePrecision<MemoryT>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>,
+                          /* .source      = */ typePrecision<MemoryT>,
+                          /* .destination = */ typePrecision<MemoryT>};
   }
 
   /**
@@ -98,9 +98,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<SrcT>, "Source precision type must be a known type");
     static_assert(isKnownType<DstT>, "Destination precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>::precision,
-                          /* .source      = */ typePrecision<SrcT>::precision,
-                          /* .destination = */ typePrecision<DstT>::precision};
+    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>,
+                          /* .source      = */ typePrecision<SrcT>,
+                          /* .destination = */ typePrecision<DstT>};
   }
 
   /**
@@ -150,7 +150,7 @@ AFFT_EXPORT namespace afft
       throw std::invalid_argument("Shape must not contain zeros");
     }
 
-    std::vector<std::size_t> strides(resultShape.size());
+    std::vector<std::size_t> strides(shape.size());
 
     if (!shape.empty())
     {
@@ -188,7 +188,7 @@ AFFT_EXPORT namespace afft
       return makeStrides(resultShape, fastestAxisStride);
     }
     // Check if the axes size matches the shape size
-    else if (orgAxesOrder.size() != shape.size())
+    else if (orgAxesOrder.size() != resultShape.size())
     {
       throw std::invalid_argument("Axes order must have the same size as the shape");
     }
@@ -207,7 +207,7 @@ AFFT_EXPORT namespace afft
         throw std::invalid_argument("Axes order must not contain out-of-range values");
       }
 
-      for (std::size_t j{i + 1}; j < axes.size(); ++j)
+      for (std::size_t j{i + 1}; j < orgAxesOrder.size(); ++j)
       {
         if (orgAxesOrder[i] == orgAxesOrder[j])
         {

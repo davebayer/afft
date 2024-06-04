@@ -200,7 +200,7 @@ namespace afft::detail
         {
           mHasDefaultSrcMemoryBlocks = false;
 
-          for (std::size_t i{}; i < targetCount)
+          for (std::size_t i{}; i < targetCount; ++i)
           {
             if (srcBlocks[i].starts.size() == shapeRank)
             {
@@ -247,7 +247,7 @@ namespace afft::detail
         {
           mHasDefaultDstMemoryBlocks = false;
 
-          for (std::size_t i{}; i < targetCount)
+          for (std::size_t i{}; i < targetCount; ++i)
           {
             if (dstBlocks[i].starts.size() == shapeRank)
             {
@@ -1089,8 +1089,8 @@ namespace afft::detail
       ArchDesc(const ArchParametersT& archParams, std::size_t shapeRank)
       : mComplexFormat{validateAndReturn(archParams.complexFormat)},
         mPreserveSource{archParams.preserveSource},
-        mUseExternalWorkspace{archParams.externalWorkspace},
-        mArchVariant{makeArchVariant(archParams), shapeRank}
+        mUseExternalWorkspace{archParams.useExternalWorkspace},
+        mArchVariant{makeArchVariant(archParams, shapeRank)}
       {
         static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters");
       }
@@ -1144,7 +1144,11 @@ namespace afft::detail
         case ArchVariantIdx::mpstGpu:
           return 1;
         case ArchVariantIdx::spmtGpu:
+#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
           return std::get<SpmtGpuDesc>(mArchVariant).devices.size();
+#       else
+          return 0;
+#       endif
         default:
           cxx::unreachable();
         }
@@ -1183,18 +1187,18 @@ namespace afft::detail
         static_assert(isValid(target), "Invalid target");
         static_assert(isValid(distrib), "Invalid distribution");
 
-        switch (mTargetVariant.index())
+        switch (mArchVariant.index())
         {
         case ArchVariantIdx::spstCpu:
-          return std::get<SpstCpuDesc>(mTargetVariant);
+          return std::get<SpstCpuDesc>(mArchVariant);
         case ArchVariantIdx::spstGpu:
-          return std::get<SpstGpuDesc>(mTargetVariant);
+          return std::get<SpstGpuDesc>(mArchVariant);
         case ArchVariantIdx::spmtGpu:
-          return std::get<SpmtGpuDesc>(mTargetVariant);
+          return std::get<SpmtGpuDesc>(mArchVariant);
         case ArchVariantIdx::mpstCpu:
-          return std::get<MpstCpuDesc>(mTargetVariant);
+          return std::get<MpstCpuDesc>(mArchVariant);
         case ArchVariantIdx::mpstGpu:
-          return std::get<MpstGpuDesc>(mTargetVariant);
+          return std::get<MpstGpuDesc>(mArchVariant);
         default:
           cxx::unreachable();
         }
@@ -1244,11 +1248,11 @@ namespace afft::detail
         {
         case ArchVariantIdx::spstCpu:
         case ArchVariantIdx::mpstCpu:
-          return getTargetDesc<Target::cpu, distrib>().memoryLayout;
+          return getArchDesc<Target::cpu, distrib>().memoryLayout;
         case ArchVariantIdx::spstGpu:
         case ArchVariantIdx::spmtGpu:
         case ArchVariantIdx::mpstGpu:
-          return getTargetDesc<Target::gpu, distrib>().memoryLayout;
+          return getArchDesc<Target::gpu, distrib>().memoryLayout;
         default:
           cxx::unreachable();
         }
@@ -1383,6 +1387,8 @@ namespace afft::detail
         desc.context      = params.context;
         desc.device       = params.device;
 #     endif
+
+        return desc;
       }
 
       ComplexFormat mComplexFormat{};        ///< Complex format.

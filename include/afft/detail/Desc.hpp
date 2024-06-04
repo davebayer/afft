@@ -44,7 +44,7 @@ namespace afft::detail
       template<typename TransformParametersT, typename ArchParametersT>
       Desc(const TransformParametersT& transformParameters, const ArchParametersT& archParameters)
       : TransformDesc{transformParameters},
-        ArchDesc{archParameters}
+        ArchDesc{archParameters, getTransformRank()}
       {
         static_assert(isTransformParameters<TransformParametersT>, "TransformParametersT must be a TransformParameters type.");
         static_assert(isArchitectureParameters<ArchParametersT>, "ArchParametersT must be an ArchParameters type.");

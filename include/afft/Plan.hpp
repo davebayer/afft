@@ -33,8 +33,8 @@
 #include "distrib.hpp"
 #include "typeTraits.hpp"
 #include "detail/cxx.hpp"
+#include "detail/Desc.hpp"
 #include "detail/makePlanImpl.hpp"
-#include "detail/Config.hpp"
 #include "detail/PlanImpl.hpp"
 
 AFFT_EXPORT namespace afft
@@ -81,7 +81,7 @@ AFFT_EXPORT namespace afft
       {
         checkInitialized();
 
-        return mImpl->getConfig().getTransform();
+        return mImpl->getDesc().getTransform();
       }
 
       /**
@@ -92,7 +92,7 @@ AFFT_EXPORT namespace afft
       template<Transform transform>
       [[nodiscard]] TransformParameters<transform> getTransformParameters() const
       {
-        static_assert(detail::isValidTransform(transform), "Invalid transform type");
+        static_assert(detail::isValid(transform), "Invalid transform type");
 
         checkInitialized();
 
@@ -101,7 +101,7 @@ AFFT_EXPORT namespace afft
           throw std::runtime_error("Plan transform does not match requested transform");
         }
 
-        return mImpl->getConfig().getTransformParameters<transform>();
+        return mImpl->getDesc().getTransformParameters<transform>();
       }
 
       /**
@@ -112,7 +112,7 @@ AFFT_EXPORT namespace afft
       {
         checkInitialized();
 
-        return mImpl->getConfig().getTarget();
+        return mImpl->getDesc().getTarget();
       }
 
       /**
@@ -123,7 +123,7 @@ AFFT_EXPORT namespace afft
       {
         checkInitialized();
 
-        return mImpl->getConfig().getDistribType();
+        return mImpl->getDesc().getDistribution();
       }
 
       /**
@@ -132,10 +132,10 @@ AFFT_EXPORT namespace afft
        * @return Target parameters
        */
       template<Target target, Distribution distrib = Distribution::spst>
-      [[nodiscard]] TargetParameters<target> getTargetParameters() const
+      [[nodiscard]] ArchitectureParameters<target, distrib> getArchitectureParameters() const
       {
-        static_assert(detail::isValidTarget(target), "Invalid target type");
-        static_assert(detail::isValidDistribution(distrib), "Invalid distribution");
+        static_assert(detail::isValid(target), "Invalid target type");
+        static_assert(detail::isValid(distrib), "Invalid distribution");
 
         checkInitialized();
 
@@ -149,7 +149,7 @@ AFFT_EXPORT namespace afft
           throw std::runtime_error("Plan distribution does not match requested distribution");
         }
 
-        return mImpl->getConfig().getTargetParameters<target, distrib>();
+        return mImpl->getDesc().getArchitectureParameters<target, distrib>();
       }
 
       /**
@@ -164,36 +164,6 @@ AFFT_EXPORT namespace afft
       }
 
       /**
-       * @brief Execute in-place plan with default execution parameters
-       * @param srcDst Source and destination
-       */
-      template<typename SrcDstT>
-      void execute(SrcDstT* srcDst)
-      {
-        static_assert(isKnownType<SrcDstT>, "A known type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(srcDst);
-      }
-
-      /**
-       * @brief Execute in-place plan with default execution parameters
-       * @param srcDst Source and destination
-       */
-      template<typename SrcDstT>
-      void execute(PlanarComplex<SrcDstT*> srcDst)
-      {
-        static_assert(isRealType<SrcDstT>, "A real type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(srcDst);
-      }
-
-      /**
        * @brief Execute in-place plan
        * @tparam SrcDstT Source or destination buffer type
        * @tparam ExecParamsT Execution parameters type
@@ -202,6 +172,25 @@ AFFT_EXPORT namespace afft
        */
       template<typename SrcDstT, typename ExecParamsT>
       void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
+      {
+        static_assert(isKnownType<SrcDstT>, "A known type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
+        mImpl->execute(detail::makeView(srcDst), execParams);
+      }
+
+      /**
+       * @brief Execute in-place plan
+       * @tparam SrcDstT Source or destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param srcDst Source and destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcDstT, typename ExecParamsT>
+      void execute(View<SrcDstT*> srcDst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcDstT>, "A known type is required");
         static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
@@ -228,83 +217,26 @@ AFFT_EXPORT namespace afft
 
         checkInitialized();
 
+        mImpl->execute(detail::makeView(srcDst), execParams);
+      }
+
+      /**
+       * @brief Execute in-place plan
+       * @tparam SrcDstT Source or destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param srcDst Source and destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcDstT, typename ExecParamsT>
+      void execute(View<PlanarComplex<SrcDstT*>> srcDst, const ExecParamsT& execParams)
+      {
+        static_assert(isRealType<SrcDstT>, "A real type is required");
+        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
         mImpl->execute(srcDst, execParams);
-      }
-
-      /**
-       * @brief Execute out-of-place plan
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       */
-      template<typename SrcT, typename DstT>
-      void execute(SrcT* src, DstT* dst)
-      {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @param src Source buffer in PlanarComplex format
-       * @param dst Destination buffer
-       */
-      template<typename SrcT, typename DstT>
-      void execute(PlanarComplex<SrcT*> src, DstT* dst)
-      {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @param src Source buffer
-       * @param dst Destination buffer in PlanarComplex format
-       */
-      template<typename SrcT, typename DstT>
-      void execute(SrcT* src, PlanarComplex<DstT*> dst)
-      {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @param src Source buffer in PlanarComplex format
-       * @param dst Destination buffer in PlanarComplex format
-       */
-      template<typename SrcT, typename DstT>
-      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
-      {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeWithDefaultTargetParameters(src, dst);
       }
 
       /**
@@ -318,6 +250,28 @@ AFFT_EXPORT namespace afft
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
+      {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
+        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void execute(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isKnownType<DstT>, "A known type is required");
@@ -348,6 +302,28 @@ AFFT_EXPORT namespace afft
 
         checkInitialized();
 
+        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan with source buffer as PlanarComplex
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers in PlanarComplex format
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void execute(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isKnownType<DstT>, "A known type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
         mImpl->execute(src, dst, execParams);
       }
 
@@ -362,6 +338,28 @@ AFFT_EXPORT namespace afft
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert(isKnownType<SrcT>, "A known type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
+        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers in PlanarComplex format
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void execute(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
       {
         static_assert(isKnownType<SrcT>, "A known type is required");
         static_assert(isRealType<DstT>, "A real type is required");
@@ -392,75 +390,29 @@ AFFT_EXPORT namespace afft
 
         checkInitialized();
 
-        mImpl->execute(src, dst, execParams);
+        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking
+       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
        * @tparam SrcT Source buffer type
        * @tparam DstT Destination buffer type
-       * @param src Source buffer
-       * @param dst Destination buffer
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers in PlanarComplex format
+       * @param dst Destination buffers in PlanarComplex format
+       * @param execParams Execution parameters
        */
-      template<typename SrcT, typename DstT>
-      void executeUnsafe(SrcT* src, DstT* dst)
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void execute(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
       {
+        static_assert(isRealType<SrcT>, "A real type is required");
+        static_assert(isRealType<DstT>, "A real type is required");
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
 
         checkInitialized();
 
-        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       */
-      template<typename SrcT, typename DstT>
-      void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst)
-      {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @param src Source buffer
-       * @param dst Destination buffer
-       */
-      template<typename SrcT, typename DstT>
-      void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst)
-      {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
-      }
-
-      /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @param src Source buffer
-       * @param dst Destination buffer
-       */
-      template<typename SrcT, typename DstT>
-      void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst)
-      {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-
-        checkInitialized();
-
-        mImpl->executeUnsafeWithDefaultTargetParameters(src, dst);
+        mImpl->execute(src, dst, execParams);
       }
 
       /**
@@ -474,6 +426,26 @@ AFFT_EXPORT namespace afft
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(SrcT* src, DstT* dst, const ExecParamsT& execParams)
+      {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
+        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking
+       * @tparam SrcT Source buffer type
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeUnsafe(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
@@ -500,6 +472,26 @@ AFFT_EXPORT namespace afft
 
         checkInitialized();
 
+        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeUnsafe(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -520,6 +512,26 @@ AFFT_EXPORT namespace afft
 
         checkInitialized();
 
+        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeUnsafe(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
         mImpl->executeUnsafe(src, dst, execParams);
       }
 
@@ -534,6 +546,26 @@ AFFT_EXPORT namespace afft
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
       void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
+        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+
+        checkInitialized();
+
+        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+      }
+
+      /**
+       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
+       * @tparam SrcT Source buffer type in PlanarComplex format
+       * @tparam DstT Destination buffer type in PlanarComplex format
+       * @tparam ExecParamsT Execution parameters type
+       * @param src Source buffers
+       * @param dst Destination buffers
+       * @param execParams Execution parameters
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeUnsafe(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
       {
         static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
         static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
@@ -582,24 +614,6 @@ AFFT_EXPORT namespace afft
   };
 
   /**
-   * @brief Create a plan for the given transform and architecture parameters with default backend parameters
-   * @tparam TransformParametersT Transform parameters type
-   * @tparam ArchParametersT Architecture parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @return Plan
-   */
-  template<typename TransformParametersT, typename ArchParametersT>
-  Plan makePlan(const TransformParametersT& transformParams,
-                ArchParametersT&            archParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
-
-    return makePlan(transformParams, archParams, BackendParameters<ArchParametersT::target, ArchParametersT::distrib>{});
-  }
-
-  /**
    * @brief Create a plan for the given transform, architecture and backend parameters
    * @tparam TransformParametersT Transform parameters type
    * @tparam ArchParametersT Architecture parameters type
@@ -618,38 +632,36 @@ AFFT_EXPORT namespace afft
     static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
     static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
 
-    static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
-                 "Architecture and backend parameters must share the same target and distribution");
+    // static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
+    //              "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>.shape;
-    static constexpr auto targetParamsShapeRank    = detail::ArchParametersTemplateRanks<ArchParametersT>.shape;
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>::shape;
+    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParametersT>::shape;
 
     static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (targetParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == targetParamsShapeRank),
+                  (archParamsShapeRank == dynamicRank) ||
+                  (transformParamsShapeRank == archParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
-    return Plan{detail::makePlanImpl(detail::Desc(transformParams, archParams), backendParams)};
+    return Plan{detail::makePlanImpl(detail::Desc{transformParams, archParams}, backendParams)};
   }
 
   /**
-   * @brief Create a plan with feedback for the given transform and architecture parameters with default backend parameters
+   * @brief Create a plan for the given transform and architecture parameters with default backend parameters
    * @tparam TransformParametersT Transform parameters type
    * @tparam ArchParametersT Architecture parameters type
    * @param transformParams Transform parameters
    * @param archParams Architecutre parameters
-   * @return Plan and feedback
+   * @return Plan
    */
   template<typename TransformParametersT, typename ArchParametersT>
-  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
-                                                              ArchParametersT&          archParams)
+  Plan makePlan(const TransformParametersT& transformParams,
+                ArchParametersT&            archParams)
   {
     static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
     static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
 
-    return makePlanWithFeedback(transformParams,
-                                archParams,
-                                BackendParameters<ArchParametersT::target, ArchParametersT::distrib>{});
+    return makePlan(transformParams, archParams, BackendParameters<ArchParametersT::target, ArchParametersT::distribution>{});
   }
 
   /**
@@ -671,24 +683,44 @@ AFFT_EXPORT namespace afft
     static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
     static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
 
-    static_assert(detail::isCompatible<ArchParametersT, BackendParamsT>,
-                 "Architecture and backend parameters must share the same target and distribution");
+    // static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
+    //              "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>.shape;
-    static constexpr auto targetParamsShapeRank    = detail::ArchParametersTemplateRanks<ArchParametersT>.shape;
+    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>::shape;
+    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParametersT>::shape;
 
     static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (targetParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == targetParamsShapeRank),
+                  (archParamsShapeRank == dynamicRank) ||
+                  (transformParamsShapeRank == archParamsShapeRank),
                   "Transform and target parameters must have the same shape rank");
 
     std::pair<Plan, std::vector<Feedback>> result{};
 
-    result.first = Plan{detail::makePlanImpl(detail::Desc(transformParams, archParams),
+    result.first = Plan{detail::makePlanImpl(detail::Desc{transformParams, archParams},
                                              backendParams,
                                              &result.second)};
 
     return result;
+  }
+
+  /**
+   * @brief Create a plan with feedback for the given transform and architecture parameters with default backend parameters
+   * @tparam TransformParametersT Transform parameters type
+   * @tparam ArchParametersT Architecture parameters type
+   * @param transformParams Transform parameters
+   * @param archParams Architecutre parameters
+   * @return Plan and feedback
+   */
+  template<typename TransformParametersT, typename ArchParametersT>
+  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
+                                                              ArchParametersT&          archParams)
+  {
+    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
+    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
+
+    return makePlanWithFeedback(transformParams,
+                                archParams,
+                                BackendParameters<ArchParametersT::target, ArchParametersT::distribution>{});
   }
 } // namespace afft
 
