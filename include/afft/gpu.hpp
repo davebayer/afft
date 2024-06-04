@@ -67,8 +67,7 @@ namespace gpu
   };
 
   /// @brief Default backend initialization order
-  inline constexpr std::array defaultBackendInitOrder = detail::cxx::to_array<Backend>(
-  {
+  inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
     Backend::cufft,  // prefer cufft
     Backend::vkfft,  // fallback to vkfft
@@ -85,7 +84,7 @@ namespace gpu
     Backend::vkfft,  // prefer vkfft
     Backend::clfft,  // fallback to clfft
 # endif
-  });
+  );
 
   /**
    * @struct Parameters
@@ -102,7 +101,7 @@ namespace gpu
     MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
     ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
     bool                preserveSource{true};                          ///< preserve source data
-    bool                externalWorkspace{false};                      ///< Use external workspace, defaults to `false`
+    bool                useExternalWorkspace{false};                   ///< Use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
     int                 device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
@@ -121,6 +120,9 @@ namespace gpu
    */
   struct ExecutionParameters
   {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+    
 # if AFFT_GPU_BACKEND_IS(CUDA)
     cudaStream_t     stream{0};   ///< CUDA stream, defaults to `zero` stream
     void*            workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
@@ -149,8 +151,7 @@ namespace spmt::gpu
   };
 
   /// @brief Order of initialization of backends
-  inline constexpr std::array defaultBackendInitOrder = detail::cxx::to_array<Backend>(
-  {
+  inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
     Backend::cufft, // just cufft
 # elif AFFT_GPU_BACKEND_IS(HIP)
@@ -162,7 +163,7 @@ namespace spmt::gpu
     Backend::rocfft, // fallback to rocfft
 #   endif
 # endif
-  });
+  );
 
   /**
    * @brief Parameters for multi gpu target
@@ -175,14 +176,14 @@ namespace spmt::gpu
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
 
-    MemoryLayout<sRank> memoryLayout{};                                ///< memory layout
-    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                preserveSource{true};                          ///< preserve source data
-    bool                externalWorkspace{false};                      ///< use external workspace, defaults to `false`
+    MemoryLayout<sRank> memoryLayout{};                            ///< memory layout
+    ComplexFormat       complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    bool                preserveSource{true};                      ///< preserve source data
+    bool                useExternalWorkspace{false};               ///< use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    View<int>           devices{};                                     ///< list of CUDA devices
+    View<int>           devices{};                                 ///< list of CUDA devices
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    View<int>           devices{};                                     ///< list of HIP devices
+    View<int>           devices{};                                 ///< list of HIP devices
 # endif
   }
 #endif
@@ -192,6 +193,9 @@ namespace spmt::gpu
   struct ExecutionParameters
 #if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
   {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
+
 # if AFFT_GPU_BACKEND_IS(CUDA)
     cudaStream_t stream{0};   ///< CUDA stream, defaults to `zero` stream
     View<void*>  workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
@@ -216,12 +220,11 @@ namespace mpst::gpu
   };
 
   /// @brief Order of initialization of backends
-  inline constexpr std::array defaultBackendInitOrder = detail::cxx::to_array<Backend>(
-  {
+  inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
     Backend::cufft, // just cufft
 # endif
-  });
+  );
 
   /**
    * @brief Parameters for multi process gpu target
@@ -234,29 +237,42 @@ namespace mpst::gpu
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
 
-    MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout
-    ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                   preserveSource{true};                          ///< preserve source data
-    bool                   externalWorkspace{false};                      ///< use external workspace, defaults to `false`
+    MemoryLayout<sRank>    memoryLayout{};                            ///< memory layout
+    ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    bool                   preserveSource{true};                      ///< preserve source data
+    bool                   useExternalWorkspace{false};               ///< use external workspace, defaults to `false`
 # if AFFT_MP_BACKEND_IS(MPI)
-    MPI_Comm               communicator{MPI_COMM_WORLD};                  ///< MPI communicator
+    MPI_Comm               communicator{MPI_COMM_WORLD};              ///< MPI communicator
 # endif
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int                    device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
+    int                    device{detail::cuda::getCurrentDevice()};  ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int                    device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
+    int                    device{detail::hip::getCurrentDevice()};   ///< HIP device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
-    cl_context             context{};                                     ///< OpenCL context
-    cl_device_id           device{};                                      ///< OpenCL device
+    cl_context             context{};                                 ///< OpenCL context
+    cl_device_id           device{};                                  ///< OpenCL device
 # endif
   }
 #endif
    ;
 
   /// @brief Execution parameters for mutli process gpu target
-  using ExecutionParameters = std::conditional_t<(AFFT_GPU_IS_ENABLED && AFFT_MP_IS_ENABLED),
-                                                 spst::gpu::ExecutionParameters,
-                                                 void>;
+  struct ExecutionParameters
+  {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+    
+# if AFFT_GPU_BACKEND_IS(CUDA)
+    cudaStream_t     stream{0};   ///< CUDA stream, defaults to `zero` stream
+    void*            workspace{}; ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+# elif AFFT_GPU_BACKEND_IS(HIP)
+    hipStream_t      stream{0};    ///< HIP stream, defaults to `zero` stream
+    void*            workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
+# elif AFFT_GPU_BACKEND_IS(OPENCL)
+    cl_command_queue commandQueue{};
+    cl_mem           workspace{};
+# endif
+  };
 } // namespace mpst::gpu
 
 namespace gpu

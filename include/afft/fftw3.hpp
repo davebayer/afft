@@ -30,28 +30,24 @@
 #endif
 
 #include "exception.hpp"
-#include "detail/fftw3/Lib.hpp"
+#include "typeTraits.hpp"
+#if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# include "detail/fftw3/Lib.hpp"
+#endif
 
-AFFT_EXPORT namespace afft
+AFFT_EXPORT namespace afft::fftw3
 {
-namespace fftw3
-{
-  /// @brief FFTW3 planner flags
-  enum class PlannerFlag : std::uint8_t
-  {
-    estimate,        ///< Estimate plan flag
-    measure,         ///< Measure plan flag
-    patient,         ///< Patient plan flag
-    exhaustive,      ///< Exhaustive planner flag
-    estimatePatient, ///< Estimate and patient plan flag
-  };
-
   /**
    * @brief Does the FFTW3 library support the given precision?
    * @tparam prec Precision of the FFTW3 library.
    */
+# if AFFT_BACKEND_IS_ENABLED(FFTW3)
   template<Precision prec>
   inline constexpr bool isSupportedPrecision = detail::fftw3::IsSupportedPrecision<prec>::value;
+# else
+  template<Precision prec>
+  inline constexpr bool isSupportedPrecision = false;
+# endif
 
   /**
    * @brief Export FFTW3 wisdom to a file.
@@ -229,56 +225,20 @@ namespace fftw3
     }
 # endif
   }
-} // namespace fftw3
-
-inline namespace spst
-{
-namespace cpu::fftw3
-{
-  using namespace afft::fftw3;
-
-  /**
-   * @brief Initialization parameters for the FFTW3 plan.
-   */
-  struct Parameters
-  {
-    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
-    bool                          conserveMemory{false};              ///< Conserve memory flag
-    bool                          wisdomOnly{false};                  ///< Wisdom only flag
-    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
-    bool                          allowPruning{false};                ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
-  };
-} // namespace cpu::fftw3
-} // inline namespace spst
 
 namespace mpst
 {
-namespace cpu::fftw3
-{
-  using namespace afft::fftw3;
-
-  /**
-   * @brief Initialization parameters for the FFTW3 MPI plan.
-   */
-  struct Parameters
-  {
-    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
-    bool                          conserveMemory{false};              ///< Conserve memory flag
-    bool                          wisdomOnly{false};                  ///< Wisdom only flag
-    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
-    bool                          allowPruning{false};                ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
-    std::size_t                   blockSize{};                        ///< Decomposition block size
-  };
-} // namespace cpu::fftw3
-
   /**
    * @brief Does the FFTW3 MPI library support the given precision?
    * @tparam prec Precision of the FFTW3 MPI library.
    */
+#if AFFT_BACKEND_IS_ENABLED(FFTW3) && AFFT_MP_BACKEND_IS(MPI)
   template<Precision prec>
   inline constexpr bool isSupportedPrecision = detail::fftw3::IsMpiSupportedPrecision<prec>::value;
+#else
+  template<Precision prec>
+  inline constexpr bool isSupportedPrecision = false;
+#endif
 
 #if AFFT_MP_BACKEND_IS(MPI)
   /**

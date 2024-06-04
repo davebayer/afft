@@ -33,10 +33,6 @@
 
 #include "common.hpp"
 
-#include "clfft.hpp"
-#include "cufft.hpp"
-#include "fftw3.hpp"
-
 AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
@@ -63,147 +59,6 @@ AFFT_EXPORT namespace afft
   // Check that the BackendMask underlying type has sufficient size to store all Backend values
   static_assert(detail::backendMaskHasSufficientUnderlyingTypeSize(Backend::_count),
                 "BackendMask does not have sufficient size to store all Backend values");
-
-  /// @brief Backend select strategy
-  enum class SelectStrategy : std::uint8_t
-  {
-    first, ///< select the first available backend
-    best,  ///< select the best available backend
-  };
-
-inline namespace spst
-{
-namespace cpu
-{
-  /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
-                                                      Backend::mkl |
-                                                      Backend::pocketfft;
-
-  /// @brief Backend selection parameters
-  struct BackendParameters
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
-  };
-} // namespace cpu
-
-namespace gpu
-{
-  /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = Backend::clfft |
-                                                      Backend::cufft |
-                                                      Backend::hipfft |
-                                                      Backend::rocfft |
-                                                      Backend::vkfft;
-
-  /// @brief Backend selection parameters
-  struct BackendParameters
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
-  };
-} // namespace gpu
-} // inline namespace spst
-
-namespace spmt
-{
-namespace gpu
-{
-  /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = Backend::cufft |
-                                                      Backend::hipfft |
-                                                      Backend::rocfft;
-
-  /// @brief Backend selection parameters
-  struct BackendParameters
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
-  };
-} // namespace gpu
-} // namespace spmt
-
-namespace mpst
-{
-namespace cpu
-{
-  /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
-                                                      Backend::mkl;
-
-  /// @brief Backend selection parameters
-  struct BackendParameters
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
-  };
-} // namespace cpu
-
-namespace gpu
-{
-  /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = BackendMask::empty | Backend::cufft;
-
-  /// @brief Backend selection parameters
-  struct BackendParameters
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
-  };
-} // namespace gpu
-} // namespace mpst
-
-  /**
-   * @brief Feedback from the backend initialization.
-   */
-  struct Feedback
-  {
-    Backend                       backend{};      ///< Backend that was initialized
-    std::string                   message{};      ///< Message from the backend
-    std::chrono::duration<double> measuredTime{}; ///< Measured time of the backend's transformation (if available)
-  };
-
-  /**
-   * @brief Converts a Backend to a string.
-   * @param backend Backend to convert.
-   * @return String representation of the backend.
-   */
-  [[nodiscard]] inline constexpr std::string_view toString(Backend backend)
-  {
-    switch (backend)
-    {
-    case Backend::clfft:
-      return "clFFT";
-    case Backend::cufft:
-      return "cuFFT";
-    case Backend::fftw3:
-      return "FFTW3";
-    case Backend::hipfft:
-      return "hipFFT";
-    case Backend::mkl:
-      return "Intel MKL";
-    case Backend::pocketfft:
-      return "PocketFFT";
-    case Backend::rocfft:
-      return "rocFFT";
-    case Backend::vkfft:
-      return "VkFFT";
-    default:
-      return "<Invalid backend>";
-    }
-  }
 
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
@@ -264,6 +119,263 @@ namespace gpu
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
     return detail::backendMaskBinaryOp(std::bit_xor<>{}, lhs, rhs);
+  }
+
+  /// @brief Backend select strategy
+  enum class SelectStrategy : std::uint8_t
+  {
+    first, ///< select the first available backend
+    best,  ///< select the best available backend
+  };
+
+namespace cufft
+{
+  /// @brief cuFFT Workspace policy
+  enum class WorkspacePolicy : std::uint8_t
+  {
+    performance, ///< Use the workspace for performance.
+    minimal,     ///< Use the minimal workspace.
+    user,        ///< Use the user-defined workspace size.
+  };
+} // namespace cufft
+
+namespace fftw3
+{
+  /// @brief FFTW3 planner flags
+  enum class PlannerFlag : std::uint8_t
+  {
+    estimate,        ///< Estimate plan flag
+    measure,         ///< Measure plan flag
+    patient,         ///< Patient plan flag
+    exhaustive,      ///< Exhaustive planner flag
+    estimatePatient, ///< Estimate and patient plan flag
+  };
+} // namespace fftw3
+
+inline namespace spst
+{
+namespace cpu
+{
+namespace fftw3
+{
+  using namespace afft::fftw3;
+
+  /**
+   * @brief Initialization parameters for the FFTW3 plan.
+   */
+  struct Parameters
+  {
+    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};              ///< Conserve memory flag
+    bool                          wisdomOnly{false};                  ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
+    bool                          allowPruning{false};                ///< Allow pruning flag
+    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
+  };
+} // namespace fftw3
+
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
+                                                      Backend::mkl |
+                                                      Backend::pocketfft;
+
+  /// @brief Backend selection parameters
+  struct BackendParameters
+  {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
+  };
+} // namespace cpu
+
+namespace gpu
+{
+namespace clfft
+{
+  /// @brief clFFT initialization parameters
+  struct Parameters
+  {
+    bool useFastMath{true}; ///< Use fast math.
+  };
+} // namespace clfft
+
+namespace cufft
+{
+  using namespace afft::cufft;
+
+  /// @brief cuFFT initialization parameters
+  struct Parameters
+  {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+
+    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
+    bool            usePatientJIT{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+    std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
+  };
+} // namespace cufft
+
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::clfft |
+                                                      Backend::cufft |
+                                                      Backend::hipfft |
+                                                      Backend::rocfft |
+                                                      Backend::vkfft;
+
+  /// @brief Backend selection parameters
+  struct BackendParameters
+  {
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
+    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
+  };
+} // namespace gpu
+} // inline namespace spst
+
+namespace spmt
+{
+namespace gpu
+{
+namespace cufft
+{
+  /// @brief cuFFT initialization parameters
+  struct Parameters
+  {
+    bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+  };
+} // namespace cufft
+
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::cufft |
+                                                      Backend::hipfft |
+                                                      Backend::rocfft;
+
+  /// @brief Backend selection parameters
+  struct BackendParameters
+  {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
+
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
+  };
+} // namespace gpu
+} // namespace spmt
+
+namespace mpst
+{
+namespace cpu
+{
+namespace fftw3
+{
+  using namespace afft::fftw3;
+
+  /**
+   * @brief Initialization parameters for the FFTW3 MPI plan.
+   */
+  struct Parameters
+  {
+    PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
+    bool                          conserveMemory{false};              ///< Conserve memory flag
+    bool                          wisdomOnly{false};                  ///< Wisdom only flag
+    bool                          allowLargeGeneric{false};           ///< Allow large generic flag
+    bool                          allowPruning{false};                ///< Allow pruning flag
+    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
+    std::size_t                   blockSize{};                        ///< Decomposition block size
+  };
+} // namespace fftw3
+
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
+                                                      Backend::mkl;
+
+  /// @brief Backend selection parameters
+  struct BackendParameters
+  {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
+  };
+} // namespace cpu
+
+namespace gpu
+{
+namespace cufft
+{
+  /// @brief cuFFT initialization parameters
+  struct Parameters
+  {
+    bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+  };
+} // namespace cufft
+
+  /// @brief Supported backends
+  inline constexpr BackendMask supportedBackendMask = BackendMask::empty | Backend::cufft;
+
+  /// @brief Backend selection parameters
+  struct BackendParameters
+  {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+
+    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
+    BackendMask       mask{supportedBackendMask};      ///< backend mask
+    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
+    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
+  };
+} // namespace gpu
+} // namespace mpst
+
+  /**
+   * @brief Feedback from the backend initialization.
+   */
+  struct Feedback
+  {
+    Backend                       backend{};      ///< Backend that was initialized
+    std::string                   message{};      ///< Message from the backend
+    std::chrono::duration<double> measuredTime{}; ///< Measured time of the backend's transformation (if available)
+  };
+
+  /**
+   * @brief Converts a Backend to a string.
+   * @param backend Backend to convert.
+   * @return String representation of the backend.
+   */
+  [[nodiscard]] inline constexpr std::string_view toString(Backend backend)
+  {
+    switch (backend)
+    {
+    case Backend::clfft:
+      return "clFFT";
+    case Backend::cufft:
+      return "cuFFT";
+    case Backend::fftw3:
+      return "FFTW3";
+    case Backend::hipfft:
+      return "hipFFT";
+    case Backend::mkl:
+      return "Intel MKL";
+    case Backend::pocketfft:
+      return "PocketFFT";
+    case Backend::rocfft:
+      return "rocFFT";
+    case Backend::vkfft:
+      return "VkFFT";
+    default:
+      return "<Invalid backend>";
+    }
   }
 } // namespace afft
 

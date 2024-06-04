@@ -109,16 +109,21 @@ namespace cpu
   {
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+    static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
 
-    MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
-    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                preserveSource{true};                          ///< preserve source data
-    Alignment           alignment{afft::cpu::alignments::defaultNew};  ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned            threadLimit{allThreads};                       ///< Thread limit for CPU transform, 0 for no limit
+    MemoryLayout<sRank> memoryLayout{};                               ///< Memory layout for CPU transform
+    ComplexFormat       complexFormat{ComplexFormat::interleaved};    ///< complex number format
+    bool                preserveSource{true};                         ///< preserve source data
+    Alignment           alignment{afft::cpu::alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    unsigned            threadLimit{allThreads};                      ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Execution parameters for CPU transform
-  struct ExecutionParameters {};
+  struct ExecutionParameters
+  {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+  };
 } // namespace cpu
 } // inline namespace spst
 
@@ -144,21 +149,26 @@ namespace mpst::cpu
   {
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+    static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
 
-    MemoryLayout<sRank>    memoryLayout{};                                ///< memory layout for cpu transform
-    ComplexFormat          complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                   preserveSource{true};                          ///< preserve source data
+    MemoryLayout<sRank>    memoryLayout{};                               ///< memory layout for cpu transform
+    ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
+    bool                   preserveSource{true};                         ///< preserve source data
 # if AFFT_MP_BACKEND_IS(MPI)
-    MPI_Comm               communicator{MPI_COMM_WORLD};                  ///< communicator for mpi cpu transform
+    MPI_Comm               communicator{MPI_COMM_WORLD};                 ///< communicator for mpi cpu transform
 # endif
-    Alignment              alignment{afft::cpu::alignments::defaultNew};  ///< alignment for cpu memory allocation
-    unsigned               threadLimit{1};                                ///< thread limit for cpu transform
+    Alignment              alignment{afft::cpu::alignments::defaultNew}; ///< alignment for cpu memory allocation
+    unsigned               threadLimit{1};                               ///< thread limit for cpu transform
   }
 #endif
    ;
 
   /// @brief Execution parameters for mpi cpu transform
-  using ExecutionParameters = std::conditional_t<AFFT_MP_IS_ENABLED, afft::spst::cpu::ExecutionParameters, void>;
+  struct ExecutionParameters
+  {
+    static constexpr Target       target{Target::cpu};              ///< target
+    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+  };
 } // namespace mpst::cpu
 
 namespace cpu
