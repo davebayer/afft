@@ -46,10 +46,27 @@ AFFT_EXPORT namespace afft
     f16,         ///< IEEE 754 half-precision binary floating-point format
     f32,         ///< IEEE 754 single-precision binary floating-point format
     f64,         ///< IEEE 754 double-precision binary floating-point format
-    f64f64,      ///< double double precision (f128 simulated with two f64)
     f80,         ///< x86 80-bit extended precision format
+    f64f64,      ///< double double precision (f128 simulated with two f64)
     f128,        ///< IEEE 754 quadruple-precision binary floating-point format
-    _longDouble, ///< Precision of long double, only for internal use
+
+    _float        = f32,    ///< Precision of float
+    _double       = f64,    ///< Precision of double
+# if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 && LDBL_MIN_EXP == -1021
+    _longDouble   = f64,    ///< Precision of long double
+# elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
+    _longDouble   = f80,    ///< Precision of long double
+# elif (LDBL_MANT_DIG >=   105 && LDBL_MANT_DIG <=   107) && \
+       (LDBL_MAX_EXP  >=  1023 && LDBL_MAX_EXP  <=  1025) && \
+       (LDBL_MIN_EXP  >= -1022 && LDBL_MIN_EXP  <= -1020)
+    _longDouble   = f64f64, ///< Precision of long double
+# elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
+    _longDouble   = f128,   ///< Precision of long double
+# else
+#   error "Unrecognized long double format"
+# endif
+    _doubleDouble = f64f64, ///< Precision of double double
+    _quad         = f128,   ///< Precision of quad
   };
 
   /// @brief Alignment of a data type

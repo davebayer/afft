@@ -34,20 +34,6 @@
 AFFT_EXPORT namespace afft
 {
   /**
-   * @brief Real data type.
-   * @tparam prec The precision.
-   */
-  template<Precision prec>
-  using Real = std::enable_if_t<detail::isValidPrecision(prec), detail::Float<prec>>;
-
-  /**
-   * @brief Complex data type.
-   * @tparam T The real type.
-   */
-  template<typename T>
-  using Complex = std::complex<T>;
-
-  /**
    * @brief Planar complex data type.
    * @tparam T The real type.
    */
@@ -87,10 +73,10 @@ AFFT_EXPORT namespace afft
                   "Size of the type must match the given precision and complexity");
 
     // Ensure the precision is valid
-    static_assert(detail::isValidPrecision(prec), "Invalid precision");
+    static_assert(detail::isValid(prec), "Invalid precision");
 
     // Ensure the complexity is valid
-    static_assert(detail::isValidComplexity(cmpl), "Invalid complexity");
+    static_assert(detail::isValid(cmpl), "Invalid complexity");
 
     static constexpr Precision  precision{prec};  ///< The precision.
     static constexpr Complexity complexity{cmpl}; ///< The complexity.
@@ -108,32 +94,32 @@ AFFT_EXPORT namespace afft
   /// Specialization of TypeProperties for float.
   template<>
   struct TypeProperties<float>
-    : TypePropertiesBase<float, Precision::f32, Complexity::real> {};
+    : TypePropertiesBase<float, Precision::_float, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<float> (std::complex<float>).
+  /// Specialization of TypeProperties for std::complex<float>.
   template<>
-  struct TypeProperties<Complex<float>>
-    : TypePropertiesBase<Complex<float>, Precision::f32, Complexity::complex> {};
+  struct TypeProperties<std::complex<float>>
+    : TypePropertiesBase<std::complex<float>, Precision::_float, Complexity::complex> {};
 
   /// Specialization of TypeProperties for double.
   template<>
   struct TypeProperties<double>
-    : TypePropertiesBase<double, Precision::f64, Complexity::real> {};
+    : TypePropertiesBase<double, Precision::_double, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<double> (std::complex<double>).
+  /// Specialization of TypeProperties for std::complex<double>.
   template<>
-  struct TypeProperties<Complex<double>>
-    : TypePropertiesBase<Complex<double>, Precision::f64, Complexity::complex> {};
+  struct TypeProperties<std::complex<double>>
+    : TypePropertiesBase<std::complex<double>, Precision::_double, Complexity::complex> {};
 
   /// Specialization of TypeProperties for long double.
   template<>
   struct TypeProperties<long double>
-    : TypePropertiesBase<long double, detail::getLongDoublePrecision(), Complexity::real> {};
+    : TypePropertiesBase<long double, Precision::_longDouble, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<long double> (std::complex<long double>).
+  /// Specialization of TypeProperties for std::complex<long double>.
   template<>
-  struct TypeProperties<Complex<long double>>
-    : TypePropertiesBase<Complex<long double>, detail::getLongDoublePrecision(), Complexity::complex> {};
+  struct TypeProperties<std::complex<long double>>
+    : TypePropertiesBase<std::complex<long double>, Precision::_longDouble, Complexity::complex> {};
 
 #ifdef AFFT_CXX_HAS_STD_FLOAT
 # ifdef __STDCPP_BFLOAT16_T__
@@ -142,10 +128,10 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::bfloat16_t>
     : TypePropertiesBase<std::bfloat16_t, Precision::bf16, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<std::bfloat16_t> (std::complex<std::bfloat16_t>).
+  /// Specialization of TypeProperties for std::complex<std::bfloat16_t>.
   template<>
-  struct TypeProperties<Complex<std::bfloat16_t>>
-    : TypePropertiesBase<Complex<std::bfloat16_t>, Precision::bf16, Complexity::complex> {}; 
+  struct TypeProperties<std::complex<std::bfloat16_t>>
+    : TypePropertiesBase<std::complex<std::bfloat16_t>, Precision::bf16, Complexity::complex> {}; 
 #endif
 # ifdef __STDCPP_FLOAT16_T__
   /// Specialization of TypeProperties for std::float16_t.
@@ -153,10 +139,10 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::float16_t>
     : TypePropertiesBase<std::float16_t, Precision::f16, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<std::float16_t> (std::complex<std::float16_t>).
+  /// Specialization of TypeProperties for std::complex<std::float16_t>.
   template<>
-  struct TypeProperties<Complex<std::float16_t>>
-    : TypePropertiesBase<Complex<std::float16_t>, Precision::f16, Complexity::complex> {};
+  struct TypeProperties<std::complex<std::float16_t>>
+    : TypePropertiesBase<std::complex<std::float16_t>, Precision::f16, Complexity::complex> {};
 # endif
 # ifdef __STDCPP_FLOAT32_T__
   /// Specialization of TypeProperties for std::float32_t.
@@ -164,10 +150,10 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::float32_t>
     : TypePropertiesBase<std::float32_t, Precision::f32, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<std::float32_t> (std::complex<std::float32_t>).
+  /// Specialization of TypeProperties for std::complex<std::float32_t>.
   template<>
-  struct TypeProperties<Complex<std::float32_t>>
-    : TypePropertiesBase<Complex<std::float32_t>, Precision::f32, Complexity::complex> {};
+  struct TypeProperties<std::complex<std::float32_t>>
+    : TypePropertiesBase<std::complex<std::float32_t>, Precision::f32, Complexity::complex> {};
 # endif
 # ifdef __STDCPP_FLOAT64_T__
   /// Specialization of TypeProperties for std::float64_t.
@@ -175,21 +161,21 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::float64_t>
     : TypePropertiesBase<std::float64_t, Precision::f64, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<std::float64_t> (std::complex<std::float64_t>).
+  /// Specialization of TypeProperties for std::complex<std::float64_t>.
   template<>
-  struct TypeProperties<Complex<std::float64_t>>
-    : TypePropertiesBase<Complex<std::float64_t>, Precision::f64, Complexity::complex> {};
+  struct TypeProperties<std::complex<std::float64_t>>
+    : TypePropertiesBase<std::complex<std::float64_t>, Precision::f64, Complexity::complex> {};
 # endif
 # ifdef __STDCPP_FLOAT128_T__
   /// Specialization of TypeProperties for std::float128_t.
   template<>
   struct TypeProperties<std::float128_t>
-    : TypePropertiesBase<std::float128_t, detail::getLongDoublePrecision(), Complexity::real> {};
+    : TypePropertiesBase<std::float128_t, Precision::f128, Complexity::real> {};
 
-  /// Specialization of TypeProperties for Complex<std::float128_t> (std::complex<std::float128_t>).
+  /// Specialization of TypeProperties for std::complex<std::float128_t>.
   template<>
-  struct TypeProperties<Complex<std::float128_t>>
-    : TypePropertiesBase<Complex<std::float128_t>, detail::getLongDoublePrecision(), Complexity::complex> {};
+  struct TypeProperties<std::complex<std::float128_t>>
+    : TypePropertiesBase<std::complex<std::float128_t>, Precision::f128, Complexity::complex> {};
 # endif
 #endif
 } // namespace afft

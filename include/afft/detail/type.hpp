@@ -40,128 +40,6 @@ namespace afft
 namespace detail
 {
   /**
-   * @struct FloatSelect
-   * @brief Selects the floating-point type based on the precision.
-   * @tparam prec The precision.
-   */
-  template<Precision prec>
-  struct FloatSelect
-  {
-    using Type = void;
-  };
-
-#ifdef AFFT_HAS_BF16
-  /// @brief Specialization for bf16 precision.
-  template<>
-  struct FloatSelect<Precision::bf16>
-  {
-# if defined(__GNUG__) || defined(__clang__)
-    using Type = __bf16;
-# else
-    using Type = void;
-# endif
-  };
-#endif /* AFFT_HAS_BF16 */
-
-#ifdef AFFT_HAS_F16
-  /// @brief Specialization for f16 precision.
-  template<>
-  struct FloatSelect<Precision::f16>
-  {
-# if defined(__GNUG__) || defined(__clang__)
-    using Type = _Float16;
-# else
-    using Type = void;
-# endif
-  };
-#endif /* AFFT_HAS_F16 */
-
-  /// @brief Specialization for f32 precision.
-  template<>
-  struct FloatSelect<Precision::f32>
-  {
-    using Type = float;
-  };
-
-  /// @brief Specialization for f64 precision.
-  template<>
-  struct FloatSelect<Precision::f64>
-  {
-    using Type = double;
-  };
-
-  /// @brief Specialization for f64f64 precision.
-  template<>
-  struct FloatSelect<Precision::f64f64>
-  {
-    using Type = void;
-  };
-
-#ifdef AFFT_HAS_F80
-  /// @brief Specialization for f80 precision.
-  template<>
-  struct FloatSelect<Precision::f80>
-  {
-# if defined(__GNUG__) || defined(__clang__)
-    using Type = _Float64x;
-# else
-    using Type = void;
-# endif
-  };
-#endif /* AFFT_HAS_F80 */
-
-#ifdef AFFT_HAS_F128
-  /// @brief Specialization for f128 precision.
-  template<>
-  struct FloatSelect<Precision::f128>
-  {
-// # if defined(__GNUG__) || defined(__clang__)
-    // using Type = __float128;
-// # else
-    using Type = void;
-// # endif
-  };
-#endif /* AFFT_HAS_F128 */
-
-  /**
-   * @brief Floating-point type selected according to precision.
-   * @tparam prec The precision.
-   */
-  template<Precision prec>
-  using Float = std::enable_if_t<isValidPrecision(prec), typename FloatSelect<prec>::Type>;
-
-  /**
-   * @brief Checks if the given precision is supported.
-   * @tparam prec The precision.
-   * @return True if the precision is supported, false otherwise.
-   */
-  template<Precision prec>
-  [[nodiscard]] inline constexpr bool hasPrecision() noexcept
-  {
-    return !std::is_same_v<detail::Float<prec>, void>;
-  }
-
-  /**
-   * @brief Checks if the given precision is supported.
-   * @param prec The precision.
-   * @return True if the precision is supported, false otherwise.
-   */
-  [[nodiscard]] inline constexpr bool hasPrecision(Precision prec) noexcept
-  {
-    switch (prec)
-    {
-    case Precision::bf16:   return hasPrecision<Precision::bf16>();
-    case Precision::f16:    return hasPrecision<Precision::f16>();
-    case Precision::f32:    return hasPrecision<Precision::f32>();
-    case Precision::f64:    return hasPrecision<Precision::f64>();
-    case Precision::f64f64: return hasPrecision<Precision::f64f64>();
-    case Precision::f80:    return hasPrecision<Precision::f80>();
-    case Precision::f128:   return hasPrecision<Precision::f128>();
-    default:                return false;
-    }
-  }
-
-  /**
    * @brief Gets the size of a floating-point type.
    * @tparam prec The precision.
    * @tparam cmpl The complexity.
@@ -170,25 +48,39 @@ namespace detail
   template<Precision prec, Complexity cmpl = Complexity::real>
   [[nodiscard]] inline constexpr std::size_t sizeOf() noexcept
   {
-    static_assert(isValidPrecision(prec), "Invalid precision.");
-    static_assert(isValidComplexity(cmpl), "Invalid complexity.");
+    static_assert(isValid(prec), "Invalid precision.");
+    static_assert(isValid(cmpl), "Invalid complexity.");
 
-    if constexpr (hasPrecision<prec>())
+    constexpr std::size_t cmlpScale = (cmpl == Complexity::real) ? 1 : 2;
+
+    if constexpr (prec == Precision::_longDouble)
     {
-      if constexpr (cmpl == Complexity::real)
-      {
-        return sizeof(Float<prec>);
-      }
-      else
-      {
-        return 2 * sizeof(Float<prec>);
-      }
+      return cmlpScale * sizeof(long double);
     }
     else
     {
-      return std::size_t{};
+      switch (prec)
+      {
+      case Precision::bf16:
+        return cmlpScale * 2;
+      case Precision::f16:
+        return cmlpScale * 2;
+      case Precision::f32:
+        return cmlpScale * 4;
+      case Precision::f64:
+        return cmlpScale * 8;
+      case Precision::f64f64:
+        return cmlpScale * 16;
+      case Precision::f80: // fixme: size may vary depending on the platform
+        return cmlpScale * 16;
+      case Precision::f128:
+        return cmlpScale * 16;
+      default:
+        return 0;
+      }
     }
   }
+  
 
   /**
    * @brief Gets the size of a floating-point type.

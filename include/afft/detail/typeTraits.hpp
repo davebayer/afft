@@ -46,10 +46,10 @@ namespace afft::detail
   struct TypePropertiesHelper
     : TypeProperties<std::remove_cv_t<T>> {};
   
-  /// @brief Specialization for Complex.
+  /// @brief Specialization for std::complex.
   template<typename T>
-  struct TypePropertiesHelper<Complex<T>>
-    : TypeProperties<Complex<std::remove_cv_t<T>>> {};
+  struct TypePropertiesHelper<std::complex<T>>
+    : TypeProperties<std::complex<std::remove_cv_t<T>>> {};
 
   /**
    * @brief TransformParameters type for given transform.
