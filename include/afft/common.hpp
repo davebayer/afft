@@ -36,14 +36,6 @@ AFFT_EXPORT namespace afft
   /// @brief Maximum number of dimensions
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
 
-  /**
-   * @brief Non-owning const view of a contiguous sequence of objects.
-   * @tparam T Type of the elements.
-   * @tparam extent Number of elements in the span.
-   */
-  template<typename T, std::size_t extent = dynamicExtent>
-  using View = Span<const T, extent>;
-
   /// @brief Dynamic rank
   inline constexpr std::size_t dynamicRank{dynamicExtent};
 

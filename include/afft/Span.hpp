@@ -47,6 +47,14 @@ AFFT_EXPORT namespace afft
   using Span = afft::thirdparty::span::span<T, extent>;
 #endif
 
+  /**
+   * @brief Non-owning const view of a contiguous sequence of objects.
+   * @tparam T Type of the elements.
+   * @tparam extent Number of elements in the span.
+   */
+  template<typename T, std::size_t extent = dynamicExtent>
+  using View = Span<const T, extent>;
+
 // namespace detail
 // {
 //   template<typename T, std::size_t extent>
