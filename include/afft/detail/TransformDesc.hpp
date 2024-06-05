@@ -73,7 +73,7 @@ namespace afft::detail
         mPrecision(validateAndReturn(transformParams.precision)),
         mShapeRank(transformParams.shape.size()),
         mShape(makeShape(transformParams.shape)),
-        mTransformRank(transformParams.axes.size()),
+        mTransformRank(transformParams.axes.empty() ? mShapeRank : transformParams.axes.size()),
         mTransformAxes(makeTransformAxes(transformParams.axes, mShapeRank)),
         mNormalization(validateAndReturn(transformParams.normalization)),
         mPlacement(validateAndReturn(transformParams.placement)),
@@ -111,6 +111,15 @@ namespace afft::detail
       [[nodiscard]] constexpr const PrecisionTriad& getPrecision() const noexcept
       {
         return mPrecision;
+      }
+
+      /**
+       * @brief Check if the transform has uniform precision.
+       * @return True if the transform has uniform precision, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasUniformPrecision() const noexcept
+      {
+        return mPrecision.execution == mPrecision.source && mPrecision.execution == mPrecision.destination;
       }
 
       /**
@@ -414,6 +423,28 @@ namespace afft::detail
         
         return transformParams;
       }
+
+      /**
+       * @brief Get the size of the source element.
+       * @return Size of the source element.
+       */
+      [[nodiscard]] constexpr std::size_t sizeOfSrcElem() const
+      {
+        const std::size_t cmplScale = (getSrcDstComplexity().first == Complexity::complex) ? 2 : 1;
+
+        return sizeOf(getPrecision().source) * cmplScale;
+      }
+
+      /**
+       * @brief Get the size of the destination element.
+       * @return Size of the destination element.
+       */
+      [[nodiscard]] constexpr std::size_t sizeOfDstElem() const
+      {
+        const std::size_t cmplScale = (getSrcDstComplexity().second == Complexity::complex) ? 2 : 1;
+
+        return sizeOf(getPrecision().destination) * cmplScale;
+      }
     private:
       /// @brief Transform variant type.
       using TransformVariant = std::variant<DftDesc, DhtDesc, DttDesc>;
@@ -492,46 +523,46 @@ namespace afft::detail
 
       /**
        * @brief Make the transform variant.
-       * @tparam sRank Rank of the shape.
-       * @tparam tRank Rank of the transform.
+       * @tparam shapeExt Extent of the shape.
+       * @tparam transformExt Extent of the transform axes.
        * @param dftParams DFT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t sRank, std::size_t tRank>
+      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dft::Parameters<sRank, tRank>& dftParams, std::size_t)
+      makeTransformVariant(const dft::Parameters<shapeExt, transformExt>& dftParams, std::size_t)
       {
         return DftDesc{validateAndReturn(dftParams.type)};
       }
 
       /**
        * @brief Make the transform variant.
-       * @tparam sRank Rank of the shape.
-       * @tparam tRank Rank of the transform.
+       * @tparam shapeExt Extent of the shape.
+       * @tparam transformExt Extent of the transform axes.
        * @param dhtParams DHT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t sRank, std::size_t tRank>
+      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dht::Parameters<sRank, tRank>& dhtParams, std::size_t)
+      makeTransformVariant(const dht::Parameters<shapeExt, transformExt>& dhtParams, std::size_t)
       {
         return DhtDesc{validateAndReturn(dhtParams.type)};
       }
 
       /**
        * @brief Make the transform variant.
-       * @tparam sRank Rank of the shape.
-       * @tparam tRank Rank of the transform.
-       * @tparam ttRank Rank of the transform type.
+       * @tparam shapeExt Extent of the shape.
+       * @tparam transformExt Extent of the transform axes.
+       * @tparam ttExt Extent of the transform type.
        * @param dttParams DTT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
+      template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dtt::Parameters<sRank, tRank, ttRank>& dttParams, std::size_t transformRank)
+      makeTransformVariant(const dtt::Parameters<shapeExt, transformExt, ttExt>& dttParams, std::size_t transformRank)
       {
         if ((transformRank != 1) && (dttParams.types.size() != transformRank))
         {

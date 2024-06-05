@@ -41,13 +41,15 @@ namespace afft::detail
       Desc() = delete;
 
       /// @brief Constructor.
-      template<typename TransformParametersT, typename ArchParametersT>
-      Desc(const TransformParametersT& transformParameters, const ArchParametersT& archParameters)
+      template<typename TransformParamsT, typename ArchParamsT>
+      Desc(const TransformParamsT& transformParameters, const ArchParamsT& archParameters)
       : TransformDesc{transformParameters},
-        ArchDesc{archParameters, getTransformRank()}
+        ArchDesc{archParameters, getShapeRank()}
       {
-        static_assert(isTransformParameters<TransformParametersT>, "TransformParametersT must be a TransformParameters type.");
-        static_assert(isArchitectureParameters<ArchParametersT>, "ArchParametersT must be an ArchParameters type.");
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a TransformParameters type.");
+        static_assert(isArchitectureParameters<ArchParamsT>, "ArchParamsT must be an ArchParameters type.");
+
+        // TODO: check strides or set them to default values
       }
 
       /// @brief Copy constructor.

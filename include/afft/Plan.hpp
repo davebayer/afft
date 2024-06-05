@@ -29,699 +29,1020 @@
 # include "detail/include.hpp"
 #endif
 
+#include "backend.hpp"
 #include "common.hpp"
-#include "distrib.hpp"
-#include "typeTraits.hpp"
-#include "detail/cxx.hpp"
+#include "transform.hpp"
 #include "detail/Desc.hpp"
-#include "detail/makePlanImpl.hpp"
-#include "detail/PlanImpl.hpp"
 
-AFFT_EXPORT namespace afft
+namespace afft
 {
-  /**
-   * @class Plan
-   * @brief Plan class
-   */
-  class Plan
+  class Plan : public std::enable_shared_from_this<Plan>
   {
+    private:
+      /// @brief Default execution parameters helper.
+      struct DefaultExecParams
+      {
+        /// @brief Conversion to any execution parameters.
+        template<typename ExecParamsT>
+        [[nodiscard]] constexpr operator ExecParamsT() const noexcept
+        {
+          static_assert(isExecutionParameters<ExecParamsT>, "invalid execution parameters type");
+
+          return ExecParamsT{};
+        }
+      };
+
+      /**
+       * @brief Check if the type is known execution parameters.
+       * @tparam T Type to check.
+       */
+      template<typename T>
+      static constexpr bool isKnownExecParams = isExecutionParameters<T> || std::is_same_v<T, DefaultExecParams>;
+
     public:
-      /// Default constructor. Creates an uninitialized plan.
-      Plan() = default;
+      /// @brief Copy constructor is deleted.
+      Plan(const Plan&) = delete;
 
-      /// Copy constructor
-      Plan(const Plan&) = default;
-
-      /// Move constructor
+      /// @brief Move constructor.
       Plan(Plan&&) = default;
 
-      /// Destructor
+      /// @brief Destructor.
       virtual ~Plan() = default;
 
-      /// Copy assignment operator
-      Plan& operator=(const Plan&) = default;
+      /// @brief Copy assignment operator is deleted.
+      Plan& operator=(const Plan&) = delete;
 
-      /// Move assignment operator
+      /// @brief Move assignment operator.
       Plan& operator=(Plan&&) = default;
 
-      /**
-       * @brief Check if the plan is initialized
-       * @return True if the plan is initialized, false otherwise
-       */
-      [[nodiscard]] bool isInitialized() const
+      /// @brief Get the transform.
+      [[nodiscard]] constexpr Transform getTransform() const
       {
-        return static_cast<bool>(mImpl);
+        return mDesc.getTransform();
+      }
+
+      /// @brief Get shape rank.
+      [[nodiscard]] constexpr std::size_t getShapeRank() const noexcept
+      {
+        return mDesc.getShapeRank();
+      }
+
+      /// @brief Get transform rank.
+      [[nodiscard]] constexpr std::size_t getTransformRank() const noexcept
+      {
+        return mDesc.getTransformRank();
       }
 
       /**
-       * @brief Get the transform type
-       * @return Transform type
-       */
-      [[nodiscard]] Transform getTransform() const
-      {
-        checkInitialized();
-
-        return mImpl->getDesc().getTransform();
-      }
-
-      /**
-       * @brief Get the transform parameters
+       * @brief Get transform parameters.
        * @tparam transform Transform type
        * @return Transform parameters
        */
       template<Transform transform>
-      [[nodiscard]] TransformParameters<transform> getTransformParameters() const
+      [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
       {
-        static_assert(detail::isValid(transform), "Invalid transform type");
-
-        checkInitialized();
+        static_assert(detail::isValid(transform), "invalid transform type");
 
         if (transform != getTransform())
         {
-          throw std::runtime_error("Plan transform does not match requested transform");
+          throw std::invalid_argument("plan transform does not match requested transform");
         }
 
-        return mImpl->getDesc().getTransformParameters<transform>();
+        return mDesc.getTransformParameters<transform>();
       }
 
       /**
-       * @brief Get target
+       * @brief Get target.
        * @return Target
        */
-      [[nodiscard]] Target getTarget() const
+      [[nodiscard]] constexpr Target getTarget() const noexcept
       {
-        checkInitialized();
-
-        return mImpl->getDesc().getTarget();
+        return mDesc.getTarget();
       }
 
       /**
-       * @brief Get the distribution
+       * @brief Get distribution.
        * @return Distribution
        */
-      [[nodiscard]] Distribution getDistribution() const
+      [[nodiscard]] constexpr Distribution getDistribution() const noexcept
       {
-        checkInitialized();
-
-        return mImpl->getDesc().getDistribution();
+        return mDesc.getDistribution();
       }
 
       /**
-       * @brief Get target parameters
-       * @tparam target Target type
-       * @return Target parameters
+       * @brief Get architecture parameters.
+       * @tparam target Target type.
+       * @tparam distribution Distribution type.
+       * @return Architecture parameters.
        */
-      template<Target target, Distribution distrib = Distribution::spst>
-      [[nodiscard]] ArchitectureParameters<target, distrib> getArchitectureParameters() const
+      template<Target target, Distribution distribution>
+      [[nodiscard]] constexpr ArchitectureParameters<target, distribution> getArchitectureParameters() const
       {
-        static_assert(detail::isValid(target), "Invalid target type");
-        static_assert(detail::isValid(distrib), "Invalid distribution");
-
-        checkInitialized();
+        static_assert(detail::isValid(target), "invalid target type");
+        static_assert(detail::isValid(distribution), "invalid distribution type");
 
         if (target != getTarget())
         {
-          throw std::runtime_error("Plan target does not match requested target");
+          throw std::invalid_argument("plan target does not match requested target");
         }
 
-        if (distrib != getDistribution())
+        if (distribution != getDistribution())
         {
-          throw std::runtime_error("Plan distribution does not match requested distribution");
+          throw std::invalid_argument("plan distribution does not match requested distribution");
         }
 
-        return mImpl->getDesc().getArchitectureParameters<target, distrib>();
+        return mDesc.getArchitectureParameters<target, distribution>();
       }
 
       /**
-       * @brief Get plan backend.
-       * @return Backend.
+       * @brief Get backend.
+       * @return Backend
        */
-      [[nodiscard]] Backend getBackend() const
-      {
-        checkInitialized();
+      [[nodiscard]] virtual Backend getBackend() const noexcept = 0;
 
-        return mImpl->getBackend();
+      /**
+       * @brief Execute the plan.
+       * @tparam SrcDstT Source/destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param srcDst Source/destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
+      void execute(SrcDstT* srcDst, const ExecParamsT execParams = {})
+      {
+        static_assert(isKnownType<SrcDstT>, "unknown source/destination type");
+        static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(View{srcDst}, View{srcDst}, execParams);
       }
 
       /**
-       * @brief Execute in-place plan
-       * @tparam SrcDstT Source or destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param srcDst Source and destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcDstT Source/destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param srcDst Source/destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcDstT, typename ExecParamsT>
-      void execute(SrcDstT* srcDst, const ExecParamsT& execParams)
+      template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
+      void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcDstT>, "A known type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcDstT>, "source/destination type must be real");
+        static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(srcDst), execParams);
+        executeImpl1(View{srcDst}, View{srcDst}, execParams);
       }
 
       /**
-       * @brief Execute in-place plan
-       * @tparam SrcDstT Source or destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param srcDst Source and destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcDstT Source/destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param srcDst Source/destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcDstT, typename ExecParamsT>
-      void execute(View<SrcDstT*> srcDst, const ExecParamsT& execParams)
+      template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<SrcDstT*> srcDst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcDstT>, "A known type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownType<SrcDstT>, "unknown source/destination type");
+        static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(srcDst, execParams);
+        executeImpl1(srcDst, srcDst, execParams);
       }
 
       /**
-       * @brief Execute in-place plan
-       * @tparam SrcDstT Source or destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param srcDst Source and destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcDstT Source/destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param srcDst Source/destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcDstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT& execParams)
+      template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<PlanarComplex<SrcDstT*>> srcDst, const ExecParamsT execParams = {})
       {
-        static_assert(isRealType<SrcDstT>, "A real type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcDstT>, "source/destination type must be real");
+        static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(srcDst), execParams);
+        executeImpl1(srcDst, srcDst, execParams);
       }
 
       /**
-       * @brief Execute in-place plan
-       * @tparam SrcDstT Source or destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param srcDst Source and destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcDstT, typename ExecParamsT>
-      void execute(View<PlanarComplex<SrcDstT*>> srcDst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(SrcT* src, DstT* dst, const ExecParamsT execParams = {})
       {
-        static_assert(isRealType<SrcDstT>, "A real type is required");
-        static_assert(!std::is_const_v<SrcDstT>, "A non-const type is required for the source and destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownType<SrcT>, "unknown source type");
+        static_assert(isKnownType<DstT>, "unknown destination type");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(srcDst, execParams);
+        executeImpl1(View<SrcT*>(&src, 1), View<DstT*>(&dst, 1), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(SrcT* src, DstT* dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcT>, "source type must be real");
+        static_assert(isKnownType<DstT>, "unknown destination type");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownType<SrcT>, "unknown source type");
+        static_assert(isRealType<DstT>, "destination type must be real");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(src, dst, execParams);
+        executeImpl1(View{src}, View{dst}, execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer in PlanarComplex format
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcT>, "source type must be real");
+        static_assert(isRealType<DstT>, "destination type must be real");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers in PlanarComplex format
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<SrcT*> src, View<DstT*> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isKnownType<DstT>, "A known type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownType<SrcT>, "unknown source type");
+        static_assert(isKnownType<DstT>, "unknown destination type");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(src, dst, execParams);
+        executeImpl1(src, dst, execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer in PlanarComplex format
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcT>, "source type must be real");
+        static_assert(isKnownType<DstT>, "unknown destination type");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(src, dst, execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with destination buffer as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers in PlanarComplex format
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isKnownType<SrcT>, "A known type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownType<SrcT>, "unknown source type");
+        static_assert(isRealType<DstT>, "destination type must be real");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(src, dst, execParams);
+        executeImpl1(src, dst, execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer in PlanarComplex format
-       * @param dst Destination buffer in PlanarComplex format
-       * @param execParams Execution parameters
+       * @brief Execute the plan.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
+      void execute(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT execParams = {})
       {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isRealType<SrcT>, "source type must be real");
+        static_assert(isRealType<DstT>, "destination type must be real");
+        static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(src, dst, execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers in PlanarComplex format
-       * @param dst Destination buffers in PlanarComplex format
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void execute(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(const void* src, void* dst, const ExecParamsT& execParams = {})
       {
-        static_assert(isRealType<SrcT>, "A real type is required");
-        static_assert(isRealType<DstT>, "A real type is required");
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->execute(src, dst, execParams);
+        executeImpl1(View<const void*>(&src, 1), View<void*>(&dst, 1), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(SrcT* src, DstT* dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(void* src, void* dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View<void*>(&src, 1), View<void*>(&dst, 1), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking
-       * @tparam SrcT Source buffer type
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(src, dst, execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(PlanarComplex<void*> src, void* dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source buffer as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(const void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(src, dst, execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(src, dst, execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffer
-       * @param dst Destination buffer
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(PlanarComplex<void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(detail::makeView(src), detail::makeView(dst), execParams);
+        executeImpl1(View(src), View(dst), execParams);
       }
 
       /**
-       * @brief Execute out-of-place plan without type checking and with source and destination buffers as PlanarComplex
-       * @tparam SrcT Source buffer type in PlanarComplex format
-       * @tparam DstT Destination buffer type in PlanarComplex format
-       * @tparam ExecParamsT Execution parameters type
-       * @param src Source buffers
-       * @param dst Destination buffers
-       * @param execParams Execution parameters
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
        */
-      template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeUnsafe(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<const void*> src, View<void*> dst, const ExecParamsT& execParams = {})
       {
-        static_assert(!std::is_const_v<DstT>, "A non-const type is required for the destination buffer");
-        static_assert(isExecutionParameters<ExecParamsT>, "Unknown execution parameters type");
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        checkInitialized();
-
-        mImpl->executeUnsafe(src, dst, execParams);
+        executeImpl1(src, dst, execParams);
       }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<void*> src, View<void*> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<PlanarComplex<const void*>> src, View<void*> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<PlanarComplex<void*>> src, View<void*> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<const void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<PlanarComplex<const void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
+      /**
+       * @brief Execute the plan without type checking.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffer.
+       * @param dst Destination buffer.
+       * @param execParams Execution parameters.
+       */
+      template<typename ExecParamsT = DefaultExecParams>
+      void executeUnsafe(View<PlanarComplex<void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      {
+        static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
+
+        executeImpl1(src, dst, execParams);
+      }
+
     protected:
-    private:
-      // Allow makePlan to create Plan objects
-      template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
-      friend Plan makePlan(const TransformParametersT& transformParams,
-                           ArchParametersT&            archParams,
-                           const BackendParametersT&   backendParams);
+      /// @brief Default constructor is deleted.
+      Plan() = delete;
 
-      // Allow makePlanWithFeedback to create Plan objects
-      template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
-      friend std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
-                                                                         ArchParametersT&            archParams,
-                                                                         const BackendParametersT&   backendParams);
-
-      // Allow PlanCache to create Plan objects
-      friend class PlanCache;
-
-      /**
-       * @brief Construct a new Plan object with the given implementation
-       * @param impl Plan implementation
-       */
-      explicit Plan(std::shared_ptr<detail::PlanImpl> impl)
-      : mImpl{std::move(impl)}
+      /// @brief Constructor.
+      Plan(const detail::Desc& desc)
+      : mDesc{desc}
       {}
 
       /**
-       * @brief Check if the plan is initialized
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
        */
-      void checkInitialized() const
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
+                                      [[maybe_unused]] View<void*>                                 dst,
+                                      [[maybe_unused]] const afft::spst::cpu::ExecutionParameters& execParams)
       {
-        if (!mImpl)
+        throw std::logic_error{"backend does not implement spst cpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
+                                      [[maybe_unused]] View<void*>                                 dst,
+                                      [[maybe_unused]] const afft::spst::gpu::ExecutionParameters& execParams)
+      {
+        throw std::logic_error{"backend does not implement spst gpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
+                                      [[maybe_unused]] View<void*>                                 dst,
+                                      [[maybe_unused]] const afft::spmt::gpu::ExecutionParameters& execParams)
+      {
+        throw std::logic_error{"backend does not implement spmt gpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
+                                      [[maybe_unused]] View<void*>                                 dst,
+                                      [[maybe_unused]] const afft::mpst::cpu::ExecutionParameters& execParams)
+      {
+        throw std::logic_error{"backend does not implement mpst cpu execution"};
+      }
+
+      /**
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
+                                      [[maybe_unused]] View<void*>                                 dst,
+                                      [[maybe_unused]] const afft::mpst::gpu::ExecutionParameters& execParams)
+      {
+        throw std::logic_error{"backend does not implement mpst gpu execution"};
+      }
+    
+      detail::Desc mDesc;
+    private:
+      /**
+       * @brief Check execution type properties.
+       * @param srcPrecision Source precision.
+       * @param srcComplexity Source complexity.
+       * @param dstPrecision Destination precision.
+       * @param dstComplexity Destination complexity.
+       */
+      void checkExecTypeProps(const Precision  srcPrecision,
+                              const Complexity srcComplexity,
+                              const Precision  dstPrecision,
+                              const Complexity dstComplexity) const
+      {
+        const auto& prec = mDesc.getPrecision();
+        const auto [refSrcCmpl, refDstCmpl] = mDesc.getSrcDstComplexity();
+
+        switch (mDesc.getPlacement())
         {
-          throw std::runtime_error("Plan is not initialized");
+        case Placement::inPlace:
+          if (srcPrecision != prec.source && srcPrecision != prec.destination)
+          {
+            throw std::invalid_argument{"invalid type precision"};
+          }
+
+          if (srcComplexity != refSrcCmpl && srcComplexity != refDstCmpl)
+          {
+            throw std::invalid_argument{"invalid type complexity"};
+          }
+          break;
+        case Placement::outOfPlace:
+          if (srcPrecision != prec.source)
+          {
+            throw std::invalid_argument{"invalid source type precision"};
+          }
+          
+          if (dstPrecision != prec.destination)
+          {
+            throw std::invalid_argument{"invalid destination type precision"};
+          }
+
+          if (srcComplexity != refSrcCmpl)
+          {
+            throw std::invalid_argument{"invalid source type complexity"};
+          }
+
+          if (dstComplexity != refDstCmpl)
+          {
+            throw std::invalid_argument{"invalid destination type complexity"};
+          }
+          break;
+        default:
+          detail::cxx::unreachable();
         }
       }
 
-      std::shared_ptr<detail::PlanImpl> mImpl; ///< Plan implementation
+      /// @brief Check if the source is preserved.
+      void checkSrcIsPreserved() const
+      {
+        if (!mDesc.getPreserveSource())
+        {
+          throw std::invalid_argument("running destructive transform on const source data");
+        }
+      }
+
+      /**
+       * @brief Check execution buffer count.
+       * @param srcCount Source buffer count.
+       * @param dstCount Destination buffer count.
+       */
+      void checkBufferCount(const std::size_t srcCount, const std::size_t dstCount) const
+      {
+        const auto targetCount = mDesc.getTargetCount();
+
+        if (srcCount != targetCount)
+        {
+          throw std::invalid_argument{"invalid source buffer count"};
+        }
+
+        if (dstCount != targetCount)
+        {
+          throw std::invalid_argument{"invalid destination buffer count"};
+        }
+      }
+
+      /**
+       * @brief Check placement.
+       * @param placement Placement.
+       */
+      void checkPlacement(const Placement placement) const
+      {
+        if (placement != mDesc.getPlacement())
+        {
+          throw std::invalid_argument("placement does not match plan placement");
+        }
+      }
+
+      /**
+       * @brief Level 1 implementation of the execute method.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeImpl1(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
+                      (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
+
+        using NonConstSrcT = std::remove_const_t<SrcT>;
+
+        if constexpr (std::is_const_v<SrcT>)
+        {
+          checkSrcIsPreserved();
+        }
+
+        View<NonConstSrcT*> srcNonConst(const_cast<NonConstSrcT* const*>(src.data()), src.size());
+
+        checkBufferCount(src.size(), dst.size());
+        
+        const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+        {
+          return reinterpret_cast<std::uintptr_t>(s) == reinterpret_cast<std::uintptr_t>(d);
+        });
+        checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
+
+        if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
+        {
+          checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
+        }
+
+        executeImpl2(srcNonConst, dst, execParams);
+      }
+
+      /**
+       * @brief Level 1 implementation of the execute method.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeImpl1(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      {
+        static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
+                      (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
+
+        using NonConstSrcT = std::remove_const_t<SrcT>;
+
+        if constexpr (std::is_const_v<SrcT>)
+        {
+          checkSrcIsPreserved();
+        }
+
+        View<NonConstSrcT> srcNonConst{const_cast<PlanarComplex<NonConstSrcT>* const*>(src.data()), src.size()};
+
+        checkBufferCount(src.size(), dst.size());
+        
+        const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+        {
+          return reinterpret_cast<std::uintptr_t>(s.real) == reinterpret_cast<std::uintptr_t>(d);
+        });
+
+        checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
+
+        if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
+        {
+          checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
+        }
+
+        executeImpl2(srcNonConst, dst, execParams);
+      }
+
+      /**
+       * @brief Level 1 implementation of the execute method.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeImpl1(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
+                      (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
+
+        using NonConstSrcT = std::remove_const_t<SrcT>;
+
+        if constexpr (std::is_const_v<SrcT>)
+        {
+          checkSrcIsPreserved();
+        }
+
+        View<NonConstSrcT> srcNonConst{const_cast<NonConstSrcT* const*>(src.data()), src.size()};
+
+        checkBufferCount(src.size(), dst.size());
+        
+        const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+        {
+          return reinterpret_cast<std::uintptr_t>(s) == reinterpret_cast<std::uintptr_t>(d.real);
+        });
+
+        checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
+
+        if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
+        {
+          checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
+        }
+
+        executeImpl2(srcNonConst, dst, execParams);
+      }
+
+      /**
+       * @brief Level 1 implementation of the execute method.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeImpl1(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      {
+        static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
+                      (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
+
+        using NonConstSrcT = std::remove_const_t<SrcT>;
+
+        if constexpr (std::is_const_v<SrcT>)
+        {
+          checkSrcIsPreserved();
+        }
+
+        View<NonConstSrcT> srcNonConst{const_cast<PlanarComplex<NonConstSrcT>* const*>(src.data()), src.size()};
+
+        checkBufferCount(src.size(), dst.size());
+        
+        const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+        {
+          return reinterpret_cast<std::uintptr_t>(s.real) == reinterpret_cast<std::uintptr_t>(d.real) &&
+                 reinterpret_cast<std::uintptr_t>(s.imag) == reinterpret_cast<std::uintptr_t>(d.imag);
+        });
+
+        checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
+
+        if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
+        {
+          checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
+        }
+
+        executeImpl2(srcNonConst, dst, execParams);
+      }
+
+      /**
+       * @brief Level 2 implementation of the execute method.
+       * @tparam SrcT Source type.
+       * @tparam DstT Destination type.
+       * @tparam ExecParamsT Execution parameters type.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      template<typename SrcT, typename DstT, typename ExecParamsT>
+      void executeImpl2(View<SrcT> src, View<DstT> dst, const ExecParamsT& execParams)
+      {
+        auto isNullPtr = [](const auto* ptr) { return ptr == nullptr; };
+
+        if (std::any_of(src.begin(), src.end(), isNullPtr))
+        {
+          throw std::invalid_argument("a null pointer was passed as source buffer");
+        }
+
+        if (std::any_of(dst.begin(), dst.end(), isNullPtr))
+        {
+          throw std::invalid_argument("a null pointer was passed as destination buffer");
+        }
+
+        View<void*> srcVoid{reinterpret_cast<void* const*>(src.data()), src.size()};
+        View<void*> dstVoid{reinterpret_cast<void* const*>(dst.data()), dst.size()};
+
+        if constexpr (std::is_same_v<ExecParamsT, DefaultExecParams>)
+        {
+          switch (getTarget())
+          {
+          case Target::cpu:
+            switch (getDistribution())
+            {
+            case Distribution::spst:
+              executeBackendImpl(srcVoid, dstVoid, afft::spst::cpu::ExecutionParameters{});
+              break;
+            case Distribution::mpst:
+              executeBackendImpl(srcVoid, dstVoid, afft::mpst::cpu::ExecutionParameters{});
+              break;
+            default:
+              detail::cxx::unreachable();
+            }
+            break;
+          case Target::gpu:
+            switch (getDistribution())
+            {
+            case Distribution::spst:
+              executeBackendImpl(srcVoid, dstVoid, afft::spst::gpu::ExecutionParameters{});
+              break;
+            case Distribution::spmt:
+              executeBackendImpl(srcVoid, dstVoid, afft::spmt::gpu::ExecutionParameters{});
+              break;
+            case Distribution::mpst:
+              executeBackendImpl(srcVoid, dstVoid, afft::mpst::gpu::ExecutionParameters{});
+              break;
+            default:
+              detail::cxx::unreachable();
+            }
+            break;
+          default:
+            detail::cxx::unreachable();
+          }
+        }
+        else
+        {
+          if (execParams.target != getTarget())
+          {
+            throw std::invalid_argument("execution parameters target does not match plan target");
+          }
+
+          if (execParams.distribution != getDistribution())
+          {
+            throw std::invalid_argument("execution parameters distribution does not match plan distribution");
+          }
+
+          executeBackendImpl(srcVoid, dstVoid, execParams);
+        }
+      }
   };
-
-  /**
-   * @brief Create a plan for the given transform, architecture and backend parameters
-   * @tparam TransformParametersT Transform parameters type
-   * @tparam ArchParametersT Architecture parameters type
-   * @tparam BackendParametersT Backend parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @param backendParams Backend parameters
-   * @return Plan
-   */
-  template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
-  Plan makePlan(const TransformParametersT& transformParams,
-                ArchParametersT&            archParams,
-                const BackendParametersT&   backendParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
-    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
-
-    // static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
-    //              "Architecture and backend parameters must share the same target and distribution");
-
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>::shape;
-    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParametersT>::shape;
-
-    static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (archParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == archParamsShapeRank),
-                  "Transform and target parameters must have the same shape rank");
-
-    return Plan{detail::makePlanImpl(detail::Desc{transformParams, archParams}, backendParams)};
-  }
-
-  /**
-   * @brief Create a plan for the given transform and architecture parameters with default backend parameters
-   * @tparam TransformParametersT Transform parameters type
-   * @tparam ArchParametersT Architecture parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @return Plan
-   */
-  template<typename TransformParametersT, typename ArchParametersT>
-  Plan makePlan(const TransformParametersT& transformParams,
-                ArchParametersT&            archParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
-
-    return makePlan(transformParams, archParams, BackendParameters<ArchParametersT::target, ArchParametersT::distribution>{});
-  }
-
-  /**
-   * @brief Create a plan with feedback for the given transform, architecture and backend parameters
-   * @tparam TransformParametersT Transform parameters type
-   * @tparam ArchParametersT Architecture parameters type
-   * @tparam BackendParametersT Backend parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @param backendParams Backend parameters
-   * @return Plan and feedback
-   */
-  template<typename TransformParametersT, typename ArchParametersT, typename BackendParametersT>
-  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
-                                                              ArchParametersT&            archParams,
-                                                              const BackendParametersT&   backendParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
-    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
-
-    // static_assert(detail::isCompatible<ArchParametersT, BackendParametersT>,
-    //              "Architecture and backend parameters must share the same target and distribution");
-
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParametersT>::shape;
-    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParametersT>::shape;
-
-    static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (archParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == archParamsShapeRank),
-                  "Transform and target parameters must have the same shape rank");
-
-    std::pair<Plan, std::vector<Feedback>> result{};
-
-    result.first = Plan{detail::makePlanImpl(detail::Desc{transformParams, archParams},
-                                             backendParams,
-                                             &result.second)};
-
-    return result;
-  }
-
-  /**
-   * @brief Create a plan with feedback for the given transform and architecture parameters with default backend parameters
-   * @tparam TransformParametersT Transform parameters type
-   * @tparam ArchParametersT Architecture parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @return Plan and feedback
-   */
-  template<typename TransformParametersT, typename ArchParametersT>
-  std::pair<Plan, std::vector<Feedback>> makePlanWithFeedback(const TransformParametersT& transformParams,
-                                                              ArchParametersT&          archParams)
-  {
-    static_assert(isTransformParameters<TransformParametersT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters type");
-
-    return makePlanWithFeedback(transformParams,
-                                archParams,
-                                BackendParameters<ArchParametersT::target, ArchParametersT::distribution>{});
-  }
 } // namespace afft
 
 #endif /* AFFT_PLAN_HPP */

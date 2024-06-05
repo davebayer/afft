@@ -29,21 +29,21 @@
 # include "../include.hpp"
 #endif
 
-#include "PlanImpl.hpp"
+#include "Plan.hpp"
 
 namespace afft::detail::pocketfft::spst::cpu
 {
   /**
-   * @class PlanImpl
+   * @class Plan
    * @tparam prec The precision of the data.
    * @brief Implementation of the plan for the spst cpu architecture using PocketFFT
    */
   template<typename PrecT>
-  class PlanImpl final : public pocketfft::PlanImpl
+  class Plan final : public pocketfft::Plan
   {
     private:
       /// @brief Alias for the parent class
-      using Parent = pocketfft::PlanImpl;
+      using Parent = pocketfft::Plan;
 
       /// @brief Alias for the real type
       using R = PrecT;
@@ -58,21 +58,21 @@ namespace afft::detail::pocketfft::spst::cpu
        * @brief Constructor
        * @param Desc The plan description
        */
-      PlanImpl(const Desc& desc)
+      Plan(const Desc& desc)
       : Parent{desc},
-        mShape{getDesc().getShape().begin(), getDesc().getShape().end()},
+        mShape{mDesc.getShape().begin(), mDesc.getShape().end()},
         mSrcStrides(mShape.size()),
         mDstStrides(mShape.size()),
-        mAxes{getDesc().getTransformAxes().begin(), getDesc().getTransformAxes().end()}
+        mAxes{mDesc.getTransformAxes().begin(), mDesc.getTransformAxes().end()}
       {
-        const auto& memLayout = getDesc().template getMemoryLayout<Distribution::spst>();
+        const auto& memLayout = mDesc.template getMemoryLayout<Distribution::spst>();
 
         std::transform(memLayout.getSrcStrides().begin(),
                        memLayout.getSrcStrides().end(),
                        mSrcStrides.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * getDesc().sizeOfSrcElem());
+          return safeIntCast<std::ptrdiff_t>(stride * mDesc.sizeOfSrcElem());
         });
 
         std::transform(memLayout.getDstStrides().begin(),
@@ -80,7 +80,7 @@ namespace afft::detail::pocketfft::spst::cpu
                        mDstStrides.begin(),
                        [this](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * getDesc().sizeOfDstElem());
+          return safeIntCast<std::ptrdiff_t>(stride * mDesc.sizeOfDstElem());
         });
       }
 
@@ -92,9 +92,9 @@ namespace afft::detail::pocketfft::spst::cpu
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeImpl(View<void*> src, View<void*> dst, const afft::spst::cpu::ExecutionParameters&) override
+      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::spst::cpu::ExecutionParameters&) override
       {
-        switch (getDesc().getTransform())
+        switch (mDesc.getTransform())
         {
         case Transform::dft:
           execDft(src.front(), dst.front());
@@ -118,10 +118,10 @@ namespace afft::detail::pocketfft::spst::cpu
        */
       void execDft(void* src, void* dst)
       {
-        const auto& dftDesc = getDesc().template getTransformDesc<Transform::dft>();
+        const auto& dftDesc = mDesc.template getTransformDesc<Transform::dft>();
 
         const auto direction  = Parent::getDirection();
-        const auto normFactor = getDesc().template getNormalizationFactor<R>();
+        const auto normFactor = mDesc.template getNormalizationFactor<R>();
         const auto nthreads   = getThreadCount();
 
         switch (dftDesc.type)
@@ -180,9 +180,9 @@ namespace afft::detail::pocketfft::spst::cpu
        */
       void execDht(void* src, void* dst)
       {
-        const auto& dhtDesc = getDesc().template getTransformDesc<Transform::dht>();
+        const auto& dhtDesc = mDesc.template getTransformDesc<Transform::dht>();
 
-        const auto normFactor = getDesc().template getNormalizationFactor<R>();
+        const auto normFactor = mDesc.template getNormalizationFactor<R>();
         const auto nthreads   = getThreadCount();
 
         switch (dhtDesc.type)
@@ -215,7 +215,7 @@ namespace afft::detail::pocketfft::spst::cpu
         static constexpr std::array dttTypes = {dtt::Type::dct1, dtt::Type::dct2, dtt::Type::dct3, dtt::Type::dct4,
                                                 dtt::Type::dst1, dtt::Type::dst2, dtt::Type::dst3, dtt::Type::dst4};
 
-        auto cvtDttType = [dir = getDesc().getDirection()](dtt::Type dttType) constexpr -> int
+        auto cvtDttType = [dir = mDesc.getDirection()](dtt::Type dttType) constexpr -> int
         {
           switch (dttType)
           {
@@ -232,19 +232,19 @@ namespace afft::detail::pocketfft::spst::cpu
           }
         };
 
-        const auto  axes    = getDesc().getTransformAxes();
-        const auto& dttDesc = getDesc().template getTransformDesc<Transform::dtt>();
+        const auto  axes    = mDesc.getTransformAxes();
+        const auto& dttDesc = mDesc.template getTransformDesc<Transform::dtt>();
 
-        auto normFactor = getDesc().template getNormalizationFactor<R>();
+        auto normFactor = mDesc.template getNormalizationFactor<R>();
 
-        const auto ortho    = (getDesc().getNormalization() == Normalization::orthogonal);
+        const auto ortho    = (mDesc.getNormalization() == Normalization::orthogonal);
         const auto nthreads = getThreadCount();
 
         for (const auto dttType : dttTypes)
         {
           mAxes.clear();
 
-          for (std::size_t i{}; i < getDesc().getTransformRank(); ++i)
+          for (std::size_t i{}; i < mDesc.getTransformRank(); ++i)
           {
             if (dttDesc.types[i] == dttType)
             {
@@ -297,7 +297,7 @@ namespace afft::detail::pocketfft::spst::cpu
 
       [[nodiscard]] constexpr std::size_t getThreadCount() const
       {
-        return static_cast<std::size_t>(getDesc().template getArchDesc<Target::cpu, Distribution::spst>().threadLimit);
+        return static_cast<std::size_t>(mDesc.template getArchDesc<Target::cpu, Distribution::spst>().threadLimit);
       }
 
       ::pocketfft::shape_t  mShape{};      ///< The shape of the data
@@ -311,8 +311,8 @@ namespace afft::detail::pocketfft::spst::cpu
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] inline std::unique_ptr<pocketfft::PlanImpl>
-  makePlanImpl(const Desc& desc)
+  [[nodiscard]] inline std::unique_ptr<pocketfft::Plan>
+  makePlan(const Desc& desc)
   {
     // TODO: Adapt this and add DHT checks
     //
@@ -366,13 +366,13 @@ namespace afft::detail::pocketfft::spst::cpu
     switch (const auto precision = desc.getPrecision().execution)
     {
       case Precision::_float:
-        return std::make_unique<PlanImpl<float>>(desc);
+        return std::make_unique<Plan<float>>(desc);
       case Precision::_double:
-        return std::make_unique<PlanImpl<double>>(desc);
+        return std::make_unique<Plan<double>>(desc);
       default:
         if (precision == Precision::_longDouble)
         {
-          return std::make_unique<PlanImpl<long double>>(desc);
+          return std::make_unique<Plan<long double>>(desc);
         }
         else
         {

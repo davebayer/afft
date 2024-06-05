@@ -70,45 +70,45 @@ namespace gpu
   inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
     Backend::cufft,  // prefer cufft
-    Backend::vkfft,  // fallback to vkfft
+    Backend::vkfft   // fallback to vkfft
 # elif AFFT_GPU_BACKEND_IS(HIP)
 #   if defined(__HIP_PLATFORM_AMD__)
     Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
-    Backend::rocfft, // fallback to rocfft
+    Backend::rocfft  // fallback to rocfft
 #   elif defined(__HIP_PLATFORM_NVIDIA__)
     Backend::hipfft, // prefer cufft (it is used by hipfft on CUDA)
     Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
-    Backend::rocfft, // fallback to rocfft
+    Backend::rocfft  // fallback to rocfft
 #  endif
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
     Backend::vkfft,  // prefer vkfft
-    Backend::clfft,  // fallback to clfft
+    Backend::clfft   // fallback to clfft
 # endif
   );
 
   /**
    * @struct Parameters
    * @brief Parameters for gpu target
-   * @tparam sRank Rank of the shape
+   * @tparam shapeExt Extent of the shape
    */
-  template<std::size_t sRank = dynamicRank>
+  template<std::size_t shapeExt = dynamicExtent>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED
   {
     static constexpr Target       target{Target::gpu};              ///< Target
     static constexpr Distribution distribution{Distribution::spst}; ///< Distribution
 
-    MemoryLayout<sRank> memoryLayout{};                                ///< Memory layout for CPU transform
-    ComplexFormat       complexFormat{ComplexFormat::interleaved};     ///< complex number format
-    bool                preserveSource{true};                          ///< preserve source data
-    bool                useExternalWorkspace{false};                   ///< Use external workspace, defaults to `false`
+    MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for CPU transform
+    ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    bool                   preserveSource{true};                      ///< preserve source data
+    bool                   useExternalWorkspace{false};               ///< Use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int                 device{detail::cuda::getCurrentDevice()};      ///< CUDA device, defaults to current device
+    int                    device{detail::cuda::getCurrentDevice()};  ///< CUDA device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int                 device{detail::hip::getCurrentDevice()};       ///< HIP device, defaults to current device
+    int                    device{detail::hip::getCurrentDevice()};   ///< HIP device, defaults to current device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
-    cl_context          context{};                                     ///< OpenCL context
-    cl_device_id        device{};                                      ///< OpenCL device
+    cl_context             context{};                                 ///< OpenCL context
+    cl_device_id           device{};                                  ///< OpenCL device
 # endif
   }
 #endif
@@ -153,37 +153,37 @@ namespace spmt::gpu
   /// @brief Order of initialization of backends
   inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    Backend::cufft, // just cufft
+    Backend::cufft  // just cufft
 # elif AFFT_GPU_BACKEND_IS(HIP)
 #   if defined(__HIP_PLATFORM_AMD__)
     Backend::rocfft, // prefer rocfft
-    Backend::hipfft, // fallback to hipfft
+    Backend::hipfft  // fallback to hipfft
 #   elif defined(__HIP_PLATFORM_NVIDIA__)
     Backend::hipfft, // prefer hipfft
-    Backend::rocfft, // fallback to rocfft
+    Backend::rocfft  // fallback to rocfft
 #   endif
 # endif
   );
 
   /**
    * @brief Parameters for multi gpu target
-   * @tparam sRank Rank of the shape
+   * @tparam shapeExt Extent of the shape
    */
-  template<std::size_t sRank = dynamicRank>
+  template<std::size_t shapeExt = dynamicExtent>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
   {
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
 
-    MemoryLayout<sRank> memoryLayout{};                            ///< memory layout
-    ComplexFormat       complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    bool                preserveSource{true};                      ///< preserve source data
-    bool                useExternalWorkspace{false};               ///< use external workspace, defaults to `false`
+    MemoryLayout<shapeExt> memoryLayout{};                            ///< memory layout
+    ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    bool                   preserveSource{true};                      ///< preserve source data
+    bool                   useExternalWorkspace{false};               ///< use external workspace, defaults to `false`
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    View<int>           devices{};                                 ///< list of CUDA devices
+    View<int>              devices{};                                 ///< list of CUDA devices
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    View<int>           devices{};                                 ///< list of HIP devices
+    View<int>              devices{};                                 ///< list of HIP devices
 # endif
   }
 #endif
@@ -191,8 +191,8 @@ namespace spmt::gpu
 
   /// @brief Execution parameters for multi gpu target
   struct ExecutionParameters
-#if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
   {
+#if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::spmt}; ///< distribution
 
@@ -203,8 +203,8 @@ namespace spmt::gpu
     hipStream_t  stream{0};    ///< HIP stream, defaults to `zero` stream
     View<void*>  workspace{};  ///< workspace memory pointer, must be specified if `externalWorkspace` is `true`
 # endif
-  }
 #endif
+  }
    ;
 } // namespace spmt::gpu
 
@@ -222,22 +222,22 @@ namespace mpst::gpu
   /// @brief Order of initialization of backends
   inline constexpr std::array defaultBackendInitOrder = detail::makeArray<Backend>(
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    Backend::cufft, // just cufft
+    Backend::cufft // just cufft
 # endif
   );
 
   /**
    * @brief Parameters for multi process gpu target
-   * @tparam sRank Rank of the shape
+   * @tparam shapeExt Extent of the shape
    */
-  template<std::size_t sRank = dynamicRank>
+  template<std::size_t shapeExt = dynamicExtent>
   struct Parameters
 #if AFFT_GPU_IS_ENABLED && AFFT_MP_IS_ENABLED
   {
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
 
-    MemoryLayout<sRank>    memoryLayout{};                            ///< memory layout
+    MemoryLayout<shapeExt> memoryLayout{};                            ///< memory layout
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace, defaults to `false`
@@ -365,9 +365,9 @@ namespace gpu
         [[maybe_unused]] const std::size_t sizeInBytes = n * sizeof(T);
 
 #     if AFFT_GPU_BACKEND_IS(CUDA)
-        detail::Error::check(cudaMallocManaged(&ptr, sizeInBytes));
+        detail::cuda::checkError(cudaMallocManaged(&ptr, sizeInBytes));
 #     elif AFFT_GPU_BACKEND_IS(HIP)
-        detail::Error::check(hipMallocManaged(&ptr, sizeInBytes));
+        detail::hip::checkError(hipMallocManaged(&ptr, sizeInBytes));
 #     elif AFFT_GPU_BACKEND_IS(OPENCL)
         ptr = static_cast<T*>(clSVMAlloc(mContext, CL_MEM_READ_WRITE, sizeInBytes, 0));
 #     endif
@@ -388,9 +388,9 @@ namespace gpu
       void deallocate([[maybe_unused]] T* p, std::size_t) noexcept
       {
 #     if AFFT_GPU_BACKEND_IS(CUDA)
-        detail::Error::check(cudaFree(p));
+        detail::cuda::checkError(cudaFree(p));
 #     elif AFFT_GPU_BACKEND_IS(HIP)
-        detail::Error::check(hipFree(p));
+        detail::hip::checkError(hipFree(p));
 #     elif AFFT_GPU_BACKEND_IS(OPENCL)
         clSVMFree(mContext, p);
 #     endif

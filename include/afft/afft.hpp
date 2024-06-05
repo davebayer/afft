@@ -37,6 +37,7 @@
 #include "init.hpp"
 #include "type.hpp"
 #include "Plan.hpp"
+#include "makePlan.hpp"
 #include "PlanCache.hpp"
 #include "utils.hpp"
 

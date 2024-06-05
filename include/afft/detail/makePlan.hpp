@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_MAKE_PLAN_IMPL_HPP
-#define AFFT_DETAIL_MAKE_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_MAKE_PLAN_HPP
+#define AFFT_DETAIL_MAKE_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "include.hpp"
@@ -31,33 +31,47 @@
 
 #include "common.hpp"
 #include "Desc.hpp"
-#include "PlanImpl.hpp"
+#include "../Plan.hpp"
 #include "../backend.hpp"
 
 #if AFFT_BACKEND_IS_ENABLED(CLFFT)
-# include "clfft/makePlanImpl.hpp"
+# include "clfft/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(CUFFT)
-# include "cufft/makePlanImpl.hpp"
+# include "cufft/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(FFTW3)
-# include "fftw3/makePlanImpl.hpp"
+# include "fftw3/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(MKL)
-# include "mkl/makePlanImpl.hpp"
+# include "mkl/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
-# include "pocketfft/makePlanImpl.hpp"
+# include "pocketfft/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(ROCFFT)
-# include "rocfft/makePlanImpl.hpp"
+# include "rocfft/makePlan.hpp"
 #endif
 #if AFFT_BACKEND_IS_ENABLED(VKFFT)
-# include "vkfft/makePlanImpl.hpp"
+# include "vkfft/makePlan.hpp"
 #endif
 
 namespace afft::detail
 {
+  struct DefaultBackendParams
+  {
+    template<typename BackendParamsT>
+    [[nodiscard]] constexpr operator BackendParamsT() const
+    {
+      static_assert(isBackendParameters<BackendParamsT>, "invalid backend parameters type");
+
+      return {};
+    }
+  };
+
+  template<typename BackendParamsT>
+  inline constexpr bool isKnownBackendParams = isBackendParameters<BackendParamsT> || std::is_same_v<BackendParamsT, DefaultBackendParams>;
+
   /**
    * @brief For each backend in the backend mask, call the function.
    * @tparam Fn Function type.
@@ -122,11 +136,11 @@ namespace afft::detail
     {
       if constexpr (distrib == Distribution::spst)
       {
-        return spst::gpu::supportedBackendMask;
+        return spst::cpu::supportedBackendMask;
       }
       else if constexpr (distrib == Distribution::mpst)
       {
-        return mpst::gpu::supportedBackendMask;
+        return mpst::cpu::supportedBackendMask;
       }
     }
     else if constexpr (target == Target::gpu)
@@ -150,21 +164,21 @@ namespace afft::detail
 
   /**
    * @brief Make plan implementation of the specified backend.
-   * @tparam BackendParametersT Backend parameters type.
+   * @tparam BackendParamsT Backend parameters type.
    * @param backend Backend.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbackMessage Feedback message.
    * @return Plan implementation.
    */
-  template<typename BackendParametersT>
-  [[nodiscard]] std::unique_ptr<PlanImpl>
-  makePlanImpl(Backend                                    backend,
-               [[maybe_unused]] const Desc&               desc,
-               [[maybe_unused]] const BackendParametersT& backendParams,
-               std::string*                               feedbackMessage)
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<Plan>
+  makePlan(Backend                                    backend,
+           [[maybe_unused]] const Desc&               desc,
+           [[maybe_unused]] const BackendParamsT& backendParams,
+           std::string*                               feedbackMessage)
   {
-    static_assert(isBackendParameters<BackendParametersT>, "Invalid backend parameters type");
+    static_assert(isBackendParameters<BackendParamsT>, "Invalid backend parameters type");
 
     auto assignFeedbackMessage = [&](auto&& message)
     {
@@ -174,9 +188,9 @@ namespace afft::detail
       }
     };
 
-    std::unique_ptr<PlanImpl> planImpl{};
+    std::unique_ptr<Plan> plan{};
     
-    if ((backend & getSupportedBackendMask<BackendParametersT::target, BackendParametersT::distribution>()) == BackendMask::empty)
+    if ((backend & getSupportedBackendMask<BackendParamsT::target, BackendParamsT::distribution>()) == BackendMask::empty)
     {
       assignFeedbackMessage("Backend not supported for target and distribution");
     }
@@ -188,37 +202,37 @@ namespace afft::detail
         {
 #       if AFFT_BACKEND_IS_ENABLED(CLFFT)
         case Backend::clfft:
-          planImpl = clfft::makePlanImpl(desc, backendParams);
+          plan = clfft::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(CUFFT)
         case Backend::cufft:
-          planImpl = cufft::makePlanImpl(desc, backendParams);
+          plan = cufft::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(FFTW3)
         case Backend::fftw3:
-          planImpl = fftw3::makePlanImpl(desc, backendParams);
+          plan = fftw3::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(MKL)
         case Backend::mkl:
-          planImpl = mkl::makePlanImpl(desc, backendParams);
+          plan = mkl::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
         case Backend::pocketfft:
-          planImpl = pocketfft::makePlanImpl(desc, backendParams);
+          plan = pocketfft::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(ROCFFT)
         case Backend::rocfft:
-          planImpl = rocfft::makePlanImpl(desc, backendParams);
+          plan = rocfft::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(VKFFT)
         case Backend::vkfft:
-          planImpl = vkfft::makePlanImpl(desc, backendParams);
+          plan = vkfft::makePlan(desc, backendParams);
           break;
 #       endif
         default:
@@ -236,26 +250,26 @@ namespace afft::detail
       }
     }
 
-    return planImpl;
+    return plan;
   }
 
   /**
    * @brief Make the first plan implementation.
-   * @tparam BackendParametersT Backend parameters type.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
-  template<typename BackendParametersT>
-  [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeFirstPlanImpl(const Desc& desc, const BackendParametersT& backendParams, std::vector<Feedback>* feedbacks)
+  template<typename BackendParamsT>
+  [[nodiscard]] inline std::unique_ptr<Plan>
+  makeFirstPlan(const Desc& desc, const BackendParamsT& backendParams, std::vector<Feedback>* feedbacks)
   {
-    std::unique_ptr<PlanImpl> planImpl{};
+    std::unique_ptr<Plan> plan{};
 
     forEachBackend(backendParams.mask, backendParams.order, [&](Backend backend)
     {
-      if (!planImpl)
+      if (!plan)
       {
         std::string* feedbackMessage{};
 
@@ -267,65 +281,65 @@ namespace afft::detail
           feedbackMessage = &feedback.message;
         }
         
-        planImpl = makePlanImpl(backend, desc, backendParams, feedbackMessage);
+        plan = makePlan(backend, desc, backendParams, feedbackMessage);
       }
     });
 
-    return planImpl;
+    return plan;
   }
 
   /**
    * @brief Make the best plan implementation.
-   * @tparam BackendParametersT Backend parameters type.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
-  template<typename BackendParametersT>
-  [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makeBestPlanImpl([[maybe_unused]] const Desc& desc,
-                   [[maybe_unused]] const BackendParametersT& backendParams,
-                   [[maybe_unused]] std::vector<Feedback>* feedbacks)
+  template<typename BackendParamsT>
+  [[nodiscard]] inline std::unique_ptr<Plan>
+  makeBestPlan([[maybe_unused]] const Desc& desc,
+               [[maybe_unused]] const BackendParamsT& backendParams,
+               [[maybe_unused]] std::vector<Feedback>* feedbacks)
   {
     return {};
   }
 
   /**
    * @brief Make plan implementation.
-   * @tparam BackendParametersT Backend parameters type.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Descriptor.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
-  template<typename BackendParametersT>
-  [[nodiscard]] inline std::unique_ptr<PlanImpl>
-  makePlanImpl(const Desc& desc, const BackendParametersT& backendParams, std::vector<Feedback>* feedbacks = nullptr)
+  template<typename BackendParamsT>
+  [[nodiscard]] inline std::unique_ptr<Plan>
+  makePlan(const Desc& desc, const BackendParamsT& backendParams, std::vector<Feedback>* feedbacks = nullptr)
   {
     validate(backendParams.strategy);
 
-    std::unique_ptr<PlanImpl> planImpl{};
+    std::unique_ptr<Plan> plan{};
 
     switch (backendParams.strategy)
     {
     case SelectStrategy::first:
-      planImpl = makeFirstPlanImpl(desc, backendParams, feedbacks);
+      plan = makeFirstPlan(desc, backendParams, feedbacks);
       break;
     case SelectStrategy::best:
-      planImpl = makeBestPlanImpl(desc, backendParams, feedbacks);
+      plan = makeBestPlan(desc, backendParams, feedbacks);
       break;
     default:
       cxx::unreachable();
     }
 
-    if (!planImpl)
+    if (!plan)
     {
       throw std::runtime_error{"Failed to create plan implementation"};
     }
 
-    return planImpl;
+    return plan;
   }
 } // namespace afft::detail
 
-#endif /* AFFT_DETAIL_MAKE_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_MAKE_PLAN_HPP */

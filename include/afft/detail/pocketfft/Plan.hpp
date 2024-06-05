@@ -22,24 +22,24 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
-#define AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_POCKETFFT_PLAN_HPP
+#define AFFT_DETAIL_POCKETFFT_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
 #include "common.hpp"
-#include "../PlanImpl.hpp"
+#include "../../Plan.hpp"
 
 namespace afft::detail::pocketfft
 {
   /// @brief The pocketfft plan implementation base class.
-  class PlanImpl : public detail::PlanImpl
+  class Plan : public afft::Plan
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::PlanImpl;
+      using Parent = afft::Plan;
 
     public:
       /// @brief Inherit constructor.
@@ -49,7 +49,7 @@ namespace afft::detail::pocketfft
       using Parent::operator=;
 
       /// @brief Default destructor.
-      virtual ~PlanImpl() = default;
+      virtual ~Plan() = default;
 
       /**
        * @brief Get the pocketfft backend.
@@ -66,7 +66,7 @@ namespace afft::detail::pocketfft
        */
       [[nodiscard]] auto getDirection() const noexcept
       {
-        switch (getDesc().getDirection())
+        switch (mDesc.getDirection())
         {
         case Direction::forward:
           return ::pocketfft::FORWARD;
@@ -79,4 +79,4 @@ namespace afft::detail::pocketfft
   };
 } // namespace afft::detail::pocketfft
 
-#endif /* AFFT_DETAIL_POCKETFFT_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_POCKETFFT_PLAN_HPP */

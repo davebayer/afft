@@ -102,20 +102,20 @@ namespace cpu
   
   /**
    * @brief Parameters for CPU transform
-   * @tparam sRank Rank of the shape
+   * @tparam shapeExt Extent of the shape
    */
-  template<std::size_t sRank = dynamicRank>
+  template<std::size_t shapeExt = dynamicExtent>
   struct Parameters
   {
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::spst}; ///< distribution
     static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
 
-    MemoryLayout<sRank> memoryLayout{};                               ///< Memory layout for CPU transform
-    ComplexFormat       complexFormat{ComplexFormat::interleaved};    ///< complex number format
-    bool                preserveSource{true};                         ///< preserve source data
-    Alignment           alignment{afft::cpu::alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned            threadLimit{allThreads};                      ///< Thread limit for CPU transform, 0 for no limit
+    MemoryLayout<shapeExt> memoryLayout{};                               ///< Memory layout for CPU transform
+    ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
+    bool                   preserveSource{true};                         ///< preserve source data
+    Alignment              alignment{afft::cpu::alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
+    unsigned               threadLimit{allThreads};                      ///< Thread limit for CPU transform, 0 for no limit
   };
 
   /// @brief Execution parameters for CPU transform
@@ -141,9 +141,9 @@ namespace mpst::cpu
 
   /**
    * @brief Multi-process parameters for mpi cpu transform
-   * @tparam sRank Rank of the shape
+   * @tparam shapeExt Extent of the shape
    */
-  template<std::size_t sRank = dynamicRank>
+  template<std::size_t shapeExt = dynamicExtent>
   struct Parameters
 #if AFFT_MP_IS_ENABLED
   {
@@ -151,7 +151,7 @@ namespace mpst::cpu
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
     static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
 
-    MemoryLayout<sRank>    memoryLayout{};                               ///< memory layout for cpu transform
+    MemoryLayout<shapeExt> memoryLayout{};                               ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
     bool                   preserveSource{true};                         ///< preserve source data
 # if AFFT_MP_BACKEND_IS(MPI)

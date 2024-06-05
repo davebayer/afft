@@ -22,28 +22,28 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP
-#define AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_POCKETFFT_MAKE_PLAN_HPP
+#define AFFT_DETAIL_POCKETFFT_MAKE_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "PlanImpl.hpp"
+#include "Plan.hpp"
 #include "spst.hpp"
 
 namespace afft::detail::pocketfft
 {
   /**
    * @brief Create a plan implementation.
-   * @tparam BackendParametersT Backend parameters type.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Plan description.
    * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  template<typename BackendParametersT>
-  [[nodiscard]] std::unique_ptr<PlanImpl>
-  makePlanImpl(const Desc& desc, const BackendParametersT& backendParams)
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<Plan>
+  makePlan(const Desc& desc, const BackendParamsT& backendParams)
   {
     if (desc.getComplexFormat() != ComplexFormat::interleaved)
     {
@@ -54,7 +54,7 @@ namespace afft::detail::pocketfft
     {
       if constexpr (backendParams.distribution == Distribution::spst)
       {
-        return spst::cpu::makePlanImpl(desc);
+        return spst::cpu::makePlan(desc);
       }
       else
       {
@@ -68,5 +68,5 @@ namespace afft::detail::pocketfft
   }
 } // namespace afft::detail::pocketfft
 
-#endif /* AFFT_DETAIL_POCKETFFT_MAKE_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_POCKETFFT_MAKE_PLAN_HPP */
 

@@ -43,12 +43,12 @@ namespace afft::detail
 
       /**
        * @brief Constructor.
-       * @tparam sRank Shape rank of the memory layout.
+       * @tparam shapeExt Extent of the shape.
        * @param shapeRank Shape rank.
        * @param memLayout Memory layout.
        */
-      template<std::size_t sRank>
-      SpstMemoryLayout(std::size_t shapeRank, const afft::spst::MemoryLayout<sRank>& memLayout)
+      template<std::size_t shapeExt>
+      SpstMemoryLayout(std::size_t shapeRank, const afft::spst::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
         mHasDefaultSrcStrides{memLayout.srcStrides.empty()},
         mHasDefaultDstStrides{memLayout.dstStrides.empty()}
@@ -182,13 +182,13 @@ namespace afft::detail
 
       /**
        * @brief Constructor.
-       * @tparam sRank Shape rank of the memory layout.
+       * @tparam shapeExt Extent of the shape.
        * @param shapeRank Shape rank.
        * @param targetCount Number of targets.
        * @param memLayout Memory layout.
        */
-      template<std::size_t sRank>
-      SpmtMemoryLayout(std::size_t shapeRank, std::size_t targetCount, const afft::spmt::MemoryLayout<sRank>& memLayout)
+      template<std::size_t shapeExt>
+      SpmtMemoryLayout(std::size_t shapeRank, std::size_t targetCount, const afft::spmt::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
         mData(targetCount)
       {
@@ -642,12 +642,12 @@ namespace afft::detail
 
       /**
        * @brief Constructor.
-       * @tparam sRank Shape rank of the memory layout.
+       * @tparam shapeExt Extent of the shape.
        * @param shapeRank Shape rank.
        * @param memLayout Memory layout.
        */
-      template<std::size_t sRank>
-      MpstMemoryLayout(std::size_t shapeRank, const afft::mpst::MemoryLayout<sRank>& memLayout)
+      template<std::size_t shapeExt>
+      MpstMemoryLayout(std::size_t shapeRank, const afft::mpst::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
         mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
         mHasDefaultDstStrides{memLayout.dstBlock.strides.empty()},
@@ -1081,18 +1081,18 @@ namespace afft::detail
 
       /**
        * @brief Constructor.
-       * @tparam ArchParametersT Architecture parameters type.
+       * @tparam ArchParamsT Architecture parameters type.
        * @param archParams Architecture parameters.
        * @param shapeRank Shape rank.
        */
-      template<typename ArchParametersT>
-      ArchDesc(const ArchParametersT& archParams, std::size_t shapeRank)
+      template<typename ArchParamsT>
+      ArchDesc(const ArchParamsT& archParams, std::size_t shapeRank)
       : mComplexFormat{validateAndReturn(archParams.complexFormat)},
         mPreserveSource{archParams.preserveSource},
         mUseExternalWorkspace{archParams.useExternalWorkspace},
         mArchVariant{makeArchVariant(archParams, shapeRank)}
       {
-        static_assert(isArchitectureParameters<ArchParametersT>, "Invalid architecture parameters");
+        static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters");
       }
 
       /// @brief Copy constructor.
@@ -1187,21 +1187,34 @@ namespace afft::detail
         static_assert(isValid(target), "Invalid target");
         static_assert(isValid(distrib), "Invalid distribution");
 
-        switch (mArchVariant.index())
+        if constexpr (target == Target::cpu)
         {
-        case ArchVariantIdx::spstCpu:
-          return std::get<SpstCpuDesc>(mArchVariant);
-        case ArchVariantIdx::spstGpu:
-          return std::get<SpstGpuDesc>(mArchVariant);
-        case ArchVariantIdx::spmtGpu:
-          return std::get<SpmtGpuDesc>(mArchVariant);
-        case ArchVariantIdx::mpstCpu:
-          return std::get<MpstCpuDesc>(mArchVariant);
-        case ArchVariantIdx::mpstGpu:
-          return std::get<MpstGpuDesc>(mArchVariant);
-        default:
-          cxx::unreachable();
+          if constexpr (distrib == Distribution::spst)
+          {
+            return std::get<ArchVariantIdx::spstCpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            return std::get<ArchVariantIdx::mpstCpu>(mArchVariant);
+          }
         }
+        else if constexpr (target == Target::gpu)
+        {
+          if constexpr (distrib == Distribution::spst)
+          {
+            return std::get<ArchVariantIdx::spstGpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::spmt)
+          {
+            return std::get<ArchVariantIdx::spmtGpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            return std::get<ArchVariantIdx::mpstGpu>(mArchVariant);
+          }
+        }
+
+        cxx::unreachable();
       }
 
       /// @brief Get the external workspace flag.
@@ -1278,13 +1291,13 @@ namespace afft::detail
 
       /**
        * @brief Make architecture variant.
-       * @tparam sRank Shape rank.
+       * @tparam shapeExt Extent of the shape.
        * @param params Architecture parameters.
        * @return Architecture variant.
        */
-      template<std::size_t sRank>
+      template<std::size_t shapeExt>
       [[nodiscard]] static SpstCpuDesc
-      makeArchVariant(const spst::cpu::Parameters<sRank>& params, std::size_t shapeRank)
+      makeArchVariant(const spst::cpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
         SpstCpuDesc desc{};
         desc.memoryLayout = SpstMemoryLayout{shapeRank, params.memoryLayout};
@@ -1296,13 +1309,13 @@ namespace afft::detail
 
       /**
        * @brief Make architecture variant.
-       * @tparam sRank Shape rank.
+       * @tparam shapeExt Extent of the shape.
        * @param params Architecture parameters.
        * @return Architecture variant.
        */
-      template<std::size_t sRank>
+      template<std::size_t shapeExt>
       [[nodiscard]] static SpstGpuDesc
-      makeArchVariant(const spst::gpu::Parameters<sRank>& params, std::size_t shapeRank)
+      makeArchVariant(const spst::gpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
         SpstGpuDesc desc{};
         desc.memoryLayout = SpstMemoryLayout{shapeRank, params.memoryLayout};
@@ -1320,23 +1333,23 @@ namespace afft::detail
 
       /**
        * @brief Make architecture variant.
-       * @tparam sRank Shape rank.
+       * @tparam shapeExt Extent of the shape.
        * @param params Architecture parameters.
        * @return Architecture variant.
        */
-      template<std::size_t sRank>
+      template<std::size_t shapeExt>
       [[nodiscard]] static SpmtGpuDesc
-      makeArchVariant(const spmt::gpu::Parameters<sRank>& params, std::size_t shapeRank)
+      makeArchVariant(const spmt::gpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
         const std::size_t targetCount = params.devices.size();
 
         SpmtGpuDesc desc{};
         desc.memoryLayout = SpmtMemoryLayout{shapeRank, params.devices.size(), params.memoryLayout};
 #     if AFFT_GPU_BACKEND_IS(CUDA)
-        devices.resize(targetCount);
+        desc.devices.resize(targetCount);
         std::copy(params.devices.begin(), params.devices.end(), desc.devices);
 #     elif AFFT_GPU_BACKEND_IS(HIP)
-        devices.resize(targetCount);
+        desc.devices.resize(targetCount);
         std::copy(params.devices.begin(), params.devices.end(), desc.devices);
 #     endif
 
@@ -1345,13 +1358,13 @@ namespace afft::detail
 
       /**
        * @brief Make architecture variant.
-       * @tparam sRank Shape rank.
+       * @tparam shapeExt Extent of the shape.
        * @param params Architecture parameters.
        * @return Architecture variant.
        */
-      template<std::size_t sRank>
+      template<std::size_t shapeExt>
       [[nodiscard]] static MpstCpuDesc
-      makeArchVariant(const mpst::cpu::Parameters<sRank>& params, std::size_t shapeRank)
+      makeArchVariant(const mpst::cpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
         MpstCpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};
@@ -1366,13 +1379,13 @@ namespace afft::detail
 
       /**
        * @brief Make architecture variant.
-       * @tparam sRank Shape rank.
+       * @tparam shapeExt Extent of the shape.
        * @param params Architecture parameters.
        * @return Architecture variant.
        */
-      template<std::size_t sRank>
+      template<std::size_t shapeExt>
       [[nodiscard]] static MpstGpuDesc
-      makeArchVariant(const mpst::gpu::Parameters<sRank>& params, std::size_t shapeRank)
+      makeArchVariant(const mpst::gpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
         MpstGpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};

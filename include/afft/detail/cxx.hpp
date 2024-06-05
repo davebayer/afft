@@ -383,14 +383,6 @@ inline namespace cxx23
 //       __builtin_unreachable();
 // #   endif
   }
-
-#ifdef AFFT_CXX_HAS_EXPECTED
-  using std::unexpected;
-  using std::expected;
-#else
-  using tl::expected;
-  using tl::unexpected;
-#endif
 } // inline namespace cxx23
 } // namespace afft::detail::cxx
 

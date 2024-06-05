@@ -207,7 +207,7 @@ namespace afft::detail
         cufft::init();
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(FFTW3)
-        fftw::init();
+        fftw3::init();
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
         hipfft::init();
@@ -238,7 +238,7 @@ namespace afft::detail
         cufft::finalize();
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(FFTW3)
-        fftw::finalize();
+        fftw3::finalize();
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
         hipfft::finalize();

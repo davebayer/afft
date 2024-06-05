@@ -34,8 +34,8 @@
 namespace afft
 {
   /// @brief Named constant representing all axes (is empty view)
-  template<std::size_t tRank = dynamicRank>
-  inline constexpr View<std::size_t, tRank> allAxes{};
+  template<std::size_t transformExt = dynamicRank>
+  inline constexpr View<std::size_t, transformExt> allAxes{};
 
   /// @brief Namespace for discrete Fourier transform
   namespace dft
@@ -54,24 +54,24 @@ namespace afft
 
     /**
      * @brief DFT Parameters
-     * @tparam sRank Rank of the shape, dynamic by default
-     * @tparam tRank Rank of the transform, dynamic by default
+     * @tparam shapeExt Extent of the shape, dynamic by default
+     * @tparam transformExt Extent of the transform, dynamic by default
      */
-    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank>
+    template<std::size_t shapeExt = dynamicExtent, std::size_t transformExt = dynamicExtent>
     struct Parameters
     {
-      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
+      static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape extent must be greater than 0");
+      static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform extent must be greater than 0");
+      static_assert((shapeExt == dynamicExtent) || (transformExt == dynamicExtent) || (transformExt <= shapeExt),
                     "transform rank must be less than or equal to shape rank");
 
-      Direction                direction{};                        ///< direction of the transform
-      PrecisionTriad           precision{};                        ///< precision triad
-      View<std::size_t, sRank> shape{};                            ///< shape of the transform
-      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
-      Normalization            normalization{Normalization::none}; ///< normalization
-      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
-      Type                     type{Type::complexToComplex};       ///< type of the transform
+      Direction                       direction{};                        ///< direction of the transform
+      PrecisionTriad                  precision{};                        ///< precision triad
+      View<std::size_t, shapeExt>     shape{};                            ///< shape of the transform
+      View<std::size_t, transformExt> axes{allAxes<transformExt>};        ///< axes of the transform
+      Normalization                   normalization{Normalization::none}; ///< normalization
+      Placement                       placement{Placement::outOfPlace};   ///< placement of the transform
+      Type                            type{Type::complexToComplex};       ///< type of the transform
     };
   } // namespace dft
 
@@ -86,24 +86,24 @@ namespace afft
 
     /**
      * @brief DHT Parameters
-     * @tparam sRank Rank of the shape, dynamic by default
-     * @tparam tRank Rank of the transform, dynamic by default
+     * @tparam shapeExt Extent of the shape, dynamic by default
+     * @tparam transformExt Extent of the transform, dynamic by default
      */
-    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank>
+    template<std::size_t shapeExt = dynamicExtent, std::size_t transformExt = dynamicExtent>
     struct Parameters
     {
-      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
+      static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape rank must be greater than 0");
+      static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform rank must be greater than 0");
+      static_assert((shapeExt == dynamicExtent) || (transformExt == dynamicExtent) || (transformExt <= shapeExt),
                     "transform rank must be less than or equal to shape rank");
 
-      Direction                direction{};                        ///< direction of the transform
-      PrecisionTriad           precision{};                        ///< precision triad
-      View<std::size_t, sRank> shape{};                            ///< shape of the transform
-      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
-      Normalization            normalization{Normalization::none}; ///< normalization
-      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
-      Type                     type{Type::separable};              ///< type of the transform
+      Direction                       direction{};                        ///< direction of the transform
+      PrecisionTriad                  precision{};                        ///< precision triad
+      View<std::size_t, shapeExt>     shape{};                            ///< shape of the transform
+      View<std::size_t, transformExt> axes{allAxes<transformExt>};        ///< axes of the transform
+      Normalization                   normalization{Normalization::none}; ///< normalization
+      Placement                       placement{Placement::outOfPlace};   ///< placement of the transform
+      Type                            type{Type::separable};              ///< type of the transform
     };
   } // namespace dht
 
@@ -129,27 +129,29 @@ namespace afft
 
     /**
      * @brief DTT Parameters
-     * @tparam sRank Rank of the shape, dynamic by default
-     * @tparam tRank Rank of the transform, dynamic by default
-     * @tparam ttRank Rank of the types, dynamic by default
+     * @tparam shapeExt Extent of the shape, dynamic by default
+     * @tparam transformExt Extent of the transform, dynamic by default
+     * @tparam ttExt Extent of the types, dynamic by default
      */
-    template<std::size_t sRank = dynamicRank, std::size_t tRank = dynamicRank, std::size_t ttRank = dynamicRank>
+    template<std::size_t shapeExt     = dynamicExtent,
+             std::size_t transformExt = dynamicExtent,
+             std::size_t ttExt        = dynamicExtent>
     struct Parameters
     {
-      static_assert((sRank == dynamicRank) || (sRank > 0), "shape rank must be greater than 0");
-      static_assert((tRank == dynamicRank) || (tRank > 0), "transform rank must be greater than 0");
-      static_assert((sRank == dynamicRank) || (tRank == dynamicRank) || (tRank <= sRank),
+      static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape rank must be greater than 0");
+      static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform rank must be greater than 0");
+      static_assert((shapeExt == dynamicExtent) || (transformExt == dynamicExtent) || (transformExt <= shapeExt),
                     "transform rank must be less than or equal to shape rank");
-      static_assert((ttRank == dynamicRank) || (ttRank == 1) || (tRank == dynamicRank || ttRank == tRank),
+      static_assert((ttExt == dynamicExtent) || (ttExt == 1) || (transformExt == dynamicExtent || ttExt == transformExt),
                     "types rank must be 1 or equal to the number of axes");
 
-      Direction                direction{};                        ///< direction of the transform
-      PrecisionTriad           precision{};                        ///< precision triad
-      View<std::size_t, sRank> shape{};                            ///< shape of the transform
-      View<std::size_t, tRank> axes{allAxes<tRank>};               ///< axes of the transform
-      Normalization            normalization{Normalization::none}; ///< normalization
-      Placement                placement{Placement::outOfPlace};   ///< placement of the transform
-      View<Type, ttRank>       types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
+      Direction                       direction{};                        ///< direction of the transform
+      PrecisionTriad                  precision{};                        ///< precision triad
+      View<std::size_t, shapeExt>     shape{};                            ///< shape of the transform
+      View<std::size_t, transformExt> axes{allAxes<transformExt>};        ///< axes of the transform
+      Normalization                   normalization{Normalization::none}; ///< normalization
+      Placement                       placement{Placement::outOfPlace};   ///< placement of the transform
+      View<Type, ttExt>               types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
     };
   } // namespace dtt
 } // namespace afft

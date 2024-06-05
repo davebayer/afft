@@ -87,16 +87,16 @@ namespace afft::detail
   struct IsTransformParameters : std::false_type {};
 
   /// @brief Specialization for dft transform parameters.
-  template<std::size_t sRank, std::size_t tRank>
-  struct IsTransformParameters<afft::dft::Parameters<sRank, tRank>> : std::true_type {};
+  template<std::size_t shapeExt, std::size_t transformExt>
+  struct IsTransformParameters<afft::dft::Parameters<shapeExt, transformExt>> : std::true_type {};
 
   /// @brief Specialization for dht transform parameters.
-  template<std::size_t sRank, std::size_t tRank>
-  struct IsTransformParameters<afft::dht::Parameters<sRank, tRank>> : std::true_type {};
+  template<std::size_t shapeExt, std::size_t transformExt>
+  struct IsTransformParameters<afft::dht::Parameters<shapeExt, transformExt>> : std::true_type {};
 
   /// @brief Specialization for dtt transform parameters.
-  template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
-  struct IsTransformParameters<afft::dtt::Parameters<sRank, tRank, ttRank>> : std::true_type {};
+  template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
+  struct IsTransformParameters<afft::dtt::Parameters<shapeExt, transformExt, ttExt>> : std::true_type {};
 
   /**
    * @brief TransformParameters template ranks.
@@ -106,28 +106,28 @@ namespace afft::detail
   struct TransformParametersTemplateRanks;
 
   /// @brief Specialization for dft transform parameters.
-  template<std::size_t sRank, std::size_t tRank>
-  struct TransformParametersTemplateRanks<afft::dft::Parameters<sRank, tRank>>
+  template<std::size_t shapeExt, std::size_t transformExt>
+  struct TransformParametersTemplateRanks<afft::dft::Parameters<shapeExt, transformExt>>
   {
-    static constexpr std::size_t shape     = sRank;
-    static constexpr std::size_t transform = tRank;
+    static constexpr std::size_t shape     = shapeExt;
+    static constexpr std::size_t transform = transformExt;
   };
   
   /// @brief Specialization for dht transform parameters.
-  template<std::size_t sRank, std::size_t tRank>
-  struct TransformParametersTemplateRanks<afft::dht::Parameters<sRank, tRank>>
+  template<std::size_t shapeExt, std::size_t transformExt>
+  struct TransformParametersTemplateRanks<afft::dht::Parameters<shapeExt, transformExt>>
   {
-    static constexpr std::size_t shape     = sRank;
-    static constexpr std::size_t transform = tRank;
+    static constexpr std::size_t shape     = shapeExt;
+    static constexpr std::size_t transform = transformExt;
   };
 
   /// @brief Specialization for dtt transform parameters.
-  template<std::size_t sRank, std::size_t tRank, std::size_t ttRank>
-  struct TransformParametersTemplateRanks<afft::dtt::Parameters<sRank, tRank, ttRank>>
+  template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
+  struct TransformParametersTemplateRanks<afft::dtt::Parameters<shapeExt, transformExt, ttExt>>
   {
-    static constexpr std::size_t shape         = sRank;
-    static constexpr std::size_t transform     = tRank;
-    static constexpr std::size_t transformType = ttRank;
+    static constexpr std::size_t shape         = shapeExt;
+    static constexpr std::size_t transform     = transformExt;
+    static constexpr std::size_t transformType = ttExt;
   };
 
   /**
@@ -181,24 +181,24 @@ namespace afft::detail
   struct IsArchParameters : std::false_type {};
 
   /// @brief Specialization for cpu target parameters.
-  template<std::size_t sRank>
-  struct IsArchParameters<afft::spst::cpu::Parameters<sRank>> : std::true_type {};
+  template<std::size_t shapeExt>
+  struct IsArchParameters<afft::spst::cpu::Parameters<shapeExt>> : std::true_type {};
 
   /// @brief Specialization for gpu target parameters.
-  template<std::size_t sRank>
-  struct IsArchParameters<afft::spst::gpu::Parameters<sRank>> : std::true_type {};
+  template<std::size_t shapeExt>
+  struct IsArchParameters<afft::spst::gpu::Parameters<shapeExt>> : std::true_type {};
 
   /// @brief Specialization for distributed spmt gpu target parameters.
-  template<std::size_t sRank>
-  struct IsArchParameters<afft::spmt::gpu::Parameters<sRank>> : std::true_type {};
+  template<std::size_t shapeExt>
+  struct IsArchParameters<afft::spmt::gpu::Parameters<shapeExt>> : std::true_type {};
 
   /// @brief Specialization for distributed mpst cpu target parameters.
-  template<std::size_t sRank>
-  struct IsArchParameters<afft::mpst::cpu::Parameters<sRank>> : std::true_type {};
+  template<std::size_t shapeExt>
+  struct IsArchParameters<afft::mpst::cpu::Parameters<shapeExt>> : std::true_type {};
 
   /// @brief Specialization for distributed cpu target parameters.
-  template<std::size_t sRank>
-  struct IsArchParameters<afft::mpst::gpu::Parameters<sRank>> : std::true_type {};
+  template<std::size_t shapeExt>
+  struct IsArchParameters<afft::mpst::gpu::Parameters<shapeExt>> : std::true_type {};
 
   /**
    * @brief ArchParameters template ranks.
@@ -208,38 +208,38 @@ namespace afft::detail
   struct ArchParametersTemplateRanks;
 
   /// @brief Specialization for spst cpu target parameters.
-  template<std::size_t sRank>
-  struct ArchParametersTemplateRanks<afft::spst::cpu::Parameters<sRank>>
+  template<std::size_t shapeExt>
+  struct ArchParametersTemplateRanks<afft::spst::cpu::Parameters<shapeExt>>
   {
-    static constexpr std::size_t shape = sRank;
+    static constexpr std::size_t shape = shapeExt;
   };
 
   /// @brief Specialization for spst gpu target parameters.
-  template<std::size_t sRank>
-  struct ArchParametersTemplateRanks<afft::spst::gpu::Parameters<sRank>>
+  template<std::size_t shapeExt>
+  struct ArchParametersTemplateRanks<afft::spst::gpu::Parameters<shapeExt>>
   {
-    static constexpr std::size_t shape = sRank;
+    static constexpr std::size_t shape = shapeExt;
   };
 
   /// @brief Specialization for distributed spmt gpu target parameters.
-  template<std::size_t sRank>
-  struct ArchParametersTemplateRanks<afft::spmt::gpu::Parameters<sRank>>
+  template<std::size_t shapeExt>
+  struct ArchParametersTemplateRanks<afft::spmt::gpu::Parameters<shapeExt>>
   {
-    static constexpr std::size_t shape = sRank;
+    static constexpr std::size_t shape = shapeExt;
   };
 
   /// @brief Specialization for distributed mpst cpu target parameters.
-  template<std::size_t sRank>
-  struct ArchParametersTemplateRanks<afft::mpst::cpu::Parameters<sRank>>
+  template<std::size_t shapeExt>
+  struct ArchParametersTemplateRanks<afft::mpst::cpu::Parameters<shapeExt>>
   {
-    static constexpr std::size_t shape = sRank;
+    static constexpr std::size_t shape = shapeExt;
   };
 
   /// @brief Specialization for distributed mpst gpu target parameters.
-  template<std::size_t sRank>
-  struct ArchParametersTemplateRanks<afft::mpst::gpu::Parameters<sRank>>
+  template<std::size_t shapeExt>
+  struct ArchParametersTemplateRanks<afft::mpst::gpu::Parameters<shapeExt>>
   {
-    static constexpr std::size_t shape = sRank;
+    static constexpr std::size_t shape = shapeExt;
   };
 
   /**
