@@ -22,39 +22,61 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_VKFFT_ERROR_HPP
-#define AFFT_DETAIL_VKFFT_ERROR_HPP
+#ifndef AFFT_DETAIL_PLAN_HPP
+#define AFFT_DETAIL_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "error.hpp"
+#include "../../Plan.hpp"
 
 namespace afft::detail::vkfft
 {
-  /**
-   * @brief Check if VkFFT result is ok.
-   * @param result VkFFT result.
-   * @return True if result is VKFFT_SUCCESS, false otherwise.
-   */
-  [[nodiscard]] inline constexpr bool isOk(VkFFTResult result)
+  /// @brief The vkfft plan implementation base class.
+  class Plan : public afft::Plan
   {
-    return (result == VKFFT_SUCCESS);
-  }
+    private:
+      /// @brief Alias for the parent class.
+      using Parent = afft::Plan;
 
-  /**
-   * @brief Check if VkFFT result is valid.
-   * @param result VkFFT result.
-   * @throw BackendError if result is not valid.
-   */
-  inline void checkError(VkFFTResult result)
-  {
-    if (!isOk(result))
-    {
-      throw BackendError{Backend::vkfft, getVkFFTErrorString(result)};
-    }
-  }
+    public:
+      /// @brief Inherit constructor.
+      using Parent::Parent;
+
+      /// @brief Inherit assignment operator.
+      using Parent::operator=;
+
+      /// @brief Default destructor.
+      virtual ~Plan() = default;
+
+      /**
+       * @brief Get the vkfft backend.
+       * @return The vkfft backend.
+       */
+      [[nodiscard]] Backend getBackend() const noexcept override
+      {
+        return Backend::vkfft;
+      }
+    protected:
+      /**
+       * @brief Get the vkfft direction from the plan description.
+       * @return The vkfft direction.
+       */
+      [[nodiscard]] auto getDirection() const noexcept
+      {
+        switch (mDesc.getDirection())
+        {
+        case Direction::forward:
+          return -1;
+        case Direction::backward:
+          return 1;
+        default:
+          cxx::unreachable();
+        }
+      }
+  };
 } // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_VKFFT_ERROR_HPP */
+#endif /* AFFT_DETAIL_PLAN_HPP */

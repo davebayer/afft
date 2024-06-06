@@ -22,39 +22,45 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_VKFFT_ERROR_HPP
-#define AFFT_DETAIL_VKFFT_ERROR_HPP
+#ifndef AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP
+#define AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "Plan.hpp"
+#include "spst.hpp"
 
 namespace afft::detail::vkfft
 {
   /**
-   * @brief Check if VkFFT result is ok.
-   * @param result VkFFT result.
-   * @return True if result is VKFFT_SUCCESS, false otherwise.
+   * @brief Create a plan implementation.
+   * @tparam BackendParamsT Backend parameters type.
+   * @param desc Plan description.
+   * @param backendParams Backend parameters.
+   * @return Plan implementation.
    */
-  [[nodiscard]] inline constexpr bool isOk(VkFFTResult result)
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<Plan>
+  makePlan(const Desc& desc, const BackendParamsT& backendParams)
   {
-    return (result == VKFFT_SUCCESS);
-  }
-
-  /**
-   * @brief Check if VkFFT result is valid.
-   * @param result VkFFT result.
-   * @throw BackendError if result is not valid.
-   */
-  inline void checkError(VkFFTResult result)
-  {
-    if (!isOk(result))
+    if constexpr (backendParams.target == Target::gpu)
     {
-      throw BackendError{Backend::vkfft, getVkFFTErrorString(result)};
+      if constexpr (backendParams.distribution == Distribution::spst)
+      {
+        return spst::gpu::makePlan(desc);
+      }
+      else
+      {
+        throw BackendError{Backend::pocketfft, "only spst distribution is supported"};
+      }
+    }
+    else
+    {
+      throw BackendError{Backend::pocketfft, "only gpu target is supported"};
     }
   }
 } // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_VKFFT_ERROR_HPP */
+#endif // AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP

@@ -71,4 +71,15 @@ namespace afft::detail
   };
 } // namespace afft::detail
 
+  /// @brief Specialization of std::hash for afft::detail::Desc.
+  template<>
+  struct std::hash<afft::detail::Desc>
+  {
+    [[nodiscard]] constexpr std::size_t operator()(const afft::detail::Desc&) const noexcept
+    {
+      return 0;
+      // return std::hash<TransformDesc>{}(desc) ^ std::hash<ArchDesc>{}(desc);
+    }
+  };
+
 #endif /* AFFT_DETAIL_DESC_HPP */

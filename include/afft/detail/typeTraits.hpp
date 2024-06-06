@@ -290,27 +290,12 @@ namespace afft::detail
    * @tparam T The type.
    */
   template<typename T>
-  struct IsBackendParameters : std::false_type {};
-
-  /// @brief Specialization for spst cpu BackendParameters.
-  template<>
-  struct IsBackendParameters<afft::spst::cpu::BackendParameters> : std::true_type {};
-
-  /// @brief Specialization for spst gpu BackendParameters.
-  template<>
-  struct IsBackendParameters<afft::spst::gpu::BackendParameters> : std::true_type {};
-
-  /// @brief Specialization for spmt gpu BackendParameters.
-  template<>
-  struct IsBackendParameters<afft::spmt::gpu::BackendParameters> : std::true_type {};
-
-  /// @brief Specialization for mpst cpu BackendParameters.
-  template<>
-  struct IsBackendParameters<afft::mpst::cpu::BackendParameters> : std::true_type {};
-
-  /// @brief Specialization for mpst gpu BackendParameters.
-  template<>
-  struct IsBackendParameters<afft::mpst::gpu::BackendParameters> : std::true_type {};
+  struct IsBackendParameters : std::integral_constant<bool,
+                                 std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::BackendParameters> ||
+                                 std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::BackendParameters> ||
+                                 std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::BackendParameters> ||
+                                 std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::BackendParameters> ||
+                                 std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::BackendParameters>> {};
 
   /**
    * @brief ExecutionParameters type for given architecture.
@@ -360,27 +345,12 @@ namespace afft::detail
    * @tparam T The type.
    */
   template<typename T>
-  struct IsExecutionParameters : std::false_type {};
-
-  /// @brief Specialization for spst cpu ExecutionParameters.
-  template<>
-  struct IsExecutionParameters<afft::spst::cpu::ExecutionParameters> : std::true_type {};
-
-  /// @brief Specialization for spst gpu ExecutionParameters.
-  template<>
-  struct IsExecutionParameters<afft::spst::gpu::ExecutionParameters> : std::true_type {};
-
-  /// @brief Specialization for spmt gpu ExecutionParameters.
-  template<>
-  struct IsExecutionParameters<afft::spmt::gpu::ExecutionParameters> : std::true_type {};
-
-  /// @brief Specialization for mpst cpu ExecutionParameters.
-  template<>
-  struct IsExecutionParameters<afft::mpst::cpu::ExecutionParameters> : std::true_type {};
-
-  /// @brief Specialization for mpst gpu ExecutionParameters.
-  template<>
-  struct IsExecutionParameters<afft::mpst::gpu::ExecutionParameters> : std::true_type {};
+  struct IsExecutionParameters : std::integral_constant<bool,
+                                   std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::ExecutionParameters> || 
+                                   std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::ExecutionParameters> || 
+                                   std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::ExecutionParameters> || 
+                                   std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::ExecutionParameters> || 
+                                   std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::ExecutionParameters>> {};
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */
