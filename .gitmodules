@@ -8,3 +8,6 @@
 	path = 3rdparty/span
 	url = https://github.com/tcbrindle/span.git
 	
+[submodule "3rdparty/heffte"]
+	path = 3rdparty/heffte
+	url = https://github.com/af-ayala/heffte.git
