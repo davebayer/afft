@@ -48,16 +48,18 @@
 #define AFFT_BACKEND_CUFFT      (1 << 1)
 /// @brief FFTW3 backend id
 #define AFFT_BACKEND_FFTW3      (1 << 2)
+/// @brief HeFFTe backend id
+#define AFFT_BACKEND_HEFFTE     (1 << 3)
 /// @brief hipFFT backend id
-#define AFFT_BACKEND_HIPFFT     (1 << 3)
+#define AFFT_BACKEND_HIPFFT     (1 << 4)
 /// @brief MKL backend id
-#define AFFT_BACKEND_MKL        (1 << 4)
+#define AFFT_BACKEND_MKL        (1 << 5)
 /// @brief PocketFFT backend id
-#define AFFT_BACKEND_POCKETFFT  (1 << 5)
+#define AFFT_BACKEND_POCKETFFT  (1 << 6)
 /// @brief rocFFT backend id
-#define AFFT_BACKEND_ROCFFT     (1 << 6)
+#define AFFT_BACKEND_ROCFFT     (1 << 7)
 /// @brief VkFFT backend id
-#define AFFT_BACKEND_VKFFT      (1 << 7)
+#define AFFT_BACKEND_VKFFT      (1 << 8)
 
 /**
  * @brief Is backend enabled?

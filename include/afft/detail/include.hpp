@@ -124,6 +124,11 @@ import std;
 # endif
 #endif
 
+// Include HeFFTe header
+#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+# include <heffte.h>
+#endif
+
 // Include hipFFT header
 #if AFFT_BACKEND_IS_ENABLED(HIPFFT)
 # if AFFT_GPU_BACKEND_IS(HIP)
@@ -163,6 +168,9 @@ import std;
     // push the current value of VKFFT_MAX_FFT_DIMENSIONS
 #   pragma push_macro("VKFFT_MAX_FFT_DIMENSIONS")
 #   undef VKFFT_MAX_FFT_DIMENSIONS
+    // push the current value of VKFFT_USE_DOUBLEDOUBLE_FP128
+#   pragma push_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
+#   undef VKFFT_USE_DOUBLEDOUBLE_FP128
     // define VKFFT_BACKEND based on the current GPU backend
 #   if AFFT_GPU_BACKEND_IS(CUDA)
 #     define VKFFT_BACKEND 1
@@ -178,12 +186,18 @@ import std;
 #   endif
     // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
 #   define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
+    // define VKFFT_USE_DOUBLEDOUBLE_FP128 if double-double precision is enabled
+#   ifdef AFFT_VKFFT_HAS_DOUBLE_DOUBLE
+#     define VKFFT_USE_DOUBLEDOUBLE_FP128
+#   endif
     // include the vkFFT header
 #   include <vkFFT.h>
     // restore the original value of VKFFT_BACKEND
 #   pragma pop_macro("VKFFT_BACKEND")
     // restore the original value of VKFFT_MAX_FFT_DIMENSIONS
 #   pragma pop_macro("VKFFT_MAX_FFT_DIMENSIONS")
+    // restore the original value of VKFFT_USE_DOUBLEDOUBLE_FP128
+#   pragma pop_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
 # endif
 #endif
 
