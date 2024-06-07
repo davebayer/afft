@@ -290,12 +290,12 @@ namespace afft::detail
    * @tparam T The type.
    */
   template<typename T>
-  struct IsBackendParameters : std::integral_constant<bool,
-                                 std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::BackendParameters> ||
-                                 std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::BackendParameters> ||
-                                 std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::BackendParameters> ||
-                                 std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::BackendParameters> ||
-                                 std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::BackendParameters>> {};
+  struct IsBackendParameters
+    : std::bool_constant<std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::BackendParameters> ||
+                         std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::BackendParameters> ||
+                         std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::BackendParameters> ||
+                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::BackendParameters> ||
+                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::BackendParameters>> {};
 
   /**
    * @brief ExecutionParameters type for given architecture.
@@ -345,12 +345,12 @@ namespace afft::detail
    * @tparam T The type.
    */
   template<typename T>
-  struct IsExecutionParameters : std::integral_constant<bool,
-                                   std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::ExecutionParameters> || 
-                                   std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::ExecutionParameters> || 
-                                   std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::ExecutionParameters> || 
-                                   std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::ExecutionParameters> || 
-                                   std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::ExecutionParameters>> {};
+  struct IsExecutionParameters
+    : std::bool_constant<std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::ExecutionParameters> || 
+                         std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::ExecutionParameters> || 
+                         std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::ExecutionParameters> || 
+                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::ExecutionParameters> || 
+                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::ExecutionParameters>> {};
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

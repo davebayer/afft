@@ -45,6 +45,9 @@
 #if AFFT_BACKEND_IS_ENABLED(FFTW3)
 # include "fftw3/init.hpp"
 #endif
+#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+# include "heffte/init.hpp"
+#endif
 #if AFFT_BACKEND_IS_ENABLED(HIPFFT)
 # include "hipfft/init.hpp"
 #endif
@@ -209,6 +212,9 @@ namespace afft::detail
 #     if AFFT_BACKEND_IS_ENABLED(FFTW3)
         fftw3::init();
 #     endif
+#     if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+        heffte::init();
+#     endif
 #     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
         hipfft::init();
 #     endif
@@ -239,6 +245,9 @@ namespace afft::detail
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(FFTW3)
         fftw3::finalize();
+#     endif
+#     if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+        heffte::finalize();
 #     endif
 #     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
         hipfft::finalize();

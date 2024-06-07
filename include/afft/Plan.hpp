@@ -38,6 +38,8 @@ namespace afft
 {
   class Plan : public std::enable_shared_from_this<Plan>
   {
+    friend class PlanCache;
+
     private:
       /// @brief Default execution parameters helper.
       struct DefaultExecParams
@@ -159,6 +161,15 @@ namespace afft
        * @return Backend
        */
       [[nodiscard]] virtual Backend getBackend() const noexcept = 0;
+
+      /**
+       * @brief Get workspace size.
+       * @return Workspace size.
+       */
+      [[nodiscard]] virtual View<std::size_t> getWorkspaceSize() const noexcept
+      {
+        return {};
+      }
 
       /**
        * @brief Execute the plan.
@@ -636,6 +647,12 @@ namespace afft
       Plan(const detail::Desc& desc)
       : mDesc{desc}
       {}
+
+      /// @brief Get the plan description.
+      [[nodiscard]] const Desc& getDesc() const noexcept
+      {
+        return mDesc;
+      }
 
       /**
        * @brief Execute the plan backend implementation.

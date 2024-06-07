@@ -43,6 +43,12 @@
 #if AFFT_BACKEND_IS_ENABLED(FFTW3)
 # include "fftw3/makePlan.hpp"
 #endif
+#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+# include "heffte/makePlan.hpp"
+#endif
+#if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+# include "hipfft/makePlan.hpp"
+#endif
 #if AFFT_BACKEND_IS_ENABLED(MKL)
 # include "mkl/makePlan.hpp"
 #endif
@@ -173,10 +179,10 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<Plan>
-  makePlan(Backend                                    backend,
-           [[maybe_unused]] const Desc&               desc,
+  makePlan(Backend                                backend,
+           [[maybe_unused]] const Desc&           desc,
            [[maybe_unused]] const BackendParamsT& backendParams,
-           std::string*                               feedbackMessage)
+           std::string*                           feedbackMessage)
   {
     static_assert(isBackendParameters<BackendParamsT>, "Invalid backend parameters type");
 
@@ -213,6 +219,16 @@ namespace afft::detail
 #       if AFFT_BACKEND_IS_ENABLED(FFTW3)
         case Backend::fftw3:
           plan = fftw3::makePlan(desc, backendParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+        case Backend::heffte:
+          plan = heffte::makePlan(desc, backendParams);
+          break;
+#       endif
+#       if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+        case Backend::hipfft:
+          plan = hipfft::makePlan(desc, backendParams);
           break;
 #       endif
 #       if AFFT_BACKEND_IS_ENABLED(MKL)

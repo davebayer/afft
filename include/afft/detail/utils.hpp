@@ -57,7 +57,7 @@ namespace afft::detail
   template<typename T, typename... Args>
   [[nodiscard]] constexpr std::array<T, sizeof...(Args)> makeArray(Args&&... args)
   {
-    static_assert(std::conjunction_v<std::is_convertible_v<Args, T>...>,
+    static_assert(std::conjunction_v<std::is_convertible<Args, T>...>,
                   "Arguments must be convertible to the array type");
 
     return std::array<T, sizeof...(Args)>{std::forward<Args>(args)...};

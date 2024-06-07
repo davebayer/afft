@@ -84,6 +84,9 @@ namespace afft::detail::pocketfft::spst::cpu
         });
       }
 
+      /// @brief Default destructor
+      ~Plan() = default;
+
       /// @brief Inherit assignment operator
       using Parent::operator=;
 

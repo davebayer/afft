@@ -129,10 +129,10 @@ namespace cpu
 
 namespace mpst::cpu
 {
-  /// @brief Backend mask for mpi cpu transform
+  /// @brief Backend mask for mpst cpu transform
   inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl};
 
-  /// @brief Default backend initialization order for mpi cpu transform
+  /// @brief Default backend initialization order for mpst cpu transform
   inline constexpr std::array defaultBackendInitOrder
   {
     Backend::mkl,   // prefer mkl
@@ -140,7 +140,7 @@ namespace mpst::cpu
   };
 
   /**
-   * @brief Multi-process parameters for mpi cpu transform
+   * @brief Multi-process parameters for mpst cpu transform
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt = dynamicExtent>
@@ -149,7 +149,6 @@ namespace mpst::cpu
   {
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
-    static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
 
     MemoryLayout<shapeExt> memoryLayout{};                               ///< memory layout for cpu transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
@@ -159,15 +158,18 @@ namespace mpst::cpu
 # endif
     Alignment              alignment{afft::cpu::alignments::defaultNew}; ///< alignment for cpu memory allocation
     unsigned               threadLimit{1};                               ///< thread limit for cpu transform
+    bool                   useExternalWorkspace{false};                  ///< use external workspace
   }
 #endif
    ;
 
-  /// @brief Execution parameters for mpi cpu transform
+  /// @brief Execution parameters for mpst cpu transform
   struct ExecutionParameters
   {
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
+
+    void* workspace{}; ///< workspace for mpst cpu transform
   };
 } // namespace mpst::cpu
 

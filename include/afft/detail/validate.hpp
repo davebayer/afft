@@ -363,6 +363,25 @@ namespace afft::detail
     }
   };
 
+  /// @brief Validator for the afft::heffte::Backend enum class.
+  template<>
+  struct Validator<afft::heffte::Backend>
+  {
+    constexpr bool operator()(afft::heffte::Backend backend) const noexcept
+    {
+      switch (backend)
+      {
+      case afft::heffte::Backend::cufft:
+      case afft::heffte::Backend::fftw3:
+      case afft::heffte::Backend::mkl:
+      case afft::heffte::Backend::rocfft:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
   /**
    * @brief Is the value valid?
    * @tparam T Type of the value.

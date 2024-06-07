@@ -33,7 +33,7 @@
 #include "detail/utils.hpp"
 
 namespace afft
-{
+{  
   /// @brief Exception base class for afft library.
   struct Exception : public std::exception
   {

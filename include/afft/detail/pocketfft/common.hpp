@@ -29,6 +29,8 @@
 # include "../include.hpp"
 #endif
 
+#include "../../exception.hpp"
+
 namespace afft::detail::pocketfft
 {
   // Check the types

@@ -41,6 +41,7 @@ AFFT_EXPORT namespace afft
     clfft,     ///< clFFT
     cufft,     ///< cuFFT
     fftw3,     ///< FFTW3
+    heffte,    ///< HeFFTe
     hipfft,    ///< hipFFT
     mkl,       ///< Intel MKL
     pocketfft, ///< PocketFFT
@@ -152,6 +153,64 @@ namespace fftw3
   };
 } // namespace fftw3
 
+namespace heffte
+{
+  enum class Backend : std::uint8_t
+  {
+    cufft,  ///< cuFFT backend
+    fftw3,  ///< FFTW3 backend
+    mkl,    ///< Intel MKL backend
+    rocfft, ///< rocFFT backend
+  };
+
+  struct Parameters
+  {
+    Backend backend{};         ///< Backend
+    bool    useReorder{true};  ///< Use reorder flag
+    bool    useAlltoAll{true}; ///< Use alltoall flag
+    bool    usePencils{true};  ///< Use pencils flag
+  };
+
+  inline constexpr Backend defaultBackend = Backend::fftw3;
+
+  [[nodiscard]] Parameters makeDefaultParameters(Backend heffteBackend = defaultBackend)
+  {
+    switch (heffteBackend)
+    {
+#   ifdef Heffte_ENABLE_CUDA
+    case Backend::cufft:
+    {
+      const auto options = ::heffte::default_options<::heffte::backend::cufft>();
+      return Parameters{Backend::cufft, options.use_reorder, options.use_alltoall, options.use_pencils};
+    }
+#   endif
+#   ifdef Heffte_ENABLE_FFTW
+    case Backend::fftw3:
+    {
+      const auto options = ::heffte::default_options<::heffte::backend::fftw>();
+      return Parameters{Backend::fftw3, options.use_reorder, options.use_alltoall, options.use_pencils};
+    }
+#   endif
+#   ifdef Heffte_ENABLE_MKL
+    case Backend::mkl:
+    {
+      const auto options = ::heffte::default_options<::heffte::backend::mkl>();
+      return Parameters{Backend::mkl, options.use_reorder, options.use_alltoall, options.use_pencils};
+    }
+#   endif
+#   ifdef Heffte_ENABLE_ROCM
+    case Backend::rocfft:
+    {
+      const auto options = ::heffte::default_options<::heffte::backend::rocfft>();
+      return Parameters{Backend::rocfft, options.use_reorder, options.use_alltoall, options.use_pencils};
+    }
+#   endif
+    default:
+      return Parameters{};
+    }
+  }
+} // namespace heffte
+
 inline namespace spst
 {
 namespace cpu
@@ -210,9 +269,6 @@ namespace cufft
   /// @brief cuFFT initialization parameters
   struct Parameters
   {
-    static constexpr Target       target{Target::gpu};              ///< target
-    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
-
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
     bool            usePatientJIT{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
     std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
@@ -229,6 +285,9 @@ namespace cufft
   /// @brief Backend selection parameters
   struct BackendParameters
   {
+    static constexpr Target       target{Target::gpu};              ///< target
+    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
+    
     SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< backend mask
     View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
@@ -278,9 +337,7 @@ namespace fftw3
 {
   using namespace afft::fftw3;
 
-  /**
-   * @brief Initialization parameters for the FFTW3 MPI plan.
-   */
+  /// @brief Initialization parameters for the FFTW3 MPI plan.
   struct Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
@@ -292,9 +349,15 @@ namespace fftw3
     std::size_t                   blockSize{};                        ///< Decomposition block size
   };
 } // namespace fftw3
+namespace heffte
+{
+  /// @brief HeFFTe initialization parameters
+  using afft::heffte::Parameters;
+} // namespace heffte
 
   /// @brief Supported backends
   inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
+                                                      Backend::heffte |
                                                       Backend::mkl;
 
   /// @brief Backend selection parameters
@@ -303,10 +366,11 @@ namespace fftw3
     static constexpr Target       target{Target::cpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
 
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
+    SelectStrategy     strategy{SelectStrategy::first};               ///< backend select strategy
+    BackendMask        mask{supportedBackendMask};                    ///< backend mask
+    View<Backend>      order{};                                       ///< backend initialization order, empty view means default order for the target
+    fftw3::Parameters  fftw3{};                                       ///< FFTW3 backend initialization parameters
+    heffte::Parameters heffte{afft::heffte::makeDefaultParameters()}; ///< HeFFTe backend initialization parameters
   };
 } // namespace cpu
 
@@ -320,9 +384,15 @@ namespace cufft
     bool usePatientJIT{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
 } // namespace cufft
+namespace heffte
+{
+  /// @brief HeFFTe initialization parameters
+  using afft::heffte::Parameters;
+} // namespace heffte
 
   /// @brief Supported backends
-  inline constexpr BackendMask supportedBackendMask = BackendMask::empty | Backend::cufft;
+  inline constexpr BackendMask supportedBackendMask = Backend::cufft |
+                                                      Backend::heffte;
 
   /// @brief Backend selection parameters
   struct BackendParameters
@@ -330,10 +400,11 @@ namespace cufft
     static constexpr Target       target{Target::gpu};              ///< target
     static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
 
-    SelectStrategy    strategy{SelectStrategy::first}; ///< backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< backend mask
-    View<Backend>     order{};                         ///< backend initialization order, empty view means default order for the target
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
+    SelectStrategy     strategy{SelectStrategy::first};               ///< backend select strategy
+    BackendMask        mask{supportedBackendMask};                    ///< backend mask
+    View<Backend>      order{};                                       ///< backend initialization order, empty view means default order for the target
+    cufft::Parameters  cufft{};                                       ///< cuFFT backend initialization parameters
+    heffte::Parameters heffte{afft::heffte::makeDefaultParameters()}; ///< HeFFTe backend initialization parameters
   };
 } // namespace gpu
 } // namespace mpst
@@ -363,6 +434,8 @@ namespace cufft
       return "cuFFT";
     case Backend::fftw3:
       return "FFTW3";
+    case Backend::heffte:
+      return "HeFFTe";
     case Backend::hipfft:
       return "hipFFT";
     case Backend::mkl:
@@ -374,7 +447,7 @@ namespace cufft
     case Backend::vkfft:
       return "VkFFT";
     default:
-      return "<Invalid backend>";
+      return "<invalid backend>";
     }
   }
 } // namespace afft
