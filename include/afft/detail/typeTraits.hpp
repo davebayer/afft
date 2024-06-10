@@ -30,9 +30,7 @@
 #endif
 
 #include "common.hpp"
-#include "../cpu.hpp"
-#include "../distrib.hpp"
-#include "../gpu.hpp"
+#include "../architecture.hpp"
 #include "../transform.hpp"
 #include "../type.hpp"
 

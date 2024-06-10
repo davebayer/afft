@@ -22,159 +22,46 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_CPU_HPP
-#define AFFT_CPU_HPP
+#ifndef AFFT_ALLOC_HPP
+#define AFFT_ALLOC_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.hpp"
 #endif
 
-#include "backend.hpp"
-#include "common.hpp"
-#include "distrib.hpp"
-#include "detail/cxx.hpp"
+#include "architecture.hpp"
 
-AFFT_EXPORT namespace afft
+namespace afft
 {
 namespace cpu
 {
-  /// @brief alignments for CPU memory allocation
-  namespace alignments
-  {
-    inline constexpr Alignment defaultNew{__STDCPP_DEFAULT_NEW_ALIGNMENT__}; ///< Default alignment for new operator
-    inline constexpr Alignment simd128{16};                                  ///< 128-bit SIMD alignment
-    inline constexpr Alignment simd256{32};                                  ///< 256-bit SIMD alignment
-    inline constexpr Alignment simd512{64};                                  ///< 512-bit SIMD alignment
-
-    inline constexpr Alignment sse{simd128};                                 ///< SSE alignment
-    inline constexpr Alignment sse2{simd128};                                ///< SSE2 alignment
-    inline constexpr Alignment sse3{simd128};                                ///< SSE3 alignment
-    inline constexpr Alignment sse4{simd128};                                ///< SSE4 alignment
-    inline constexpr Alignment sse4_1{simd128};                              ///< SSE4.1 alignment
-    inline constexpr Alignment sse4_2{simd128};                              ///< SSE4.2 alignment
-    inline constexpr Alignment avx{simd256};                                 ///< AVX alignment
-    inline constexpr Alignment avx2{simd256};                                ///< AVX2 alignment
-    inline constexpr Alignment avx512{simd512};                              ///< AVX-512 alignment
-    inline constexpr Alignment neon{simd128};                                ///< NEON alignment
-  } // namespace Alignment
-
+  /// @brief Default alignment for memory allocation
 #if defined(__AVX512F__)
-  inline constexpr auto defaultAlignment = alignments::avx512;
+  inline constexpr auto defaultAlignment = Alignment::avx512;
 #elif defined(__AVX2__)
-  inline constexpr auto defaultAlignment = alignments::avx2;
+  inline constexpr auto defaultAlignment = Alignment::avx2;
 #elif defined(__AVX__)
-  inline constexpr auto defaultAlignment = alignments::avx;
+  inline constexpr auto defaultAlignment = Alignment::avx;
 #elif defined(__SSE4_2__)
-  inline constexpr auto defaultAlignment = alignments::sse4_2;
+  inline constexpr auto defaultAlignment = Alignment::sse4_2;
 #elif defined(__SSE4_1__)
-  inline constexpr auto defaultAlignment = alignments::sse4_1;
+  inline constexpr auto defaultAlignment = Alignment::sse4_1;
 #elif defined(__SSE4__)
-  inline constexpr auto defaultAlignment = alignments::sse4;
+  inline constexpr auto defaultAlignment = Alignment::sse4;
 #elif defined(__SSE3__)
-  inline constexpr auto defaultAlignment = alignments::sse3;
+  inline constexpr auto defaultAlignment = Alignment::sse3;
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-  inline constexpr auto defaultAlignment = alignments::sse2;
+  inline constexpr auto defaultAlignment = Alignment::sse2;
 #elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-  inline constexpr auto defaultAlignment = alignments::sse;
+  inline constexpr auto defaultAlignment = Alignment::sse;
 #elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-  inline constexpr auto defaultAlignment = alignments::neon;
+  inline constexpr auto defaultAlignment = Alignment::neon;
+#elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
+  inline constexpr auto defaultAlignment = Alignment::sve;
 #else
-  inline constexpr auto defaultAlignment = alignments::defaultNew;
+  inline constexpr auto defaultAlignment = Alignment::defaultNew;
 #endif
-}
 
-inline namespace spst
-{
-namespace cpu
-{
-  /// @brief Backend mask for CPU transform
-  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl | Backend::pocketfft};
-
-  /// @brief Default backend initialization order
-  inline constexpr std::array defaultBackendInitOrder
-  {
-    Backend::mkl,       // prefer mkl
-    Backend::fftw3,     // if mkl cannot create plan, fallback fftw3
-    Backend::pocketfft, // fallback to pocketfft
-  };
-
-  inline constexpr unsigned allThreads{}; ///< All threads for CPU transform
-  
-  /**
-   * @brief Parameters for CPU transform
-   * @tparam shapeExt Extent of the shape
-   */
-  template<std::size_t shapeExt = dynamicExtent>
-  struct Parameters
-  {
-    static constexpr Target       target{Target::cpu};              ///< target
-    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
-    static constexpr bool         useExternalWorkspace{false};      ///< use external workspace, disabled for now as no backend supports it
-
-    MemoryLayout<shapeExt> memoryLayout{};                               ///< Memory layout for CPU transform
-    ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
-    bool                   preserveSource{true};                         ///< preserve source data
-    Alignment              alignment{afft::cpu::alignments::defaultNew}; ///< Alignment for CPU memory allocation, defaults to `alignments::defaultNew`
-    unsigned               threadLimit{allThreads};                      ///< Thread limit for CPU transform, 0 for no limit
-  };
-
-  /// @brief Execution parameters for CPU transform
-  struct ExecutionParameters
-  {
-    static constexpr Target       target{Target::cpu};              ///< target
-    static constexpr Distribution distribution{Distribution::spst}; ///< distribution
-  };
-} // namespace cpu
-} // inline namespace spst
-
-namespace mpst::cpu
-{
-  /// @brief Backend mask for mpst cpu transform
-  inline constexpr BackendMask backendMask{Backend::fftw3 | Backend::mkl};
-
-  /// @brief Default backend initialization order for mpst cpu transform
-  inline constexpr std::array defaultBackendInitOrder
-  {
-    Backend::mkl,   // prefer mkl
-    Backend::fftw3, // if mkl cannot create plan, fallback fftw3
-  };
-
-  /**
-   * @brief Multi-process parameters for mpst cpu transform
-   * @tparam shapeExt Extent of the shape
-   */
-  template<std::size_t shapeExt = dynamicExtent>
-  struct Parameters
-#if AFFT_MP_IS_ENABLED
-  {
-    static constexpr Target       target{Target::cpu};              ///< target
-    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
-
-    MemoryLayout<shapeExt> memoryLayout{};                               ///< memory layout for cpu transform
-    ComplexFormat          complexFormat{ComplexFormat::interleaved};    ///< complex number format
-    bool                   preserveSource{true};                         ///< preserve source data
-# if AFFT_MP_BACKEND_IS(MPI)
-    MPI_Comm               communicator{MPI_COMM_WORLD};                 ///< communicator for mpi cpu transform
-# endif
-    Alignment              alignment{afft::cpu::alignments::defaultNew}; ///< alignment for cpu memory allocation
-    unsigned               threadLimit{1};                               ///< thread limit for cpu transform
-    bool                   useExternalWorkspace{false};                  ///< use external workspace
-  }
-#endif
-   ;
-
-  /// @brief Execution parameters for mpst cpu transform
-  struct ExecutionParameters
-  {
-    static constexpr Target       target{Target::cpu};              ///< target
-    static constexpr Distribution distribution{Distribution::mpst}; ///< distribution
-
-    void* workspace{}; ///< workspace for mpst cpu transform
-  };
-} // namespace mpst::cpu
-
-namespace cpu
-{
   /**
    * @brief Aligned memory deleter
    * @tparam T Type of the memory
@@ -546,9 +433,149 @@ namespace cpu
       }
     protected:
     private:
-      Alignment mAlignment{alignments::defaultNew}; ///< Alignment for memory allocation
+      Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
 } // namespace cpu
+
+namespace gpu
+{
+  /**
+   * @class UnifiedMemoryAllocator
+   * @brief Allocator named concept implementation implementation for unified GPU memory to be used with std::vector and
+   *        others.
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class UnifiedMemoryAllocator
+#if AFFT_GPU_IS_ENABLED
+  {
+    public:
+      /// @brief Type of the memory
+      using value_type = T;
+
+#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+      /// @brief Default constructor
+      constexpr UnifiedMemoryAllocator() noexcept = default;
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+      /// @brief Default constructor
+      UnifiedMemoryAllocator() = delete;
+
+      /// @brief Constructor
+      constexpr UnifiedMemoryAllocator(cl_context context) noexcept
+      : mContext(context)
+      {}
+#   endif
+
+      /// @brief Copy constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator([[maybe_unused]] const UnifiedMemoryAllocator<U>& other) noexcept
+#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+      : mContext(other.context)
+#   endif
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator([[maybe_unused]] UnifiedMemoryAllocator<U>&& other) noexcept
+#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+      : mContext(std::move(other.context))
+#   endif
+      {}
+
+      /// @brief Destructor
+      ~UnifiedMemoryAllocator() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
+      {
+        if (this != &other)
+        {
+#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+          mContext = other.context;
+#       endif
+        }
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
+      {
+        if (this != &other)
+        {
+#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+          mContext = std::move(other.context);
+#       endif
+        }
+        return *this;
+      }
+
+      /**
+       * @brief Allocate memory
+       * @param n Number of elements
+       * @return Pointer to the allocated memory
+       */
+      [[nodiscard]] T* allocate(std::size_t n)
+      {
+        T* ptr{};
+
+        [[maybe_unused]] const std::size_t sizeInBytes = n * sizeof(T);
+
+#     if AFFT_GPU_BACKEND_IS(CUDA)
+        detail::cuda::checkError(cudaMallocManaged(&ptr, sizeInBytes));
+#     elif AFFT_GPU_BACKEND_IS(HIP)
+        detail::hip::checkError(hipMallocManaged(&ptr, sizeInBytes));
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+        ptr = static_cast<T*>(clSVMAlloc(mContext, CL_MEM_READ_WRITE, sizeInBytes, 0));
+#     endif
+
+        if (ptr == nullptr)
+        {
+          throw std::bad_alloc();
+        }
+
+        return ptr;
+      }
+
+      /**
+       * @brief Deallocate memory
+       * @param p Pointer to the memory
+       * @param n Number of elements
+       */
+      void deallocate([[maybe_unused]] T* p, std::size_t) noexcept
+      {
+#     if AFFT_GPU_BACKEND_IS(CUDA)
+        detail::cuda::checkError(cudaFree(p));
+#     elif AFFT_GPU_BACKEND_IS(HIP)
+        detail::hip::checkError(hipFree(p));
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+        clSVMFree(mContext, p);
+#     endif
+      }
+
+#   if AFFT_GPU_BACKEND_IS(OPENCL)
+      /// @brief Get the OpenCL context
+      [[nodiscard]] cl_context getContext() const noexcept
+      {
+        return mContext;
+      }
+#   endif
+    protected:
+    private:
+#   if AFFT_GPU_BACKEND_IS(CUDA)
+#   elif AFFT_GPU_BACKEND_IS(HIP)
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+      cl_context mContext; ///< OpenCL context
+#   endif  
+  }
+#endif
+   ;
+} // namespace gpu
 } // namespace afft
 
-#endif /* AFFT_CPU_HPP */
+#endif /* AFFT_ALLOC_HPP */

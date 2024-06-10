@@ -22,53 +22,40 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_COMMON_HPP
-#define AFFT_DETAIL_COMMON_HPP
+#ifndef AFFT_DETAIL_ARCHITECTURE_HPP
+#define AFFT_DETAIL_ARCHITECTURE_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "include.hpp"
 #endif
 
-#include "utils.hpp"
-#include "validate.hpp"
-#include "../common.hpp"
+#include "common.hpp"
 
 namespace afft::detail
 {
   /**
-   * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxDimCount.
-   * @tparam T The type of the elements.
+   * @brief Architecture parameters base class
+   * @tparam _target Target architecture
+   * @tparam _distrib Distribution
    */
-  template<typename T>
-  struct MaxDimArray : std::array<T, maxDimCount>
+  template<Target _target, Distribution _distrib>
+  struct ArchitectureParametersBase
   {
-    /**
-     * @brief Safely casts the elements of the array to a different type.
-     * @tparam U The type to cast to.
-     * @return A new MaxDimArray with the elements cast to the new type.
-     */
-    template<typename U>
-    [[nodiscard]] constexpr MaxDimArray<U> cast() const noexcept(std::is_same_v<T, U>)
-    {
-      static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Both types must be integral.");
+    static constexpr Target       target{_target};        ///< Target architecture
+    static constexpr Distribution distribution{_distrib}; ///< Distribution
+  };
 
-      if constexpr (std::is_same_v<T, U>)
-      {
-        return *this;
-      }
-      else
-      {
-        MaxDimArray<U> result{};
-
-        for (std::size_t i{}; i < this->size(); ++i)
-        {
-          result[i] = safeIntCast<U>((*this)[i]);
-        }
-
-        return result;
-      }
-    }
+  /**
+   * @brief Architecture execution parameters base class
+   * @tparam _target Target architecture
+   * @tparam _distrib Distribution
+   */
+  template<Target _target, Distribution _distrib>
+  struct ArchitectureExecutionParametersBase
+  {
+    static constexpr Target       target{_target};        ///< Target architecture
+    static constexpr Distribution distribution{_distrib}; ///< Distribution
   };
 } // namespace afft::detail
 
-#endif /* AFFT_DETAIL_COMMON_HPP */
+#endif /* AFFT_DETAIL_ARCHITECTURE_HPP */

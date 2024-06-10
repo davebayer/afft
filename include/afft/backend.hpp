@@ -30,6 +30,7 @@
 #endif
 
 #include "detail/backend.hpp"
+#include "detail/utils.hpp"
 
 #include "common.hpp"
 
@@ -357,9 +358,15 @@ inline namespace spst
       using afft::fftw3::spst::cpu::Parameters;
     } // namespace fftw3
 
+    /// @brief Supported backends for spst cpu architecture
     inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
                                                         Backend::mkl |
                                                         Backend::pocketfft;
+
+    /// @brief Default backend order for spst cpu architecture
+    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(Backend::mkl,
+                                                                                 Backend::fftw3,
+                                                                                 Backend::pocketfft);
 
     struct BackendParameters;
   } // namespace cpu
@@ -374,11 +381,32 @@ inline namespace spst
       using afft::cufft::spst::gpu::Parameters;
     } // namespace cufft
 
+    /// @brief Supported backends for spst gpu architecture
     inline constexpr BackendMask supportedBackendMask = Backend::clfft |
                                                         Backend::cufft |
                                                         Backend::hipfft |
                                                         Backend::rocfft |
                                                         Backend::vkfft;
+
+    /// @brief Default backend order for spst gpu architecture
+    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
+#   if AFFT_GPU_BACKEND_IS(CUDA)
+      Backend::cufft,  // prefer cufft
+      Backend::vkfft   // fallback to vkfft
+#   elif AFFT_GPU_BACKEND_IS(HIP)
+#     if defined(__HIP_PLATFORM_AMD__)
+      Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
+      Backend::rocfft  // fallback to rocfft
+#     elif defined(__HIP_PLATFORM_NVIDIA__)
+      Backend::hipfft, // prefer cufft (it is used by hipfft on CUDA)
+      Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
+      Backend::rocfft  // fallback to rocfft
+#     endif
+#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+      Backend::vkfft,  // prefer vkfft
+      Backend::clfft   // fallback to clfft
+#   endif
+    );
 
     struct BackendParameters;
   } // namespace gpu
@@ -389,7 +417,7 @@ inline namespace spst
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
   };
 
@@ -398,7 +426,7 @@ inline namespace spst
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
     cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
   };
@@ -415,9 +443,26 @@ namespace spmt
       using afft::cufft::spmt::gpu::Parameters;
     } // namespace cufft
 
+    /// @brief Supported backends for spmt gpu architecture
     inline constexpr BackendMask supportedBackendMask = Backend::cufft |
                                                         Backend::hipfft |
                                                         Backend::rocfft;
+
+    /// @brief Order of initialization of backends
+    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
+#   if AFFT_GPU_BACKEND_IS(CUDA)
+      Backend::cufft  // just cufft
+#   elif AFFT_GPU_BACKEND_IS(HIP)
+#     if defined(__HIP_PLATFORM_AMD__)
+      Backend::rocfft, // prefer rocfft
+      Backend::hipfft  // fallback to hipfft
+#     elif defined(__HIP_PLATFORM_NVIDIA__)
+      Backend::hipfft, // prefer hipfft
+      Backend::rocfft  // fallback to rocfft
+#     endif
+#   endif
+    );
+
     struct BackendParameters;
   } // namespace gpu
 } // namespace spmt
@@ -428,7 +473,7 @@ namespace spmt
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
   };
 
@@ -448,9 +493,17 @@ namespace mpst
       using afft::heffte::mpst::cpu::Parameters;
     } // namespace heffte
 
+    /// @brief Supported backends for mpst cpu transform
     inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
                                                         Backend::mkl |
                                                         Backend::heffte;
+    /// @brief Default backend initialization order for mpst cpu transform
+    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
+      Backend::mkl,    // prefer mkl
+      Backend::heffte, // if mkl cannot create plan, fallback heffte
+      Backend::fftw3   // if heffte cannot create plan, fallback fftw3
+    );
+
     struct BackendParameters;
   } // namespace cpu
   namespace gpu
@@ -464,8 +517,19 @@ namespace mpst
       using afft::heffte::mpst::gpu::Parameters;
     } // namespace heffte
 
+    /// @brief Supported backends for mpst gpu transform
     inline constexpr BackendMask supportedBackendMask = Backend::cufft |
                                                         Backend::heffte;
+
+    /// @brief Order of initialization of backends
+    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
+#   if AFFT_GPU_BACKEND_IS(CUDA)
+      Backend::cufft, // try cufft first
+      Backend::heffte // fallback to heffte
+#   elif AFFT_GPU_BACKEND_IS(HIP)
+      Backend::heffte
+#   endif
+    );
     struct BackendParameters;
   } // namespace gpu
 } // namespace mpst
@@ -475,7 +539,7 @@ namespace mpst
   {
     SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask        mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>      order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>      order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     fftw3::Parameters  fftw3{};                         ///< FFTW3 backend initialization parameters
     heffte::Parameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
@@ -485,7 +549,7 @@ namespace mpst
   {
     SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask        mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>      order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>      order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     cufft::Parameters  cufft{};                         ///< cuFFT backend initialization parameters
     heffte::Parameters heffte{};                        ///< HeFFTe backend initialization parameters
   };

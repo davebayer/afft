@@ -70,7 +70,27 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Alignment of a data type
-  enum class Alignment : std::size_t {};
+  enum class Alignment : std::size_t
+  {
+    defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
+    simd128    = 16,                               ///< 128-bit SIMD alignment
+    simd256    = 32,                               ///< 256-bit SIMD alignment
+    simd512    = 64,                               ///< 512-bit SIMD alignment
+    simd1024   = 128,                              ///< 1024-bit SIMD alignment
+    simd2048   = 256,                              ///< 2048-bit SIMD alignment
+
+    sse    = simd128,  ///< SSE alignment
+    sse2   = simd128,  ///< SSE2 alignment
+    sse3   = simd128,  ///< SSE3 alignment
+    sse4   = simd128,  ///< SSE4 alignment
+    sse4_1 = simd128,  ///< SSE4.1 alignment
+    sse4_2 = simd128,  ///< SSE4.2 alignment
+    avx    = simd256,  ///< AVX alignment
+    avx2   = simd256,  ///< AVX2 alignment
+    avx512 = simd512,  ///< AVX-512 alignment
+    neon   = simd128,  ///< NEON alignment
+    sve    = simd2048, ///< SVE alignment
+  };
 
   /// @brief Complexity of a data type
   enum class Complexity : std::uint8_t
