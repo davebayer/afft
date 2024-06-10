@@ -60,6 +60,11 @@ namespace afft::detail::heffte
       throw BackendError{Backend::heffte, "only DFT transform is supported"};
     }
 
+    if (desc.getPlacement() != Placement::outOfPlace)
+    {
+      throw BackendError{Backend::heffte, "only out-of-place placement is supported"};
+    }
+
     if constexpr (backendParams.distribution == Distribution::mpst)
     {
       if constexpr (backendParams.target == Target::cpu)

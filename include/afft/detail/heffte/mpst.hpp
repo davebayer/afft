@@ -82,7 +82,7 @@ namespace afft::detail::heffte::mpst
         mBatch{1}, // TODO
         mWorkspaceSize{mBatch * mPlan.size_workspace() * sizeof(C)}
       {
-        // Do nothing
+        mDesc.fillDefaultMemoryLayoutStrides();
       }
 
       /// @brief Default destructor.
@@ -258,7 +258,7 @@ namespace afft::detail::heffte::mpst
 
     const auto& memLayout = desc.getMemoryLayout<Distribution::mpst>();
 
-    if (memLayout.hasDefaultSrcMemoryBlocks() || memLayout.hasDefaultDstMemoryBlocks())
+    if (memLayout.hasDefaultSrcMemoryBlock() || memLayout.hasDefaultDstMemoryBlock())
     {
       throw BackendError{Backend::heffte, "only custom memory layout is supported"};
     }

@@ -56,6 +56,8 @@ namespace afft::detail::vkfft::spst::gpu
       Plan(const Desc& desc)
       : Parent{desc}
       {
+        mDesc.fillDefaultMemoryLayoutStrides();
+
         const auto& gpuDesc = mDesc.getArchDesc<Target::gpu, Distribution::spst>();
 
         const auto direction = mDesc.getDirection();

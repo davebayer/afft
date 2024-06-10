@@ -65,6 +65,8 @@ namespace afft::detail::pocketfft::spst::cpu
         mDstStrides(mShape.size()),
         mAxes{mDesc.getTransformAxes().begin(), mDesc.getTransformAxes().end()}
       {
+        mDesc.fillDefaultMemoryLayoutStrides();
+
         const auto& memLayout = mDesc.template getMemoryLayout<Distribution::spst>();
 
         std::transform(memLayout.getSrcStrides().begin(),
@@ -323,9 +325,9 @@ namespace afft::detail::pocketfft::spst::cpu
     // {
     // case Transform::dft:
     // {
-    //   const auto& dftConfig = config.getTransformConfig<Transform::dft>();
+    //   const auto& dftDesc = config.getTransformConfig<Transform::dft>();
 
-    //   switch (dftConfig.type)
+    //   switch (dftDesc.type)
     //   {
     //   case dft::Type::complexToComplex:
     //     if (commonParams.placement == Placement::inPlace)
