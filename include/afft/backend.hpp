@@ -133,16 +133,19 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
 // clFFT
 /**********************************************************************************************************************/
-namespace clfft::spst::gpu
+namespace clfft
 {
-  struct Parameters;
-} // namespace clfft::spst::gpu
+  namespace spst::gpu
+  {
+    struct Parameters;
+  } // namespace spst::gpu
 
   /// @brief clFFT initialization parameters
-  struct clfft::spst::gpu::Parameters
+  struct spst::gpu::Parameters
   {
     bool useFastMath{true}; ///< Use fast math.
   };
+} // namespace clfft
 
 /**********************************************************************************************************************/
 // cuFFT
@@ -162,7 +165,6 @@ namespace cufft
   {
     struct Parameters;
   } // namespace mpst::gpu
-} // namespace cufft
 
   /// @brief cuFFT Workspace policy
   enum class cufft::WorkspacePolicy : std::uint8_t
@@ -173,7 +175,7 @@ namespace cufft
   };
 
   /// @brief cuFFT initialization parameters for the spst gpu architecture
-  struct cufft::spst::gpu::Parameters
+  struct spst::gpu::Parameters
   {
     WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
     bool            usePatientJit{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
@@ -181,16 +183,17 @@ namespace cufft
   };
 
   /// @brief cuFFT initialization parameters for the spmt gpu architecture
-  struct cufft::spmt::gpu::Parameters
+  struct spmt::gpu::Parameters
   {
     bool usePatientJit{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
 
   /// @brief cuFFT initialization parameters for the mpst gpu architecture
-  struct cufft::mpst::gpu::Parameters
+  struct mpst::gpu::Parameters
   {
     bool usePatientJit{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
+} // namespace cufft  
 
 /**********************************************************************************************************************/
 // FFTW3
@@ -206,10 +209,9 @@ namespace fftw3
   {
     struct Parameters;
   } // namespace cpu
-} // namespace fftw3
 
   /// @brief FFTW3 planner flags
-  enum class fftw3::PlannerFlag : std::uint8_t
+  enum class PlannerFlag : std::uint8_t
   {
     estimate,        ///< Estimate plan flag
     measure,         ///< Measure plan flag
@@ -219,7 +221,7 @@ namespace fftw3
   };
 
   /// @brief FFTW3 initialization parameters for the spst cpu architecture
-  struct fftw3::spst::cpu::Parameters
+  struct spst::cpu::Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
     bool                          conserveMemory{false};              ///< Conserve memory flag
@@ -230,7 +232,7 @@ namespace fftw3
   };
 
   /// @brief FFTW3 initialization parameters for the mpst cpu architecture
-  struct fftw3::mpst::cpu::Parameters
+  struct mpst::cpu::Parameters
   {
     PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
     bool                          conserveMemory{false};              ///< Conserve memory flag
@@ -240,6 +242,7 @@ namespace fftw3
     std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
     std::size_t                   blockSize{};                        ///< Decomposition block size
   };
+} // namespace fftw3
 
 /**********************************************************************************************************************/
 // HeFFTe
@@ -262,24 +265,23 @@ namespace heffte
   {
     struct Parameters;
   } // namespace mpst::gpu
-} // namespace heffte
 
   /// @brief HeFFTe cpu backends
-  enum class heffte::cpu::Backend : std::uint8_t
+  enum class cpu::Backend : std::uint8_t
   {
     fftw3,  ///< FFTW3 backend
     mkl,    ///< Intel MKL backend
   };
 
   /// @brief HeFFTe gpu backends
-  enum class heffte::gpu::Backend : std::uint8_t
+  enum class gpu::Backend : std::uint8_t
   {
     cufft,  ///< cuFFT backend
     rocfft, ///< rocFFT backend
   };
 
   /// @brief HeFFTe initialization parameters for the mpst cpu architecture
-  struct heffte::mpst::cpu::Parameters
+  struct mpst::cpu::Parameters
   {
     using Backend = heffte::cpu::Backend;
 
@@ -313,7 +315,7 @@ namespace heffte
   };
 
   /// @brief HeFFTe initialization parameters for the mpst gpu architecture
-  struct heffte::mpst::gpu::Parameters
+  struct mpst::gpu::Parameters
   {
     using Backend = heffte::gpu::Backend;
 
@@ -345,6 +347,7 @@ namespace heffte
     bool    useAlltoAll{true}; ///< Use alltoall flag
     bool    usePencils{true};  ///< Use pencils flag
   };
+} // namespace heffte
 
 /**********************************************************************************************************************/
 // Backend parameters for spst distribution
@@ -410,10 +413,9 @@ inline namespace spst
 
     struct BackendParameters;
   } // namespace gpu
-} // namespace spst
 
   /// @brief Backend parameters for the spst distribution on the CPU
-  struct spst::cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::spst>
+  struct cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::spst>
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
@@ -422,7 +424,7 @@ inline namespace spst
   };
 
   /// @brief Backend parameters for the spst distribution on the GPU
-  struct spst::gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spst>
+  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spst>
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
@@ -430,6 +432,7 @@ inline namespace spst
     clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
     cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
   };
+} // namespace spst
 
 /**********************************************************************************************************************/
 // Backend parameters for spmt distribution
@@ -465,17 +468,16 @@ namespace spmt
 
     struct BackendParameters;
   } // namespace gpu
-} // namespace spmt
-
 
   /// @brief Backend parameters for the spmt distribution on the GPU
-  struct spmt::gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spmt>
+  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spmt>
   {
     SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask       mask{supportedBackendMask};      ///< Backend mask
     View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
     cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
   };
+} // namespace spmt
 
 /**********************************************************************************************************************/
 // Backend parameters for mpst distribution
@@ -532,10 +534,9 @@ namespace mpst
     );
     struct BackendParameters;
   } // namespace gpu
-} // namespace mpst
 
   /// @brief Backend parameters for the mpst distribution on the CPU
-  struct mpst::cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::mpst>
+  struct cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::mpst>
   {
     SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask        mask{supportedBackendMask};      ///< Backend mask
@@ -545,7 +546,7 @@ namespace mpst
   };
 
   /// @brief Backend parameters for the mpst distribution on the GPU
-  struct mpst::gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::mpst>
+  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::mpst>
   {
     SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask        mask{supportedBackendMask};      ///< Backend mask
@@ -553,6 +554,7 @@ namespace mpst
     cufft::Parameters  cufft{};                         ///< cuFFT backend initialization parameters
     heffte::Parameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
+} // namespace mpst
 
   /**
    * @brief Feedback from the backend initialization.

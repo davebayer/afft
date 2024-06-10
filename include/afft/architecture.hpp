@@ -59,57 +59,14 @@ namespace afft
     View<std::size_t, shapeExt> strides{}; ///< strides of the memory block
   };
 
-inline namespace spst
-{
-  /**
-   * @brief Memory layout
-   * @tparam shapeExt Extent of the shape
-   */
-  template<std::size_t shapeExt = dynamicExtent>
-  struct MemoryLayout
-  {
-    View<std::size_t, shapeExt> srcStrides{}; ///< stride of the source data
-    View<std::size_t, shapeExt> dstStrides{}; ///< stride of the destination data
-  };
-} // inline namespace spst
-
-namespace spmt
-{
-  /**
-   * @brief Memory layout
-   * @tparam shapeExt Extent of the shape
-   */
-  template<std::size_t shapeExt = dynamicExtent>
-  struct MemoryLayout
-  {
-    View<MemoryBlock<shapeExt>> srcBlocks{};    ///< source memory blocks
-    View<MemoryBlock<shapeExt>> dstBlocks{};    ///< destination memory blocks
-    View<std::size_t, shapeExt> srcAxesOrder{}; ///< order of the source axes
-    View<std::size_t, shapeExt> dstAxesOrder{}; ///< order of the destination axes
-  };
-} // namespace spmt
-
-namespace mpst
-{
-  /**
-   * @brief Memory layout
-   * @tparam shapeExt Extent of the shape
-   */
-  template<std::size_t shapeExt = dynamicExtent>
-  struct MemoryLayout
-  {
-    MemoryBlock<shapeExt>       srcBlock{};     ///< source memory block
-    MemoryBlock<shapeExt>       dstBlock{};     ///< destination memory block
-    View<std::size_t, shapeExt> srcAxesOrder{}; ///< order of the source axes
-    View<std::size_t, shapeExt> dstAxesOrder{}; ///< order of the destination axes
-  };
-} // namespace mpst
-
 /**********************************************************************************************************************/
 // Spst architectures
 /**********************************************************************************************************************/
 inline namespace spst
 {
+  template<std::size_t shapeExt = dynamicExtent>
+  struct MemoryLayout;
+
   namespace cpu
   {
     template<std::size_t shapeExt = dynamicExtent>
@@ -122,6 +79,17 @@ inline namespace spst
     struct Parameters;
     struct ExecutionParameters;
   } // namespace gpu
+
+  /**
+   * @brief Memory layout
+   * @tparam shapeExt Extent of the shape
+   */
+  template<std::size_t shapeExt>
+  struct MemoryLayout
+  {
+    View<std::size_t, shapeExt> srcStrides{}; ///< stride of the source data
+    View<std::size_t, shapeExt> dstStrides{}; ///< stride of the destination data
+  };
 
   /**
    * @brief Parameters for spst cpu architecture
@@ -184,12 +152,28 @@ inline namespace spst
 /**********************************************************************************************************************/
 namespace spmt
 {
+  template<std::size_t shapeExt = dynamicExtent>
+  struct MemoryLayout;
+  
   namespace gpu
   {
     template<std::size_t shapeExt = dynamicExtent>
     struct Parameters;
     struct ExecutionParameters;
   } // namespace gpu
+
+  /**
+   * @brief Memory layout
+   * @tparam shapeExt Extent of the shape
+   */
+  template<std::size_t shapeExt>
+  struct MemoryLayout
+  {
+    View<MemoryBlock<shapeExt>> srcBlocks{};    ///< source memory blocks
+    View<MemoryBlock<shapeExt>> dstBlocks{};    ///< destination memory blocks
+    View<std::size_t, shapeExt> srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t, shapeExt> dstAxesOrder{}; ///< order of the destination axes
+  };
 
   /**
    * @brief Parameters for spmt gpu architecture
@@ -227,6 +211,9 @@ namespace spmt
 /**********************************************************************************************************************/
 namespace mpst
 {
+  template<std::size_t shapeExt = dynamicExtent>
+  struct MemoryLayout;
+
   namespace cpu
   {
     template<std::size_t shapeExt = dynamicExtent>
@@ -239,6 +226,19 @@ namespace mpst
     struct Parameters;
     struct ExecutionParameters;
   } // namespace gpu
+
+  /**
+   * @brief Memory layout
+   * @tparam shapeExt Extent of the shape
+   */
+  template<std::size_t shapeExt>
+  struct MemoryLayout
+  {
+    MemoryBlock<shapeExt>       srcBlock{};     ///< source memory block
+    MemoryBlock<shapeExt>       dstBlock{};     ///< destination memory block
+    View<std::size_t, shapeExt> srcAxesOrder{}; ///< order of the source axes
+    View<std::size_t, shapeExt> dstAxesOrder{}; ///< order of the destination axes
+  };
 
   /**
    * @brief Parameters for mpst cpu architecture
