@@ -26,7 +26,7 @@
 module;
 
 // First include the config header.
-#include "config.hpp"
+#include <afft/config.hpp>
 
 // Check the C++ version.
 #if AFFT_CXX_VERSION < 202002L
@@ -39,7 +39,7 @@ module;
 #endif
 
 // Include all external headers.
-#include "detail/include.hpp"
+#include <afft/detail/include.hpp>
 
 // Define the module.
 export module afft;
@@ -53,4 +53,4 @@ import std;
 #define AFFT_EXPORT export
 
 // Include all public headers.
-#include "afft.hpp"
+#include <afft/afft.hpp>
