@@ -30,6 +30,7 @@
 #endif
 
 #include "cxx.hpp"
+#include "../common.hpp"
 
 namespace afft
 {
