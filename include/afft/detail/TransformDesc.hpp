@@ -154,6 +154,72 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the shape of the source.
+       * @tparam I Integral type.
+       * @return Shape of the source.
+       */
+      template<typename I = std::size_t>
+      [[nodiscard]] constexpr MaxDimArray<I> getSrcShape() const
+      {
+        MaxDimArray<I> srcShape = getShapeAs<I>();
+
+        switch (getTransform())
+        {
+        case Transform::dft:
+          switch (getTransformDesc<Transform::dft>().type)
+          {
+          case dft::Type::complexToReal:
+          {
+            auto& reducedElem = srcShape[getTransformAxes().back()];
+
+            reducedElem = reducedElem / 2 + 1;
+            break;
+          }
+          default:
+            break;
+          }
+          break;
+        default:
+          break;
+        }
+
+        return srcShape;
+      }
+
+      /**
+       * @brief Get the shape of the destination.
+       * @tparam I Integral type.
+       * @return Shape of the destination.
+       */
+      template<typename I = std::size_t>
+      [[nodiscard]] constexpr MaxDimArray<I> getDstShape() const
+      {
+        MaxDimArray<I> dstShape = getShapeAs<I>();
+
+        switch (getTransform())
+        {
+        case Transform::dft:
+          switch (getTransformDesc<Transform::dft>().type)
+          {
+          case dft::Type::realToComplex:
+          {
+            auto& reducedElem = dstShape[getTransformAxes().back()];
+
+            reducedElem = reducedElem / 2 + 1;
+            break;
+          }
+          default:
+            break;
+          }
+          break;
+        default:
+          break;
+        }
+
+        return dstShape;
+      }
+
+      /**
        * @brief Get the rank of the transform.
        * @return Rank of the transform.
        */
