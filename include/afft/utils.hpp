@@ -110,26 +110,48 @@ AFFT_EXPORT namespace afft
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t rank>
-  [[nodiscard]] constexpr auto makeStrides(View<std::size_t, rank> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<std::size_t, rank>), rank != dynamicRank)
+  template<typename I, std::size_t stridesExt, std::size_t shapeExt>
+  constexpr void makeStrides(Span<I, stridesExt> strides,
+                             View<I, shapeExt>   shape,
+                             std::size_t         fastestAxisStride = 1)
   {
-    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
+    static_assert(std::is_integral_v<I>, "I must be an integral type");
+    static_assert((stridesExt == dynamicExtent) ||
+                  (shapeExt == dynamicExtent) ||
+                  (stridesExt == shapeExt), "strides and shape must have the same size");
+
+    if (strides.size() != shape.size())
     {
-      throw std::invalid_argument("Shape must not contain zeros");
+      throw std::invalid_argument("strides and shape must have the same size");
     }
 
-    std::array<std::size_t, rank> strides{};
-
-    if (!shape.empty())
+    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<I>{}))
     {
-      strides[shape.size() - 1] = fastestAxisStride;
-
-      for (std::size_t i = shape.size() - 1; i > 0; --i)
-      {
-        strides[i - 1] = shape[i] * strides[i];
-      }
+      throw std::invalid_argument("shape must not contain zeros");
     }
+
+    strides[shape.size() - 1] = fastestAxisStride;
+
+    for (std::size_t i = shape.size() - 1; i > 0; --i)
+    {
+      strides[i - 1] = shape[i] * strides[i];
+    }
+  }
+
+  /**
+   * @brief Make strides.
+   * @tparam rank Rank of the shape
+   * @param shapeExt Shape extent
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */
+  template<typename I, std::size_t shapeExt>
+  [[nodiscard]] constexpr auto makeStrides(View<I, shapeExt> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicRank)
+  {
+    std::array<I, shapeExt> strides{};
+
+    makeStrides(strides, shape, fastestAxisStride);
 
     return strides;
   }
@@ -137,30 +159,19 @@ AFFT_EXPORT namespace afft
   /**
    * @brief Make strides.
    * @tparam rank Rank of the shape
-   * @param shape Shape
+   * @param shapeExt Shape extent
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
-  template<std::size_t rank>
-  [[nodiscard]] auto makeStrides(View<std::size_t, rank> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<std::size_t>), rank == dynamicRank)
+  template<typename I, std::size_t shapeExt>
+  [[nodiscard]] auto makeStrides(View<I, shapeExt> shape, std::size_t fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicRank)
   {
-    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<>{}))
-    {
-      throw std::invalid_argument("Shape must not contain zeros");
-    }
+    static_assert(std::is_integral_v<I>, "I must be an integral type");
 
-    std::vector<std::size_t> strides(shape.size());
+    std::vector<I> strides(shape.size());
 
-    if (!shape.empty())
-    {
-      strides[shape.size() - 1] = fastestAxisStride;
-
-      for (std::size_t i = shape.size() - 1; i > 0; --i)
-      {
-        strides[i - 1] = shape[i] * strides[i];
-      }
-    }
+    makeStrides(strides, shape, fastestAxisStride);
 
     return strides;
   }
@@ -168,38 +179,36 @@ AFFT_EXPORT namespace afft
   /**
    * @brief Make transposed strides.
    * @tparam rank Rank of the shape
-   * @param resultShape Shape of the result
-   * @param orgAxesOrder Original axes order
+   * @param stridesExt Strides extent
+   * @param shapeExt Shape extent
+   * @param axesExt Axes order extent
    * @param fastestAxisStride Stride of the fastest axis
-   * @return Strides
    */
-  template<std::size_t rank = dynamicRank>
-  [[nodiscard]] auto makeTransposedStrides(View<std::size_t, rank> resultShape,
-                                           View<std::size_t>       orgAxesOrder,
-                                           std::size_t             fastestAxisStride = 1)
+  template<typename I, typename A, std::size_t stridesExt, std::size_t shapeExt, std::size_t axesExt>
+  constexpr void makeTransposedStrides(Span<I, stridesExt> strides,
+                                       View<I, shapeExt>   shape,
+                                       View<A, axesExt>    orgAxesOrder,
+                                       std::size_t         fastestAxisStride = 1)
   {
-    using ReturnT = std::conditional_t<(rank == dynamicRank),
-                                       std::array<std::size_t, rank>,
-                                       std::vector<std::size_t>>;
+    static_assert(std::is_integral_v<I>, "I must be an integral type");
+    static_assert(std::is_integral_v<A>, "A must be an integral type");
+    static_assert((stridesExt == dynamicExtent) ||
+                  (shapeExt == dynamicExtent) ||
+                  (stridesExt == shapeExt), "strides and shape must have the same size");
+    static_assert((stridesExt == dynamicExtent) ||
+                  (axesExt == dynamicExtent) ||
+                  (stridesExt == axesExt), "strides and axes order must have the same size");
 
-    // If the axes order is empty, then the result axes order is the same as the original axes order
-    if (orgAxesOrder.empty())
-    {
-      return makeStrides(resultShape, fastestAxisStride);
-    }
-    // Check if the axes size matches the shape size
-    else if (orgAxesOrder.size() != resultShape.size())
+    if (orgAxesOrder.size() != shape.size())
     {
       throw std::invalid_argument("Axes order must have the same size as the shape");
     }
 
-    // Check if the shape contains zeros
-    if (detail::cxx::any_of(resultShape.begin(), resultShape.end(), detail::IsZero<>{}))
+    if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<I>{}))
     {
       throw std::invalid_argument("Shape must not contain zeros");
     }
-    
-    // Check if the axes order contains out-of-range values or duplicates
+
     for (std::size_t i{}; i < orgAxesOrder.size(); ++i)
     {
       if (orgAxesOrder[i] >= orgAxesOrder.size())
@@ -216,24 +225,59 @@ AFFT_EXPORT namespace afft
       }
     }
 
-    ReturnT strides{};
+    strides[orgAxesOrder[shape.size() - 1]] = fastestAxisStride;
 
-    // Resize the strides if the rank is dynamic
-    if constexpr (rank == dynamicRank)
+    for (std::size_t i = shape.size() - 1; i > 0; --i)
     {
-      strides.resize(resultShape.size());
+      strides[orgAxesOrder[i - 1]] = shape[i] * strides[orgAxesOrder[i]];
     }
+  }
 
-    // Calculate the strides
-    if (const std::size_t size = resultShape.size(); size > 0)
-    {
-      strides[orgAxesOrder[size - 1]] = fastestAxisStride;
+  /**
+   * @brief Make transposed strides.
+   * @tparam rank Rank of the shape
+   * @param shapeExt Shape extent
+   * @param orgAxesOrderExt Original axes order extent
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */  
+  template<typename I, typename A, std::size_t shapeExt, std::size_t axesExt>
+  constexpr auto makeTransposedStrides(View<I, shapeExt> shape,
+                                       View<A, axesExt>  orgAxesOrder,
+                                       std::size_t       fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicRank)
+  {
+    static_assert(std::is_integral_v<I>, "I must be an integral type");
+    static_assert(std::is_integral_v<A>, "A must be an integral type");
 
-      for (std::size_t i = size - 1; i > 0; --i)
-      {
-        strides[orgAxesOrder[i - 1]] = resultShape[i] * strides[orgAxesOrder[i]];
-      }
-    }
+    std::array<I, shapeExt> strides{};
+
+    makeTransposedStrides(strides, shape, orgAxesOrder, fastestAxisStride);
+
+    return strides;
+  }
+
+  /**
+   * @brief Make transposed strides.
+   * @tparam I Integral type
+   * @tparam A Integral type
+   * @param shape Shape
+   * @param orgAxesOrder Original axes order
+   * @param fastestAxisStride Stride of the fastest axis
+   * @return Strides
+   */
+  template<typename I, typename A, std::size_t shapeExt, std::size_t axesExt>
+  auto makeTransposedStrides(View<I, shapeExt> shape,
+                             View<A, axesExt>  orgAxesOrder,
+                             std::size_t       fastestAxisStride = 1)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicRank)
+  {
+    static_assert(std::is_integral_v<I>, "I must be an integral type");
+    static_assert(std::is_integral_v<A>, "A must be an integral type");
+
+    std::vector<I> strides(shape.size());
+
+    makeTransposedStrides(strides, shape, orgAxesOrder, fastestAxisStride);
 
     return strides;
   }

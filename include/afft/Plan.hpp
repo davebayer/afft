@@ -649,7 +649,7 @@ namespace afft
       {}
 
       /// @brief Get the plan description.
-      [[nodiscard]] const Desc& getDesc() const noexcept
+      [[nodiscard]] const detail::Desc& getDesc() const noexcept
       {
         return mDesc;
       }
