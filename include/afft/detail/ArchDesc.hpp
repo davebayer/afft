@@ -649,6 +649,8 @@ namespace afft::detail
       template<std::size_t shapeExt>
       MpstMemoryLayout(std::size_t shapeRank, const afft::mpst::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
+        mHasDefaultSrcStrides{memLayout.srcBlock.starts.empty() && memLayout.srcBlock.sizes.empty()},
+        mHasDefaultDstStrides{memLayout.dstBlock.starts.empty() && memLayout.dstBlock.sizes.empty()},
         mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
         mHasDefaultDstStrides{memLayout.dstBlock.strides.empty()},
         mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
@@ -764,6 +766,24 @@ namespace afft::detail
 
       /// @brief Move assignment operator.
       MpstMemoryLayout& operator=(MpstMemoryLayout&&) = default;
+
+      /**
+       * @brief Check if the memory layout has default memory block.
+       * @return True if the memory layout has default memory block, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultSrcMemoryBlock() const noexcept
+      {
+        return mHasDefaultSrcMemoryBlocks;
+      }
+
+      /**
+       * @brief Check if the memory layout has default memory block.
+       * @return True if the memory layout has default memory block, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultDstMemoryBlock() const noexcept
+      {
+        return mHasDefaultDstMemoryBlocks;
+      }
 
       /**
        * @brief Check if the memory layout has default source strides.
@@ -993,19 +1013,21 @@ namespace afft::detail
         return Span<std::size_t>{mDstStrides.data(), mShapeRank};
       }      
     private:
-      std::size_t                mShapeRank{};              ///< Shape rank.
-      MaxDimArray<std::size_t>   mSrcStarts{};              ///< Source starts.
-      MaxDimArray<std::size_t>   mSrcSizes{};               ///< Source sizes.
-      MaxDimArray<std::size_t>   mSrcStrides{};             ///< Source strides.
-      MaxDimArray<std::size_t>   mDstStarts{};              ///< Destination starts.
-      MaxDimArray<std::size_t>   mDstSizes{};               ///< Destination sizes.
-      MaxDimArray<std::size_t>   mDstStrides{};             ///< Destination strides.
-      MaxDimArray<std::size_t>   mSrcAxesOrder{};           ///< Source axes order.
-      MaxDimArray<std::size_t>   mDstAxesOrder{};           ///< Destination axes order;
-      bool                       mHasDefaultSrcStrides{};   ///< Has default source strides.
-      bool                       mHasDefaultDstStrides{};   ///< Has default destination strides.
-      bool                       mHasDefaultSrcAxesOrder{}; ///< Has default source axes order.
-      bool                       mHasDefaultDstAxesOrder{}; ///< Has default destination axes order.
+      std::size_t                mShapeRank{};                 ///< Shape rank.
+      MaxDimArray<std::size_t>   mSrcStarts{};                 ///< Source starts.
+      MaxDimArray<std::size_t>   mSrcSizes{};                  ///< Source sizes.
+      MaxDimArray<std::size_t>   mSrcStrides{};                ///< Source strides.
+      MaxDimArray<std::size_t>   mDstStarts{};                 ///< Destination starts.
+      MaxDimArray<std::size_t>   mDstSizes{};                  ///< Destination sizes.
+      MaxDimArray<std::size_t>   mDstStrides{};                ///< Destination strides.
+      MaxDimArray<std::size_t>   mSrcAxesOrder{};              ///< Source axes order.
+      MaxDimArray<std::size_t>   mDstAxesOrder{};              ///< Destination axes order;
+      bool                       mHasDefaultSrcMemoryBlocks{}; ///< Has default memory layout.
+      bool                       mHasDefaultDstMemoryBlocks{}; ///< Has default memory layout.
+      bool                       mHasDefaultSrcStrides{};      ///< Has default source strides.
+      bool                       mHasDefaultDstStrides{};      ///< Has default destination strides.
+      bool                       mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
+      bool                       mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
   };
 
   /// @brief Describes the spst cpu target.
@@ -1182,10 +1204,54 @@ namespace afft::detail
        * @return Architecture description.
        */
       template<Target target, Distribution distrib>
-      [[nodiscard]] const auto& getArchDesc() const
+      [[nodiscard]] constexpr auto& getArchDesc()
       {
         static_assert(isValid(target), "Invalid target");
         static_assert(isValid(distrib), "Invalid distribution");
+        static_assert(!(target == Target::cpu && distrib == Distribution::spmt), "Invalid distribution for cpu target");
+
+        if constexpr (target == Target::cpu)
+        {
+          if constexpr (distrib == Distribution::spst)
+          {
+            return std::get<ArchVariantIdx::spstCpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            return std::get<ArchVariantIdx::mpstCpu>(mArchVariant);
+          }
+        }
+        else if constexpr (target == Target::gpu)
+        {
+          if constexpr (distrib == Distribution::spst)
+          {
+            return std::get<ArchVariantIdx::spstGpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::spmt)
+          {
+            return std::get<ArchVariantIdx::spmtGpu>(mArchVariant);
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            return std::get<ArchVariantIdx::mpstGpu>(mArchVariant);
+          }
+        }
+
+        cxx::unreachable();
+      }
+
+      /**
+       * @brief Get the architecture description.
+       * @tparam target Target.
+       * @tparam distrib Distribution.
+       * @return Architecture description.
+       */
+      template<Target target, Distribution distrib>
+      [[nodiscard]] constexpr const auto& getArchDesc() const
+      {
+        static_assert(isValid(target), "Invalid target");
+        static_assert(isValid(distrib), "Invalid distribution");
+        static_assert(!(target == Target::cpu && distrib == Distribution::spmt), "Invalid distribution for cpu target");
 
         if constexpr (target == Target::cpu)
         {
@@ -1253,18 +1319,50 @@ namespace afft::detail
        * @return Memory layout.
        */
       template<Distribution distrib>
-      [[nodiscard]] auto getMemoryLayout() const
+      [[nodiscard]] constexpr auto& getMemoryLayout()
       {
         static_assert(isValid(distrib), "Invalid distribution");
 
-        switch (mArchVariant.index())
+        switch (getTarget())
         {
-        case ArchVariantIdx::spstCpu:
-        case ArchVariantIdx::mpstCpu:
-          return getArchDesc<Target::cpu, distrib>().memoryLayout;
-        case ArchVariantIdx::spstGpu:
-        case ArchVariantIdx::spmtGpu:
-        case ArchVariantIdx::mpstGpu:
+        case Target::cpu:
+          if constexpr (distrib != Distribution::spmt)
+          {
+            return getArchDesc<Target::cpu, distrib>().memoryLayout;
+          }
+          else
+          {
+            throw std::invalid_argument{"invalid distribution for cpu target"};
+          }
+        case Target::gpu:
+          return getArchDesc<Target::gpu, distrib>().memoryLayout;
+        default:
+          cxx::unreachable();
+        }
+      }
+
+      /**
+       * @brief Get the memory layout.
+       * @tparam distrib Distribution.
+       * @return Memory layout.
+       */
+      template<Distribution distrib>
+      [[nodiscard]] constexpr const auto& getMemoryLayout() const
+      {
+        static_assert(isValid(distrib), "Invalid distribution");
+
+        switch (getTarget())
+        {
+        case Target::cpu:
+          if constexpr (distrib != Distribution::spmt)
+          {
+            return getArchDesc<Target::cpu, distrib>().memoryLayout;
+          }
+          else
+          {
+            throw std::invalid_argument{"invalid distribution for cpu target"};
+          }
+        case Target::gpu:
           return getArchDesc<Target::gpu, distrib>().memoryLayout;
         default:
           cxx::unreachable();

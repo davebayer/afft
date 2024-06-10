@@ -31,6 +31,7 @@
 
 #include "ArchDesc.hpp"
 #include "TransformDesc.hpp"
+#include "../utils.hpp"
 
 namespace afft::detail
 {
@@ -66,8 +67,70 @@ namespace afft::detail
 
       /// @brief Move assignment operator.
       Desc& operator=(Desc&&) = default;
-    private:
 
+      /// @brief Fill the default memory layout strides.
+      void fillDefaultMemoryLayoutStrides()
+      {
+        const auto shapeRank = getShapeRank();
+
+        switch (getDistribution())
+        {
+        case Distribution::spst:
+        {
+          auto& memoryLayout = getMemoryLayout<Distribution::spst>();
+
+          if (memoryLayout.hasDefaultSrcStrides())
+          {
+            const auto srcShape = getSrcShape();
+            makeStrides(memoryLayout.getSrcStridesWritable(), View<std::size_t>{srcShape.data(), shapeRank});
+          }
+
+          if (memoryLayout.hasDefaultDstStrides())
+          {
+            const auto dstShape = getDstShape();
+            makeStrides(memoryLayout.getDstStridesWritable(), View<std::size_t>{dstShape.data(), shapeRank});
+          }
+
+          break;
+        }
+        case Distribution::spmt:
+        {
+          auto& memoryLayout = getMemoryLayout<Distribution::spmt>();
+
+          for (std::size_t i{}; i < getTargetCount(); ++i)
+          {
+            if (memoryLayout.hasDefaultSrcStrides(i))
+            {
+              makeStrides(memoryLayout.getSrcStridesWritable(i), memoryLayout.getSrcSizes(i));
+            }
+            
+            if (memoryLayout.hasDefaultDstStrides(i))
+            {
+              makeStrides(memoryLayout.getDstStridesWritable(i), memoryLayout.getDstSizes(i));
+            }
+          }
+
+          break;
+        }
+        case Distribution::mpst:
+        {
+          auto& memoryLayout = getMemoryLayout<Distribution::mpst>();
+
+          if (memoryLayout.hasDefaultSrcStrides())
+          {
+            makeStrides(memoryLayout.getSrcStridesWritable(), memoryLayout.getSrcSizes());
+          }
+
+          if (memoryLayout.hasDefaultDstStrides())
+          {
+            makeStrides(memoryLayout.getDstStridesWritable(), memoryLayout.getDstSizes());
+          }
+          break;
+        }
+        default:
+          cxx::unreachable();
+        }
+      }
   };
 } // namespace afft::detail
 
