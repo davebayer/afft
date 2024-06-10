@@ -363,18 +363,33 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the afft::heffte::Backend enum class.
+  /// @brief Validator for the afft::heffte::cpu::Backend enum class.
   template<>
-  struct Validator<afft::heffte::Backend>
+  struct Validator<afft::heffte::cpu::Backend>
   {
-    constexpr bool operator()(afft::heffte::Backend backend) const noexcept
+    constexpr bool operator()(afft::heffte::cpu::Backend backend) const noexcept
     {
       switch (backend)
       {
-      case afft::heffte::Backend::cufft:
-      case afft::heffte::Backend::fftw3:
-      case afft::heffte::Backend::mkl:
-      case afft::heffte::Backend::rocfft:
+      case afft::heffte::cpu::Backend::fftw3:
+      case afft::heffte::cpu::Backend::mkl:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
+  /// @brief Validator for the afft::heffte::gpu::Backend enum class.
+  template<>
+  struct Validator<afft::heffte::gpu::Backend>
+  {
+    constexpr bool operator()(afft::heffte::gpu::Backend backend) const noexcept
+    {
+      switch (backend)
+      {
+      case afft::heffte::gpu::Backend::cufft:
+      case afft::heffte::gpu::Backend::rocfft:
         return true;
       default:
         return false;
