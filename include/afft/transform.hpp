@@ -30,6 +30,7 @@
 #endif
 
 #include "common.hpp"
+#include "detail/transform.hpp"
 
 namespace afft
 {
@@ -58,7 +59,7 @@ namespace afft
      * @tparam transformExt Extent of the transform, dynamic by default
      */
     template<std::size_t shapeExt = dynamicExtent, std::size_t transformExt = dynamicExtent>
-    struct Parameters
+    struct Parameters : detail::TransformParametersBase<shapeExt, transformExt>
     {
       static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape extent must be greater than 0");
       static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform extent must be greater than 0");
@@ -90,7 +91,7 @@ namespace afft
      * @tparam transformExt Extent of the transform, dynamic by default
      */
     template<std::size_t shapeExt = dynamicExtent, std::size_t transformExt = dynamicExtent>
-    struct Parameters
+    struct Parameters : detail::TransformParametersBase<shapeExt, transformExt>
     {
       static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape rank must be greater than 0");
       static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform rank must be greater than 0");
@@ -136,7 +137,7 @@ namespace afft
     template<std::size_t shapeExt     = dynamicExtent,
              std::size_t transformExt = dynamicExtent,
              std::size_t ttExt        = dynamicExtent>
-    struct Parameters
+    struct Parameters : detail::TransformParametersBase<shapeExt, transformExt>
     {
       static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape rank must be greater than 0");
       static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform rank must be greater than 0");

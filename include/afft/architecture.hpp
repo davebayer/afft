@@ -96,7 +96,7 @@ inline namespace spst
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt>
-  struct cpu::Parameters : detail::ArchitectureParametersBase<Target::cpu, Distribution::spst>
+  struct cpu::Parameters : detail::ArchitectureParametersBase<Target::cpu, Distribution::spst, shapeExt>
   {
     MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for CPU transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
@@ -115,7 +115,7 @@ inline namespace spst
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt>
-  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::spst>
+  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::spst, shapeExt>
   {
     MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for GPU transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
@@ -180,7 +180,7 @@ namespace spmt
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt>
-  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::spmt>
+  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::spmt, shapeExt>
   {
     MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for GPU transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
@@ -245,7 +245,7 @@ namespace mpst
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt>
-  struct cpu::Parameters : detail::ArchitectureParametersBase<Target::cpu, Distribution::mpst>
+  struct cpu::Parameters : detail::ArchitectureParametersBase<Target::cpu, Distribution::mpst, shapeExt>
   {
     MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for CPU transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
@@ -269,7 +269,7 @@ namespace mpst
    * @tparam shapeExt Extent of the shape
    */
   template<std::size_t shapeExt>
-  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::mpst>
+  struct gpu::Parameters : detail::ArchitectureParametersBase<Target::gpu, Distribution::mpst, shapeExt>
   {
     MemoryLayout<shapeExt> memoryLayout{};                            ///< Memory layout for GPU transform
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format

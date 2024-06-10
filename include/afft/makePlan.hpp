@@ -52,15 +52,13 @@ namespace afft
     static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
     static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
 
-    // static_assert(detail::isCompatible<ArchParamsT, BackendParamsT>,
-    //              "Architecture and backend parameters must share the same target and distribution");
+    static_assert((ArchParamsT::target == BackendParamsT::target) &&
+                  (ArchParamsT::distribution == BackendParamsT::distribution),
+                  "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>::shape;
-    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParamsT>::shape;
-
-    static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (archParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == archParamsShapeRank),
+    static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
+                  (ArchParamsT::shapeExtent == dynamicRank) ||
+                  (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
                   "Transform and target parameters must have the same shape rank");
 
     return detail::makePlan(detail::Desc{transformParams, archParams}, backendParams);
@@ -86,15 +84,13 @@ namespace afft
     static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
     static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
 
-    // static_assert(detail::isCompatible<ArchParamsT, BackendParamsT>,
-    //              "Architecture and backend parameters must share the same target and distribution");
+    static_assert((ArchParamsT::target == BackendParamsT::target) &&
+                  (ArchParamsT::distribution == BackendParamsT::distribution),
+                  "Architecture and backend parameters must share the same target and distribution");
 
-    static constexpr auto transformParamsShapeRank = detail::TransformParametersTemplateRanks<TransformParamsT>::shape;
-    static constexpr auto archParamsShapeRank      = detail::ArchParametersTemplateRanks<ArchParamsT>::shape;
-
-    static_assert((transformParamsShapeRank == dynamicRank) ||
-                  (archParamsShapeRank == dynamicRank) ||
-                  (transformParamsShapeRank == archParamsShapeRank),
+    static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
+                  (ArchParamsT::shapeExtent == dynamicRank) ||
+                  (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
                   "Transform and target parameters must have the same shape rank");
 
     std::pair<std::unique_ptr<Plan>, std::vector<Feedback>> result{};

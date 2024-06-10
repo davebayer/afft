@@ -97,38 +97,6 @@ namespace afft::detail
   struct IsTransformParameters<afft::dtt::Parameters<shapeExt, transformExt, ttExt>> : std::true_type {};
 
   /**
-   * @brief TransformParameters template ranks.
-   * @tparam T The transform parameters type.
-   */
-  template<typename T>
-  struct TransformParametersTemplateRanks;
-
-  /// @brief Specialization for dft transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt>
-  struct TransformParametersTemplateRanks<afft::dft::Parameters<shapeExt, transformExt>>
-  {
-    static constexpr std::size_t shape     = shapeExt;
-    static constexpr std::size_t transform = transformExt;
-  };
-  
-  /// @brief Specialization for dht transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt>
-  struct TransformParametersTemplateRanks<afft::dht::Parameters<shapeExt, transformExt>>
-  {
-    static constexpr std::size_t shape     = shapeExt;
-    static constexpr std::size_t transform = transformExt;
-  };
-
-  /// @brief Specialization for dtt transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
-  struct TransformParametersTemplateRanks<afft::dtt::Parameters<shapeExt, transformExt, ttExt>>
-  {
-    static constexpr std::size_t shape         = shapeExt;
-    static constexpr std::size_t transform     = transformExt;
-    static constexpr std::size_t transformType = ttExt;
-  };
-
-  /**
    * @brief ArchitectureParameters type selection based on given target and distribution.
    * @tparam target The target type.
    * @tparam distrib The distribution type.
@@ -197,48 +165,6 @@ namespace afft::detail
   /// @brief Specialization for distributed cpu target parameters.
   template<std::size_t shapeExt>
   struct IsArchParameters<afft::mpst::gpu::Parameters<shapeExt>> : std::true_type {};
-
-  /**
-   * @brief ArchParameters template ranks.
-   * @tparam T The architecture parameters type.
-   */
-  template<typename T>
-  struct ArchParametersTemplateRanks;
-
-  /// @brief Specialization for spst cpu target parameters.
-  template<std::size_t shapeExt>
-  struct ArchParametersTemplateRanks<afft::spst::cpu::Parameters<shapeExt>>
-  {
-    static constexpr std::size_t shape = shapeExt;
-  };
-
-  /// @brief Specialization for spst gpu target parameters.
-  template<std::size_t shapeExt>
-  struct ArchParametersTemplateRanks<afft::spst::gpu::Parameters<shapeExt>>
-  {
-    static constexpr std::size_t shape = shapeExt;
-  };
-
-  /// @brief Specialization for distributed spmt gpu target parameters.
-  template<std::size_t shapeExt>
-  struct ArchParametersTemplateRanks<afft::spmt::gpu::Parameters<shapeExt>>
-  {
-    static constexpr std::size_t shape = shapeExt;
-  };
-
-  /// @brief Specialization for distributed mpst cpu target parameters.
-  template<std::size_t shapeExt>
-  struct ArchParametersTemplateRanks<afft::mpst::cpu::Parameters<shapeExt>>
-  {
-    static constexpr std::size_t shape = shapeExt;
-  };
-
-  /// @brief Specialization for distributed mpst gpu target parameters.
-  template<std::size_t shapeExt>
-  struct ArchParametersTemplateRanks<afft::mpst::gpu::Parameters<shapeExt>>
-  {
-    static constexpr std::size_t shape = shapeExt;
-  };
 
   /**
    * @brief BackendParameters type for given architecture.

@@ -22,37 +22,24 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_ARCHITECTURE_HPP
-#define AFFT_DETAIL_ARCHITECTURE_HPP
+#ifndef AFFT_DETAIL_TRANSFORM_HPP
+#define AFFT_DETAIL_TRANSFORM_HPP
 
 #include "common.hpp"
 
 namespace afft::detail
 {
   /**
-   * @brief Architecture parameters base class
-   * @tparam _target Target architecture
-   * @tparam _distrib Distribution
+   * @brief Transform parameters base class
+   * @tparam shapeExt Shape extent
+   * @tparam axesExt Axes extent
    */
-  template<Target _target, Distribution _distrib, std::size_t _shapeExt>
-  struct ArchitectureParametersBase
+  template<std::size_t shapeExt, std::size_t axesExt>
+  struct TransformParametersBase
   {
-    static constexpr Target       target{_target};        ///< Target architecture
-    static constexpr Distribution distribution{_distrib}; ///< Distribution
-    static constexpr std::size_t  shapeExtent{_shapeExt}; ///< Shape extent
-  };
-
-  /**
-   * @brief Architecture execution parameters base class
-   * @tparam _target Target architecture
-   * @tparam _distrib Distribution
-   */
-  template<Target _target, Distribution _distrib>
-  struct ArchitectureExecutionParametersBase
-  {
-    static constexpr Target       target{_target};        ///< Target architecture
-    static constexpr Distribution distribution{_distrib}; ///< Distribution
+    static constexpr std::size_t shapeExtent{shapeExt}; ///< Shape extent
+    static constexpr std::size_t axesExtent{axesExt};   ///< Axes extent
   };
 } // namespace afft::detail
 
-#endif /* AFFT_DETAIL_ARCHITECTURE_HPP */
+#endif /* AFFT_DETAIL_TRANSFORM_HPP */
