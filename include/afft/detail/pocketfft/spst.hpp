@@ -325,7 +325,7 @@ namespace afft::detail::pocketfft::spst::cpu
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] inline std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
   {
     // TODO: Adapt this and add DHT checks
     //

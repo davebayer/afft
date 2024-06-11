@@ -30,16 +30,23 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Initialize the library. Should be called before any other afft function.
-  inline void init()
+  void init();
+
+  /// @brief Finalize the library.
+  void finalize();
+
+#ifdef AFFT_HEADER_ONLY
+  AFFT_HEADER_ONLY_INLINE void init()
   {
     detail::Initializer::getInstance().init();
   }
 
   /// @brief Finalize the library.
-  inline void finalize()
+  AFFT_HEADER_ONLY_INLINE void finalize()
   {
     detail::Initializer::getInstance().finalize();
   }
+#endif
 } // namespace afft
 
 #endif /* AFFT_INIT_HPP */

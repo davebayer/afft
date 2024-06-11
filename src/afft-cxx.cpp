@@ -22,39 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_VKFFT_ERROR_HPP
-#define AFFT_DETAIL_VKFFT_ERROR_HPP
+// Disable the inline keyword for symbols that should be included in the library
+#define AFFT_HEADER_ONLY_INLINE
 
-#ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "../include.hpp"
-#endif
-
-#include "../../exception.hpp"
-
-namespace afft::detail::vkfft
-{
-  /**
-   * @brief Check if VkFFT result is ok.
-   * @param result VkFFT result.
-   * @return True if result is VKFFT_SUCCESS, false otherwise.
-   */
-  [[nodiscard]] constexpr bool isOk(VkFFTResult result)
-  {
-    return (result == VKFFT_SUCCESS);
-  }
-
-  /**
-   * @brief Check if VkFFT result is valid.
-   * @param result VkFFT result.
-   * @throw BackendError if result is not valid.
-   */
-  inline void checkError(VkFFTResult result)
-  {
-    if (!isOk(result))
-    {
-      throw BackendError{Backend::vkfft, getVkFFTErrorString(result)};
-    }
-  }
-} // namespace afft::detail::vkfft
-
-#endif /* AFFT_DETAIL_VKFFT_ERROR_HPP */
+// Include the library headers
+#include <afft/afft.hpp>

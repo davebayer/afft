@@ -33,7 +33,7 @@
 #include "detail/architecture.hpp"
 #include "detail/utils.hpp"
 
-#if AFFT_GPU_BACKEND_IS(MPI)
+#if AFFT_MP_BACKEND_IS(MPI)
 # include "detail/mpi/mpi.hpp"
 #endif
 

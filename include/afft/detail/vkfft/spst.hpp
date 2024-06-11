@@ -31,6 +31,8 @@
 
 #include "../../Plan.hpp"
 
+#if AFFT_GPU_IS_ENABLED
+
 namespace afft::detail::vkfft::spst::gpu
 {
   /**
@@ -399,7 +401,7 @@ namespace afft::detail::vkfft::spst::gpu
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] inline std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
   {
     const auto& precision = desc.getPrecision();
 
@@ -413,5 +415,7 @@ namespace afft::detail::vkfft::spst::gpu
 } // namespace afft::detail::vkfft::spst::gpu
 
 #endif /* AFFT_HEADER_ONLY */
+
+#endif /* AFFT_GPU_IS_ENABLED */
 
 #endif /* AFFT_DETAIL_VKFFT_SPST_HPP */

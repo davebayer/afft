@@ -33,7 +33,7 @@ namespace afft::hip
    * @brief Get the current HIP device.
    * @return Current HIP device.
    */
-  [[nodiscard]] int getCurrentDevice()
+  [[nodiscard]] inline int getCurrentDevice()
   {
     return detail::hip::getCurrentDevice();
   }

@@ -46,7 +46,7 @@ namespace detail
    * @return The size of the floating-point type. If the precision is not supported, returns 0.
    */
   template<Precision prec, Complexity cmpl = Complexity::real>
-  [[nodiscard]] inline constexpr std::size_t sizeOf() noexcept
+  [[nodiscard]] constexpr std::size_t sizeOf() noexcept
   {
     static_assert(isValid(prec), "Invalid precision.");
     static_assert(isValid(cmpl), "Invalid complexity.");
@@ -87,7 +87,7 @@ namespace detail
    * @param prec The precision.
    * @return The size of the floating-point type. If the precision is not supported, returns 0.
    */
-  [[nodiscard]] inline constexpr std::size_t sizeOf(Precision prec) noexcept
+  [[nodiscard]] constexpr std::size_t sizeOf(Precision prec) noexcept
   {
     switch (prec)
     {

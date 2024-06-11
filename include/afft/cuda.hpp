@@ -33,7 +33,7 @@ namespace afft::cuda
    * @brief Get the current CUDA device.
    * @return Current CUDA device.
    */
-  [[nodiscard]] int getCurrentDevice()
+  [[nodiscard]] inline int getCurrentDevice()
   {
     return detail::cuda::getCurrentDevice();
   }

@@ -174,7 +174,7 @@ AFFT_EXPORT namespace afft
    * @param rhs right-hand side
    * @return true if the precision triads are equal, false otherwise
    */
-  [[nodiscard]] inline constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
+  [[nodiscard]] constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
   {
     return (lhs.execution == rhs.execution) &&
            (lhs.source == rhs.source) &&

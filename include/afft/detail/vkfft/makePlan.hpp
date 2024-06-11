@@ -43,22 +43,26 @@ namespace afft::detail::vkfft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams)
+  makePlan([[maybe_unused]] const Desc& desc, const BackendParamsT& backendParams)
   {
     if constexpr (backendParams.target == Target::gpu)
     {
+#   if AFFT_GPU_IS_ENABLED
       if constexpr (backendParams.distribution == Distribution::spst)
       {
         return spst::gpu::makePlan(desc);
       }
       else
       {
-        throw BackendError{Backend::pocketfft, "only spst distribution is supported"};
+        throw BackendError{Backend::vkfft, "only spst distribution is supported"};
       }
+#   else
+      throw BackendError{Backend::vkfft, "gpu support is disabled"};
+#   endif
     }
     else
     {
-      throw BackendError{Backend::pocketfft, "only gpu target is supported"};
+      throw BackendError{Backend::vkfft, "only gpu target is supported"};
     }
   }
 } // namespace afft::detail::vkfft

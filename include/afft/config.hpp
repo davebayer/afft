@@ -153,6 +153,15 @@
 # define AFFT_EXPORT
 #endif
 
+// Define AFFT_HEADER_ONLY_INLINE macro to expand to inline if not defined
+#ifndef AFFT_HEADER_ONLY_INLINE
+# ifdef AFFT_HEADER_ONLY
+#   define AFFT_HEADER_ONLY_INLINE inline
+# else
+#   define AFFT_HEADER_ONLY_INLINE
+# endif
+#endif
+
 /**
  * @brief Define AFFT_PARAM macro to enable passing parameters containing commas
  * @param ... Parameter

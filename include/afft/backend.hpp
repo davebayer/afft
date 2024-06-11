@@ -76,7 +76,7 @@ AFFT_EXPORT namespace afft
    * @return Result of the operation.
    */
   template<typename T>
-  [[nodiscard]] inline constexpr auto operator~(T value)
+  [[nodiscard]] constexpr auto operator~(T value)
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>))
   {
     return detail::backendMaskUnaryOp(std::bit_not<>{}, value);
@@ -91,7 +91,7 @@ AFFT_EXPORT namespace afft
    * @return Result of the operation.
    */
   template<typename T, typename U>
-  [[nodiscard]] inline constexpr auto operator&(T lhs, U rhs)
+  [[nodiscard]] constexpr auto operator&(T lhs, U rhs)
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
@@ -107,7 +107,7 @@ AFFT_EXPORT namespace afft
    * @return Result of the operation.
    */
   template<typename T, typename U>
-  [[nodiscard]] inline constexpr auto operator|(T lhs, U rhs)
+  [[nodiscard]] constexpr auto operator|(T lhs, U rhs)
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
@@ -123,7 +123,7 @@ AFFT_EXPORT namespace afft
    * @return Result of the operation.
    */
   template<typename T, typename U>
-  [[nodiscard]] inline constexpr auto operator^(T lhs, U rhs)
+  [[nodiscard]] constexpr auto operator^(T lhs, U rhs)
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
@@ -432,7 +432,7 @@ inline namespace spst
     clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
     cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
   };
-} // namespace spst
+} // inline namespace spst
 
 /**********************************************************************************************************************/
 // Backend parameters for spmt distribution
@@ -571,7 +571,7 @@ namespace mpst
    * @param backend Backend to convert.
    * @return String representation of the backend.
    */
-  [[nodiscard]] inline constexpr std::string_view toString(Backend backend)
+  [[nodiscard]] constexpr std::string_view toString(Backend backend)
   {
     switch (backend)
     {
