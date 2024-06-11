@@ -57,6 +57,7 @@ namespace afft::detail
   template<typename T, typename... Args>
   [[nodiscard]] constexpr std::array<T, sizeof...(Args)> makeArray(Args&&... args)
   {
+    static_assert(!std::is_reference_v<T>, "Array type must not be a reference");
     static_assert(std::conjunction_v<std::is_convertible<Args, T>...>,
                   "Arguments must be convertible to the array type");
 
@@ -85,7 +86,7 @@ namespace afft::detail
   template<typename T = void>
   struct IsZero
   {
-    static_assert(std::is_arithmetic_v<T>, "IsZero can only be used with arithmetic types.");
+    static_assert(std::is_arithmetic_v<T> || std::is_void_v<T>, "IsZero can only be used with arithmetic types.");
 
     /**
      * @brief Checks if a value is zero.
@@ -123,7 +124,7 @@ namespace afft::detail
   template<typename T = void>
   struct IsNotZero
   {
-    static_assert(std::is_arithmetic_v<T>, "IsNotZero can only be used with arithmetic types.");
+    static_assert(std::is_arithmetic_v<T> || std::is_void_v<T>, "IsNotZero can only be used with arithmetic types.");
 
     /**
      * @brief Checks if a value is not zero.
@@ -271,19 +272,6 @@ namespace afft::detail
 
     return DivResult<I>{/* .quotient  = */ a / b,
                         /* .remainder = */ a % b};
-  }
-
-  /**
-   * @brief Removes the const qualifier from a pointer.
-   * @tparam T Type of the pointer.
-   * @param ptr Pointer to remove the const qualifier from.
-   * @return Pointer without the const qualifier.
-   * @warning This function should be used with caution, as it can lead to undefined behavior.
-   */
-  template<typename T>
-  [[nodiscard]] constexpr T* removeConstFromPtr(const T* ptr)
-  {
-    return const_cast<T*>(ptr);
   }
 } // namespace afft::detail
 
