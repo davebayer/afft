@@ -28,18 +28,30 @@ cmake_minimum_required(VERSION 3.20)
 project(afft VERSION 0.1.0 LANGUAGES CXX)
 
 ########################################################################################################################
+# Helper functions
+########################################################################################################################
+function(reportFound arg)
+  if(arg)
+    message(CHECK_PASS "found")
+  else()
+    message(CHECK_FAIL "not found")
+  endif()
+endfunction()
+
+########################################################################################################################
 # Options and variables
 ########################################################################################################################
 option(AFFT_BUILD_EXAMPLES  "Build examples"                  OFF)
 option(AFFT_BUILD_TESTS     "Build tests"                     OFF)
+option(AFFT_HEADER_ONLY     "Build as header-only library"    ON)
 # option(AFFT_STATIC_LIBS     "Link to static libraries"      OFF)
 # option(AFFT_GPU_STATIC_LIBS "Link to static GPU libraries"  ${AFFT_STATIC_LIBS})
 # option(AFFT_MODULE          "Build as C++20 module"         OFF)
 
-set(AFFT_MAX_DIM_COUNT     4          CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
-set(AFFT_CPU_BACKEND_LIST "POCKETFFT" CACHE STRING "Semicolon separated list of CPU backends to use (FFTW3, MKL and POCKETFFT), default is POCKETFFT")
-set(AFFT_GPU_FRAMEWORK    ""          CACHE STRING "GPU framework to use (CUDA, HIP or OPENCL), default is none (no GPU support)")
-set(AFFT_GPU_BACKEND_LIST "VKFFT"     CACHE STRING "Semicolon separated list of GPU backends to use (CUFFT, HIPFFT, ROCFFT and VKFFT), default is VKFFT")
+set(AFFT_MAX_DIM_COUNT 4                 CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
+set(AFFT_BACKEND_LIST  "POCKETFFT;VKFFT" CACHE STRING "Semicolon separated list of backends to use, default is POCKETFFT and VKFFT")
+set(AFFT_GPU_BACKEND   ""                CACHE STRING "GPU framework to use (CUDA, HIP or OPENCL), default is none (no GPU support)")
+set(AFFT_MP_BACKEND    ""                CACHE STRING "Multi process framework to use (MPI), default is none (no MP support)")
 
 ########################################################################################################################
 # Create target
@@ -58,54 +70,20 @@ target_include_directories(afft INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mdspan/include)
 target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
 
-########################################################################################################################
-# Set up CPU target
-########################################################################################################################
-foreach(CPU_BACKEND ${AFFT_CPU_BACKEND_LIST})
-  if(CPU_BACKEND STREQUAL "FFTW3")
-    find_library(FFTW3F_LIB NAMES "libfftw3f" "fftw3f" REQUIRED)
-    find_library(FFTW3_LIB NAMES "libfftw3" "fftw3" REQUIRED)
-    find_library(FFTW3L_LIB NAMES "libfftw3l" "fftw3l")
-    find_library(FFTW3Q_LIB NAMES "libfftw3q" "fftw3q")
-    find_library(FFTW3F_THREADS_LIB NAMES "libfftw3f_threads" "fftw3f_threads" REQUIRED)
-    find_library(FFTW3_THREADS_LIB NAMES "libfftw3_threads" "fftw3_threads" REQUIRED)
-    find_library(FFTW3L_THREADS_LIB NAMES "libfftw3l_threads" "fftw3l_threads")
-    find_library(FFTW3Q_THREADS_LIB NAMES "libfftw3q_threads" "fftw3q_threads")
-
-    if (FFTW3L_LIB AND FFTW3L_THREADS_LIB)
-      target_compile_definitions(afft INTERFACE AFFT_CPU_FFTW3_LONG_FOUND)
-    endif()
-    if (FFTW3Q_LIB AND FFTW3Q_THREADS_LIB)
-      target_compile_definitions(afft INTERFACE AFFT_CPU_FFTW3_QUAD_FOUND)
-    endif()
-
-    target_link_libraries(afft INTERFACE ${FFTW3F_LIB} ${FFTW3_LIB} ${FFTW3F_THREADS_LIB} ${FFTW3_THREADS_LIB})
-  elseif(CPU_BACKEND STREQUAL "MKL")
-    find_package(MKL REQUIRED)
-    target_link_libraries(afft INTERFACE MKL::MKL)
-  elseif(CPU_BACKEND STREQUAL "POCKETFFT")
-    target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pocketfft)
-  else()
-    message(FATAL_ERROR "Invalid CPU backend: ${CPU_BACKEND}")
-  endif()
-endforeach()
-
-# Convert the list of CPU backends to uppercase and pass it to the target
-string(TOUPPER "${AFFT_CPU_BACKEND_LIST}" CPU_BACKEND_LIST_UPPER)
-list(TRANSFORM CPU_BACKEND_LIST_UPPER PREPEND "AFFT_CPU_BACKEND_" OUTPUT_VARIABLE CPU_BACKEND_LIST_UPPER_PREP)
-string(REPLACE ";" "|" CPU_BACKEND_MASK "${CPU_BACKEND_LIST_UPPER_PREP}")
-target_compile_definitions(afft INTERFACE AFFT_CPU_BACKEND_MASK=${CPU_BACKEND_MASK})
+if(AFFT_HEADER_ONLY)
+  target_compile_definitions(afft INTERFACE AFFT_HEADER_ONLY)
+endif()
 
 ########################################################################################################################
 # Set up GPU target if needed
 ########################################################################################################################
-if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
-  if(AFFT_GPU_FRAMEWORK STREQUAL "CUDA")
-      find_package(CUDAToolkit REQUIRED)
+if(NOT ("${AFFT_GPU_BACKEND}" STREQUAL ""))
+  if(AFFT_GPU_BACKEND STREQUAL "CUDA")
+    find_package(CUDAToolkit REQUIRED)
     target_include_directories(afft SYSTEM INTERFACE ${CUDAToolkit_INCLUDE_DIRS})
     target_compile_definitions(afft INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${CUDAToolkit_ROOT_DIR}") #fixme: is empty
     target_link_libraries(afft INTERFACE CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
-  elseif(AFFT_GPU_FRAMEWORK STREQUAL "HIP")
+  elseif(AFFT_GPU_BACKEND STREQUAL "HIP")
     find_package(hip REQUIRED)
     target_include_directories(afft SYSTEM INTERFACE ${HIP_INCLUDE_DIRS})
     target_compile_definitions(afft INTERFACE AFFT_GPU_HIP_ROOT_DIR="${hip_ROOT_DIR}") #fixme: is empty
@@ -121,40 +99,177 @@ if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
     else()
       message(FATAL_ERROR "Invalid HIP platform: ${HIP_PLATFORM}")
     endif()
-  elseif(AFFT_GPU_FRAMEWORK STREQUAL "OPENCL")
+  elseif(AFFT_GPU_BACKEND STREQUAL "OPENCL")
       find_package(OpenCL REQUIRED)
     target_link_libraries(afft INTERFACE OpenCL::OpenCL)
   else()
-    message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_FRAMEWORK}")
+    message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_BACKEND}")
   endif()
-  
-  foreach(GPU_BACKEND ${AFFT_GPU_BACKEND_LIST})
-    if(GPU_BACKEND STREQUAL "CLFFT")
+
+  string(TOUPPER "${AFFT_GPU_BACKEND}" GPU_BACKEND_UPPER)
+  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND=${GPU_BACKEND_UPPER})
+endif()
+
+########################################################################################################################
+# Set up MP target if needed
+########################################################################################################################
+if(NOT ("${AFFT_MP_BACKEND}" STREQUAL ""))
+  set(HAS_MP_SUPPORT TRUE)
+
+  if(AFFT_MP_BACKEND STREQUAL "MPI")
+    find_package(MPI REQUIRED)
+    target_link_libraries(afft INTERFACE MPI::MPI_CXX)
+  else()
+    message(FATAL_ERROR "Invalid MP framework: ${AFFT_MP_BACKEND}")
+  endif()
+else()
+  set(HAS_MP_SUPPORT FALSE)
+endif()
+
+########################################################################################################################
+# Set up backend libraries
+########################################################################################################################
+foreach(BACKEND ${AFFT_BACKEND_LIST})
+  if(BACKEND STREQUAL "CLFFT")
+    if(AFFT_GPU_BACKEND STREQUAL "OPENCL")
+      status(CHECK_START "Finding clFFT library")
       find_library(CLFFT_LIB NAMES "libclFFT" "clFFT" REQUIRED)
+      reportFound(CLFFT_LIB)
+
       target_link_libraries(afft INTERFACE ${CLFFT_LIB})
-    elseif(GPU_BACKEND STREQUAL "CUFFT")
-      target_link_libraries(afft INTERFACE CUDA::cufft)
-    elseif(GPU_BACKEND STREQUAL "HIPFFT")
+    endif()
+  elseif(BACKEND STREQUAL "CUFFT")
+    if(AFFT_GPU_BACKEND STREQUAL "CUDA")
+      if(HAS_MP_SUPPORT AND AFFT_MP_BACKEND STREQUAL "MPI")
+        find_package(NVHPC REQUIRED)
+        target_link_libraries(afft INTERFACE NVHPC::CUFFTMP)
+      else()
+        target_link_libraries(afft INTERFACE CUDA::cufft)
+      endif()
+    endif()
+  elseif(BACKEND STREQUAL "FFTW3")
+    message(CHECK_START "Finding fftw3 library")
+    list(APPEND CMAKE_MESSAGE_INDENT "  ")
+
+    message(CHECK_START "Finding fftw3f library")
+    find_library(FFTW3F_LIB NAMES "libfftw3f" "fftw3f")
+    reportFound(FFTW3F_LIB)
+
+    message(CHECK_START "Finding fftw3f_threads library")
+    find_library(FFTW3F_THREADS_LIB NAMES "libfftw3f_threads" "fftw3f_threads")
+    reportFound(FFTW3F_THREADS_LIB)
+
+    message(CHECK_START "Finding fftw3 library")
+    find_library(FFTW3_LIB NAMES "libfftw3" "fftw3")
+    reportFound(FFTW3_LIB)
+
+    message(CHECK_START "Finding fftw3_threads library")
+    find_library(FFTW3_THREADS_LIB NAMES "libfftw3_threads" "fftw3_threads")
+    reportFound(FFTW3_THREADS_LIB)
+
+    message(CHECK_START "Finding fftw3l library")
+    find_library(FFTW3L_LIB NAMES "libfftw3l" "fftw3l")
+    reportFound(FFTW3L_LIB)
+
+    message(CHECK_START "Finding fftw3l_threads library")
+    find_library(FFTW3L_THREADS_LIB NAMES "libfftw3l_threads" "fftw3l_threads")
+    reportFound(FFTW3L_THREADS_LIB)
+
+    message(CHECK_START "Finding fftw3q library")
+    find_library(FFTW3Q_LIB NAMES "libfftw3q" "fftw3q")
+    reportFound(FFTW3Q_LIB)
+
+    message(CHECK_START "Finding fftw3q_threads library")
+    find_library(FFTW3Q_THREADS_LIB NAMES "libfftw3q_threads" "fftw3q_threads")
+    reportFound(FFTW3Q_THREADS_LIB)
+
+    if(FFTW3F_LIB AND FFTW3F_THREADS_LIB)
+      target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_FLOAT)
+      target_link_libraries(afft INTERFACE ${FFTW3F_LIB} ${FFTW3F_THREADS_LIB})
+    endif()
+    if (FFTW3_LIB AND FFTW3_THREADS_LIB)
+      target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_DOUBLE)
+      target_link_libraries(afft INTERFACE ${FFTW3_LIB} ${FFTW3_THREADS_LIB})
+    endif()
+    if (FFTW3L_LIB AND FFTW3L_THREADS_LIB)
+      target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_LONG)
+      target_link_libraries(afft INTERFACE ${FFTW3L_LIB} ${FFTW3L_THREADS_LIB})
+    endif()
+    if (FFTW3Q_LIB AND FFTW3Q_THREADS_LIB)
+      target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_QUAD)
+      target_link_libraries(afft INTERFACE ${FFTW3Q_LIB} ${FFTW3Q_THREADS_LIB})
+    endif()
+
+    if(AFFT_MP_BACKEND STREQUAL "MPI")
+      message(CHECK_START "Finding fftw3f_mpi library")
+      find_library(FFTW3F_MPI_LIB NAMES "libfftw3f_mpi" "fftw3f_mpi")
+      reportFound(FFTW3F_MPI_LIB)
+
+      message(CHECK_START "Finding fftw3_mpi library")
+      find_library(FFTW3_MPI_LIB NAMES "libfftw3_mpi" "fftw3_mpi")
+      reportFound(FFTW3_MPI_LIB)
+
+      message(CHECK_START "Finding fftw3l_mpi library")
+      find_library(FFTW3L_MPI_LIB NAMES "libfftw3l_mpi" "fftw3l_mpi")
+      reportFound(FFTW3L_MPI_LIB)
+
+      if(FFTW3F_LIB AND FFTW3F_THREADS_LIB AND FFTW3F_MPI_LIB)
+        target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_MPI_FLOAT)
+        target_link_libraries(afft INTERFACE ${FFTW3F_MPI_LIB})
+      endif()
+      if (FFTW3_LIB AND FFTW3_THREADS_LIB AND FFTW3F_MPI_LIB)
+        target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_MPI_DOUBLE)
+        target_link_libraries(afft INTERFACE ${FFTW3_MPI_LIB})
+      endif()
+      if (FFTW3L_LIB AND FFTW3L_THREADS_LIB AND FFTW3F_MPI_LIB)
+        target_compile_definitions(afft INTERFACE AFFT_FFTW3_HAS_MPI_LONG)
+        target_link_libraries(afft INTERFACE ${FFTW3L_MPI_LIB})
+      endif()
+    endif()
+
+    list(POP_BACK CMAKE_MESSAGE_INDENT)
+  elseif(BACKEND STREQUAL "MKL")
+    find_package(MKL REQUIRED)
+    target_link_libraries(afft INTERFACE MKL::MKL)
+
+    # TODO: MPI support
+  elseif(BACKEND STREQUAL "POCKETFFT")
+    target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/pocketfft)
+  elseif(BACKEND STREQUAL "HIPFFT")
+    if(AFFT_GPU_BACKEND STREQUAL "HIP")
       find_package(hipfft REQUIRED)
       target_link_libraries(afft INTERFACE hip::hipfft)
-    elseif(GPU_BACKEND STREQUAL "ROCFFT")
+    endif()
+  elseif(BACKEND STREQUAL "ROCFFT")
+    if(AFFT_GPU_BACKEND STREQUAL "HIP")
       find_package(rocfft REQUIRED)
       target_link_libraries(afft INTERFACE roc::rocfft)
-    elseif(GPU_BACKEND STREQUAL "VKFFT")
-      target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/VkFFT/vkFFT)
-    else()
-      message(FATAL_ERROR "Invalid GPU backend: ${GPU_BACKEND}")
     endif()
-  endforeach()
+  elseif(BACKEND STREQUAL "VKFFT")
+    if((AFFT_GPU_BACKEND STREQUAL "CUDA") OR (AFFT_GPU_BACKEND STREQUAL "HIP") OR (AFFT_GPU_BACKEND STREQUAL "OPENCL"))
+      target_include_directories(afft SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/VkFFT/vkFFT)
 
-  # Convert the GPU framework and the list of GPU backends to uppercase and pass it to the target
-  string(TOUPPER "${AFFT_GPU_FRAMEWORK}" GPU_FRAMEWORK_UPPER)
-  string(TOUPPER "${AFFT_GPU_BACKEND_LIST}" GPU_BACKEND_LIST_UPPER)
-  list(TRANSFORM GPU_BACKEND_LIST_UPPER PREPEND "AFFT_GPU_BACKEND_" OUTPUT_VARIABLE GPU_BACKEND_LIST_UPPER_PREP)
-  string(REPLACE ";" "|" GPU_BACKEND_MASK "${GPU_BACKEND_LIST_UPPER_PREP}")
-  target_compile_definitions(afft INTERFACE AFFT_GPU_FRAMEWORK=${GPU_FRAMEWORK_UPPER})
-  target_compile_definitions(afft INTERFACE AFFT_GPU_BACKEND_MASK=${GPU_BACKEND_MASK})
-endif()
+      if(AFFT_VKFFT_HAS_DOUBLE_DOUBLE)
+        message(CHECK_START "Finding quadmath library")
+        find_library(QUADMATH_LIB NAMES "quadmath")
+        reportFound(QUADMATH_LIB)
+
+        if(QUADMATH_LIB)
+          target_compile_definitions(afft INTERFACE AFFT_VKFFT_HAS_QUADMATH)
+          target_link_libraries(afft INTERFACE ${QUADMATH_LIB})
+        endif()
+      endif()
+    endif()
+  else()
+    message(FATAL_ERROR "Invalid backend: ${BACKEND}")
+  endif()
+endforeach()
+
+# Convert the list of CPU backends to uppercase and pass it to the target
+string(TOUPPER "${AFFT_BACKEND_LIST}" BACKEND_LIST_UPPER)
+list(TRANSFORM BACKEND_LIST_UPPER PREPEND "AFFT_BACKEND_" OUTPUT_VARIABLE BACKEND_LIST_UPPER_PREP)
+string(REPLACE ";" "|" BACKEND_MASK "${BACKEND_LIST_UPPER_PREP}")
+target_compile_definitions(afft INTERFACE AFFT_BACKEND_MASK=${BACKEND_MASK})
 
 ########################################################################################################################
 
@@ -171,15 +286,15 @@ if(AFFT_BUILD_EXAMPLES)
   set_target_properties(cpu_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
   target_link_libraries(cpu_dft_1D_C2C_simple PRIVATE afft::afft)
 
-  if(NOT (AFFT_GPU_FRAMEWORK STREQUAL ""))
-    if(AFFT_GPU_FRAMEWORK STREQUAL "CUDA")
+  if(NOT (AFFT_GPU_BACKEND STREQUAL ""))
+    if(AFFT_GPU_BACKEND STREQUAL "CUDA")
       set(GPU_EXAMPLES_FRAMEWORK_DIR "cuda")
-    elseif(AFFT_GPU_FRAMEWORK STREQUAL "HIP")
+    elseif(AFFT_GPU_BACKEND STREQUAL "HIP")
       set(GPU_EXAMPLES_FRAMEWORK_DIR "hip")
-    elseif(AFFT_GPU_FRAMEWORK STREQUAL "OPENCL")
+    elseif(AFFT_GPU_BACKEND STREQUAL "OPENCL")
       set(GPU_EXAMPLES_FRAMEWORK_DIR "opencl")
     else()
-      message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_FRAMEWORK}")
+      message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_BACKEND}")
     endif()
 
     add_executable(gpu_dft_1D_C2C_simple "examples/gpu/${GPU_EXAMPLES_FRAMEWORK_DIR}/dft_1D_C2C_simple.cpp")

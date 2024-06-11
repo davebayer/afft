@@ -29,10 +29,25 @@
 # include "../include.hpp"
 #endif
 
+#include "../../Plan.hpp"
+
+namespace afft::detail::vkfft::spst::gpu
+{
+  /**
+   * @brief Create a vkfft spst gpu plan implementation.
+   * @param desc Plan description.
+   * @return Plan implementation.
+   */
+  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
+} // namespace afft::detail::vkfft::spst::gpu
+
+#ifdef AFFT_HEADER_ONLY
+
 #include "Plan.hpp"
 
 namespace afft::detail::vkfft::spst::gpu
 {
+  /// @brief Alias for the unsigned integer type used by VkFFT
   using UInt = pfUINT;
 
   /**
@@ -380,12 +395,11 @@ namespace afft::detail::vkfft::spst::gpu
   };
 
   /**
-   * @brief Create a plan implementation.
+   * @brief Create a vkfft spst gpu plan implementation.
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] inline std::unique_ptr<vkfft::Plan>
-  makePlan(const Desc& desc)
+  [[nodiscard]] inline std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
   {
     const auto& precision = desc.getPrecision();
 
@@ -397,5 +411,7 @@ namespace afft::detail::vkfft::spst::gpu
     return std::make_unique<Plan>(desc);
   }
 } // namespace afft::detail::vkfft::spst::gpu
+
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_VKFFT_SPST_HPP */

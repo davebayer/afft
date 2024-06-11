@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "Plan.hpp"
+#include "../../Plan.hpp"
 #include "spst.hpp"
 
 namespace afft::detail::pocketfft
@@ -42,7 +42,7 @@ namespace afft::detail::pocketfft
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan(const Desc& desc, const BackendParamsT& backendParams)
   {
     if (desc.getComplexFormat() != ComplexFormat::interleaved)

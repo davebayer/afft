@@ -29,6 +29,20 @@
 # include "../include.hpp"
 #endif
 
+#include "../../Plan.hpp"
+
+namespace afft::detail::pocketfft::spst::cpu
+{
+  /**
+   * @brief Create a pocketfft spst cpu plan implementation.
+   * @param desc Plan description.
+   * @return Plan implementation.
+   */
+  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
+} // namespace afft::detail::pocketfft::spst::cpu
+
+#ifdef AFFT_HEADER_ONLY
+
 #include "Plan.hpp"
 
 namespace afft::detail::pocketfft::spst::cpu
@@ -300,11 +314,6 @@ namespace afft::detail::pocketfft::spst::cpu
         }
       }
 
-      [[nodiscard]] constexpr std::size_t getThreadCount() const
-      {
-        return static_cast<std::size_t>(mDesc.template getArchDesc<Target::cpu, Distribution::spst>().threadLimit);
-      }
-
       ::pocketfft::shape_t  mShape{};      ///< The shape of the data
       ::pocketfft::stride_t mSrcStrides{}; ///< The stride of the source data
       ::pocketfft::stride_t mDstStrides{}; ///< The stride of the destination data
@@ -312,12 +321,11 @@ namespace afft::detail::pocketfft::spst::cpu
   };
 
   /**
-   * @brief Create a plan implementation.
+   * @brief Create a pocketfft spst cpu plan implementation.
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] inline std::unique_ptr<pocketfft::Plan>
-  makePlan(const Desc& desc)
+  [[nodiscard]] inline std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
   {
     // TODO: Adapt this and add DHT checks
     //
@@ -386,5 +394,7 @@ namespace afft::detail::pocketfft::spst::cpu
     }
   }
 } // namespace afft::detail::pocketfft::spst::cpu
+
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_POCKETFFT_SPST_HPP */

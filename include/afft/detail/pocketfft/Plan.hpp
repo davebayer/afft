@@ -52,8 +52,8 @@ namespace afft::detail::pocketfft
       virtual ~Plan() = default;
 
       /**
-       * @brief Get the pocketfft backend.
-       * @return The pocketfft backend.
+       * @brief Get the backend.
+       * @return The backend.
        */
       [[nodiscard]] Backend getBackend() const noexcept override
       {
@@ -75,6 +75,15 @@ namespace afft::detail::pocketfft
         default:
           cxx::unreachable();
         }
+      }
+
+      /**
+       * @brief Get the thread count from the plan description.
+       * @return The thread count.
+       */
+      [[nodiscard]] constexpr std::size_t getThreadCount() const
+      {
+        return static_cast<std::size_t>(mDesc.template getArchDesc<Target::cpu, Distribution::spst>().threadLimit);
       }
   };
 } // namespace afft::detail::pocketfft

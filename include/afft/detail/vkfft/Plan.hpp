@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_PLAN_HPP
-#define AFFT_DETAIL_PLAN_HPP
+#ifndef AFFT_DETAIL_VKFFT_PLAN_HPP
+#define AFFT_DETAIL_VKFFT_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
@@ -45,15 +45,15 @@ namespace afft::detail::vkfft
       /// @brief Inherit constructor.
       using Parent::Parent;
 
-      /// @brief Inherit assignment operator.
-      using Parent::operator=;
-
       /// @brief Default destructor.
       virtual ~Plan() = default;
 
+      /// @brief Inherit assignment operator.
+      using Parent::operator=;
+
       /**
-       * @brief Get the vkfft backend.
-       * @return The vkfft backend.
+       * @brief Get the backend.
+       * @return The backend.
        */
       [[nodiscard]] Backend getBackend() const noexcept override
       {
@@ -79,4 +79,4 @@ namespace afft::detail::vkfft
   };
 } // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_PLAN_HPP */
+#endif /* AFFT_DETAIL_VKFFT_PLAN_HPP */

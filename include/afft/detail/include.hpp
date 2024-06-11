@@ -92,113 +92,115 @@ import std;
 # include <mpi.h>
 #endif
 
-// Include clFFT header
-#if AFFT_BACKEND_IS_ENABLED(CLFFT)
-# if AFFT_GPU_BACKEND_IS(OPENCL)
-#   include <clFFT.h>
-# endif
-#endif
-
-// Include cuFFT header
-#if AFFT_BACKEND_IS_ENABLED(CUFFT)
-# if AFFT_GPU_BACKEND_IS(CUDA)
-#   ifdef AFFT_CUFFT_HAS_MP
-#     include <cufftMp.h>
-#   else
-#     include <cufftXt.h>
-#   endif
-#   if CUFFT_VERSION < 8000
-#     error "cuFFT version 8.0 or higher is required"
+#ifdef AFFT_HEADER_ONLY
+ // Include clFFT header
+# if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#   if AFFT_GPU_BACKEND_IS(OPENCL)
+#     include <clFFT.h>
 #   endif
 # endif
-#endif
 
-// Include FFTW3 header
-#if AFFT_BACKEND_IS_ENABLED(FFTW3)
-# if (defined(AFFT_FFTW3_HAS_FLOAT) || defined(AFFT_FFTW3_HAS_DOUBLE) || defined(AFFT_FFTW3_HAS_LONG) || defined(AFFT_FFTW3_HAS_QUAD))
-#   include <fftw3.h>
-# endif
-# if AFFT_MP_BACKEND_IS(MPI) && \
-     (defined(AFFT_FFTW3_HAS_MPI_FLOAT) || defined(AFFT_FFTW3_HAS_MPI_DOUBLE) || defined(AFFT_FFTW3_HAS_MPI_LONG))
-#   include <fftw3-mpi.h>
-# endif
-#endif
-
-// Include HeFFTe header
-#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
-# include <heffte.h>
-#endif
-
-// Include hipFFT header
-#if AFFT_BACKEND_IS_ENABLED(HIPFFT)
-# if AFFT_GPU_BACKEND_IS(HIP)
-#   include <hipfft/hipfftXt.h>
-# endif
-#endif
-
-// Include MKL header
-#if AFFT_BACKEND_IS_ENABLED(MKL)
-# include <mkl_dfti.h>
-#endif
-
-// Include PocketFFT header
-#if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
-# include <pocketfft_hdronly.h>
-#endif
-
-// Include rocFFT header
-#if AFFT_BACKEND_IS_ENABLED(ROCFFT)
-# if AFFT_GPU_BACKEND_IS(HIP)
-#   include <rocfft/rocfft.h>
-# endif
-#endif
-
-// Include vkFFT header
-#if AFFT_BACKEND_IS_ENABLED(VKFFT)
-# if AFFT_GPU_BACKEND_IS(CUDA) || \
-     (AFFT_GPU_BACKEND_IS(HIP) && defined(__HIP_PLATFORM_AMD__)) || \
-     AFFT_GPU_BACKEND_IS(OPENCL)
-    // check if AFFT has been included before including vkFFT
-#   ifdef VKFFT_H
-#     error "AFFT and vkFFT cannot be included together in the same translation unit"
-#   endif
-    // push the current value of VKFFT_BACKEND
-#   pragma push_macro("VKFFT_BACKEND")
-#   undef VKFFT_BACKEND
-    // push the current value of VKFFT_MAX_FFT_DIMENSIONS
-#   pragma push_macro("VKFFT_MAX_FFT_DIMENSIONS")
-#   undef VKFFT_MAX_FFT_DIMENSIONS
-    // push the current value of VKFFT_USE_DOUBLEDOUBLE_FP128
-#   pragma push_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
-#   undef VKFFT_USE_DOUBLEDOUBLE_FP128
-    // define VKFFT_BACKEND based on the current GPU backend
+ // Include cuFFT header
+# if AFFT_BACKEND_IS_ENABLED(CUFFT)
 #   if AFFT_GPU_BACKEND_IS(CUDA)
-#     define VKFFT_BACKEND 1
-#     ifndef CUDA_TOOLKIT_ROOT_DIR
-#       define CUDA_TOOLKIT_ROOT_DIR AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
+#     ifdef AFFT_CUFFT_HAS_MP
+#       include <cufftMp.h>
+#     else
+#       include <cufftXt.h>
 #     endif
-#   elif AFFT_GPU_BACKEND_IS(HIP)
-#     define VKFFT_BACKEND 2
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
-#     define VKFFT_BACKEND 3
-#   else
-#     error "vkFFT backend is only supported with CUDA, HIP or OpenCL"
+#     if CUFFT_VERSION < 8000
+#       error "cuFFT version 8.0 or higher is required"
+#     endif
 #   endif
-    // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
-#   define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
-    // define VKFFT_USE_DOUBLEDOUBLE_FP128 if double-double precision is enabled
-#   ifdef AFFT_VKFFT_HAS_DOUBLE_DOUBLE
-#     define VKFFT_USE_DOUBLEDOUBLE_FP128
-#   endif
-    // include the vkFFT header
-#   include <vkFFT.h>
-    // restore the original value of VKFFT_BACKEND
-#   pragma pop_macro("VKFFT_BACKEND")
-    // restore the original value of VKFFT_MAX_FFT_DIMENSIONS
-#   pragma pop_macro("VKFFT_MAX_FFT_DIMENSIONS")
-    // restore the original value of VKFFT_USE_DOUBLEDOUBLE_FP128
-#   pragma pop_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
 # endif
-#endif
+
+ // Include FFTW3 header
+# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#   if (defined(AFFT_FFTW3_HAS_FLOAT) || defined(AFFT_FFTW3_HAS_DOUBLE) || defined(AFFT_FFTW3_HAS_LONG) || defined(AFFT_FFTW3_HAS_QUAD))
+#     include <fftw3.h>
+#   endif
+#   if AFFT_MP_BACKEND_IS(MPI) && \
+       (defined(AFFT_FFTW3_HAS_MPI_FLOAT) || defined(AFFT_FFTW3_HAS_MPI_DOUBLE) || defined(AFFT_FFTW3_HAS_MPI_LONG))
+#     include <fftw3-mpi.h>
+#   endif
+# endif
+
+ // Include HeFFTe header
+# if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#   include <heffte.h>
+# endif
+
+ // Include hipFFT header
+# if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#   if AFFT_GPU_BACKEND_IS(HIP)
+#     include <hipfft/hipfftXt.h>
+#   endif
+# endif
+
+ // Include MKL header
+# if AFFT_BACKEND_IS_ENABLED(MKL)
+#   include <mkl_dfti.h>
+# endif
+
+ // Include PocketFFT header
+# if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#   include <pocketfft_hdronly.h>
+# endif
+
+ // Include rocFFT header
+# if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#   if AFFT_GPU_BACKEND_IS(HIP)
+#     include <rocfft/rocfft.h>
+#   endif
+# endif
+
+ // Include vkFFT header
+# if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#   if AFFT_GPU_BACKEND_IS(CUDA) || \
+       (AFFT_GPU_BACKEND_IS(HIP) && defined(__HIP_PLATFORM_AMD__)) || \
+       AFFT_GPU_BACKEND_IS(OPENCL)
+      // check if AFFT has been included before including vkFFT
+#     ifdef VKFFT_H
+#       error "AFFT and vkFFT cannot be included together in the same translation unit"
+#     endif
+      // push the current value of VKFFT_BACKEND
+#     pragma push_macro("VKFFT_BACKEND")
+#     undef VKFFT_BACKEND
+      // push the current value of VKFFT_MAX_FFT_DIMENSIONS
+#     pragma push_macro("VKFFT_MAX_FFT_DIMENSIONS")
+#     undef VKFFT_MAX_FFT_DIMENSIONS
+      // push the current value of VKFFT_USE_DOUBLEDOUBLE_FP128
+#     pragma push_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
+#     undef VKFFT_USE_DOUBLEDOUBLE_FP128
+      // define VKFFT_BACKEND based on the current GPU backend
+#     if AFFT_GPU_BACKEND_IS(CUDA)
+#       define VKFFT_BACKEND 1
+#       ifndef CUDA_TOOLKIT_ROOT_DIR
+#         define CUDA_TOOLKIT_ROOT_DIR AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
+#       endif
+#     elif AFFT_GPU_BACKEND_IS(HIP)
+#       define VKFFT_BACKEND 2
+#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#       define VKFFT_BACKEND 3
+#     else
+#       error "vkFFT backend is only supported with CUDA, HIP or OpenCL"
+#     endif
+      // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
+#     define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
+      // define VKFFT_USE_DOUBLEDOUBLE_FP128 if double-double precision is enabled
+#     ifdef AFFT_VKFFT_HAS_DOUBLE_DOUBLE
+#       define VKFFT_USE_DOUBLEDOUBLE_FP128
+#     endif
+      // include the vkFFT header
+#     include <vkFFT.h>
+      // restore the original value of VKFFT_BACKEND
+#     pragma pop_macro("VKFFT_BACKEND")
+      // restore the original value of VKFFT_MAX_FFT_DIMENSIONS
+#     pragma pop_macro("VKFFT_MAX_FFT_DIMENSIONS")
+      // restore the original value of VKFFT_USE_DOUBLEDOUBLE_FP128
+#     pragma pop_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
+#   endif
+# endif
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_INCLUDE_HPP */
