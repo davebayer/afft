@@ -670,6 +670,16 @@ typedef afft_spst_cpu_ExecutionParameters afft_cpu_ExecutionParameters;
 typedef afft_spst_gpu_ExecutionParameters afft_gpu_ExecutionParameters;
 
 /**********************************************************************************************************************/
+// Initialization
+/**********************************************************************************************************************/
+
+/// @brief Initialize the library
+afft_Error afft_init();
+
+/// @brief Finalize the library
+afft_Error afft_finalize();
+
+/**********************************************************************************************************************/
 // Plan
 /**********************************************************************************************************************/
 
@@ -1203,6 +1213,104 @@ void afft_Plan_destroy(afft_Plan* plan);
 // PlanCache
 /**********************************************************************************************************************/
 
+
+/**********************************************************************************************************************/
+// Allocations
+/**********************************************************************************************************************/
+
+/**
+ * @brief Allocate aligned memory.
+ * @param sizeInBytes Size of the memory block in bytes.
+ * @param alignment Alignment of the memory block.
+ * @return Pointer to the allocated memory block or NULL if the allocation failed.
+ */
+void* afft_cpu_alignedAlloc(size_t sizeInBytes, afft_Alignment alignment);
+
+/**
+ * @brief Free aligned memory.
+ * @param ptr Pointer to the memory block.
+ */
+void afft_cpu_alignedFree(void* ptr);
+
+#if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+/**
+ * @brief Allocate unified memory.
+ * @param sizeInBytes Size of the memory block in bytes.
+ * @return Pointer to the allocated memory block or NULL if the allocation failed.
+ */
+void* afft_gpu_unifiedAlloc(size_t sizeInBytes);
+
+/**
+ * @brief Free unified memory.
+ * @param ptr Pointer to the memory block.
+ */
+void afft_gpu_unifiedFree(void* ptr);
+#elif AFFT_GPU_BACKEND_IS(OPENCL)
+/**
+ * @brief Allocate unified memory.
+ * @param context OpenCL context.
+ * @param sizeInBytes Size of the memory block in bytes.
+ * @return Pointer to the allocated memory block or NULL if the allocation failed.
+ */
+void* afft_gpu_unifiedAlloc(cl_context context, size_t sizeInBytes);
+
+/**
+ * @brief Free unified memory.
+ * @param context OpenCL context.
+ * @param ptr Pointer to the memory block.
+ */
+void afft_gpu_unifiedFree(cl_context context, void* ptr);
+#endif
+
+/**********************************************************************************************************************/
+// Utilities
+/**********************************************************************************************************************/
+
+/**
+ * @brief Get the size of the type.
+ * @param type Type.
+ * @return Size of the type.
+ */
+static inline afft_Alignment afft_getAlignment(size_t count, ...)
+{
+  va_list args;
+  va_start(args, count);
+
+  uintptr_t logOredPtrs = 0;
+
+  for (size_t i = 0; i < count; ++i)
+  {
+    logOredPtrs |= va_arg(args, uintptr_t);
+  }
+
+  const afft_Alignment alignment = (afft_Alignment)(logOredPtrs & ~(logOredPtrs - 1));
+
+  va_end(args);
+
+  return alignment;
+}
+
+/**
+ * @brief Make strides from the shape.
+ * @param rank Rank of the shape.
+ * @param shape Shape of the array.
+ * @param strides Strides of the array.
+ * @return Error code.
+ */
+afft_Error afft_makeStrides(size_t rank, const size_t* shape, size_t* strides);
+
+/**
+ * @brief Make transposed strides.
+ * @param rank Rank of the shape.
+ * @param resultShape Shape of the result array.
+ * @param orgAxesOrder Order of the original axes.
+ * @param strides Strides of the array.
+ * @return Error code.
+ */
+afft_Error afft_makeTransposedStrides(size_t        rank,
+                                      const size_t* resultShape,
+                                      const size_t* orgAxesOrder,
+                                      size_t*       strides);
 
 #ifdef __cplusplus
 }
