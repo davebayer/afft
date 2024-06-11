@@ -40,8 +40,8 @@ AFFT_EXPORT namespace afft
   template<typename T>
   struct PlanarComplex
   {
-    T real{}; ///< The real part.
-    T imag{}; ///< The imaginary part.
+    T* real{}; ///< The real part.
+    T* imag{}; ///< The imaginary part.
   };
 
   /**
@@ -49,7 +49,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The real type.
    */
   template<typename T>
-  PlanarComplex(T r, T i) -> PlanarComplex<T>;
+  PlanarComplex(T* r, T* i) -> PlanarComplex<T>;
 
   /**
    * @struct TypePropertiesBase

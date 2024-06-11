@@ -196,7 +196,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
-      void execute(PlanarComplex<SrcDstT*> srcDst, const ExecParamsT execParams = {})
+      void execute(PlanarComplex<SrcDstT> srcDst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcDstT>, "source/destination type must be real");
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
@@ -230,7 +230,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<PlanarComplex<SrcDstT*>> srcDst, const ExecParamsT execParams = {})
+      void execute(View<PlanarComplex<SrcDstT>> srcDst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcDstT>, "source/destination type must be real");
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
@@ -269,7 +269,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(PlanarComplex<SrcT*> src, DstT* dst, const ExecParamsT execParams = {})
+      void execute(PlanarComplex<SrcT> src, DstT* dst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcT>, "source type must be real");
         static_assert(isKnownType<DstT>, "unknown destination type");
@@ -289,7 +289,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(SrcT* src, PlanarComplex<DstT*> dst, const ExecParamsT execParams = {})
+      void execute(SrcT* src, PlanarComplex<DstT> dst, const ExecParamsT execParams = {})
       {
         static_assert(isKnownType<SrcT>, "unknown source type");
         static_assert(isRealType<DstT>, "destination type must be real");
@@ -309,7 +309,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(PlanarComplex<SrcT*> src, PlanarComplex<DstT*> dst, const ExecParamsT execParams = {})
+      void execute(PlanarComplex<SrcT> src, PlanarComplex<DstT> dst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcT>, "source type must be real");
         static_assert(isRealType<DstT>, "destination type must be real");
@@ -349,7 +349,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT execParams = {})
+      void execute(View<PlanarComplex<SrcT>> src, View<DstT*> dst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcT>, "source type must be real");
         static_assert(isKnownType<DstT>, "unknown destination type");
@@ -369,7 +369,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT execParams = {})
+      void execute(View<SrcT*> src, View<PlanarComplex<DstT>> dst, const ExecParamsT execParams = {})
       {
         static_assert(isKnownType<SrcT>, "unknown source type");
         static_assert(isRealType<DstT>, "destination type must be real");
@@ -389,7 +389,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT execParams = {})
+      void execute(View<PlanarComplex<SrcT>> src, View<PlanarComplex<DstT>> dst, const ExecParamsT execParams = {})
       {
         static_assert(isRealType<SrcT>, "source type must be real");
         static_assert(isRealType<DstT>, "destination type must be real");
@@ -437,7 +437,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(PlanarComplex<const void*> src, void* dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(PlanarComplex<const void> src, void* dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -452,7 +452,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(PlanarComplex<void*> src, void* dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(PlanarComplex<void> src, void* dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -467,7 +467,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(const void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(const void* src, PlanarComplex<void> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -482,7 +482,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(void* src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(void* src, PlanarComplex<void> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -497,7 +497,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(PlanarComplex<const void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(PlanarComplex<const void> src, PlanarComplex<void> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -512,7 +512,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(PlanarComplex<void*> src, PlanarComplex<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(PlanarComplex<void> src, PlanarComplex<void> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -557,7 +557,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<PlanarComplex<const void*>> src, View<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<PlanarComplex<const void>> src, View<void*> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -572,7 +572,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<PlanarComplex<void*>> src, View<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<PlanarComplex<void>> src, View<void*> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -587,7 +587,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<const void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<const void*> src, View<PlanarComplex<void>> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -602,7 +602,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<void*> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<void*> src, View<PlanarComplex<void>> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -617,7 +617,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<PlanarComplex<const void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<PlanarComplex<const void>> src, View<PlanarComplex<void>> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -632,7 +632,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<PlanarComplex<void*>> src, View<PlanarComplex<void*>> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(View<PlanarComplex<void>> src, View<PlanarComplex<void>> dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -866,7 +866,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeImpl1(View<PlanarComplex<SrcT*>> src, View<DstT*> dst, const ExecParamsT& execParams)
+      void executeImpl1(View<PlanarComplex<SrcT>> src, View<DstT*> dst, const ExecParamsT& execParams)
       {
         static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
                       (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
@@ -907,7 +907,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeImpl1(View<SrcT*> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      void executeImpl1(View<SrcT*> src, View<PlanarComplex<DstT>> dst, const ExecParamsT& execParams)
       {
         static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
                       (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
@@ -948,7 +948,7 @@ namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeImpl1(View<PlanarComplex<SrcT*>> src, View<PlanarComplex<DstT*>> dst, const ExecParamsT& execParams)
+      void executeImpl1(View<PlanarComplex<SrcT>> src, View<PlanarComplex<DstT>> dst, const ExecParamsT& execParams)
       {
         static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
                       (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
