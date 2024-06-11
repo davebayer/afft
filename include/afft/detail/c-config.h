@@ -22,35 +22,9 @@
   SOFTWARE.
 */
 
-// Global module fragment.
-module;
+#ifndef AFFT_DETAIL_C_CONFIG_HPP
+#define AFFT_DETAIL_C_CONFIG_HPP
 
-// First include the C++ config header.
-#include <afft/detail/cxx-config.hpp>
+#include "../config.hpp"
 
-// Check the C++ version.
-#if AFFT_CXX_VERSION < 202002L
-# error "afft C++ module requires at least C++20"
-#endif
-
-// If import std is available, include only external backend headers.
-#ifdef AFFT_CXX_HAS_IMPORT_STD
-# define AFFT_INCLUDE_NO_STD
-#endif
-
-// Include all external headers.
-#include <afft/detail/include.hpp>
-
-// Define the module.
-export module afft;
-
-// Import the std module if available.
-#ifdef AFFT_CXX_HAS_IMPORT_STD
-import std;
-#endif
-
-// Define the export macro.
-#define AFFT_EXPORT export
-
-// Include all public headers.
-#include <afft/afft.hpp>
+#endif /* AFFT_DETAIL_C_CONFIG_HPP */

@@ -25,7 +25,7 @@
 #ifndef AFFT_DETAIL_INCLUDE_HPP
 #define AFFT_DETAIL_INCLUDE_HPP
 
-#include "../config.hpp"
+#include "cxx-config.hpp"
 
 // Include standard C++ headers
 #ifndef AFFT_INCLUDE_NO_STD

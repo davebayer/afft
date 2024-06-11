@@ -141,78 +141,10 @@
 # define AFFT_MP_BACKEND        NONE
 #endif
 
-// Define the AFFT_CXX_VERSION version macro
-#ifdef _MSVC_LANG
-#  define AFFT_CXX_VERSION      _MSVC_LANG
-#else
-#  define AFFT_CXX_VERSION      __cplusplus
-#endif
-
-// Define AFFT_EXPORT macro to expand to nothing if not defined
-#ifndef AFFT_EXPORT
-# define AFFT_EXPORT
-#endif
-
-// Define AFFT_HEADER_ONLY_INLINE macro to expand to inline if not defined
-#ifndef AFFT_HEADER_ONLY_INLINE
-# ifdef AFFT_HEADER_ONLY
-#   define AFFT_HEADER_ONLY_INLINE inline
-# else
-#   define AFFT_HEADER_ONLY_INLINE
-# endif
-#endif
-
 /**
  * @brief Define AFFT_PARAM macro to enable passing parameters containing commas
  * @param ... Parameter
  */
 #define AFFT_PARAM(...)         __VA_ARGS__
-
-// If C++ version is 20, try to include <version> header
-#if (AFFT_CXX_VERSION >= 202002L) && __has_include(<version>)
-# define AFFT_CXX_HAS_VERSION
-# include <version>
-#endif
-
-// implementation of C++20 requires clause for older C++ versions, should be used as:
-// AFFT_TEMPL_REQUIRES(typename T, std::is_integral_v<T>)
-// auto func(...) { ...}
-#if defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
-  /// @brief Macro for requires clause
-# define AFFT_TEMPL_REQUIRES(templParam, requiredExpr) \
-    template<templParam> requires(requiredExpr)
-#else
-  /// @brief Macro for requires clause, using std::enable_if_t for older C++ versions
-# define AFFT_TEMPL_REQUIRES(templParam, requiredExpr) \
-    template<templParam, std::enable_if_t<requiredExpr, int> = 0>
-#endif
-
-// implementation of C++20 requires clause for older C++ versions, should be used as:
-// template<typename T>
-// auto func() -> AFFT_RET_REQUIRES(returnType, std::is_integral_v<T>) { ... }
-#if defined(__cpp_concepts) && (__cpp_concepts >= 201907L)
-  /// @brief Macro for requires clause
-# define AFFT_RET_REQUIRES(retType, requiredExpr) \
-    retType requires(requiredExpr)
-#else
-  /// @brief Macro for requires clause, using std::enable_if_t for older C++ versions
-# define AFFT_RET_REQUIRES(retType, requiredExpr) \
-    std::enable_if_t<requiredExpr, retType>
-#endif
-
-// Check if C++20 <span> is supported
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
-# define AFFT_CXX_HAS_SPAN
-#endif
-
-// Check if C++23 `import std` is supported
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
-# define AFFT_CXX_HAS_IMPORT_STD
-#endif
-
-// Check if C++23 <stdfloat> is implemented
-#if (AFFT_CXX_VERSION >= 202002L) && __has_include(<stdfloat>)
-# define AFFT_CXX_HAS_STD_FLOAT
-#endif
 
 #endif /* AFFT_CONFIG_HPP */
