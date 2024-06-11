@@ -30,7 +30,7 @@
 #endif
 
 // Check if the CUDA Toolkit root directory is defined
-#ifndef AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR
+#ifndef AFFT_CUDA_TOOLKIT_ROOT_DIR
 # error "CUDA Toolkit root directory is not defined"
 #endif
 
@@ -42,7 +42,7 @@ namespace afft::detail::cuda
    */
   [[nodiscard]] inline constexpr std::string_view getRootDir()
   {
-    return {AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR};
+    return {AFFT_CUDA_TOOLKIT_ROOT_DIR};
   }
 
   /**
@@ -51,7 +51,7 @@ namespace afft::detail::cuda
    */
   [[nodiscard]] inline constexpr std::string_view getIncludePath()
   {
-    return {AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR "/include"};
+    return {AFFT_CUDA_TOOLKIT_ROOT_DIR "/include"};
   }
 } // namespace afft::detail::cuda
 

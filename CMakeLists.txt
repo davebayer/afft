@@ -79,22 +79,24 @@ if(NOT ("${AFFT_GPU_BACKEND}" STREQUAL ""))
   if(AFFT_GPU_BACKEND STREQUAL "CUDA")
     find_package(CUDAToolkit REQUIRED)
 
+    cmake_path(GET CUDAToolkit_BIN_DIR PARENT_PATH AFFT_CUDAToolkit_ROOT_DIR)
+
     target_include_directories(afft SYSTEM PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
-    target_compile_definitions(afft PUBLIC AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${CUDAToolkit_ROOT_DIR}") #fixme: is empty
+    target_compile_definitions(afft PUBLIC AFFT_CUDA_TOOLKIT_ROOT_DIR="${AFFT_CUDAToolkit_ROOT_DIR}")
     target_link_libraries(afft PUBLIC CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
 
     target_include_directories(afft-header-only SYSTEM INTERFACE ${CUDAToolkit_INCLUDE_DIRS})
-    target_compile_definitions(afft-header-only INTERFACE AFFT_GPU_CUDA_TOOLKIT_ROOT_DIR="${CUDAToolkit_ROOT_DIR}") #fixme: is empty
+    target_compile_definitions(afft-header-only INTERFACE AFFT_CUDA_TOOLKIT_ROOT_DIR="${AFFT_CUDAToolkit_ROOT_DIR}")
     target_link_libraries(afft-header-only INTERFACE CUDA::cuda_driver CUDA::cudart CUDA::nvrtc)
   elseif(AFFT_GPU_BACKEND STREQUAL "HIP")
     find_package(hip REQUIRED)
 
     target_include_directories(afft SYSTEM PUBLIC ${HIP_INCLUDE_DIRS})
-    target_compile_definitions(afft PRIVATE AFFT_GPU_HIP_ROOT_DIR="${hip_ROOT_DIR}") #fixme: is empty
+    target_compile_definitions(afft PRIVATE AFFT_HIP_ROOT_DIR="${HIP_ROOT_DIR}")
     target_link_libraries(afft PUBLIC hip::host)
 
     target_include_directories(afft-header-only SYSTEM INTERFACE ${HIP_INCLUDE_DIRS})
-    target_compile_definitions(afft-header-only INTERFACE AFFT_GPU_HIP_ROOT_DIR="${hip_ROOT_DIR}") #fixme: is empty
+    target_compile_definitions(afft-header-only INTERFACE AFFT_HIP_ROOT_DIR="${HIP_ROOT_DIR}")
     target_link_libraries(afft-header-only INTERFACE hip::host)
     
     if((HIP_PLATFORM STREQUAL "amd") OR (HIP_PLATFORM STREQUAL "hcc"))
