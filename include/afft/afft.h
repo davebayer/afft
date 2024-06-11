@@ -25,35 +25,7 @@
 #ifndef AFFT_H
 #define AFFT_H
 
-#ifdef __STDC_VERSION__
-# if __STDC_VERSION__ < 201112L
-#   error "C11 or later is required"
-# endif
-#endif
-
-#include <stdbool.h>
-#include <float.h>
-#ifndef __STDC_NO_COMPLEX__
-# include <complex.h>
-#endif
-
-#include "config.hpp"
-
-#if AFFT_GPU_BACKEND_IS(CUDA)
-# include <cuda_runtime.h>
-#elif AFFT_GPU_BACKEND_IS(HIP)
-# include <hip/hip_runtime.h>
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
-# if defined(__APPLE__) || defined(__MACOSX)
-#   include <OpenCL/cl.h>
-# else
-#   include <CL/cl.h>
-# endif
-#endif
-
-#if AFFT_MP_BACKEND_IS(MPI)
-# include <mpi.h>
-#endif
+#include "detail/include.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -120,6 +92,28 @@ typedef enum
 
 /// @brief Alignment type
 typedef size_t afft_Alignment;
+
+/// @brief Alignment values
+enum
+{
+  afft_Alignment_simd128  = 16,  ///< 128-bit SIMD alignment
+  afft_Alignment_simd256  = 32,  ///< 256-bit SIMD alignment
+  afft_Alignment_simd512  = 64,  ///< 512-bit SIMD alignment
+  afft_Alignment_simd1024 = 128, ///< 1024-bit SIMD alignment
+  afft_Alignment_simd2048 = 256, ///< 2048-bit SIMD alignment
+
+  afft_Alignment_sse    = afft_Alignment_simd128,  ///< SSE alignment
+  afft_Alignment_sse2   = afft_Alignment_simd128,  ///< SSE2 alignment
+  afft_Alignment_sse3   = afft_Alignment_simd128,  ///< SSE3 alignment
+  afft_Alignment_sse4   = afft_Alignment_simd128,  ///< SSE4 alignment
+  afft_Alignment_sse4_1 = afft_Alignment_simd128,  ///< SSE4.1 alignment
+  afft_Alignment_sse4_2 = afft_Alignment_simd128,  ///< SSE4.2 alignment
+  afft_Alignment_avx    = afft_Alignment_simd256,  ///< AVX alignment
+  afft_Alignment_avx2   = afft_Alignment_simd256,  ///< AVX2 alignment
+  afft_Alignment_avx512 = afft_Alignment_simd512,  ///< AVX-512 alignment
+  afft_Alignment_neon   = afft_Alignment_simd128,  ///< NEON alignment
+  afft_Alignment_sve    = afft_Alignment_simd2048, ///< SVE alignment
+};
 
 /// @brief Complexity enumeration
 typedef enum
@@ -276,7 +270,7 @@ typedef enum
   afft_fftw3_PlannerFlag_estimate,        ///< Estimate plan flag
   afft_fftw3_PlannerFlag_measure,         ///< Measure plan flag
   afft_fftw3_PlannerFlag_patient,         ///< Patient plan flag
-  afft_fftw3_PlannerFlag_exhaustive       ///< Exhaustive planner flag
+  afft_fftw3_PlannerFlag_exhaustive,      ///< Exhaustive planner flag
   afft_fftw3_PlannerFlag_estimatePatient, ///< Estimate and patient plan flag
 } afft_fftw3_PlannerFlag;
 
@@ -389,9 +383,9 @@ afft_spmt_gpu_BackendParameters afft_spmt_gpu_makeDefaultBackendParameters();
 afft_mpst_cpu_BackendParameters afft_mpst_cpu_makeDefaultBackendParameters();
 afft_mpst_gpu_BackendParameters afft_mpst_gpu_makeDefaultBackendParameters();
 
-typedef afft_gpu_clfft_Parameters afft_spst_gpu_clfft_Parameters;
-typedef afft_gpu_cufft_Parameters afft_spst_gpu_cufft_Parameters;
-typedef afft_cpu_fftw3_Parameters afft_spst_cpu_fftw3_Parameters;
+typedef afft_spst_gpu_clfft_Parameters afft_gpu_clfft_Parameters;
+typedef afft_spst_gpu_cufft_Parameters afft_gpu_cufft_Parameters;
+typedef afft_spst_cpu_fftw3_Parameters afft_cpu_fftw3_Parameters;
 
 typedef afft_spst_cpu_BackendParameters afft_cpu_BackendParameters;
 typedef afft_spst_gpu_BackendParameters afft_gpu_BackendParameters;
@@ -832,37 +826,37 @@ typedef struct
 {
   union
   {
-    afft_spst_cpu_Parameters spstCpu;
-    afft_spst_gpu_Parameters spstGpu;
-    afft_spmt_gpu_Parameters spmtGpu;
-    afft_mpst_cpu_Parameters mpstCpu;
-    afft_mpst_gpu_Parameters mpstGpu;
+    afft_spst_cpu_BackendParameters spstCpu;
+    afft_spst_gpu_BackendParameters spstGpu;
+    afft_spmt_gpu_BackendParameters spmtGpu;
+    afft_mpst_cpu_BackendParameters mpstCpu;
+    afft_mpst_gpu_BackendParameters mpstGpu;
   };
   afft_Target                target;
   afft_Distribution          distribution;
 } afft_BackendParameters;
 
-static inline afft_BackendParameters _afft_makeBackendParametersSpstCpu(afft_spst_cpu_Parameters params)
+static inline afft_BackendParameters _afft_makeBackendParametersSpstCpu(afft_spst_cpu_BackendParameters params)
 {
   return (afft_BackendParameters){.spstCpu = params, .target = afft_Target_cpu, .distribution = afft_Distribution_spst};
 }
 
-static inline afft_BackendParameters _afft_makeBackendParametersSpstGpu(afft_spst_gpu_Parameters params)
+static inline afft_BackendParameters _afft_makeBackendParametersSpstGpu(afft_spst_gpu_BackendParameters params)
 {
   return (afft_BackendParameters){.spstGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_spst};
 }
 
-static inline afft_BackendParameters _afft_makeBackendParametersSpmtGpu(afft_spmt_gpu_Parameters params)
+static inline afft_BackendParameters _afft_makeBackendParametersSpmtGpu(afft_spmt_gpu_BackendParameters params)
 {
   return (afft_BackendParameters){.spmtGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_spmt};
 }
 
-static inline afft_BackendParameters _afft_makeBackendParametersMpstCpu(afft_mpst_cpu_Parameters params)
+static inline afft_BackendParameters _afft_makeBackendParametersMpstCpu(afft_mpst_cpu_BackendParameters params)
 {
   return (afft_BackendParameters){.mpstCpu = params, .target = afft_Target_cpu, .distribution = afft_Distribution_mpst};
 }
 
-static inline afft_BackendParameters _afft_makeBackendParametersMpstGpu(afft_mpst_gpu_Parameters params)
+static inline afft_BackendParameters _afft_makeBackendParametersMpstGpu(afft_mpst_gpu_BackendParameters params)
 {
   return (afft_BackendParameters){.mpstGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_mpst};
 }
@@ -874,34 +868,34 @@ static inline afft_BackendParameters _afft_makeBackendParametersAny(afft_Backend
 
 #ifndef __cplusplus
 # define _afft_makeBackendParameters(params) _Generic((params), \
-    afft_spst_cpu_Parameters: _afft_makeBackendParametersSpstCpu, \
-    afft_spst_gpu_Parameters: _afft_makeBackendParametersSpstGpu, \
-    afft_spmt_gpu_Parameters: _afft_makeBackendParametersSpmtGpu, \
-    afft_mpst_cpu_Parameters: _afft_makeBackendParametersMpstCpu, \
-    afft_mpst_gpu_Parameters: _afft_makeBackendParametersMpstGpu, \
+    afft_spst_cpu_BackendParameters: _afft_makeBackendParametersSpstCpu, \
+    afft_spst_gpu_BackendParameters: _afft_makeBackendParametersSpstGpu, \
+    afft_spmt_gpu_BackendParameters: _afft_makeBackendParametersSpmtGpu, \
+    afft_mpst_cpu_BackendParameters: _afft_makeBackendParametersMpstCpu, \
+    afft_mpst_gpu_BackendParameters: _afft_makeBackendParametersMpstGpu, \
     afft_BackendParameters:   _afft_makeBackendParametersAny)(params)
 #else
-static inline _afft_makeBackendParameters(afft_spst_cpu_Parameters params)
+static inline _afft_makeBackendParameters(afft_spst_cpu_BackendParameters params)
 {
   return _afft_makeBackendParametersSpstCpu(params);
 }
 
-static inline _afft_makeBackendParameters(afft_spst_gpu_Parameters params)
+static inline _afft_makeBackendParameters(afft_spst_gpu_BackendParameters params)
 {
   return _afft_makeBackendParametersSpstGpu(params);
 }
 
-static inline _afft_makeBackendParameters(afft_spmt_gpu_Parameters params)
+static inline _afft_makeBackendParameters(afft_spmt_gpu_BackendParameters params)
 {
   return _afft_makeBackendParametersSpmtGpu(params);
 }
 
-static inline _afft_makeBackendParameters(afft_mpst_cpu_Parameters params)
+static inline _afft_makeBackendParameters(afft_mpst_cpu_BackendParameters params)
 {
   return _afft_makeBackendParametersMpstCpu(params);
 }
 
-static inline _afft_makeBackendParameters(afft_mpst_gpu_Parameters params)
+static inline _afft_makeBackendParameters(afft_mpst_gpu_BackendParameters params)
 {
   return _afft_makeBackendParametersMpstGpu(params);
 }
@@ -912,393 +906,298 @@ static inline _afft_makeBackendParameters(afft_BackendParameters params)
 }
 #endif
 
-#define afft_makePlan(planPtr, transformParams, archParams) \
-  _afft_makePlan(planPtr, \
-                 _afft_makeTransformParameters(transformParams), \
-                 _afft_makeArchitectureParameters(archParams))
+/**
+ * @brief Make a plan object.
+ * @param transformParams Transform parameters.
+ * @param archParams Architecture parameters.
+ * @param planPtr Pointer to the plan object pointer.
+ * @return Error code.
+ */
+#define afft_makePlan(transformParams, archParams, planPtr) \
+  _afft_makePlan(_afft_makeTransformParameters(transformParams), \
+                 _afft_makeArchitectureParameters(archParams), \
+                 planPtr)
 
-#define afft_makePlanWithBackendParameters(planPtr, transformParams, archParams, backendParams) \
-  _afft_makePlanWithBackendParameters(planPtr, \
-                                      _afft_makeTransformParameters(transformParams), \
+/**
+ * @brief Make a plan object implementation. Internal use only.
+ * @param transformParams Transform parameters.
+ * @param archParams Architecture parameters.
+ * @param planPtr Pointer to the plan object pointer.
+ * @return Error code.
+ */
+afft_Error _afft_makePlan(afft_TransformParameters    transformParams,
+                          afft_ArchitectureParameters archParams,
+                          afft_Plan**                 planPtr);
+
+/**
+ * @brief Make a plan object with backend parameters.
+ * @param transformParams Transform parameters.
+ * @param archParams Architecture parameters.
+ * @param backendParams Backend parameters.
+ * @param planPtr Pointer to the plan object pointer.
+ * @return Error code.
+ */
+#define afft_makePlanWithBackendParameters(transformParams, archParams, backendParams, planPtr) \
+  _afft_makePlanWithBackendParameters(_afft_makeTransformParameters(transformParams), \
                                       _afft_makeArchitectureParameters(archParams), \
-                                      _afft_makeBackendParameters(backendParams))
+                                      _afft_makeBackendParameters(backendParams), \
+                                      planPtr)
 
+/**
+ * @brief Make a plan object with backend parameters implementation. Internal use only.
+ * @param transformParams Transform parameters.
+ * @param archParams Architecture parameters.
+ * @param backendParams Backend parameters.
+ * @param planPtr Pointer to the plan object pointer.
+ * @return Error code.
+ */
+afft_Error _afft_makePlanWithBackendParameters(afft_TransformParameters    transformParams,
+                                               afft_ArchitectureParameters archParams,
+                                               afft_BackendParameters      backendParams,
+                                               afft_Plan**                 planPtr);
+
+/**
+ * @brief Get the plan transform.
+ * @param plan Plan object.
+ * @param transform Pointer to the transform variable.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getTransform(const afft_Plan* plan, afft_Transform* transform);
 
+/**
+ * @brief Get the plan target.
+ * @param plan Plan object.
+ * @param target Pointer to the target variable.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getTarget(const afft_Plan* plan, afft_Target* target);
 
+/**
+ * @brief Get the target count.
+ * @param plan Plan object.
+ * @param targetCount Pointer to the target count variable.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getTargetCount(const afft_Plan* plan, size_t* targetCount);
 
+/**
+ * @brief Get the plan distribution.
+ * @param plan Plan object.
+ * @param distribution Pointer to the distribution variable.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getDistribution(const afft_Plan* plan, afft_Distribution* distribution);
 
+/**
+ * @brief Get the plan backend.
+ * @param plan Plan object.
+ * @param backend Pointer to the backend variable.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getBackend(const afft_Plan* plan, afft_Backend* backend);
 
+/**
+ * @brief Get the plan workspace size.
+ * @param plan Plan object.
+ * @param workspaceSize Pointer to the workspace array the same size as number of targets.
+ * @return Error code.
+ */
 afft_Error afft_Plan_getWorkspaceSize(const afft_Plan* plan, size_t* workspaceSize);
-
-void afft_Plan_destroy(afft_Plan* plan);
-
-// typedef struct
-// {
-//   size_t          ptrCount;
-//   union
-//   {
-//     void*         ptr;
-//     void* const*  ptrs;
-//   }
-//   afft_Precision  precision;
-//   afft_Complexity complexity;
-//   bool            isConst;
-// } _afft_ExecParam;
-
-// TODO:
-// #define AFFT_PLANAR_COMPLEX(_type) afft_PlanarComplex_##_type
-// #define AFFT_PLANAR_COMPLEX_CONST(_type) afft_PlanarComplex_const_##_type
-
-// #define AFFT_DEFINE_PLANAR_COMPLEX_WITH_NAME(_type, _name)
-
-// #define AFFT_DEFINE_PLANAR_COMPLEX(_type) \
-//   typedef struct \
-//   { \
-//     _type* real; \
-//     _type* imag; \
-//   } AFFT_PLANAR_COMPLEX(_type); \
-//   \
-//   typedef struct \
-//   { \
-//     const _type* real; \
-//     const _type* imag; \
-//   } AFFT_PLANAR_COMPLEX_CONST(_type);
-
-
-
-// #define AFFT_PLANAR_COMPLEX(_name, _type) \
-//   typedef struct \
-//   { \
-//     _type* real; \
-//     _type* imag; \
-//   } afft_PlanarComplex_##_name; \
-
-// #define AFFT_REAL_TYPE_PROPERTIES(_name, _type, _precision) \
-//   AFFT_PLANAR_COMPLEX(_name, _type) \
-//   AFFT_PLANAR_COMPLEX(Const##_name, _type) \
-//   \
-//   static inline _afft_ExecParam _afft_makeExecParam_##_name(_type* ptr) \
-//   { \
-//     return (_afft_ExecParam){.ptr = ptr, .precision = _precision_, .complexity = afft_Complexity_real, .isConst = false}; \
-//   } \
-//   \
-//   static inline _afft_ExecParam _afft_makeExecParam_Const##_name(const _type* ptr) \
-//   { \
-//     return (_afft_ExecParam){.ptr = (void**)ptr, .precision = _precision_, .complexity = afft_Complexity_real, .isConst = true}; \
-//   } \
-//   \
-//   static inline _afft_ExecParam _afft_makeExecParam_PlanarComplex_##_name(afft_PlanarComplex_##_name planar) \
-//   { \
-//     return (_afft_ExecParam){.ptrs = (void* const*)&planar, .precision = _precision_, .complexity = afft_Complexity_complex, .isConst = false}; \
-//   } \
-//   \
-//   static inline _afft_ExecParam _afft_makeExecParam_PlanarComplex_Const##_name(afft_PlanarComplex_Const##name planar) \
-//   { \
-//     return (_afft_ExecParam){.ptr = (void* const*)&planar, .precision = _precision_, .complexity = afft_Complexity_complex, .isConst = true}; \
-//   }
-
-// #define AFFT_COMPLEX_TYPE_PROPERTIES(_name, _type, _precision) \
-//   static inline _afft_ExecParam _afft_makeExecParam_##_name(_type* ptr) \
-//   { \
-//     return (_afft_ExecParam){.ptr = ptr, .precision = _precision_, .complexity = afft_Complexity_complex, .isConst = false}; \
-//   } \
-//   \
-//   static inline _afft_ExecParam _afft_makeExecParam_Const##_name(const _type* ptr) \
-//   { \
-//     return (_afft_ExecParam){.ptr = (void*)ptr, .precision = _precision_, .complexity = afft_Complexity_complex, .isConst = true}; \
-//   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-typedef struct
-{
-  void*           ptr;
-  afft_Precision  precision;
-  afft_Complexity complexity;
-  bool            isConst;
-} _afft_ExecParam;
-
-
-typedef struct
-{
-  const void*       ptr;
-  afft_Target       target;
-  afft_Distribution distribution;
-} _afft_ArchParam;
-
-
-
-
-
-
-
-
-
-typedef struct
-{
-#if AFFT_GPU_BACKEND_IS(CUDA)
-  cudaStream_t     stream;
-  void*            workspace;
-#elif AFFT_GPU_BACKEND_IS(HIP)
-  hipStream_t      stream;
-  void*            workspace;
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
-  cl_command_queue commandQueue;
-  cl_mem           workspace;
-#endif
-} afft_spst_gpu_ExecutionParameters;
-
-typedef struct
-{
-#if AFFT_GPU_BACKEND_IS(CUDA)
-  cudaStream_t stream;
-  void* const* workspace;
-#elif AFFT_GPU_BACKEND_IS(HIP)
-  hipStream_t  stream;
-  void* const* workspace;
-#endif
-} afft_spmt_gpu_ExecutionParameters;
-
-typedef struct
-{
-  void* workspace;
-} afft_mpst_cpu_ExecutionParameters;
-
-typedef struct
-{
-#if AFFT_GPU_BACKEND_IS(CUDA)
-  cudaStream_t     stream;
-  void*            workspace;
-#elif AFFT_GPU_BACKEND_IS(HIP)
-  hipStream_t      stream;
-  void*            workspace;
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
-  cl_command_queue commandQueue;
-  cl_mem           workspace;
-#endif
-} afft_mpst_gpu_ExecutionParameters;
-
-typedef afft_spst_cpu_ExecutionParameters afft_cpu_ExecutionParameters;
-typedef afft_spst_gpu_ExecutionParameters afft_gpu_ExecutionParameters;
 
 typedef struct
 {
   union
   {
-    afft_spst_cpu_Parameters spstCpu;
-    afft_spst_gpu_Parameters spstGpu;
-    afft_spmt_gpu_Parameters spmtGpu;
-    afft_mpst_cpu_Parameters mpstCpu;
-    afft_mpst_gpu_Parameters mpstGpu;
+    void*        ptr;
+    void* const* ptrs;
   };
-  afft_Target                target;
-  afft_Distribution          distribution;
-} _afft_ArchParam;
+  bool           isSinglePtr;
+  bool           isConst;
+} _afft_ExecParam;
+
+static inline _afft_ExecParam _afft_makeExecParam_single(void* ptr)
+{
+  return (_afft_ExecParam){.ptr = ptr, .isSinglePtr = true, .isConst = false};
+}
+
+static inline _afft_ExecParam _afft_makeExecParam_singleConst(const void* ptr)
+{
+  return (_afft_ExecParam){.ptr = (void*)ptr, .isSinglePtr = true, .isConst = true};
+}
+
+static inline _afft_ExecParam _afft_makeExecParam_multiple(void* const* ptrs)
+{
+  return (_afft_ExecParam){.ptrs = ptrs, .isSinglePtr = false, .isConst = false};
+}
+
+static inline _afft_ExecParam _afft_makeExecParam_multipleConst(const void* const* ptrs)
+{
+  return (_afft_ExecParam){.ptrs = (void* const*)ptrs, .isSinglePtr = false, .isConst = true};
+}
 
 #ifndef __cplusplus
-# define _afft_makeArchParam(param) _Generic((param), \
-    afft_spst_cpu_Parameters: _afft_makeArchParamSpstCpu, \
-    afft_spst_gpu_Parameters: _afft_makeArchParamSpstGpu, \
-    afft_spmt_gpu_Parameters: _afft_makeArchParamSpmtGpu, \
-    afft_mpst_cpu_Parameters: _afft_makeArchParamMpstCpu, \
-    afft_mpst_gpu_Parameters: _afft_makeArchParamMpstGpu)(param)
+# define _afft_makeExecParam(ptr) _Generic((ptr), \
+    void*:       _afft_makeExecParam_single, \
+    const void*: _afft_makeExecParam_singleConst, \
+    void* const*: _afft_makeExecParam_multiple, \
+    const void* const*: _afft_makeExecParam_multipleConst)(ptr)
 #else
-static inline _afft_makeArchParam(afft_spst_cpu_Parameters param)
+static inline _afft_makeExecParam(void* ptr)
 {
-  return _afft_makeArchParamSpstCpu(param);
+  return _afft_makeExecParam_single(ptr);
 }
 
-static inline _afft_makeArchParam(afft_spst_gpu_Parameters param)
+static inline _afft_makeExecParam(const void* ptr)
 {
-  return _afft_makeArchParamSpstGpu(param);
+  return _afft_makeExecParam_singleConst(ptr);
 }
 
-static inline _afft_makeArchParam(afft_spmt_gpu_Parameters param)
+static inline _afft_makeExecParam(void* const* ptrs)
 {
-  return _afft_makeArchParamSpmtGpu(param);
+  return _afft_makeExecParam_multiple(ptrs);
 }
 
-static inline _afft_makeArchParam(afft_mpst_cpu_Parameters param)
+static inline _afft_makeExecParam(const void* const* ptrs)
 {
-  return _afft_makeArchParamMpstCpu(param);
-}
-
-static inline _afft_makeArchParam(afft_mpst_gpu_Parameters param)
-{
-  return _afft_makeArchParamMpstGpu(param);
+  return _afft_makeExecParam_multipleConst(ptrs);
 }
 #endif
 
-static inline _afft_ArchParam _afft_makeArchParamSpstCpu(afft_spst_cpu_Parameters param)
-{
-  return (_afft_ArchParam){.spstCpu = param, .target = afft_Target_cpu, .distribution = afft_Distribution_spst};
-}
-
-static inline _afft_ArchParam _afft_makeArchParamSpstGpu(afft_spst_gpu_Parameters param)
-{
-  return (_afft_ArchParam){.spstGpu = param, .target = afft_Target_gpu, .distribution = afft_Distribution_spst};
-}
-
-static inline _afft_ArchParam _afft_makeArchParamSpmtGpu(afft_spmt_gpu_Parameters param)
-{
-  return (_afft_ArchParam){.spmtGpu = param, .target = afft_Target_gpu, .distribution = afft_Distribution_spmt};
-}
-
-static inline _afft_ArchParam _afft_makeArchParamMpstCpu(afft_mpst_cpu_Parameters param)
-{
-  return (_afft_ArchParam){.mpstCpu = param, .target = afft_Target_cpu, .distribution = afft_Distribution_mpst};
-}
-
-static inline _afft_ArchParam _afft_makeArchParamMpstGpu(afft_mpst_gpu_Parameters param)
-{
-  return (_afft_ArchParam){.mpstGpu = param, .target = afft_Target_gpu, .distribution = afft_Distribution_mpst};
-}
-
-#define afft_makePlan(planPtr, transformParam, archParam) \
-  _afft_makePlan(planPtr, _afft_makeTransformParams(transformParam), _afft_makeArchParam(archParam))
-
-#define AFFT_TYPE_PROPERTIES(_name, _type, _precision_, _complexity) \
-  static inline _afft_ExecParam _afft_makeExecParam##_name(_type* ptr) \
-  { \
-    return (_afft_ExecParam){.ptr = ptr, .precision = _precision_, .complexity = _complexity, .isConst = false}; \
-  } \
-  \
-  static inline _afft_ExecParam _afft_makeExecParamConst##_name(const _type* ptr) \
-  { \
-    return (_afft_ExecParam){.ptr = (void*)ptr, .precision = _precision_, .complexity = _complexity, .isConst = true}; \
-  }
-
-AFFT_TYPE_PROPERTIES(Void, void, afft_Precision_unknown, afft_Complexity_unknown)
-AFFT_TYPE_PROPERTIES(Float, float, afft_Precision_f32, afft_Complexity_real)
-AFFT_TYPE_PROPERTIES(Double, double, afft_Precision_f64, afft_Complexity_real)
-AFFT_TYPE_PROPERTIES(LongDouble, long double, afft_Precision_longDouble, afft_Complexity_real)
-#ifndef __STDC_NO_COMPLEX__
-  AFFT_TYPE_PROPERTIES(ComplexFloat, float _Complex, afft_Precision_f32, afft_Complexity_complex)
-  AFFT_TYPE_PROPERTIES(ComplexDouble, double _Complex, afft_Precision_f64, afft_Complexity_complex)
-  AFFT_TYPE_PROPERTIES(ComplexLongDouble, long double _Complex, afft_Precision_longDouble, afft_Complexity_complex)
-#endif
-
-#ifndef __cplusplus
-# define _afft_makeExecParam(T) _Generic((T), \
-    void*:                       _afft_makeExecParamVoid, \
-    const void*:                 _afft_makeExecParamConstVoid, \
-    float*:                      _afft_makeExecParamFloat, \
-    const float*:                _afft_makeExecParamConstFloat, \
-    double*:                     _afft_makeExecParamDouble, \
-    const double*:               _afft_makeExecParamConstDouble, \
-    long double*:                _afft_makeExecParamLongDouble, \
-    const long double*:          _afft_makeExecParamConstLongDouble, \
-    float _Complex*:             _afft_makeExecParamComplexFloat, \
-    const float _Complex*:       _afft_makeExecParamConstComplexFloat, \
-    double _Complex*:            _afft_makeExecParamComplexDouble, \
-    const double _Complex*:      _afft_makeExecParamConstComplexDouble, \
-    long double _Complex*:       _afft_makeExecParamComplexLongDouble, \
-    const long double _Complex*: _afft_makeExecParamConstComplexLongDouble)(T)
-#else
-static inline _afft_ExecParam _afft_makeExecParam(void* ptr)
-{
-  return _afft_makeExecParamVoid(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const void* ptr)
-{
-  return _afft_makeExecParamConstVoid(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(float* ptr)
-{
-  return _afft_makeExecParamFloat(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const float* ptr)
-{
-  return _afft_makeExecParamConstFloat(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(double* ptr)
-{
-  return _afft_makeExecParamDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const double* ptr)
-{
-  return _afft_makeExecParamConstDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(long double* ptr)
-{
-  return _afft_makeExecParamLongDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const long double* ptr)
-{
-  return _afft_makeExecParamConstLongDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(float _Complex* ptr)
-{
-  return _afft_makeExecParamComplexFloat(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const float _Complex* ptr)
-{
-  return _afft_makeExecParamConstComplexFloat(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(double _Complex* ptr)
-{
-  return _afft_makeExecParamComplexDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const double _Complex* ptr)
-{
-  return _afft_makeExecParamConstComplexDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(long double _Complex* ptr)
-{
-  return _afft_makeExecParamComplexLongDouble(ptr);
-}
-
-static inline _afft_ExecParam _afft_makeExecParam(const long double _Complex* ptr)
-{
-  return _afft_makeExecParamConstComplexLongDouble(ptr);
-}
-#endif
-
-afft_Error _afft_Plan_execute(afft_Plan* plan, _afft_ExecParam src, _afft_ExecParam dst);
-
+/**
+ * @brief Execute a plan.
+ * @param plan Plan object.
+ * @param src Source data.
+ * @param dst Destination data.
+ * @return Error code.
+ */
 #define afft_Plan_execute(plan, src, dst) \
   _afft_Plan_execute(plan, _afft_makeExecParam(src), _afft_makeExecParam(dst))
 
-afft_Error _afft_Plan_executeUnsafeImpl(afft_Plan* plan, _afft_ExecParam src, _afft_ExecParam dst);
+/**
+ * @brief Execute a plan implementation. Internal use only.
+ * @param plan Plan object.
+ * @param src Source data.
+ * @param dst Destination data.
+ * @return Error code.
+ */
+afft_Error _afft_Plan_execute(afft_Plan* plan, _afft_ExecParam src, _afft_ExecParam dst);
 
-#define afft_Plan_executeUnsafe(plan, src, dst) \
-  _afft_Plan_executeUnsafeImpl(plan, _afft_makeExecParam(src), _afft_makeExecParam(dst))
+typedef struct
+{
+  union
+  {
+    afft_spst_cpu_ExecutionParameters spstCpu;
+    afft_spst_gpu_ExecutionParameters spstGpu;
+    afft_spmt_gpu_ExecutionParameters spmtGpu;
+    afft_mpst_cpu_ExecutionParameters mpstCpu;
+    afft_mpst_gpu_ExecutionParameters mpstGpu;
+  };
+  afft_Target                         target;
+  afft_Distribution                   distribution;
+} afft_ExecutionParameters;
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersSpstCpu(afft_spst_cpu_ExecutionParameters params)
+{
+  return (afft_ExecutionParameters){.spstCpu = params, .target = afft_Target_cpu, .distribution = afft_Distribution_spst};
+}
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersSpstGpu(afft_spst_gpu_ExecutionParameters params)
+{
+  return (afft_ExecutionParameters){.spstGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_spst};
+}
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersSpmtGpu(afft_spmt_gpu_ExecutionParameters params)
+{
+  return (afft_ExecutionParameters){.spmtGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_spmt};
+}
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersMpstCpu(afft_mpst_cpu_ExecutionParameters params)
+{
+  return (afft_ExecutionParameters){.mpstCpu = params, .target = afft_Target_cpu, .distribution = afft_Distribution_mpst};
+}
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersMpstGpu(afft_mpst_gpu_ExecutionParameters params)
+{
+  return (afft_ExecutionParameters){.mpstGpu = params, .target = afft_Target_gpu, .distribution = afft_Distribution_mpst};
+}
+
+static inline afft_ExecutionParameters _afft_makeExecutionParametersAny(afft_ExecutionParameters params)
+{
+  return params;
+}
+
+#ifndef __cplusplus
+# define _afft_makeExecutionParameters(params) _Generic((params), \
+    afft_spst_cpu_ExecutionParameters: _afft_makeExecutionParametersSpstCpu, \
+    afft_spst_gpu_ExecutionParameters: _afft_makeExecutionParametersSpstGpu, \
+    afft_spmt_gpu_ExecutionParameters: _afft_makeExecutionParametersSpmtGpu, \
+    afft_mpst_cpu_ExecutionParameters: _afft_makeExecutionParametersMpstCpu, \
+    afft_mpst_gpu_ExecutionParameters: _afft_makeExecutionParametersMpstGpu, \
+    afft_ExecutionParameters:          _afft_makeExecutionParametersAny)(params)
+#else
+static inline _afft_makeExecutionParameters(afft_spst_cpu_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersSpstCpu(params);
+}
+
+static inline _afft_makeExecutionParameters(afft_spst_gpu_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersSpstGpu(params);
+}
+
+static inline _afft_makeExecutionParameters(afft_spmt_gpu_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersSpmtGpu(params);
+}
+
+static inline _afft_makeExecutionParameters(afft_mpst_cpu_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersMpstCpu(params);
+}
+
+static inline _afft_makeExecutionParameters(afft_mpst_gpu_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersMpstGpu(params);
+}
+
+static inline _afft_makeExecutionParameters(afft_ExecutionParameters params)
+{
+  return _afft_makeExecutionParametersAny(params);
+}
+#endif
+
+/**
+ * @brief Execute a plan with execution parameters.
+ * @param plan Plan object.
+ * @param src Source data.
+ * @param dst Destination data.
+ * @param execParams Execution parameters.
+ * @return Error code.
+ */
+#define afft_Plan_executeWithParameters(plan, src, dst, execParams) \
+  _afft_Plan_executeWithParameters(plan, \
+                                   _afft_makeExecParam(src), \
+                                   _afft_makeExecParam(dst), \
+                                   _afft_makeExecutionParameters(execParams))
+
+/**
+ * @brief Execute a plan with execution parameters implementation. Internal use only.
+ * @param plan Plan object.
+ * @param src Source data.
+ * @param dst Destination data.
+ * @param execParams Execution parameters.
+ * @return Error code.
+ */
+afft_Error _afft_Plan_executeWithParameters(const afft_Plan*         plan,
+                                            _afft_ExecParam          src,
+                                            _afft_ExecParam          dst,
+                                            afft_ExecutionParameters execParams);
+
+/**
+ * @brief Destroy a plan object.
+ * @param plan Plan object.
+ */
+void afft_Plan_destroy(afft_Plan* plan);
 
 /**********************************************************************************************************************/
 // PlanCache
