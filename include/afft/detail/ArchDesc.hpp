@@ -203,7 +203,7 @@ namespace afft::detail
       SpmtMemoryLayout(std::size_t shapeRank, std::size_t targetCount, const afft::spmt::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
         mData(targetCount),
-        mBlockViews(targetCount)
+        mBlockViews(targetCount * 2)
       {
         if (const auto& srcBlocks = memLayout.srcBlocks; srcBlocks.empty())
         {
@@ -641,9 +641,11 @@ namespace afft::detail
        */
       [[nodiscard]] afft::spmt::MemoryLayout<> getView() const
       {
+        const auto targetCount = mData.size();
+
         afft::spmt::MemoryLayout<> memLayout;
-        memLayout.srcBlocks    = View<MemoryBlock<>>{mBlockViews.data(), mBlockViews.size() / 2};
-        memLayout.dstBlocks    = View<MemoryBlock<>>{mBlockViews.data() + mBlockViews.size() / 2, mBlockViews.size() / 2};
+        memLayout.srcBlocks    = View<MemoryBlock<>>{mBlockViews.data(), targetCount};
+        memLayout.dstBlocks    = View<MemoryBlock<>>{mBlockViews.data() + targetCount, targetCount};
         memLayout.srcAxesOrder = getSrcAxesOrder();
         memLayout.dstAxesOrder = getDstAxesOrder();
         return memLayout;
