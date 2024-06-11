@@ -26,7 +26,7 @@
 module;
 
 // First include the C++ config header.
-#include <afft/detail/cxx-config.hpp>
+#include <afft/detail/config.hpp>
 
 // Check the C++ version.
 #if AFFT_CXX_VERSION < 202002L
