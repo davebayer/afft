@@ -22,9 +22,17 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_C_CONFIG_HPP
-#define AFFT_DETAIL_C_CONFIG_HPP
+#ifndef AFFT_DETAIL_CONFIG_HPP
+#define AFFT_DETAIL_CONFIG_HPP
 
-#include "../config.hpp"
+#include "../config.h"
 
-#endif /* AFFT_DETAIL_C_CONFIG_HPP */
+#define AFFT_C_VERSION __STDC_VERSION__
+
+#ifdef AFFT_C_VERSION
+# if AFFT_C_VERSION < 201112L
+#   error "C11 or later is required"
+# endif
+#endif
+
+#endif /* AFFT_DETAIL_CONFIG_HPP */

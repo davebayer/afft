@@ -22,10 +22,10 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CXX_CONFIG_HPP
-#define AFFT_DETAIL_CXX_CONFIG_HPP
+#ifndef AFFT_DETAIL_CONFIG_HPP
+#define AFFT_DETAIL_CONFIG_HPP
 
-#include "../config.hpp"
+#include "../config.h"
 
 // Define the AFFT_CXX_VERSION version macro
 #ifdef _MSVC_LANG
@@ -95,4 +95,4 @@
 # define AFFT_CXX_HAS_STD_FLOAT
 #endif
 
-#endif /* AFFT_DETAIL_CXX_CONFIG_HPP */
+#endif /* AFFT_DETAIL_CONFIG_HPP */
