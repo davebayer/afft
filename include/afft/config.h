@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_CONFIG_HPP
-#define AFFT_CONFIG_HPP
+#ifndef AFFT_CONFIG_H
+#define AFFT_CONFIG_H
 
 #define AFFT_VERSION_MAJOR      0 ///< Major version.
 #define AFFT_VERSION_MINOR      1 ///< Minor version.
@@ -147,4 +147,4 @@
  */
 #define AFFT_PARAM(...)         __VA_ARGS__
 
-#endif /* AFFT_CONFIG_HPP */
+#endif /* AFFT_CONFIG_H */
