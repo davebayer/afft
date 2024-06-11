@@ -44,12 +44,9 @@ AFFT_EXPORT namespace afft
   {
     static_assert(sizeof...(Args) > 0, "At least one pointer must be provided");
 
-    auto getPtrAlignment = [](const std::uintptr_t uintPtr) constexpr -> Alignment
-    {
-      return static_cast<Alignment>(uintPtr & ~(uintPtr - 1));
-    };
+    const auto logOredPtrs = (0 | ... | reinterpret_cast<std::uintptr_t>(ptrs));
 
-    return std::min({getPtrAlignment(reinterpret_cast<std::uintptr_t>(ptrs))...});
+    return static_cast<Alignment>(logOredPtrs & ~(logOredPtrs - 1));
   }
 
   /**
