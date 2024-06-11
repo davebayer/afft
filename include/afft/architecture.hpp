@@ -38,9 +38,9 @@
 #endif
 
 #if AFFT_GPU_BACKEND_IS(CUDA)
-# include "detail/cuda/cuda.hpp"
+# include "cuda.hpp"
 #elif AFFT_GPU_BACKEND_IS(HIP)
-# include "detail/hip/hip.hpp"
+# include "hip.hpp"
 #elif AFFT_GPU_BACKEND_IS(OPENCL)
 # include "detail/opencl/opencl.hpp"
 #endif
@@ -122,9 +122,9 @@ inline namespace spst
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int                    device{};                                  ///< CUDA device
+    int                    device{cuda::getCurrentDevice()};          ///< CUDA device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int                    device{};                                  ///< HIP device
+    int                    device{hip::getCurrentDevice()};           ///< HIP device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
     cl_context             context{};                                 ///< OpenCL context
     cl_device_id           device{};                                  ///< OpenCL device
@@ -138,10 +138,10 @@ inline namespace spst
     cudaStream_t     stream{0};   ///< CUDA stream
     void*            workspace{}; ///< workspace for spst gpu transform
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    hipStream_t      stream{0};    ///< HIP stream
+    hipStream_t      stream{0};   ///< HIP stream
     void*            workspace{}; ///< workspace for spst gpu transform
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
-    cl_command_queue queue{}; ///< OpenCL command queue
+    cl_command_queue queue{};     ///< OpenCL command queue
     cl_mem           workspace{}; ///< workspace for spst gpu transform
 # endif
   };
@@ -197,7 +197,7 @@ namespace spmt
   struct gpu::ExecutionParameters : detail::ArchitectureExecutionParametersBase<Target::gpu, Distribution::spmt>
   {
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    cudaStream_t stream{0};   ///< CUDA stream
+    cudaStream_t stream{0};    ///< CUDA stream
     View<void*>  workspaces{}; ///< workspaces for spmt gpu transform
 # elif AFFT_GPU_BACKEND_IS(HIP)
     hipStream_t  stream{0};    ///< HIP stream
@@ -279,9 +279,9 @@ namespace mpst
     MPI_Comm               communicator{MPI_COMM_WORLD};              ///< MPI communicator
 # endif
 # if AFFT_GPU_BACKEND_IS(CUDA)
-    int                    device{};                                  ///< CUDA device
+    int                    device{cuda::getCurrentDevice()};          ///< CUDA device
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    int                    device{};                                  ///< HIP device
+    int                    device{hip::getCurrentDevice()};           ///< HIP device
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
     cl_context             context{};                                 ///< OpenCL context
     cl_device_id           device{};                                  ///< OpenCL device
@@ -295,10 +295,10 @@ namespace mpst
     cudaStream_t     stream{0};   ///< CUDA stream
     void*            workspace{}; ///< workspace for mpst gpu transform
 # elif AFFT_GPU_BACKEND_IS(HIP)
-    hipStream_t      stream{0};    ///< HIP stream
+    hipStream_t      stream{0};   ///< HIP stream
     void*            workspace{}; ///< workspace for mpst gpu transform
 # elif AFFT_GPU_BACKEND_IS(OPENCL)
-    cl_command_queue queue{}; ///< OpenCL command queue
+    cl_command_queue queue{};     ///< OpenCL command queue
     cl_mem           workspace{}; ///< workspace for mpst gpu transform
 # endif
   };
