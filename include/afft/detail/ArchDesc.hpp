@@ -57,7 +57,7 @@ namespace afft::detail
         {
           if (memLayout.srcStrides.size() != shapeRank)
           {
-            throw std::invalid_argument("Invalid source strides size");
+            throw std::invalid_argument("invalid source strides size");
           }
 
           std::copy(memLayout.srcStrides.begin(), memLayout.srcStrides.end(), mSrcStrides.begin());
@@ -67,7 +67,7 @@ namespace afft::detail
         {
           if (memLayout.dstStrides.size() != shapeRank)
           {
-            throw std::invalid_argument("Invalid destination strides size");
+            throw std::invalid_argument("invalid destination strides size");
           }
 
           std::copy(memLayout.dstStrides.begin(), memLayout.dstStrides.end(), mDstStrides.begin());
@@ -165,6 +165,18 @@ namespace afft::detail
         return Span<std::size_t>{mDstStrides.data(), mShapeRank};
       }
 
+      /**
+       * @brief Get the memory layout.
+       * @return Memory layout.
+       */
+      [[nodiscard]] constexpr afft::spst::MemoryLayout<> getView() const noexcept
+      {
+        afft::spst::MemoryLayout<> memLayout;
+        memLayout.srcStrides = getSrcStrides();
+        memLayout.dstStrides = getDstStrides();
+        return memLayout;
+      }
+
     private:
       std::size_t              mShapeRank{};                ///< Shape rank.
       MaxDimArray<std::size_t> mSrcStrides{};               ///< Source strides.
@@ -190,7 +202,8 @@ namespace afft::detail
       template<std::size_t shapeExt>
       SpmtMemoryLayout(std::size_t shapeRank, std::size_t targetCount, const afft::spmt::MemoryLayout<shapeExt>& memLayout)
       : mShapeRank{shapeRank},
-        mData(targetCount)
+        mData(targetCount),
+        mBlockViews(targetCount)
       {
         if (const auto& srcBlocks = memLayout.srcBlocks; srcBlocks.empty())
         {
@@ -314,6 +327,17 @@ namespace afft::detail
         else
         {
           throw std::invalid_argument("Invalid destination axes order size");
+        }
+
+        for (std::size_t i{}; i < targetCount; ++i)
+        {
+          mBlockViews[i] = MemoryBlock<>{View<std::size_t>{mData[i].mSrcStarts.data(), shapeRank},
+                                         View<std::size_t>{mData[i].mSrcSizes.data(), shapeRank},
+                                         View<std::size_t>{mData[i].mSrcStrides.data(), shapeRank}};
+
+          mBlockViews[i + targetCount] = MemoryBlock<>{View<std::size_t>{mData[i].mDstStarts.data(), shapeRank},
+                                                       View<std::size_t>{mData[i].mDstSizes.data(), shapeRank},
+                                                       View<std::size_t>{mData[i].mDstStrides.data(), shapeRank}};
         }
       }
 
@@ -609,6 +633,21 @@ namespace afft::detail
       {
         return View<std::size_t>{mDstAxesOrder.data(), mShapeRank};
       }
+
+      /**
+       * @brief Get the source axes order.
+       * @tparam I Integral type.
+       * @return Source axes order.
+       */
+      [[nodiscard]] afft::spmt::MemoryLayout<> getView() const
+      {
+        afft::spmt::MemoryLayout<> memLayout;
+        memLayout.srcBlocks    = View<MemoryBlock<>>{mBlockViews.data(), mBlockViews.size() / 2};
+        memLayout.dstBlocks    = View<MemoryBlock<>>{mBlockViews.data() + mBlockViews.size() / 2, mBlockViews.size() / 2};
+        memLayout.srcAxesOrder = getSrcAxesOrder();
+        memLayout.dstAxesOrder = getDstAxesOrder();
+        return memLayout;
+      }
     private:
       /// @brief Per target data.
       struct PerTargetData
@@ -625,6 +664,7 @@ namespace afft::detail
 
       std::size_t                mShapeRank{};                 ///< Shape rank.
       std::vector<PerTargetData> mData{};                      ///< Data.
+      std::vector<MemoryBlock<>> mBlockViews{};                ///< Block views.
       MaxDimArray<std::size_t>   mSrcAxesOrder{};              ///< Source axes order.
       MaxDimArray<std::size_t>   mDstAxesOrder{};              ///< Destination axes order;
       bool                       mHasDefaultSrcMemoryBlocks{}; ///< Has default memory layout.
@@ -1011,23 +1051,37 @@ namespace afft::detail
       [[nodiscard]] constexpr Span<std::size_t> getDstStridesWritable() noexcept
       {
         return Span<std::size_t>{mDstStrides.data(), mShapeRank};
-      }      
+      }
+
+      /**
+       * @brief Get the source axes order.
+       * @return Source axes order.
+       */
+      [[nodiscard]] afft::mpst::MemoryLayout<> getView() const
+      {
+        afft::mpst::MemoryLayout<> memLayout;
+        memLayout.srcBlock     = MemoryBlock<>{getSrcStarts(), getSrcSizes(), getSrcStrides()};
+        memLayout.dstBlock     = MemoryBlock<>{getDstStarts(), getDstSizes(), getDstStrides()};
+        memLayout.srcAxesOrder = getSrcAxesOrder();
+        memLayout.dstAxesOrder = getDstAxesOrder();
+        return memLayout;
+      }
     private:
-      std::size_t                mShapeRank{};                 ///< Shape rank.
-      MaxDimArray<std::size_t>   mSrcStarts{};                 ///< Source starts.
-      MaxDimArray<std::size_t>   mSrcSizes{};                  ///< Source sizes.
-      MaxDimArray<std::size_t>   mSrcStrides{};                ///< Source strides.
-      MaxDimArray<std::size_t>   mDstStarts{};                 ///< Destination starts.
-      MaxDimArray<std::size_t>   mDstSizes{};                  ///< Destination sizes.
-      MaxDimArray<std::size_t>   mDstStrides{};                ///< Destination strides.
-      MaxDimArray<std::size_t>   mSrcAxesOrder{};              ///< Source axes order.
-      MaxDimArray<std::size_t>   mDstAxesOrder{};              ///< Destination axes order;
-      bool                       mHasDefaultSrcMemoryBlocks{}; ///< Has default memory layout.
-      bool                       mHasDefaultDstMemoryBlocks{}; ///< Has default memory layout.
-      bool                       mHasDefaultSrcStrides{};      ///< Has default source strides.
-      bool                       mHasDefaultDstStrides{};      ///< Has default destination strides.
-      bool                       mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
-      bool                       mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
+      std::size_t              mShapeRank{};                 ///< Shape rank.
+      MaxDimArray<std::size_t> mSrcStarts{};                 ///< Source starts.
+      MaxDimArray<std::size_t> mSrcSizes{};                  ///< Source sizes.
+      MaxDimArray<std::size_t> mSrcStrides{};                ///< Source strides.
+      MaxDimArray<std::size_t> mDstStarts{};                 ///< Destination starts.
+      MaxDimArray<std::size_t> mDstSizes{};                  ///< Destination sizes.
+      MaxDimArray<std::size_t> mDstStrides{};                ///< Destination strides.
+      MaxDimArray<std::size_t> mSrcAxesOrder{};              ///< Source axes order.
+      MaxDimArray<std::size_t> mDstAxesOrder{};              ///< Destination axes order;
+      bool                     mHasDefaultSrcMemoryBlocks{}; ///< Has default memory layout.
+      bool                     mHasDefaultDstMemoryBlocks{}; ///< Has default memory layout.
+      bool                     mHasDefaultSrcStrides{};      ///< Has default source strides.
+      bool                     mHasDefaultDstStrides{};      ///< Has default destination strides.
+      bool                     mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
+      bool                     mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
   };
 
   /// @brief Describes the spst cpu target.
@@ -1098,7 +1152,7 @@ namespace afft::detail
   class ArchDesc
   {
     public:
-
+      /// @brief Default constructor is deleted.
       ArchDesc() = delete;
 
       /**
@@ -1310,7 +1364,75 @@ namespace afft::detail
       template<Target target, Distribution distrib>
       [[nodiscard]] ArchitectureParameters<target, distrib> getArchitectureParameters() const
       {
-        return {};
+        ArchitectureParameters<target, distrib> params{};
+        params.complexFormat        = mComplexFormat;
+        params.preserveSource       = mPreserveSource;
+        params.useExternalWorkspace = mUseExternalWorkspace;
+
+        if constexpr (target == Target::cpu)
+        {
+          if constexpr (distrib == Distribution::spst)
+          {
+            const auto& desc = getArchDesc<Target::cpu, Distribution::spst>();
+            params.memoryLayout = desc.memoryLayout.getView();
+            params.alignment    = desc.alignment;
+            params.threadLimit  = desc.threadLimit;
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            const auto& desc = getArchDesc<Target::cpu, Distribution::mpst>();
+            params.memoryLayout = desc.memoryLayout.getView();
+#         if AFFT_MP_BACKEND_IS(MPI)
+            params.communicator = desc.comm;
+#         endif
+            params.alignment    = desc.alignment;
+            params.threadLimit  = desc.threadLimit;
+          }
+        }
+        else if constexpr (target == Target::gpu)
+        {
+          if constexpr (distrib == Distribution::spst)
+          {
+            const auto& desc = getArchDesc<Target::gpu, Distribution::spst>();
+            params.memoryLayout = desc.memoryLayout.getView();
+#         if AFFT_GPU_BACKEND_IS(CUDA)
+            params.device = desc.device;
+#         elif AFFT_GPU_BACKEND_IS(HIP)
+            params.device = desc.device;
+#         elif AFFT_GPU_BACKEND_IS(OPENCL)
+            params.context = desc.context;
+            params.device  = desc.device;
+#         endif
+          }
+          else if constexpr (distrib == Distribution::spmt)
+          {
+            const auto& desc = getArchDesc<Target::gpu, Distribution::spmt>();
+            params.memoryLayout = desc.memoryLayout.getView();
+#         if AFFT_GPU_BACKEND_IS(CUDA)
+            params.devices = desc.devices;
+#         elif AFFT_GPU_BACKEND_IS(HIP)
+            params.devices = desc.devices;
+#         endif
+          }
+          else if constexpr (distrib == Distribution::mpst)
+          {
+            const auto& desc = getArchDesc<Target::gpu, Distribution::mpst>();
+            params.memoryLayout = desc.memoryLayout.getView();
+#         if AFFT_MP_BACKEND_IS(MPI)
+            params.communicator = desc.comm;
+#         endif
+#         if AFFT_GPU_BACKEND_IS(CUDA)
+            params.device = desc.device;
+#         elif AFFT_GPU_BACKEND_IS(HIP)
+            params.device = desc.device;
+#         elif AFFT_GPU_BACKEND_IS(OPENCL)
+            params.context = desc.context;
+            params.device  = desc.device;
+#         endif
+          }
+        }
+        
+        return params;
       }
 
       /**
@@ -1418,12 +1540,29 @@ namespace afft::detail
         SpstGpuDesc desc{};
         desc.memoryLayout = SpstMemoryLayout{shapeRank, params.memoryLayout};
 #     if AFFT_GPU_BACKEND_IS(CUDA)
-        desc.device       = params.device;
+        if (!cuda::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     elif AFFT_GPU_BACKEND_IS(HIP)
-        desc.device       = params.device;
+        if (!hip::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     elif AFFT_GPU_BACKEND_IS(OPENCL)
-        desc.context      = params.context;
-        desc.device       = params.device;
+        if (!opencl::isValidContext(params.context))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.context = params.context;
+
+        if (!opencl::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     endif
 
         return desc;
@@ -1467,6 +1606,10 @@ namespace afft::detail
         MpstCpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};
 #     if AFFT_MP_BACKEND_IS(MPI)
+        if (!mpi::isValidComm(params.comm))
+        {
+          throw std::invalid_argument{"invalid MPI communicator"};
+        }
         desc.comm         = params.comm;
 #     endif
         desc.alignment    = params.alignment;
@@ -1488,15 +1631,36 @@ namespace afft::detail
         MpstGpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};
 #     if AFFT_MP_BACKEND_IS(MPI)
+        if (!mpi::isValidComm(params.comm))
+        {
+          throw std::invalid_argument{"invalid MPI communicator"};
+        }
         desc.comm         = params.comm;
 #     endif
 #     if AFFT_GPU_BACKEND_IS(CUDA)
-        desc.device       = params.device;
+        if (!cuda::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     elif AFFT_GPU_BACKEND_IS(HIP)
-        desc.device       = params.device;
+        if (!hip::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     elif AFFT_GPU_BACKEND_IS(OPENCL)
-        desc.context      = params.context;
-        desc.device       = params.device;
+        if (!opencl::isValidContext(params.context))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.context = params.context;
+
+        if (!opencl::isValidDevice(params.device))
+        {
+          throw std::invalid_argument{"invalid CUDA device"};
+        }
+        desc.device = params.device;
 #     endif
 
         return desc;
