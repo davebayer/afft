@@ -93,8 +93,8 @@ namespace afft::detail
   struct IsTransformParameters<afft::dht::Parameters<shapeExt, transformExt>> : std::true_type {};
 
   /// @brief Specialization for dtt transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
-  struct IsTransformParameters<afft::dtt::Parameters<shapeExt, transformExt, ttExt>> : std::true_type {};
+  template<std::size_t shapeExt, std::size_t transformExt>
+  struct IsTransformParameters<afft::dtt::Parameters<shapeExt, transformExt>> : std::true_type {};
 
   /**
    * @brief ArchitectureParameters type selection based on given target and distribution.

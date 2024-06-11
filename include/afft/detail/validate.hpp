@@ -56,6 +56,7 @@ namespace afft::detail
       case Backend::cufft:
       case Backend::fftw3:
       case Backend::hipfft:
+      case Backend::heffte:
       case Backend::mkl:
       case Backend::pocketfft:
       case Backend::rocfft:

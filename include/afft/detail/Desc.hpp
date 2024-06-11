@@ -49,8 +49,6 @@ namespace afft::detail
       {
         static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a TransformParameters type.");
         static_assert(isArchitectureParameters<ArchParamsT>, "ArchParamsT must be an ArchParameters type.");
-
-        // TODO: check strides or set them to default values
       }
 
       /// @brief Copy constructor.
