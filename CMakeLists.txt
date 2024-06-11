@@ -66,7 +66,6 @@ target_compile_features(afft-header-only INTERFACE cxx_std_17)
 target_compile_definitions(afft PUBLIC AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
 target_include_directories(afft PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(afft SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
-target_compile_definitions(afft PRIVATE AFFT_HEADER_ONLY)
 
 target_compile_definitions(afft-header-only INTERFACE AFFT_MAX_DIM_COUNT=${AFFT_MAX_DIM_COUNT})
 target_include_directories(afft-header-only INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)

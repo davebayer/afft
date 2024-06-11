@@ -22,6 +22,9 @@
   SOFTWARE.
 */
 
+// Define the header only mode
+#define AFFT_HEADER_ONLY
+
 // Disable the inline keyword for symbols that should be included in the library
 #define AFFT_HEADER_ONLY_INLINE
 
