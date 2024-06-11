@@ -528,7 +528,7 @@ namespace afft::detail
         {
           throw std::invalid_argument("Too many shape dimensions");
         }
-        else if (shapeView.size() == 0)
+        else if (shapeView.empty())
         {
           throw std::invalid_argument("Empty shape");
         }
@@ -559,7 +559,7 @@ namespace afft::detail
 
         if (axesView.empty())
         {
-          std::iota(axes.begin(), axes.begin() + shapeRank, 0);
+          std::iota(axes.begin(), std::next(axes.begin(), shapeRank), 0);
         }
         else if (axesView.size() <= shapeRank)
         {
@@ -621,16 +621,15 @@ namespace afft::detail
        * @brief Make the transform variant.
        * @tparam shapeExt Extent of the shape.
        * @tparam transformExt Extent of the transform axes.
-       * @tparam ttExt Extent of the transform type.
        * @param dttParams DTT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t shapeExt, std::size_t transformExt, std::size_t ttExt>
+      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dtt::Parameters<shapeExt, transformExt, ttExt>& dttParams, std::size_t transformRank)
+      makeTransformVariant(const dtt::Parameters<shapeExt, transformExt>& dttParams, std::size_t transformRank)
       {
-        if ((transformRank != 1) && (dttParams.types.size() != transformRank))
+        if ((dttParams.types.size() != 1) && (dttParams.types.size() != transformRank))
         {
           throw std::invalid_argument("Invalid number of dtt types, must be 1 or equal to the number of axes");
         }

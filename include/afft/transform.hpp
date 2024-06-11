@@ -132,19 +132,15 @@ namespace afft
      * @brief DTT Parameters
      * @tparam shapeExt Extent of the shape, dynamic by default
      * @tparam transformExt Extent of the transform, dynamic by default
-     * @tparam ttExt Extent of the types, dynamic by default
      */
     template<std::size_t shapeExt     = dynamicExtent,
-             std::size_t transformExt = dynamicExtent,
-             std::size_t ttExt        = dynamicExtent>
+             std::size_t transformExt = dynamicExtent>
     struct Parameters : detail::TransformParametersBase<shapeExt, transformExt>
     {
       static_assert((shapeExt == dynamicExtent) || (shapeExt > 0), "shape rank must be greater than 0");
       static_assert((transformExt == dynamicExtent) || (transformExt > 0), "transform rank must be greater than 0");
       static_assert((shapeExt == dynamicExtent) || (transformExt == dynamicExtent) || (transformExt <= shapeExt),
                     "transform rank must be less than or equal to shape rank");
-      static_assert((ttExt == dynamicExtent) || (ttExt == 1) || (transformExt == dynamicExtent || ttExt == transformExt),
-                    "types rank must be 1 or equal to the number of axes");
 
       Direction                       direction{};                        ///< direction of the transform
       PrecisionTriad                  precision{};                        ///< precision triad
@@ -152,7 +148,7 @@ namespace afft
       View<std::size_t, transformExt> axes{allAxes<transformExt>};        ///< axes of the transform
       Normalization                   normalization{Normalization::none}; ///< normalization
       Placement                       placement{Placement::outOfPlace};   ///< placement of the transform
-      View<Type, ttExt>               types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
+      View<Type>                      types{};                            ///< types of the transform, must have size 1 or size equal to the number of axes
     };
   } // namespace dtt
 } // namespace afft
