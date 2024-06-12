@@ -55,7 +55,7 @@ set(AFFT_MP_BACKEND    ""                CACHE STRING "Multi process framework t
 ########################################################################################################################
 # Create targets
 ########################################################################################################################
-add_library(afft ${CMAKE_CURRENT_SOURCE_DIR}/src/afft-cxx.cpp)
+add_library(afft ${CMAKE_CURRENT_SOURCE_DIR}/src/afft-cxx.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/afft-c.cpp)
 add_library(afft::afft ALIAS afft)
 add_library(afft-header-only INTERFACE)
 add_library(afft::afft-header-only ALIAS afft-header-only)
@@ -341,6 +341,10 @@ if(AFFT_BUILD_EXAMPLES)
   add_executable(cpu_dft_1D_C2C_simple examples/cpu/dft_1D_C2C_simple.cpp)
   set_target_properties(cpu_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
   target_link_libraries(cpu_dft_1D_C2C_simple PRIVATE afft::afft)
+
+  add_executable(c_example examples/c/example.c)
+  set_target_properties(c_example PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
+  target_link_libraries(c_example PRIVATE afft::afft)
 
   if(NOT (AFFT_GPU_BACKEND STREQUAL ""))
     if(AFFT_GPU_BACKEND STREQUAL "CUDA")
