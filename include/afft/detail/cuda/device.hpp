@@ -37,7 +37,7 @@ namespace afft::detail::cuda
    * @brief Get the number of CUDA devices.
    * @return The number of CUDA devices.
    */
-  int getDeviceCount()
+  [[nodiscard]] inline int getDeviceCount()
   {
     int count{};
     checkError(cudaGetDeviceCount(&count));
@@ -49,7 +49,7 @@ namespace afft::detail::cuda
    * @param device The device to check.
    * @return True if the device is valid, false otherwise.
    */
-  bool isValidDevice(int device)
+  [[nodiscard]] inline bool isValidDevice(int device)
   {
     return (device >= 0) && (device < getDeviceCount());
   }
@@ -58,7 +58,7 @@ namespace afft::detail::cuda
    * @brief Get the current device.
    * @return The current device.
    */
-  int getCurrentDevice()
+  [[nodiscard]] inline int getCurrentDevice()
   {
     int device{};
     checkError(cudaGetDevice(&device));
