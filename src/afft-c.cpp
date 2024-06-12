@@ -570,7 +570,7 @@ static afft_mpst_gpu_BackendParameters convertToC(const afft::mpst::gpu::Backend
  */
 extern "C" const char* getBackendName(afft_Backend backend)
 {
-  return {};
+  return afft::toString(convertFromC<afft::Backend>(backend)).data();
 }
 
 /**********************************************************************************************************************/

@@ -694,8 +694,6 @@ namespace afft::detail
         mHasDefaultSrcStrides{memLayout.srcBlock.starts.empty() && memLayout.srcBlock.sizes.empty()},
         mHasDefaultDstStrides{memLayout.dstBlock.starts.empty() && memLayout.dstBlock.sizes.empty()},
         mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
-        mHasDefaultDstStrides{memLayout.dstBlock.strides.empty()},
-        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
         mHasDefaultDstAxesOrder{memLayout.dstAxesOrder.empty()}
       {
         if (memLayout.srcBlock.starts.size() == shapeRank)

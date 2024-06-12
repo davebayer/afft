@@ -167,7 +167,7 @@ namespace cufft
   } // namespace mpst::gpu
 
   /// @brief cuFFT Workspace policy
-  enum class cufft::WorkspacePolicy : std::uint8_t
+  enum class WorkspacePolicy : std::uint8_t
   {
     performance, ///< Use the workspace for performance
     minimal,     ///< Use the minimal workspace

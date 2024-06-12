@@ -80,13 +80,13 @@ namespace afft::detail
           if (memoryLayout.hasDefaultSrcStrides())
           {
             const auto srcShape = getSrcShape();
-            makeStrides(memoryLayout.getSrcStridesWritable(), View<std::size_t>{srcShape.data(), shapeRank});
+            makeStrides(View<std::size_t>{srcShape.data(), shapeRank}, memoryLayout.getSrcStridesWritable());
           }
 
           if (memoryLayout.hasDefaultDstStrides())
           {
             const auto dstShape = getDstShape();
-            makeStrides(memoryLayout.getDstStridesWritable(), View<std::size_t>{dstShape.data(), shapeRank});
+            makeStrides(View<std::size_t>{dstShape.data(), shapeRank}, memoryLayout.getDstStridesWritable());
           }
 
           break;
@@ -99,12 +99,12 @@ namespace afft::detail
           {
             if (memoryLayout.hasDefaultSrcStrides(i))
             {
-              makeStrides(memoryLayout.getSrcStridesWritable(i), memoryLayout.getSrcSizes(i));
+              makeStrides(memoryLayout.getSrcSizes(i), memoryLayout.getSrcStridesWritable(i));
             }
             
             if (memoryLayout.hasDefaultDstStrides(i))
             {
-              makeStrides(memoryLayout.getDstStridesWritable(i), memoryLayout.getDstSizes(i));
+              makeStrides(memoryLayout.getDstSizes(i), memoryLayout.getDstStridesWritable(i));
             }
           }
 
@@ -116,12 +116,12 @@ namespace afft::detail
 
           if (memoryLayout.hasDefaultSrcStrides())
           {
-            makeStrides(memoryLayout.getSrcStridesWritable(), memoryLayout.getSrcSizes());
+            makeStrides(memoryLayout.getSrcSizes(), memoryLayout.getSrcStridesWritable());
           }
 
           if (memoryLayout.hasDefaultDstStrides())
           {
-            makeStrides(memoryLayout.getDstStridesWritable(), memoryLayout.getDstSizes());
+            makeStrides(memoryLayout.getDstSizes(), memoryLayout.getDstStridesWritable());
           }
           break;
         }

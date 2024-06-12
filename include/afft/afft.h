@@ -710,7 +710,7 @@ typedef afft_spst_gpu_Parameters afft_gpu_Parameters;
 /// @brief CPU execution parameters structure for spst architecture
 typedef struct
 {
-  // no parameters
+  uint8_t _dummy; ///< Dummy field to avoid empty struct
 } afft_spst_cpu_ExecutionParameters;
 
 /// @brief GPU execution parameters structure for spst architecture
@@ -848,7 +848,7 @@ static inline afft_TransformParameters _afft_makeTransformParameters(afft_dtt_Pa
 
 static inline afft_TransformParameters _afft_makeTransformParameters(afft_TransformParameters params)
 {
-  return _afft_makeTransformParameters(params);
+  return _afft_makeTransformParametersAny(params);
 }
 
 extern "C"

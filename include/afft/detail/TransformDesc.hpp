@@ -123,6 +123,34 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the transform description.
+       * @tparam transform Transform type.
+       * @return Transform description.
+       */
+      template<Transform transform>
+      [[nodiscard]] constexpr const auto& getTransformDesc() const
+      {
+        static_assert(isValid(transform), "Invalid transform type");
+
+        if constexpr (transform == Transform::dft)
+        {
+          return std::get<DftDesc>(mTransformVariant);
+        }
+        else if constexpr (transform == Transform::dht)
+        {
+          return std::get<DhtDesc>(mTransformVariant);
+        }
+        else if constexpr (transform == Transform::dtt)
+        {
+          return std::get<DttDesc>(mTransformVariant);
+        }
+        else
+        {
+          cxx::unreachable();
+        }
+      }
+
+      /**
        * @brief Get the rank of the shape.
        * @return Rank of the shape.
        */
@@ -335,34 +363,6 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the transform description.
-       * @tparam transform Transform type.
-       * @return Transform description.
-       */
-      template<Transform transform>
-      [[nodiscard]] constexpr const auto& getTransformDesc() const
-      {
-        static_assert(isValid(transform), "Invalid transform type");
-
-        if constexpr (transform == Transform::dft)
-        {
-          return std::get<DftDesc>(mTransformVariant);
-        }
-        else if constexpr (transform == Transform::dht)
-        {
-          return std::get<DhtDesc>(mTransformVariant);
-        }
-        else if constexpr (transform == Transform::dtt)
-        {
-          return std::get<DttDesc>(mTransformVariant);
-        }
-        else
-        {
-          cxx::unreachable();
-        }
-      }
-
-      /**
        * @brief Get the normalization factor.
        * @tparam prec Precision type.
        * @return Normalization factor.
@@ -559,7 +559,7 @@ namespace afft::detail
 
         if (axesView.empty())
         {
-          std::iota(axes.begin(), std::next(axes.begin(), shapeRank), 0);
+          std::iota(axes.begin(), std::next(axes.begin(), static_cast<std::ptrdiff_t>(shapeRank)), 0);
         }
         else if (axesView.size() <= shapeRank)
         {

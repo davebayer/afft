@@ -450,7 +450,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<const void>>{&src, 1}, View<void*>{&dst, 1}, execParams);
       }
 
       /**
@@ -465,7 +465,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<void>>{&src, 1}, View<void*>{&dst, 1}, execParams);
       }
 
       /**
@@ -480,7 +480,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<const void*>{&src, 1}, View<PlanarComplex<void>>{&dst, 1}, execParams);
       }
 
       /**
@@ -495,7 +495,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<void*>{&src, 1}, View<PlanarComplex<void>>{&dst, 1}, execParams);
       }
 
       /**
@@ -510,7 +510,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<const void>>{&src, 1}, View<PlanarComplex<void>>{&dst, 1}, execParams);
       }
 
       /**
@@ -525,7 +525,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<void>>{&src, 1}, View<PlanarComplex<void>>{&dst, 1}, execParams);
       }
 
       /**
