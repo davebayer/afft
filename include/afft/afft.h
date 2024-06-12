@@ -1501,25 +1501,31 @@ static inline afft_Alignment afft_getAlignment(size_t count, ...)
 }
 
 /**
- * @brief Make strides from the shape.
- * @param rank Rank of the shape.
+ * @brief Make strides.
+ * @param shapeRank Rank of the shape.
  * @param shape Shape of the array.
+ * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
  * @return Error code.
  */
-afft_Error afft_makeStrides(size_t rank, const size_t* shape, size_t* strides);
+afft_Error afft_makeStrides(const size_t  shapeRank,
+                            const size_t* shape,
+                            const size_t  fastestAxisStride,
+                            size_t*       strides);
 
 /**
  * @brief Make transposed strides.
- * @param rank Rank of the shape.
+ * @param shapeRank Rank of the shape.
  * @param resultShape Shape of the result array.
- * @param orgAxesOrder Order of the original axes.
+ * @param orgAxesOrder Original axes order.
+ * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
  * @return Error code.
  */
-afft_Error afft_makeTransposedStrides(size_t        rank,
+afft_Error afft_makeTransposedStrides(const size_t  shapeRank,
                                       const size_t* resultShape,
                                       const size_t* orgAxesOrder,
+                                      const size_t  fastestAxisStride,
                                       size_t*       strides);
 
 #ifdef __cplusplus

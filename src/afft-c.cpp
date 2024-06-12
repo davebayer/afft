@@ -1062,6 +1062,7 @@ try
   }
 
   *planPtr = reinterpret_cast<afft_Plan*>(afft::makePlan(transformParams, archParams, backendParams).release());
+
   return afft_Error_success;
 }
 catch (...)
@@ -1386,6 +1387,26 @@ catch (...)
 //   return afft_Error_internal;
 // }
 
+template<typename ExecParamsT>
+static afft_Error planExecute(afft_Plan* plan, afft_ExecutionBuffers src, afft_ExecutionBuffers dst, const ExecParamsT& execParams)
+{
+  checkPlan(plan);
+
+  // const auto [srcCmpl, dstCmpl] 
+
+  // auto impl1 = [&](const auto s)
+  // {
+
+  // };
+
+  // if (!src.isMany)
+  // {
+  //   return (!src.isConst) ? impl1(afft::View<void*>{src.ptr, 1}) : impl1(afft::View<const void*>{src.cptr, 1});
+  // }
+
+  return afft_Error_success;
+}
+
 /**
  * @brief Execute a plan implementation. Internal use only.
  * @param plan Plan object.
@@ -1396,7 +1417,35 @@ catch (...)
 extern "C" afft_Error _afft_Plan_execute(afft_Plan* plan, afft_ExecutionBuffers src, afft_ExecutionBuffers dst)
 try
 {
-  return afft_Error_success;
+  checkPlan(plan);
+
+  switch (reinterpret_cast<afft::Plan*>(plan)->getTarget())
+  {
+  case afft::Target::cpu:
+    switch (reinterpret_cast<afft::Plan*>(plan)->getDistribution())
+    {
+    case afft::Distribution::spst:
+      return planExecute(plan, src, dst, afft::spst::cpu::ExecutionParameters{});
+    case afft::Distribution::mpst:
+      return planExecute(plan, src, dst, afft::mpst::cpu::ExecutionParameters{});    
+    default:
+      return afft_Error_invalidDistribution;
+    }
+  case afft::Target::gpu:
+    switch (reinterpret_cast<afft::Plan*>(plan)->getDistribution())
+    {
+    case afft::Distribution::spst:
+      return planExecute(plan, src, dst, afft::spst::gpu::ExecutionParameters{});
+    // case Distribution::spmt:
+    //   return planExecute(plan, src, dst, afft::spmt::gpu::ExecutionParameters{});
+    case afft::Distribution::mpst:
+      return planExecute(plan, src, dst, afft::mpst::gpu::ExecutionParameters{});    
+    default:
+      return afft_Error_invalidDistribution;
+    }
+  default:
+    return afft_Error_invalidTarget;
+  }
 }
 catch (...)
 {
@@ -1417,7 +1466,35 @@ extern "C" afft_Error _afft_Plan_executeWithParameters(afft_Plan*               
                                                        afft_ExecutionParameters execParams)
 try
 {
-  return afft_Error_success;
+  checkPlan(plan);
+
+  switch (execParams.target)
+  {
+  case afft_Target_cpu:
+    switch (execParams.distribution)
+    {
+    case afft_Distribution_spst:
+      return planExecute(plan, src, dst, convertFromC(execParams.spstCpu));
+    case afft_Distribution_mpst:
+      return planExecute(plan, src, dst, convertFromC(execParams.mpstCpu));
+    default:
+      return afft_Error_invalidDistribution;
+    }
+  case afft_Target_gpu:
+    switch (execParams.distribution)
+    {
+    case afft_Distribution_spst:
+      return planExecute(plan, src, dst, convertFromC(execParams.spstGpu));
+    // case afft_Distribution_spmt:
+    //   return planExecute(plan, src, dst, convertFromC(execParams.spmtGpu));
+    case afft_Distribution_mpst:
+      return planExecute(plan, src, dst, convertFromC(execParams.mpstGpu));
+    default:
+      return afft_Error_invalidDistribution;
+    }
+  default:
+    return afft_Error_invalidTarget;
+  }
 }
 catch (...)
 {
@@ -1514,17 +1591,24 @@ extern "C" void afft_gpu_unifiedFree(cl_context context, void* ptr);
 /**********************************************************************************************************************/
 // Utilities
 /**********************************************************************************************************************/
-
 /**
- * @brief Make strides from the shape.
- * @param rank Rank of the shape.
+ * @brief Make strides.
+ * @param shapeRank Rank of the shape.
  * @param shape Shape of the array.
+ * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
  * @return Error code.
  */
-extern "C" afft_Error afft_makeStrides(size_t rank, const size_t* shape, size_t* strides)
+extern "C" afft_Error afft_makeStrides(const size_t  shapeRank,
+                                       const size_t* shape,
+                                       const size_t  fastestAxisStride,
+                                       size_t*       strides)
 try
 {
+  afft::makeStrides(afft::View<std::size_t>{shape, shapeRank},
+                    fastestAxisStride,
+                    afft::Span<std::size_t>{strides, shapeRank});
+
   return afft_Error_success;
 }
 catch (...)
@@ -1534,18 +1618,25 @@ catch (...)
 
 /**
  * @brief Make transposed strides.
- * @param rank Rank of the shape.
+ * @param shapeRank Rank of the shape.
  * @param resultShape Shape of the result array.
- * @param orgAxesOrder Order of the original axes.
+ * @param orgAxesOrder Original axes order.
+ * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
  * @return Error code.
  */
-extern "C" afft_Error afft_makeTransposedStrides(size_t        rank,
+extern "C" afft_Error afft_makeTransposedStrides(const size_t  shapeRank,
                                                  const size_t* resultShape,
                                                  const size_t* orgAxesOrder,
+                                                 const size_t  fastestAxisStride,
                                                  size_t*       strides)
 try
 {
+  afft::makeTransposedStrides(afft::View<std::size_t>{resultShape, shapeRank},
+                              afft::View<std::size_t>{orgAxesOrder, shapeRank},
+                              fastestAxisStride,
+                              afft::Span<std::size_t>{strides, shapeRank});
+
   return afft_Error_success;
 }
 catch (...)

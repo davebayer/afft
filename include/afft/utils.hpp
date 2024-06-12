@@ -102,15 +102,17 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make strides.
-   * @tparam rank Rank of the shape
+   * @tparam I Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam stridesExt Strides extent
    * @param shape Shape
    * @param fastestAxisStride Stride of the fastest axis
-   * @return Strides
+   * @param strides Strides
    */
   template<typename I, std::size_t stridesExt, std::size_t shapeExt>
-  constexpr void makeStrides(Span<I, stridesExt> strides,
-                             View<I, shapeExt>   shape,
-                             std::size_t         fastestAxisStride = 1)
+  constexpr void makeStrides(View<I, shapeExt>   shape,
+                             std::size_t         fastestAxisStride,
+                             Span<I, stridesExt> strides)
   {
     static_assert(std::is_integral_v<I>, "I must be an integral type");
     static_assert((stridesExt == dynamicExtent) ||
@@ -136,9 +138,24 @@ AFFT_EXPORT namespace afft
   }
 
   /**
+   * @brief Make strides with the fastest axis stride set to 1.
+   * @tparam I Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam stridesExt Strides extent
+   * @param shape Shape
+   * @param strides Strides
+   */
+  template<typename I, std::size_t stridesExt, std::size_t shapeExt>
+  constexpr void makeStrides(View<I, shapeExt> shape, Span<I, stridesExt> strides)
+  {
+    makeStrides(shape, 1, strides);
+  }
+
+  /**
    * @brief Make strides.
-   * @tparam rank Rank of the shape
-   * @param shapeExt Shape extent
+   * @tparam I Integral type
+   * @tparam shapeExt Shape extent
+   * @param shape Shape
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
@@ -148,16 +165,16 @@ AFFT_EXPORT namespace afft
   {
     std::array<I, shapeExt> strides{};
 
-    makeStrides(strides, shape, fastestAxisStride);
+    makeStrides(shape, fastestAxisStride, strides);
 
     return strides;
   }
 
   /**
-   * @brief Make strides.
-   * @tparam rank Rank of the shape
-   * @param shapeExt Shape extent
-   * @param fastestAxisStride Stride of the fastest axis
+   * @brief Make strides with the fastest axis stride set to 1.
+   * @tparam I Integral type
+   * @tparam shapeExt Shape extent
+   * @param shape Shape
    * @return Strides
    */
   template<typename I, std::size_t shapeExt>
@@ -168,24 +185,28 @@ AFFT_EXPORT namespace afft
 
     std::vector<I> strides(shape.size());
 
-    makeStrides(strides, shape, fastestAxisStride);
+    makeStrides(shape, fastestAxisStride, strides);
 
     return strides;
   }
 
   /**
    * @brief Make transposed strides.
-   * @tparam rank Rank of the shape
-   * @param stridesExt Strides extent
-   * @param shapeExt Shape extent
-   * @param axesExt Axes order extent
+   * @tparam I Integral type
+   * @tparam A Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam axesExt Axes order extent
+   * @tparam stridesExt Strides extent
+   * @param shape Shape
+   * @param orgAxesOrder Original axes order
    * @param fastestAxisStride Stride of the fastest axis
+   * @param strides Strides
    */
   template<typename I, typename A, std::size_t stridesExt, std::size_t shapeExt, std::size_t axesExt>
-  constexpr void makeTransposedStrides(Span<I, stridesExt> strides,
-                                       View<I, shapeExt>   shape,
+  constexpr void makeTransposedStrides(View<I, shapeExt>   shape,
                                        View<A, axesExt>    orgAxesOrder,
-                                       std::size_t         fastestAxisStride = 1)
+                                       std::size_t         fastestAxisStride,
+                                       Span<I, stridesExt> strides)
   {
     static_assert(std::is_integral_v<I>, "I must be an integral type");
     static_assert(std::is_integral_v<A>, "A must be an integral type");
@@ -231,10 +252,32 @@ AFFT_EXPORT namespace afft
   }
 
   /**
+   * @brief Make transposed strides with the fastest axis stride set to 1.
+   * @tparam I Integral type
+   * @tparam A Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam axesExt Axes order extent
+   * @tparam stridesExt Strides extent
+   * @param shape Shape
+   * @param orgAxesOrder Original axes order
+   * @param strides Strides
+   */
+  template<typename I, typename A, std::size_t stridesExt, std::size_t shapeExt, std::size_t axesExt>
+  constexpr void makeTransposedStrides(View<I, shapeExt>   shape,
+                                       View<A, axesExt>    orgAxesOrder,
+                                       Span<I, stridesExt> strides)
+  {
+    makeTransposedStrides(shape, orgAxesOrder, 1, strides);
+  }
+
+  /**
    * @brief Make transposed strides.
-   * @tparam rank Rank of the shape
-   * @param shapeExt Shape extent
-   * @param orgAxesOrderExt Original axes order extent
+   * @tparam I Integral type
+   * @tparam A Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam axesExt Axes order extent
+   * @param shape Shape
+   * @param orgAxesOrder Original axes order
    * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */  
@@ -249,7 +292,7 @@ AFFT_EXPORT namespace afft
 
     std::array<I, shapeExt> strides{};
 
-    makeTransposedStrides(strides, shape, orgAxesOrder, fastestAxisStride);
+    makeTransposedStrides(shape, orgAxesOrder, fastestAxisStride, strides);
 
     return strides;
   }
@@ -258,9 +301,10 @@ AFFT_EXPORT namespace afft
    * @brief Make transposed strides.
    * @tparam I Integral type
    * @tparam A Integral type
+   * @tparam shapeExt Shape extent
+   * @tparam axesExt Axes order extent
    * @param shape Shape
    * @param orgAxesOrder Original axes order
-   * @param fastestAxisStride Stride of the fastest axis
    * @return Strides
    */
   template<typename I, typename A, std::size_t shapeExt, std::size_t axesExt>
@@ -274,7 +318,7 @@ AFFT_EXPORT namespace afft
 
     std::vector<I> strides(shape.size());
 
-    makeTransposedStrides(strides, shape, orgAxesOrder, fastestAxisStride);
+    makeTransposedStrides(shape, orgAxesOrder, fastestAxisStride, strides);
 
     return strides;
   }
