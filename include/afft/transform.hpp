@@ -42,7 +42,7 @@ namespace afft
   namespace dft
   {
     /// @brief DFT transform type
-    enum class Type
+    enum class Type : std::uint8_t
     {
       complexToComplex,       ///< complex-to-complex transform
       realToComplex,          ///< real-to-complex transform
@@ -80,7 +80,7 @@ namespace afft
   namespace dht
   {
     /// @brief DHT transform type
-    enum class Type
+    enum class Type : std::uint8_t
     {
       separable, ///< separable DHT, computes the DHT along each axis independently
     };
@@ -112,7 +112,7 @@ namespace afft
   namespace dtt
   {
     /// @brief DTT transform type
-    enum class Type
+    enum class Type : std::uint8_t
     {
       dct1,       ///< Discrete Cosine Transform type I
       dct2,       ///< Discrete Cosine Transform type II

@@ -44,9 +44,9 @@ AFFT_EXPORT namespace afft
   {
     static_assert(sizeof...(Args) > 0, "At least one pointer must be provided");
 
-    const auto logOredPtrs = (0 | ... | reinterpret_cast<std::uintptr_t>(ptrs));
+    const auto bitOredPtrs = (0 | ... | reinterpret_cast<std::uintptr_t>(ptrs));
 
-    return static_cast<Alignment>(logOredPtrs & ~(logOredPtrs - 1));
+    return static_cast<Alignment>(bitOredPtrs & ~(bitOredPtrs - 1));
   }
 
   /**

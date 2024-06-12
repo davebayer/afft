@@ -310,7 +310,7 @@ namespace heffte
 
     Backend backend{};         ///< Backend
     bool    useReorder{true};  ///< Use reorder flag
-    bool    useAlltoAll{true}; ///< Use alltoall flag
+    bool    useAllToAll{true}; ///< Use alltoall flag
     bool    usePencils{true};  ///< Use pencils flag
   };
 
@@ -344,7 +344,7 @@ namespace heffte
 
     Backend backend{};         ///< Backend
     bool    useReorder{true};  ///< Use reorder flag
-    bool    useAlltoAll{true}; ///< Use alltoall flag
+    bool    useAllToAll{true}; ///< Use alltoall flag
     bool    usePencils{true};  ///< Use pencils flag
   };
 } // namespace heffte
@@ -571,7 +571,7 @@ namespace mpst
    * @param backend Backend to convert.
    * @return String representation of the backend.
    */
-  [[nodiscard]] constexpr std::string_view toString(Backend backend)
+  [[nodiscard]] constexpr std::string_view toString(Backend backend) noexcept
   {
     switch (backend)
     {

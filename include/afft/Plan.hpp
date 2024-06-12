@@ -123,6 +123,15 @@ namespace afft
       }
 
       /**
+       * @brief Get target count.
+       * @return Target count.
+       */
+      [[nodiscard]] constexpr std::size_t getTargetCount() const noexcept
+      {
+        return mDesc.getTargetCount();
+      }
+
+      /**
        * @brief Get distribution.
        * @return Distribution
        */

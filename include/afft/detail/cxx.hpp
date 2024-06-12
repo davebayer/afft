@@ -361,7 +361,7 @@ inline namespace cxx23
    * @return Value of the enum's underlying type.
    */
   template<typename E>
-  [[nodiscard]] constexpr auto to_underlying(E value) noexcept
+  [[nodiscard]] constexpr std::underlying_type_t<E> to_underlying(E value) noexcept
   {
     static_assert(std::is_enum_v<E>, "to_underlying() can only be used with enum types.");
 
