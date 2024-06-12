@@ -40,7 +40,7 @@ AFFT_EXPORT namespace afft
    * @return Alignment
    */
   template<typename... Args>
-  [[nodiscard]] constexpr Alignment getAlignment(const Args*... ptrs) noexcept
+  [[nodiscard]] constexpr Alignment alignmentOf(const Args*... ptrs) noexcept
   {
     static_assert(sizeof...(Args) > 0, "At least one pointer must be provided");
 

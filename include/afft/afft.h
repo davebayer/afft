@@ -1475,13 +1475,13 @@ void afft_gpu_unifiedFree(cl_context context, void* ptr);
 /**********************************************************************************************************************/
 // Utilities
 /**********************************************************************************************************************/
-
 /**
- * @brief Get the size of the type.
- * @param type Type.
- * @return Size of the type.
+ * @brief Get the alignment of the pointers.
+ * @param count Number of pointers.
+ * @param ... Pointers.
+ * @return Alignment.
  */
-static inline afft_Alignment afft_getAlignment(size_t count, ...)
+static inline afft_Alignment afft_alignmentOf(size_t count, ...)
 {
   va_list args;
   va_start(args, count);
