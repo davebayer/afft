@@ -860,7 +860,7 @@ extern "C"
     afft_dtt_Parameters:      _afft_makeTransformParametersDtt, \
     afft_TransformParameters: _afft_makeTransformParametersAny)(params)
 #else
-# define _afft_makeTransformParameters(params) _afft_makeTransformParametersAny(params)
+# define _afft_makeTransformParameters(params) params
 #endif
 
 static inline afft_ArchitectureParameters _afft_makeArchitectureParametersSpstCpu(afft_spst_cpu_Parameters params)
@@ -962,7 +962,7 @@ extern "C"
     afft_mpst_gpu_Parameters:    _afft_makeArchitectureParametersMpstGpu, \
     afft_ArchitectureParameters: _afft_makeArchitectureParametersAny)(params)
 #else
-# define _afft_makeArchitectureParameters(params) _afft_makeArchitectureParametersAny(params)
+# define _afft_makeArchitectureParameters(params) params
 #endif
 
 static inline afft_BackendParameters _afft_makeBackendParametersSpstCpu(afft_spst_cpu_BackendParameters params)
@@ -1226,27 +1226,27 @@ static inline afft_ExecutionBuffers _afft_makeExecutionBuffersAny(afft_Execution
 #ifdef __cplusplus
 } // extern "C"
 
-static inline afft_ExecutionBuffers afft_makeExecutionBuffers(void* ptr)
+static inline afft_ExecutionBuffers _afft_makeExecutionBuffers(void* ptr)
 {
   return _afft_makeExecutionBuffersSingle(ptr);
 }
 
-static inline afft_ExecutionBuffers afft_makeExecutionBuffers(const void* ptr)
+static inline afft_ExecutionBuffers _afft_makeExecutionBuffers(const void* ptr)
 {
   return _afft_makeExecutionBuffersSingleConst(ptr);
 }
 
-static inline afft_ExecutionBuffers afft_makeExecutionBuffers(void* const* ptrs)
+static inline afft_ExecutionBuffers _afft_makeExecutionBuffers(void* const* ptrs)
 {
   return _afft_makeExecutionBuffersMany(ptrs);
 }
 
-static inline afft_ExecutionBuffers afft_makeExecutionBuffers(const void* const* ptrs)
+static inline afft_ExecutionBuffers _afft_makeExecutionBuffers(const void* const* ptrs)
 {
   return _afft_makeExecutionBuffersManyConst(ptrs);
 }
 
-static inline afft_ExecutionBuffers afft_makeExecutionBuffers(afft_ExecutionBuffers execBuffs)
+static inline afft_ExecutionBuffers _afft_makeExecutionBuffers(afft_ExecutionBuffers execBuffs)
 {
   return execBuffs;
 }
@@ -1254,14 +1254,14 @@ static inline afft_ExecutionBuffers afft_makeExecutionBuffers(afft_ExecutionBuff
 extern "C"
 {
 #elif __STDC_VERSION__ >= 201112L
-# define afft_makeExecutionBuffers(ptr) _Generic((ptr), \
+# define _afft_makeExecutionBuffers(param) _Generic((param), \
     void*:                 _afft_makeExecutionBuffersSingle, \
     const void*:           _afft_makeExecutionBuffersSingleConst, \
     void* const*:          _afft_makeExecutionBuffersMany, \
     const void* const*:    _afft_makeExecutionBuffersManyConst, \
-    afft_ExecutionBuffers: _afft_makeExecutionBuffersAny)(ptr)
+    afft_ExecutionBuffers: _afft_makeExecutionBuffersAny)(param)
 #else
-# define afft_makeExecutionBuffers(ptr) _afft_makeExecutionBuffersAny(ptr)
+# define _afft_makeExecutionBuffers(param) param
 #endif
 
 /**
@@ -1272,7 +1272,7 @@ extern "C"
  * @return Error code.
  */
 #define afft_Plan_execute(plan, src, dst) \
-  _afft_Plan_execute(plan, afft_makeExecutionBuffers(src), afft_makeExecutionBuffers(dst))
+  _afft_Plan_execute(plan, _afft_makeExecutionBuffers(src), _afft_makeExecutionBuffers(dst))
 
 /**
  * @brief Execute a plan implementation. Internal use only.
@@ -1374,7 +1374,7 @@ static inline afft_ExecutionParameters afft_makeExecutionParameters(afft_Executi
 extern "C"
 {
 #elif __STDC_VERSION__ >= 201112L
-# define afft_makeExecutionParameters(params) _Generic((params), \
+# define _afft_makeExecutionParameters(params) _Generic((params), \
     afft_spst_cpu_ExecutionParameters: _afft_makeExecutionParametersSpstCpu, \
     afft_spst_gpu_ExecutionParameters: _afft_makeExecutionParametersSpstGpu, \
     afft_spmt_gpu_ExecutionParameters: _afft_makeExecutionParametersSpmtGpu, \
@@ -1382,7 +1382,7 @@ extern "C"
     afft_mpst_gpu_ExecutionParameters: _afft_makeExecutionParametersMpstGpu, \
     afft_ExecutionParameters:          _afft_makeExecutionParametersAny)(params)
 #else
-# define afft_makeExecutionParameters(params) _afft_makeExecutionParametersAny(params)
+# define _afft_makeExecutionParameters(params) _afft_makeExecutionParametersAny(params)
 #endif
 
 /**
@@ -1395,9 +1395,9 @@ extern "C"
  */
 #define afft_Plan_executeWithParameters(plan, src, dst, execParams) \
   _afft_Plan_executeWithParameters(plan, \
-                                   afft_makeExecutionBuffers(src), \
-                                   afft_makeExecutionBuffers(dst), \
-                                   afft_makeExecutionParameters(execParams))
+                                   _afft_makeExecutionBuffers(src), \
+                                   _afft_makeExecutionBuffers(dst), \
+                                   _afft_makeExecutionParameters(execParams))
 
 /**
  * @brief Execute a plan with execution parameters implementation. Internal use only.
