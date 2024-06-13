@@ -725,6 +725,8 @@ typedef struct
 #elif AFFT_GPU_BACKEND_IS(OPENCL)
   cl_command_queue commandQueue; ///< OpenCL command queue
   cl_mem           workspace;    ///< Workspace
+#else
+  uint8_t _dummy;                ///< Dummy field to avoid empty struct
 #endif
 } afft_spst_gpu_ExecutionParameters;
 
@@ -737,6 +739,8 @@ typedef struct
 #elif AFFT_GPU_BACKEND_IS(HIP)
   hipStream_t  stream;    ///< HIP stream
   void* const* workspace; ///< Workspace
+#else
+  uint8_t _dummy;         ///< Dummy field to avoid empty struct
 #endif
 } afft_spmt_gpu_ExecutionParameters;
 
@@ -758,6 +762,8 @@ typedef struct
 #elif AFFT_GPU_BACKEND_IS(OPENCL)
   cl_command_queue commandQueue; ///< OpenCL command queue
   cl_mem           workspace;    ///< Workspace
+#else
+  uint8_t _dummy;                ///< Dummy field to avoid empty struct
 #endif
 } afft_mpst_gpu_ExecutionParameters;
 

@@ -123,9 +123,7 @@ if(NOT ("${AFFT_GPU_BACKEND}" STREQUAL ""))
     message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_BACKEND}")
   endif()
 
-  string(TOUPPER "${AFFT_GPU_BACKEND}" GPU_BACKEND_UPPER)
-  target_compile_definitions(afft PUBLIC AFFT_GPU_BACKEND=${GPU_BACKEND_UPPER})
-  target_compile_definitions(afft-header-only INTERFACE AFFT_GPU_BACKEND=${GPU_BACKEND_UPPER})
+  string(TOUPPER "${AFFT_GPU_BACKEND}" AFFT_GPU_BACKEND)
 endif()
 
 ########################################################################################################################
@@ -142,9 +140,7 @@ if(NOT ("${AFFT_MP_BACKEND}" STREQUAL ""))
     message(FATAL_ERROR "Invalid MP framework: ${AFFT_MP_BACKEND}")
   endif()
 
-  string(TOUPPER "${AFFT_MP_BACKEND}" MP_BACKEND_UPPER)
-  target_compile_definitions(afft PUBLIC AFFT_MP_BACKEND=${MP_BACKEND_UPPER})
-  target_compile_definitions(afft-header-only INTERFACE AFFT_MP_BACKEND=${MP_BACKEND_UPPER})
+  string(TOUPPER "${AFFT_MP_BACKEND}" AFFT_MP_BACKEND)
 else()
   set(HAS_MP_SUPPORT FALSE)
 endif()
@@ -323,9 +319,13 @@ endforeach()
 # Convert the list of CPU backends to uppercase and pass it to the target
 string(TOUPPER "${AFFT_BACKEND_LIST}" BACKEND_LIST_UPPER)
 list(TRANSFORM BACKEND_LIST_UPPER PREPEND "AFFT_BACKEND_" OUTPUT_VARIABLE BACKEND_LIST_UPPER_PREP)
-string(REPLACE ";" "|" BACKEND_MASK "${BACKEND_LIST_UPPER_PREP}")
-target_compile_definitions(afft PUBLIC AFFT_BACKEND_MASK=${BACKEND_MASK})
-target_compile_definitions(afft-header-only INTERFACE AFFT_BACKEND_MASK=${BACKEND_MASK})
+string(REPLACE ";" "|" AFFT_BACKEND_MASK "${BACKEND_LIST_UPPER_PREP}")
+
+########################################################################################################################
+# Make the library configuration the library
+########################################################################################################################
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h)
 
 ########################################################################################################################
 

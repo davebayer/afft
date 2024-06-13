@@ -25,9 +25,7 @@
 #ifndef AFFT_CONFIG_H
 #define AFFT_CONFIG_H
 
-#define AFFT_VERSION_MAJOR      0 ///< Major version.
-#define AFFT_VERSION_MINOR      1 ///< Minor version.
-#define AFFT_VERSION_PATCH      0 ///< Patch version.
+#include "afft-config.h"
 
 /**
  * @brief Expand and concatenate two tokens.
