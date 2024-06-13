@@ -29,21 +29,38 @@
 # include "../include.hpp"
 #endif
 
+namespace afft::detail::rocfft
+{
+  /// @brief Initialize the rocFFT library.
+  void init();
+
+  /// @brief Finalize the rocFFT library.
+  void finalize();
+} // namespace afft::detail::rocfft
+
+#if AFFT_GPU_IS_ENABLED
+
+#ifdef AFFT_HEADER_ONLY
+
 #include "error.hpp"
 
 namespace afft::detail::rocfft
 {
   /// @brief Initialize the rocFFT library.
-  inline void init()
+  AFFT_HEADER_ONLY_INLINE void init()
   {
-    Error::check(rocfft_setup());
+    checkError(rocfft_setup());
   }
 
   /// @brief Finalize the rocFFT library.
-  inline void finalize()
+  AFFT_HEADER_ONLY_INLINE void finalize()
   {
-    Error::check(rocfft_cleanup());
+    checkError(rocfft_cleanup());
   }
 } // namespace afft::detail::rocfft
+
+#endif /* AFFT_HEADER_ONLY */
+
+#endif /* AFFT_GPU_IS_ENABLED */
 
 #endif /* AFFT_DETAIL_ROCFFT_INIT_HPP */

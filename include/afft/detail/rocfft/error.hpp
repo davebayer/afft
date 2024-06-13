@@ -38,7 +38,7 @@ namespace afft::detail::rocfft
    * @param status rocFFT status.
    * @return True if status is rocfft_status_success, false otherwise.
    */
-  [[nodiscard]] inline constexpr bool isOk(rocfft_status status)
+  [[nodiscard]] constexpr bool isOk(rocfft_status status)
   {
     return (status == rocfft_status_success);
   }
@@ -48,7 +48,7 @@ namespace afft::detail::rocfft
    * @param status rocFFT status.
    * @throw BackendError if status is not valid.
    */
-  inline void checkError(rocfft_status status)
+  constexpr void checkError(rocfft_status status)
   {
     auto getErrorMsg = [](rocfft_status status)
     {
