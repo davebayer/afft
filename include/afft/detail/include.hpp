@@ -127,19 +127,22 @@ import std;
 
  // Include HeFFTe header
 # if AFFT_BACKEND_IS_ENABLED(HEFFTE)
-#   include <heffte.h>
+#   if AFFT_MP_BACKEND_IS(MPI)
+#     include <heffte.h>
+#   endif
 # endif
 
  // Include hipFFT header
 # if AFFT_BACKEND_IS_ENABLED(HIPFFT)
 #   if AFFT_GPU_BACKEND_IS(HIP)
 #     include <hipfft/hipfftXt.h>
+#     include <hipfft/hipfft-version.h>
 #   endif
 # endif
 
  // Include MKL header
 # if AFFT_BACKEND_IS_ENABLED(MKL)
-#   include <mkl_dfti.h>
+#   include <mkl.h>
 # endif
 
  // Include PocketFFT header
@@ -151,6 +154,7 @@ import std;
 # if AFFT_BACKEND_IS_ENABLED(ROCFFT)
 #   if AFFT_GPU_BACKEND_IS(HIP)
 #     include <rocfft/rocfft.h>
+#     include <rocfft/rocfft-version.h>
 #   endif
 # endif
 

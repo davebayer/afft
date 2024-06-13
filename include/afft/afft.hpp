@@ -41,19 +41,6 @@
 #include "makePlan.hpp"
 #include "PlanCache.hpp"
 #include "utils.hpp"
-
-AFFT_EXPORT namespace afft
-{
-  /**
-   * @struct Version
-   * @brief AFFT version.
-   */
-  inline constexpr struct Version
-  {
-    static constexpr int major{AFFT_VERSION_MAJOR}; ///< Major version.
-    static constexpr int minor{AFFT_VERSION_MINOR}; ///< Minor version.
-    static constexpr int patch{AFFT_VERSION_PATCH}; ///< Patch version.
-  } version;
-} // namespace afft
+#include "version.hpp"
 
 #endif /* AFFT_AFFT_HPP */
