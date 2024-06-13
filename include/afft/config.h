@@ -25,7 +25,9 @@
 #ifndef AFFT_CONFIG_H
 #define AFFT_CONFIG_H
 
-#include "afft-config.h"
+#ifndef AFFT_EXTERNAL_CONFIG
+# include "afft-config.h"
+#endif
 
 /**
  * @brief Expand and concatenate two tokens.
