@@ -8,14 +8,14 @@
     } \
   } while (0)
 
-
-template<typename CE, typename CxxE>
-[[nodiscard]] constexpr bool isSameEnumValue(const CE cValue, const CxxE cxxValue) noexcept
+template<typename T, typename U>
+[[nodiscard]] constexpr auto operator==(const T& lhs, const U& rhs) noexcept
+  -> AFFT_RET_REQUIRES(bool, std::is_enum_v<T> && std::is_enum_v<U>)
 {
-  static_assert(std::is_enum_v<CE>, "CE must be an enum type");
-  static_assert(std::is_enum_v<CxxE>, "CxxT must be an enum type");
+  std::underlying_type_t<T> lhsValue = static_cast<std::underlying_type_t<T>>(lhs);
+  std::underlying_type_t<U> rhsValue = static_cast<std::underlying_type_t<U>>(rhs);
 
-  return cValue == afft::detail::cxx::to_underlying(cxxValue);
+  return afft::detail::cxx::cmp_equal(lhsValue, rhsValue);
 }
 
 template<typename CT, typename CxxE, afft_Error _error>
@@ -72,109 +72,113 @@ constexpr auto convertToC(const CxxE cxxValue)
 template<>
 struct EnumMapping<afft::Precision> : EnumMappingBase<afft_Precision, afft::Precision, afft_Error_invalidPrecision>
 {
-  static_assert(isSameEnumValue(afft_Precision_bf16,         afft::Precision::bf16));
-  static_assert(isSameEnumValue(afft_Precision_f16,          afft::Precision::f16));
-  static_assert(isSameEnumValue(afft_Precision_f32,          afft::Precision::f32));
-  static_assert(isSameEnumValue(afft_Precision_f64,          afft::Precision::f64));
-  static_assert(isSameEnumValue(afft_Precision_f80,          afft::Precision::f80));
-  static_assert(isSameEnumValue(afft_Precision_f64f64,       afft::Precision::f64f64));
-  static_assert(isSameEnumValue(afft_Precision_f128,         afft::Precision::f128));
+  static_assert(afft_Precision_bf16         == afft::Precision::bf16);
+  static_assert(afft_Precision_f16          == afft::Precision::f16);
+  static_assert(afft_Precision_f32          == afft::Precision::f32);
+  static_assert(afft_Precision_f64          == afft::Precision::f64);
+  static_assert(afft_Precision_f80          == afft::Precision::f80);
+  static_assert(afft_Precision_f64f64       == afft::Precision::f64f64);
+  static_assert(afft_Precision_f128         == afft::Precision::f128);
 
-  static_assert(isSameEnumValue(afft_Precision_float,        afft::Precision::_float));
-  static_assert(isSameEnumValue(afft_Precision_double,       afft::Precision::_double));
-  static_assert(isSameEnumValue(afft_Precision_longDouble,   afft::Precision::_longDouble));
-  static_assert(isSameEnumValue(afft_Precision_doubleDouble, afft::Precision::_doubleDouble));
-  static_assert(isSameEnumValue(afft_Precision_quad,         afft::Precision::_quad));
+  static_assert(afft_Precision_float        == afft::Precision::_float);
+  static_assert(afft_Precision_double       == afft::Precision::_double);
+  static_assert(afft_Precision_longDouble   == afft::Precision::_longDouble);
+  static_assert(afft_Precision_doubleDouble == afft::Precision::_doubleDouble);
+  static_assert(afft_Precision_quad         == afft::Precision::_quad);
 };
 
 // Alignment
 template<>
 struct EnumMapping<afft::Alignment> : EnumMappingBase<afft_Alignment, afft::Alignment, afft_Error_invalidAlignment>
 {
-  static_assert(isSameEnumValue(afft_Alignment_simd128,  afft::Alignment::simd128));
-  static_assert(isSameEnumValue(afft_Alignment_simd256,  afft::Alignment::simd256));
-  static_assert(isSameEnumValue(afft_Alignment_simd512,  afft::Alignment::simd512));
-  static_assert(isSameEnumValue(afft_Alignment_simd1024, afft::Alignment::simd1024));
-  static_assert(isSameEnumValue(afft_Alignment_simd2048, afft::Alignment::simd2048));
+  static_assert(afft_Alignment_simd128  == afft::Alignment::simd128);
+  static_assert(afft_Alignment_simd256  == afft::Alignment::simd256);
+  static_assert(afft_Alignment_simd512  == afft::Alignment::simd512);
+  static_assert(afft_Alignment_simd1024 == afft::Alignment::simd1024);
+  static_assert(afft_Alignment_simd2048 == afft::Alignment::simd2048);
 
-  static_assert(isSameEnumValue(afft_Alignment_sse,      afft::Alignment::sse));
-  static_assert(isSameEnumValue(afft_Alignment_sse2,     afft::Alignment::sse2));
-  static_assert(isSameEnumValue(afft_Alignment_sse3,     afft::Alignment::sse3));
-  static_assert(isSameEnumValue(afft_Alignment_sse4,     afft::Alignment::sse4));
-  static_assert(isSameEnumValue(afft_Alignment_sse4_1,   afft::Alignment::sse4_1));
-  static_assert(isSameEnumValue(afft_Alignment_sse4_2,   afft::Alignment::sse4_2));
-  static_assert(isSameEnumValue(afft_Alignment_avx,      afft::Alignment::avx));
-  static_assert(isSameEnumValue(afft_Alignment_avx2,     afft::Alignment::avx2));
-  static_assert(isSameEnumValue(afft_Alignment_avx512,   afft::Alignment::avx512));
-  static_assert(isSameEnumValue(afft_Alignment_neon,     afft::Alignment::neon));
-  static_assert(isSameEnumValue(afft_Alignment_sve,      afft::Alignment::sve));
+  static_assert(afft_Alignment_sse      == afft::Alignment::sse);
+  static_assert(afft_Alignment_sse2     == afft::Alignment::sse2);
+  static_assert(afft_Alignment_sse3     == afft::Alignment::sse3);
+  static_assert(afft_Alignment_sse4     == afft::Alignment::sse4);
+  static_assert(afft_Alignment_sse4_1   == afft::Alignment::sse4_1);
+  static_assert(afft_Alignment_sse4_2   == afft::Alignment::sse4_2);
+  static_assert(afft_Alignment_avx      == afft::Alignment::avx);
+  static_assert(afft_Alignment_avx2     == afft::Alignment::avx2);
+  static_assert(afft_Alignment_avx512   == afft::Alignment::avx512);
+  static_assert(afft_Alignment_neon     == afft::Alignment::neon);
+  static_assert(afft_Alignment_sve      == afft::Alignment::sve);
 };
 
 // Complexity
 template<>
 struct EnumMapping<afft::Complexity> : EnumMappingBase<afft_Complexity, afft::Complexity, afft_Error_invalidComplexity>
 {
-  static_assert(isSameEnumValue(afft_Complexity_real,    afft::Complexity::real));
-  static_assert(isSameEnumValue(afft_Complexity_complex, afft::Complexity::complex));
+  static_assert(afft_Complexity_real    == afft::Complexity::real);
+  static_assert(afft_Complexity_complex == afft::Complexity::complex);
 };
 
 // ComplexFormat
 template<>
 struct EnumMapping<afft::ComplexFormat> : EnumMappingBase<afft_ComplexFormat, afft::ComplexFormat, afft_Error_invalidComplexFormat>
 {
-  static_assert(isSameEnumValue(afft_ComplexFormat_interleaved, afft::ComplexFormat::interleaved));
-  static_assert(isSameEnumValue(afft_ComplexFormat_planar,      afft::ComplexFormat::planar));
+  static_assert(afft_ComplexFormat_interleaved == afft::ComplexFormat::interleaved);
+  static_assert(afft_ComplexFormat_planar      == afft::ComplexFormat::planar);
 };
 
 // Direction
 template<>
 struct EnumMapping<afft::Direction> : EnumMappingBase<afft_Direction, afft::Direction, afft_Error_invalidDirection>
 {
-  static_assert(isSameEnumValue(afft_Direction_forward,  afft::Direction::forward));
-  static_assert(isSameEnumValue(afft_Direction_inverse, afft::Direction::inverse));
+  static_assert(afft_Direction_forward  == afft::Direction::forward);
+  static_assert(afft_Direction_inverse  == afft::Direction::inverse);
+
+  static_assert(afft_Direction_backward == afft::Direction::backward);
 };
 
 // Placement
 template<>
 struct EnumMapping<afft::Placement> : EnumMappingBase<afft_Placement, afft::Placement, afft_Error_invalidPlacement>
 {
-  static_assert(isSameEnumValue(afft_Placement_inPlace,    afft::Placement::inPlace));
-  static_assert(isSameEnumValue(afft_Placement_outOfPlace, afft::Placement::outOfPlace));
+  static_assert(afft_Placement_inPlace    == afft::Placement::inPlace);
+  static_assert(afft_Placement_outOfPlace == afft::Placement::outOfPlace);
+
+  static_assert(afft_Placement_notInPlace == afft::Placement::notInPlace);
 };
 
 // Transform
 template<>
 struct EnumMapping<afft::Transform> : EnumMappingBase<afft_Transform, afft::Transform, afft_Error_invalidTransform>
 {
-  static_assert(isSameEnumValue(afft_Transform_dft, afft::Transform::dft));
-  static_assert(isSameEnumValue(afft_Transform_dht, afft::Transform::dht));
-  static_assert(isSameEnumValue(afft_Transform_dtt, afft::Transform::dtt));
+  static_assert(afft_Transform_dft == afft::Transform::dft);
+  static_assert(afft_Transform_dht == afft::Transform::dht);
+  static_assert(afft_Transform_dtt == afft::Transform::dtt);
 };
 
 // Target
 template<>
 struct EnumMapping<afft::Target> : EnumMappingBase<afft_Target, afft::Target, afft_Error_invalidTarget>
 {
-  static_assert(isSameEnumValue(afft_Target_cpu, afft::Target::cpu));
-  static_assert(isSameEnumValue(afft_Target_gpu, afft::Target::gpu));
+  static_assert(afft_Target_cpu == afft::Target::cpu);
+  static_assert(afft_Target_gpu == afft::Target::gpu);
 };
 
 // Distribution
 template<>
 struct EnumMapping<afft::Distribution> : EnumMappingBase<afft_Distribution, afft::Distribution, afft_Error_invalidDistribution>
 {
-  static_assert(isSameEnumValue(afft_Distribution_spst, afft::Distribution::spst));
-  static_assert(isSameEnumValue(afft_Distribution_spmt, afft::Distribution::spmt));
-  static_assert(isSameEnumValue(afft_Distribution_mpst, afft::Distribution::mpst));
+  static_assert(afft_Distribution_spst == afft::Distribution::spst);
+  static_assert(afft_Distribution_spmt == afft::Distribution::spmt);
+  static_assert(afft_Distribution_mpst == afft::Distribution::mpst);
 };
 
 // Normalization
 template<>
 struct EnumMapping<afft::Normalization> : EnumMappingBase<afft_Normalization, afft::Normalization, afft_Error_invalidNormalization>
 {
-  static_assert(isSameEnumValue(afft_Normalization_none,       afft::Normalization::none));
-  static_assert(isSameEnumValue(afft_Normalization_orthogonal, afft::Normalization::orthogonal));
-  static_assert(isSameEnumValue(afft_Normalization_unitary,    afft::Normalization::unitary));
+  static_assert(afft_Normalization_none       == afft::Normalization::none);
+  static_assert(afft_Normalization_orthogonal == afft::Normalization::orthogonal);
+  static_assert(afft_Normalization_unitary    == afft::Normalization::unitary);
 };
 
 static constexpr afft::PrecisionTriad convertFromC(const afft_PrecisionTriad& cPrec)
@@ -204,15 +208,15 @@ static constexpr afft_PrecisionTriad convertToC(const afft::PrecisionTriad& cxxP
 template<>
 struct EnumMapping<afft::Backend> : EnumMappingBase<afft_Backend, afft::Backend, afft_Error_invalidBackend>
 {
-  static_assert(isSameEnumValue(afft_Backend_clfft,     afft::Backend::clfft));
-  static_assert(isSameEnumValue(afft_Backend_cufft,     afft::Backend::cufft));
-  static_assert(isSameEnumValue(afft_Backend_fftw3,     afft::Backend::fftw3));
-  static_assert(isSameEnumValue(afft_Backend_heffte,    afft::Backend::heffte));
-  static_assert(isSameEnumValue(afft_Backend_hipfft,    afft::Backend::hipfft));
-  static_assert(isSameEnumValue(afft_Backend_mkl,       afft::Backend::mkl));
-  static_assert(isSameEnumValue(afft_Backend_pocketfft, afft::Backend::pocketfft));
-  static_assert(isSameEnumValue(afft_Backend_rocfft,    afft::Backend::rocfft));
-  static_assert(isSameEnumValue(afft_Backend_vkfft,     afft::Backend::vkfft));
+  static_assert(afft_Backend_clfft     == afft::Backend::clfft);
+  static_assert(afft_Backend_cufft     == afft::Backend::cufft);
+  static_assert(afft_Backend_fftw3     == afft::Backend::fftw3);
+  static_assert(afft_Backend_heffte    == afft::Backend::heffte);
+  static_assert(afft_Backend_hipfft    == afft::Backend::hipfft);
+  static_assert(afft_Backend_mkl       == afft::Backend::mkl);
+  static_assert(afft_Backend_pocketfft == afft::Backend::pocketfft);
+  static_assert(afft_Backend_rocfft    == afft::Backend::rocfft);
+  static_assert(afft_Backend_vkfft     == afft::Backend::vkfft);
 };
 
 // BackendMask
@@ -223,8 +227,8 @@ struct EnumMapping<afft::BackendMask> : EnumMappingBase<afft_BackendMask, afft::
 template<>
 struct EnumMapping<afft::SelectStrategy> : EnumMappingBase<afft_SelectStrategy, afft::SelectStrategy, afft_Error_invalidSelectStrategy>
 {
-  static_assert(isSameEnumValue(afft_SelectStrategy_first, afft::SelectStrategy::first));
-  static_assert(isSameEnumValue(afft_SelectStrategy_best,  afft::SelectStrategy::best));
+  static_assert(afft_SelectStrategy_first == afft::SelectStrategy::first);
+  static_assert(afft_SelectStrategy_best  == afft::SelectStrategy::best);
 };
 
 static constexpr afft::spst::gpu::clfft::Parameters convertFromC(const afft_spst_gpu_clfft_Parameters& cParams) noexcept
@@ -248,9 +252,9 @@ template<>
 struct EnumMapping<afft::cufft::WorkspacePolicy>
   : EnumMappingBase<afft_cufft_WorkspacePolicy, afft::cufft::WorkspacePolicy, afft_Error_invalidCufftWorkspacePolicy>
 {
-  static_assert(isSameEnumValue(afft_cufft_WorkspacePolicy_performance, afft::cufft::WorkspacePolicy::performance));
-  static_assert(isSameEnumValue(afft_cufft_WorkspacePolicy_minimal,    afft::cufft::WorkspacePolicy::minimal));
-  static_assert(isSameEnumValue(afft_cufft_WorkspacePolicy_user,       afft::cufft::WorkspacePolicy::user));
+  static_assert(afft_cufft_WorkspacePolicy_performance == afft::cufft::WorkspacePolicy::performance);
+  static_assert(afft_cufft_WorkspacePolicy_minimal     == afft::cufft::WorkspacePolicy::minimal);
+  static_assert(afft_cufft_WorkspacePolicy_user        == afft::cufft::WorkspacePolicy::user);
 };
 
 static constexpr afft::spst::gpu::cufft::Parameters convertFromC(const afft_spst_gpu_cufft_Parameters& cParams)
@@ -310,11 +314,11 @@ template<>
 struct EnumMapping<afft::fftw3::PlannerFlag>
   : EnumMappingBase<afft_fftw3_PlannerFlag, afft::fftw3::PlannerFlag, afft_Error_invalidFftw3PlannerFlag>
 {
-  static_assert(isSameEnumValue(afft_fftw3_PlannerFlag_estimate,         afft::fftw3::PlannerFlag::estimate));
-  static_assert(isSameEnumValue(afft_fftw3_PlannerFlag_measure,          afft::fftw3::PlannerFlag::measure));
-  static_assert(isSameEnumValue(afft_fftw3_PlannerFlag_patient,          afft::fftw3::PlannerFlag::patient));
-  static_assert(isSameEnumValue(afft_fftw3_PlannerFlag_exhaustive,       afft::fftw3::PlannerFlag::exhaustive));
-  static_assert(isSameEnumValue(afft_fftw3_PlannerFlag_estimatePatient,  afft::fftw3::PlannerFlag::estimatePatient));
+  static_assert(afft_fftw3_PlannerFlag_estimate        == afft::fftw3::PlannerFlag::estimate);
+  static_assert(afft_fftw3_PlannerFlag_measure         == afft::fftw3::PlannerFlag::measure);
+  static_assert(afft_fftw3_PlannerFlag_patient         == afft::fftw3::PlannerFlag::patient);
+  static_assert(afft_fftw3_PlannerFlag_exhaustive      == afft::fftw3::PlannerFlag::exhaustive);
+  static_assert(afft_fftw3_PlannerFlag_estimatePatient == afft::fftw3::PlannerFlag::estimatePatient);
 };
 
 static constexpr afft::spst::cpu::fftw3::Parameters convertFromC(const afft_spst_cpu_fftw3_Parameters& cParams)
@@ -376,8 +380,8 @@ template<>
 struct EnumMapping<afft::heffte::cpu::Backend>
   : EnumMappingBase<afft_heffte_cpu_Backend, afft::heffte::cpu::Backend, afft_Error_invalidHeffteCpuBackend>
 {
-  static_assert(isSameEnumValue(afft_heffte_cpu_Backend_fftw3, afft::heffte::cpu::Backend::fftw3));
-  static_assert(isSameEnumValue(afft_heffte_cpu_Backend_mkl,   afft::heffte::cpu::Backend::mkl));
+  static_assert(afft_heffte_cpu_Backend_fftw3 == afft::heffte::cpu::Backend::fftw3);
+  static_assert(afft_heffte_cpu_Backend_mkl   == afft::heffte::cpu::Backend::mkl);
 };
 
 // HeFFTe GPU Backend
@@ -385,8 +389,8 @@ template<>
 struct EnumMapping<afft::heffte::gpu::Backend>
   : EnumMappingBase<afft_heffte_gpu_Backend, afft::heffte::gpu::Backend, afft_Error_invalidHeffteGpuBackend>
 {
-  static_assert(isSameEnumValue(afft_heffte_gpu_Backend_cufft,  afft::heffte::gpu::Backend::cufft));
-  static_assert(isSameEnumValue(afft_heffte_gpu_Backend_rocfft, afft::heffte::gpu::Backend::rocfft));
+  static_assert(afft_heffte_gpu_Backend_cufft  == afft::heffte::gpu::Backend::cufft);
+  static_assert(afft_heffte_gpu_Backend_rocfft == afft::heffte::gpu::Backend::rocfft);
 };
 
 static constexpr afft::mpst::cpu::heffte::Parameters convertFromC(const afft_mpst_cpu_heffte_Parameters& cParams)
@@ -668,13 +672,13 @@ template<>
 struct EnumMapping<afft::dft::Type>
   : EnumMappingBase<afft_dft_Type, afft::dft::Type, afft_Error_invalidDftType>
 {
-  static_assert(isSameEnumValue(afft_dft_Type_complexToComplex, afft::dft::Type::complexToComplex));
-  static_assert(isSameEnumValue(afft_dft_Type_realToComplex,    afft::dft::Type::realToComplex));
-  static_assert(isSameEnumValue(afft_dft_Type_complexToReal,    afft::dft::Type::complexToReal));
+  static_assert(afft_dft_Type_complexToComplex == afft::dft::Type::complexToComplex);
+  static_assert(afft_dft_Type_realToComplex    == afft::dft::Type::realToComplex);
+  static_assert(afft_dft_Type_complexToReal    == afft::dft::Type::complexToReal);
 
-  static_assert(isSameEnumValue(afft_dft_Type_c2c,              afft::dft::Type::c2c));
-  static_assert(isSameEnumValue(afft_dft_Type_r2c,              afft::dft::Type::r2c));
-  static_assert(isSameEnumValue(afft_dft_Type_c2r,              afft::dft::Type::c2r));
+  static_assert(afft_dft_Type_c2c              == afft::dft::Type::c2c);
+  static_assert(afft_dft_Type_r2c              == afft::dft::Type::r2c);
+  static_assert(afft_dft_Type_c2r              == afft::dft::Type::c2r);
 };
 
 static constexpr afft::dft::Parameters<> convertFromC(const afft_dft_Parameters& cParams)
@@ -712,7 +716,7 @@ template<>
 struct EnumMapping<afft::dht::Type>
   : EnumMappingBase<afft_dht_Type, afft::dht::Type, afft_Error_invalidDhtType>
 {
-  static_assert(isSameEnumValue(afft_dht_Type_separable, afft::dht::Type::separable));
+  static_assert(afft_dht_Type_separable == afft::dht::Type::separable);
 };
 
 static constexpr afft::dht::Parameters<> convertFromC(const afft_dht_Parameters& cParams)
@@ -750,17 +754,17 @@ template<>
 struct EnumMapping<afft::dtt::Type>
   : EnumMappingBase<afft_dtt_Type, afft::dtt::Type, afft_Error_invalidDttType>
 {
-  static_assert(isSameEnumValue(afft_dtt_Type_dct1, afft::dtt::Type::dct1));
-  static_assert(isSameEnumValue(afft_dtt_Type_dct2, afft::dtt::Type::dct2));
-  static_assert(isSameEnumValue(afft_dtt_Type_dct3, afft::dtt::Type::dct3));
-  static_assert(isSameEnumValue(afft_dtt_Type_dct4, afft::dtt::Type::dct4));
-  static_assert(isSameEnumValue(afft_dtt_Type_dst1, afft::dtt::Type::dst1));
-  static_assert(isSameEnumValue(afft_dtt_Type_dst2, afft::dtt::Type::dst2));
-  static_assert(isSameEnumValue(afft_dtt_Type_dst3, afft::dtt::Type::dst3));
-  static_assert(isSameEnumValue(afft_dtt_Type_dst4, afft::dtt::Type::dst4));
+  static_assert(afft_dtt_Type_dct1 == afft::dtt::Type::dct1);
+  static_assert(afft_dtt_Type_dct2 == afft::dtt::Type::dct2);
+  static_assert(afft_dtt_Type_dct3 == afft::dtt::Type::dct3);
+  static_assert(afft_dtt_Type_dct4 == afft::dtt::Type::dct4);
+  static_assert(afft_dtt_Type_dst1 == afft::dtt::Type::dst1);
+  static_assert(afft_dtt_Type_dst2 == afft::dtt::Type::dst2);
+  static_assert(afft_dtt_Type_dst3 == afft::dtt::Type::dst3);
+  static_assert(afft_dtt_Type_dst4 == afft::dtt::Type::dst4);
 
-  static_assert(isSameEnumValue(afft_dtt_Type_dct,  afft::dtt::Type::dct));
-  static_assert(isSameEnumValue(afft_dtt_Type_dst,  afft::dtt::Type::dst));
+  static_assert(afft_dtt_Type_dct  == afft::dtt::Type::dct);
+  static_assert(afft_dtt_Type_dst  == afft::dtt::Type::dst);
 };
 
 static afft::dtt::Parameters<> convertFromC(const afft_dtt_Parameters& cParams)
@@ -949,7 +953,8 @@ static afft_spst_cpu_ExecutionParameters convertToC(const afft::spst::cpu::Execu
   return cParams;
 }
 
-static constexpr afft::spst::gpu::ExecutionParameters convertFromC(const afft_spst_gpu_ExecutionParameters& cParams)
+static constexpr afft::spst::gpu::ExecutionParameters
+convertFromC([[maybe_unused]] const afft_spst_gpu_ExecutionParameters& cParams)
 {
   afft::spst::gpu::ExecutionParameters cxxParams{};
 #if AFFT_GPU_BACKEND_IS(CUDA)
@@ -966,7 +971,8 @@ static constexpr afft::spst::gpu::ExecutionParameters convertFromC(const afft_sp
   return cxxParams;
 }
 
-static afft_spst_gpu_ExecutionParameters convertToC(const afft::spst::gpu::ExecutionParameters& cxxParams)
+static afft_spst_gpu_ExecutionParameters
+convertToC([[maybe_unused]] const afft::spst::gpu::ExecutionParameters& cxxParams)
 {
   afft_spst_gpu_ExecutionParameters cParams{};
 #if AFFT_GPU_BACKEND_IS(CUDA)
@@ -1001,7 +1007,8 @@ static afft_mpst_cpu_ExecutionParameters convertToC(const afft::mpst::cpu::Execu
   return cParams;
 }
 
-static constexpr afft::mpst::gpu::ExecutionParameters convertFromC(const afft_mpst_gpu_ExecutionParameters& cParams)
+static constexpr afft::mpst::gpu::ExecutionParameters
+convertFromC([[maybe_unused]] const afft_mpst_gpu_ExecutionParameters& cParams)
 {
   afft::mpst::gpu::ExecutionParameters cxxParams{};
 #if AFFT_GPU_BACKEND_IS(CUDA)
