@@ -22,35 +22,39 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_MPI_INIT_HPP
-#define AFFT_DETAIL_MPI_INIT_HPP
+#ifndef AFFT_DETAIL_MPI_ERROR_HPP
+#define AFFT_DETAIL_MPI_ERROR_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "error.hpp"
+#include "../../exception.hpp"
 
 namespace afft::detail::mpi
 {
   /**
-   * @brief Initialize the MPI library.
+   * @brief Check if MPI result is ok.
+   * @param result MPI result.
+   * @return True if result is ok, false otherwise.
    */
-  inline void init()
+  [[nodiscard]] inline constexpr bool isOk(int result)
   {
-    int initFlag{};
-    checkError(MPI_Initialized(&initFlag));
-
-    if (!initFlag)
-    {
-      throw std::runtime_error("MPI must be initialized before afft initialization.");
-    }
-  };
+    return (result == MPI_SUCCESS);
+  }
 
   /**
-   * @brief Finalize the MPI library.
+   * @brief Check if MPI result is valid.
+   * @param result MPI result.
+   * @throw BackendError if result is not valid.
    */
-  inline void finalize() {}
+  inline void checkError(int result)
+  {
+    if (!isOk(result))
+    {
+      throw MpBackendError{"MPI error"};
+    }
+  }
 } // namespace afft::detail::mpi
 
-#endif /* AFFT_DETAIL_MPI_INIT_HPP */
+#endif /* AFFT_DETAIL_MPI_ERROR_HPP */
