@@ -43,17 +43,20 @@ namespace afft
    * @param backendParams Backend parameters
    * @return Plan
    */
-  template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT>
+  template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT = detail::DefaultBackendParameters>
   std::unique_ptr<Plan> makePlan(const TransformParamsT& transformParams,
                                  ArchParamsT&            archParams,
-                                 const BackendParamsT&   backendParams)
+                                 const BackendParamsT&   backendParams = {})
   {
     static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
     static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
-    static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
+    static_assert(isBackendParameters<BackendParamsT> ||
+                  std::is_same_v<BackendParamsT, detail::DefaultBackendParameters>,
+                  "Invalid backend parameters type");
 
-    static_assert((ArchParamsT::target == BackendParamsT::target) &&
-                  (ArchParamsT::distribution == BackendParamsT::distribution),
+    static_assert(std::is_same_v<BackendParamsT, detail::DefaultBackendParameters> ||
+                  ((ArchParamsT::target == BackendParamsT::target) &&
+                   (ArchParamsT::distribution == BackendParamsT::distribution)),
                   "Architecture and backend parameters must share the same target and distribution");
 
     static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
@@ -61,7 +64,16 @@ namespace afft
                   (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
                   "Transform and target parameters must have the same shape rank");
 
-    return detail::makePlan(detail::Desc{transformParams, archParams}, backendParams);
+    const detail::Desc desc{transformParams, archParams};
+
+    if constexpr (std::is_same_v<BackendParamsT, detail::DefaultBackendParameters>)
+    {
+      return detail::makePlan(desc, BackendParameters<ArchParamsT::target, ArchParamsT::distribution>{});
+    }
+    else
+    {
+      return detail::makePlan(desc, backendParams);
+    }
   }
 
   /**
@@ -74,31 +86,31 @@ namespace afft
    * @param backendParams Backend parameters
    * @return Plan and feedback
    */
-  template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT>
-  std::pair<std::unique_ptr<Plan>, std::vector<Feedback>>
-  makePlanWithFeedback(const TransformParamsT& transformParams,
-                       ArchParamsT&            archParams,
-                       const BackendParamsT&   backendParams)
-  {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
-    static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
+  // template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT>
+  // std::pair<std::unique_ptr<Plan>, std::vector<Feedback>>
+  // makePlanWithFeedback(const TransformParamsT& transformParams,
+  //                      ArchParamsT&            archParams,
+  //                      const BackendParamsT&   backendParams)
+  // {
+  //   static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
+  //   static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
+  //   static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
 
-    static_assert((ArchParamsT::target == BackendParamsT::target) &&
-                  (ArchParamsT::distribution == BackendParamsT::distribution),
-                  "Architecture and backend parameters must share the same target and distribution");
+  //   static_assert((ArchParamsT::target == BackendParamsT::target) &&
+  //                 (ArchParamsT::distribution == BackendParamsT::distribution),
+  //                 "Architecture and backend parameters must share the same target and distribution");
 
-    static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
-                  (ArchParamsT::shapeExtent == dynamicRank) ||
-                  (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
-                  "Transform and target parameters must have the same shape rank");
+  //   static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
+  //                 (ArchParamsT::shapeExtent == dynamicRank) ||
+  //                 (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
+  //                 "Transform and target parameters must have the same shape rank");
 
-    std::pair<std::unique_ptr<Plan>, std::vector<Feedback>> result{};
+  //   std::pair<std::unique_ptr<Plan>, std::vector<Feedback>> result{};
 
-    result.first = detail::makePlan(detail::Desc{transformParams, archParams}, backendParams, &result.second);
+  //   result.first = detail::makePlan(detail::Desc{transformParams, archParams}, backendParams, &result.second);
 
-    return result;
-  }
+  //   return result;
+  // }
 } // namespace afft
 
 #endif /* AFFT_MAKE_PLAN_HPP */

@@ -64,19 +64,14 @@
 
 namespace afft::detail
 {
-  struct DefaultBackendParams
+  /**
+   * @brief Default backend parameters. 
+   */
+  struct DefaultBackendParameters
   {
-    template<typename BackendParamsT>
-    [[nodiscard]] constexpr operator BackendParamsT() const
-    {
-      static_assert(isBackendParameters<BackendParamsT>, "invalid backend parameters type");
-
-      return {};
-    }
+    static constexpr Target       target{};       ///< Dummy target.
+    static constexpr Distribution distribution{}; ///< Dummy distribution.
   };
-
-  template<typename BackendParamsT>
-  inline constexpr bool isKnownBackendParams = isBackendParameters<BackendParamsT> || std::is_same_v<BackendParamsT, DefaultBackendParams>;
 
   /**
    * @brief For each backend in the backend mask, call the function.
