@@ -191,7 +191,7 @@ namespace afft::detail::cuda
       {
         if (!valid())
         {
-          throw makeException<std::runtime_error>("Invalid CUDA module.");
+          throw std::runtime_error{"Invalid CUDA module."};
         }
       }
 

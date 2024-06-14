@@ -27,13 +27,13 @@ int main(void)
   dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
 
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
-  cpuParams.destroySource = true; // allow to destroy source data
-  cpuParams.alignment     = afft::getAlignment(src.data(), dst.data()); // get alignment of the pointers
-  cpuParams.threadLimit   = 4; // we will use up to 4 threads
+  cpuParams.preserveSource = true; // allow to destroy source data
+  cpuParams.alignment      = afft::alignmentOf(src.data(), dst.data()); // get alignment of the pointers
+  cpuParams.threadLimit    = 4; // we will use up to 4 threads
 
   auto plan = afft::makePlan(dftParams, cpuParams); // generate the plan of the transform
 
-  plan.execute(src.data(), dst.data()); // execute the transform
+  plan->execute(src.data(), dst.data()); // execute the transform
 
   // use results from dst vector
 }

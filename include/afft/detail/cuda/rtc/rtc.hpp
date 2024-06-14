@@ -308,7 +308,7 @@ namespace afft::detail::cuda::rtc
       {
         if (std::exchange(mIsCompiled, true))
         {
-          throw makeException<std::runtime_error>("The program is already compiled");
+          throw std::runtime_error{"The program is already compiled"};
         }
 
         bool ok = isOk(nvrtcCompileProgram(mProgram.get(), static_cast<int>(options.size()), options.data()));
@@ -333,7 +333,7 @@ namespace afft::detail::cuda::rtc
       {
         if (!mIsCompiled)
         {
-          throw makeException<std::runtime_error>("The program is not compiled");
+          throw std::runtime_error{"The program is not compiled"};
         }
 
         const char* loweredName{};
@@ -352,7 +352,7 @@ namespace afft::detail::cuda::rtc
       {
         if (!mIsCompiled)
         {
-          throw makeException<std::runtime_error>("The program is not compiled");
+          throw std::runtime_error{"The program is not compiled"};
         }
 
         std::size_t size{};
@@ -363,7 +363,7 @@ namespace afft::detail::cuda::rtc
         case CodeType::LTOIR:   checkError(nvrtcGetLTOIRSize(mProgram.get(), &size));   break;
         case CodeType::OptixIR: checkError(nvrtcGetOptiXIRSize(mProgram.get(), &size)); break;
         default:
-          throw makeException<std::runtime_error>("Invalid code type");
+          throw std::runtime_error{"Invalid code type"};
         }
 
         Code code(codeType, size, Code::PrivilegedToken{});
@@ -374,7 +374,7 @@ namespace afft::detail::cuda::rtc
         case CodeType::LTOIR:   checkError(nvrtcGetLTOIR(mProgram.get(), code.data()));   break;
         case CodeType::OptixIR: checkError(nvrtcGetOptiXIR(mProgram.get(), code.data())); break;
         default:
-          throw makeException<std::runtime_error>("Invalid code type");
+          throw std::runtime_error{"Invalid code type"};
         }
 
         return code;
@@ -394,7 +394,7 @@ namespace afft::detail::cuda::rtc
       {
         if (mIsCompiled)
         {
-          throw makeException<std::runtime_error>("The program is already compiled");
+          throw std::runtime_error{"The program is already compiled"};
         }
 
         checkError(nvrtcAddNameExpression(mProgram.get(), symbolName.data()));
@@ -450,14 +450,14 @@ namespace afft::detail::cuda::rtc
   {
     if (!cuda::isValidDevice(device))
     {
-      throw makeException<std::runtime_error>("Invalid device");
+      throw std::runtime_error{"Invalid device"};
     }
 
     int ccMajor{};
-    checkError(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
+    cuda::checkError(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
 
     int ccMinor{};
-    checkError(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
+    cuda::checkError(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
 
     return cformat("-arch=sm_%d%d", ccMajor, ccMinor);
   }

@@ -26,11 +26,11 @@ int main(void)
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
 
   afft::gpu::Parameters gpuParams{}; // it will run on a gpu
-  gpuParams.destroySource = true; // allow to destroy source data
+  gpuParams.preserveSource = false; // allow to destroy source data
 
   auto plan = afft::makePlan(dftParams, gpuParams); // generate the plan of the transform, uses current device
 
-  plan.execute(src.data(), dst.data()); // execute the transform into zero stream
+  plan->execute(src.data(), dst.data()); // execute the transform into zero stream
 
   if (cudaDeviceSynchronize() != cudaSuccess)
   {

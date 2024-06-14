@@ -180,7 +180,7 @@ import std;
 #     if AFFT_GPU_BACKEND_IS(CUDA)
 #       define VKFFT_BACKEND 1
 #       ifndef CUDA_TOOLKIT_ROOT_DIR
-#         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_TOOLKIT_ROOT_DIR
+#         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_ROOT_DIR
 #       endif
 #     elif AFFT_GPU_BACKEND_IS(HIP)
 #       define VKFFT_BACKEND 2
