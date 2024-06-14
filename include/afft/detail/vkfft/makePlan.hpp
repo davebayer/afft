@@ -43,12 +43,12 @@ namespace afft::detail::vkfft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan([[maybe_unused]] const Desc& desc, const BackendParamsT& backendParams)
+  makePlan([[maybe_unused]] const Desc& desc, const BackendParamsT&)
   {
-    if constexpr (backendParams.target == Target::gpu)
+    if constexpr (BackendParamsT::target == Target::gpu)
     {
 #   if AFFT_GPU_IS_ENABLED
-      if constexpr (backendParams.distribution == Distribution::spst)
+      if constexpr (BackendParamsT::distribution == Distribution::spst)
       {
         return spst::gpu::makePlan(desc);
       }

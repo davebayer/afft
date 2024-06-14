@@ -43,16 +43,16 @@ namespace afft::detail::pocketfft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams)
+  makePlan(const Desc& desc, const BackendParamsT&)
   {
     if (desc.getComplexFormat() != ComplexFormat::interleaved)
     {
       throw BackendError{Backend::pocketfft, "only interleaved complex format is supported"};
     }
     
-    if constexpr (backendParams.target == Target::cpu)
+    if constexpr (BackendParamsT::target == Target::cpu)
     {
-      if constexpr (backendParams.distribution == Distribution::spst)
+      if constexpr (BackendParamsT::distribution == Distribution::spst)
       {
         return spst::cpu::makePlan(desc);
       }
