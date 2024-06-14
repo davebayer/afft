@@ -209,7 +209,10 @@ namespace afft
 
     if (version != nullptr)
     {
-      std::sscanf(version, "%d.%d.%d", &version.major, &version.minor, &version.patch);
+      if (std::sscanf(version, "%d.%d.%d", &version.major, &version.minor, &version.patch) != 3)
+      {
+        version = {};
+      }
     }
 # endif
     
