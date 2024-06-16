@@ -419,7 +419,7 @@ static inline afft_BackendParameters afft_makeBackendParameters(afft_BackendPara
 
 extern "C"
 {
-#elif __STDC_VERSION__ >= 201112L
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
   /**
    * @brief Make backend parameters
    * @param params Backend parameters
