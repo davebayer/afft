@@ -25,6 +25,14 @@
 #ifndef AFFT_AFFT_HPP
 #define AFFT_AFFT_HPP
 
+// Include the config header.
+#include "detail/config.hpp"
+
+// Check for C++17 or later.
+#if AFFT_CXX_VERSION < 201703L
+# error "afft C++ library requires C++17 or later. Please use the C api for older C++ versions."
+#endif
+
 // Include only once in the top-level header.
 #include "detail/include.hpp"
 #define AFFT_TOP_LEVEL_INCLUDE
