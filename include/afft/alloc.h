@@ -23,7 +23,7 @@
 */
 
 #ifndef AFFT_ALLOC_H
-#ifndef AFFT_ALLOC_H
+#define AFFT_ALLOC_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.h"

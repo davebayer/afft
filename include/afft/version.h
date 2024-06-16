@@ -23,7 +23,7 @@
 */
 
 #ifndef AFFT_VERSION_H
-#ifndef AFFT_VERSION_H
+#define AFFT_VERSION_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.h"
@@ -53,7 +53,7 @@ struct afft_Version
  */
 static inline afft_Version afft_getVersion()
 {
-  return (afft_Version){AFFT_VERSION_MAJOR, AFFT_VERSION_MINOR, AFFT_VERSION_PATCH};
+  return {AFFT_VERSION_MAJOR, AFFT_VERSION_MINOR, AFFT_VERSION_PATCH};
 }
 
 /**

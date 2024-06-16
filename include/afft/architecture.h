@@ -23,7 +23,7 @@
 */
 
 #ifndef AFFT_ARCHITECTURE_H
-#ifndef AFFT_ARCHITECTURE_H
+#define AFFT_ARCHITECTURE_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.h"

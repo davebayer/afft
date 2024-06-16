@@ -23,7 +23,7 @@
 */
 
 #ifndef AFFT_PLAN_H
-#ifndef AFFT_PLAN_H
+#define AFFT_PLAN_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.h"
@@ -76,7 +76,7 @@ typedef struct _afft_Plan afft_Plan;
    * @param planPtr Pointer to the plan.
    * @return Error code.
    */
-# define afft_Plan_create(transformParams, archParams, backendParams, planPtr) \
+# define afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr) \
     _afft_Plan_createWithBackendParameters(afft_makeTransformParameters(transformParams), \
                                            afft_makeArchitectureParameters(archParams), \
                                            afft_makeBackendParameters(backendParams), \
@@ -90,7 +90,7 @@ typedef struct _afft_Plan afft_Plan;
    * @param planPtr Pointer to the plan.
    * @return Error code.
    */
-# define afft_Plan_create(transformParams, archParams, backendParams, planPtr) \
+# define afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr) \
     _afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr)
 #endif
 
