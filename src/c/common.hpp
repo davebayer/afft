@@ -163,7 +163,7 @@ struct Convert<afft::PrecisionTriad>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  static constexpr afft::PrecisionTriad fromC(const afft_PrecisionTriad& cValue)
+  [[nodiscard]] static constexpr afft::PrecisionTriad fromC(const afft_PrecisionTriad& cValue)
   {
     afft::PrecisionTriad cxxValue{};
     cxxValue.execution   = Convert<afft::Precision>::fromC(cValue.execution);
@@ -178,7 +178,7 @@ struct Convert<afft::PrecisionTriad>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  static constexpr afft_PrecisionTriad toC(const afft::PrecisionTriad& cxxValue)
+  [[nodiscard]] static constexpr afft_PrecisionTriad toC(const afft::PrecisionTriad& cxxValue)
   {
     afft_PrecisionTriad cValue{};
     cValue.execution   = Convert<afft::Precision>::toC(cxxValue.execution);

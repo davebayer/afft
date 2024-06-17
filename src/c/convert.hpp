@@ -67,7 +67,7 @@ struct EnumConvertBase
    * @param cValue C enum value.
    * @return C++ enum value.
    */
-  static constexpr CxxType fromC(CType cValue)
+  [[nodiscard]] static constexpr CxxType fromC(CType cValue) noexcept(error == afft_Error_success)
   {
     const auto cxxValue = static_cast<CxxType>(cValue);
 
@@ -87,7 +87,7 @@ struct EnumConvertBase
    * @param cxxValue C++ enum value.
    * @return C enum value.
    */
-  static constexpr CType toC(CxxType cxxValue)
+  [[nodiscard]] static constexpr CType toC(CxxType cxxValue)
   {
     if (!afft::detail::isValid(cxxValue))
     {
