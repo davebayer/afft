@@ -22,6 +22,9 @@
   SOFTWARE.
 */
 
+// Define the header only mode
+#define AFFT_HEADER_ONLY
+
 // Global module fragment.
 module;
 
