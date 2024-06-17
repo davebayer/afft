@@ -271,6 +271,16 @@ struct Convert<afft::mpst::cpu::fftw3::Parameters>
     cxxValue.timeLimit         = std::chrono::duration<double>{cValue.timeLimit};
     cxxValue.blockSize         = cValue.blockSize;
 
+    if (cxxValue.timeLimit.count() < 0.0)
+    {
+      throw afft_Error_fftw3_invalidTimeLimit;
+    }
+
+    if (cxxValue.blockSize == 0)
+    {
+      throw afft_Error_fftw3_invalidBlockSize;
+    }
+
     return cxxValue;
   }
 
@@ -289,6 +299,16 @@ struct Convert<afft::mpst::cpu::fftw3::Parameters>
     cValue.allowPruning      = cxxValue.allowPruning;
     cValue.timeLimit         = cxxValue.timeLimit.count();
     cValue.blockSize         = cxxValue.blockSize;
+
+    if (cxxValue.timeLimit.count() < 0.0)
+    {
+      throw afft_Error_internal;
+    }
+
+    if (cValue.blockSize == 0)
+    {
+      throw afft_Error_internal;
+    }
 
     return cValue;
   }
@@ -403,11 +423,16 @@ struct Convert<afft::spst::cpu::BackendParameters>
     cxxValue.order    = afft::View<afft::Backend>{reinterpret_cast<const afft::Backend*>(cValue.order), cValue.orderSize};
     cxxValue.fftw3    = Convert<afft::spst::cpu::fftw3::Parameters>::fromC(cValue.fftw3);
 
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_invalidBackendOrder;
+    }
+
     for (const auto backend : cxxValue.order)
     {
       if (!afft::detail::isValid(backend))
       {
-        throw afft_Error_invalidBackend;
+        throw afft_Error_invalidBackendOrder;
       }
     }
 
@@ -427,6 +452,11 @@ struct Convert<afft::spst::cpu::BackendParameters>
     cValue.orderSize = cxxValue.order.size();
     cValue.order     = reinterpret_cast<const afft_Backend*>(cxxValue.order.data());
     cValue.fftw3     = Convert<afft::spst::cpu::fftw3::Parameters>::toC(cxxValue.fftw3);
+
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto backend : cxxValue.order)
     {
@@ -458,11 +488,16 @@ struct Convert<afft::spst::gpu::BackendParameters>
     cxxValue.clfft    = Convert<afft::spst::gpu::clfft::Parameters>::fromC(cValue.clfft);
     cxxValue.cufft    = Convert<afft::spst::gpu::cufft::Parameters>::fromC(cValue.cufft);
 
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_invalidBackendOrder;
+    }
+
     for (const auto backend : cxxValue.order)
     {
       if (!afft::detail::isValid(backend))
       {
-        throw afft_Error_invalidBackend;
+        throw afft_Error_invalidBackendOrder;
       }
     }
 
@@ -483,6 +518,11 @@ struct Convert<afft::spst::gpu::BackendParameters>
     cValue.order     = reinterpret_cast<const afft_Backend*>(cxxValue.order.data());
     cValue.clfft     = Convert<afft::spst::gpu::clfft::Parameters>::toC(cxxValue.clfft);
     cValue.cufft     = Convert<afft::spst::gpu::cufft::Parameters>::toC(cxxValue.cufft);
+
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto backend : cxxValue.order)
     {
@@ -513,11 +553,16 @@ struct Convert<afft::spmt::gpu::BackendParameters>
     cxxValue.order    = afft::View<afft::Backend>{reinterpret_cast<const afft::Backend*>(cValue.order), cValue.orderSize};
     cxxValue.cufft    = Convert<afft::spmt::gpu::cufft::Parameters>::fromC(cValue.cufft);
 
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_invalidBackendOrder;
+    }
+
     for (const auto backend : cxxValue.order)
     {
       if (!afft::detail::isValid(backend))
       {
-        throw afft_Error_invalidBackend;
+        throw afft_Error_invalidBackendOrder;
       }
     }
 
@@ -537,6 +582,11 @@ struct Convert<afft::spmt::gpu::BackendParameters>
     cValue.orderSize = cxxValue.order.size();
     cValue.order     = reinterpret_cast<const afft_Backend*>(cxxValue.order.data());
     cValue.cufft     = Convert<afft::spmt::gpu::cufft::Parameters>::toC(cxxValue.cufft);
+
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto backend : cxxValue.order)
     {
@@ -568,11 +618,16 @@ struct Convert<afft::mpst::cpu::BackendParameters>
     cxxValue.fftw3    = Convert<afft::mpst::cpu::fftw3::Parameters>::fromC(cValue.fftw3);
     cxxValue.heffte   = Convert<afft::mpst::cpu::heffte::Parameters>::fromC(cValue.heffte);
 
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_invalidBackendOrder;
+    }
+
     for (const auto backend : cxxValue.order)
     {
       if (!afft::detail::isValid(backend))
       {
-        throw afft_Error_invalidBackend;
+        throw afft_Error_invalidBackendOrder;
       }
     }
 
@@ -593,6 +648,11 @@ struct Convert<afft::mpst::cpu::BackendParameters>
     cValue.order     = reinterpret_cast<const afft_Backend*>(cxxValue.order.data());
     cValue.fftw3     = Convert<afft::mpst::cpu::fftw3::Parameters>::toC(cxxValue.fftw3);
     cValue.heffte    = Convert<afft::mpst::cpu::heffte::Parameters>::toC(cxxValue.heffte);
+
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto backend : cxxValue.order)
     {
@@ -624,11 +684,16 @@ struct Convert<afft::mpst::gpu::BackendParameters>
     cxxValue.cufft    = Convert<afft::mpst::gpu::cufft::Parameters>::fromC(cValue.cufft);
     cxxValue.heffte   = Convert<afft::mpst::gpu::heffte::Parameters>::fromC(cValue.heffte);
 
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_invalidBackendOrder;
+    }
+
     for (const auto backend : cxxValue.order)
     {
       if (!afft::detail::isValid(backend))
       {
-        throw afft_Error_invalidBackend;
+        throw afft_Error_invalidBackendOrder;
       }
     }
 
@@ -649,6 +714,11 @@ struct Convert<afft::mpst::gpu::BackendParameters>
     cValue.order     = reinterpret_cast<const afft_Backend*>(cxxValue.order.data());
     cValue.cufft     = Convert<afft::mpst::gpu::cufft::Parameters>::toC(cxxValue.cufft);
     cValue.heffte    = Convert<afft::mpst::gpu::heffte::Parameters>::toC(cxxValue.heffte);
+
+    if (cValue.orderSize > 0 && cValue.order == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto backend : cxxValue.order)
     {

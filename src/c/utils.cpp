@@ -39,6 +39,16 @@ extern "C" afft_Error afft_makeStrides(const size_t  shapeRank,
                                        size_t*       strides)
 try
 {
+  if (shapeRank > 0 && shape == nullptr)
+  {
+    return afft_Error_invalidShape;
+  }
+
+  if (shapeRank > 0 && strides == nullptr)
+  {
+    return afft_Error_invalidStrides;
+  }
+
   afft::makeStrides(afft::View<std::size_t>{shape, shapeRank},
                     fastestAxisStride,
                     afft::Span<std::size_t>{strides, shapeRank});
@@ -66,6 +76,21 @@ extern "C" afft_Error afft_makeTransposedStrides(const size_t  shapeRank,
                                                  size_t*       strides)
 try
 {
+  if (shapeRank > 0 && resultShape == nullptr)
+  {
+    return afft_Error_invalidShape;
+  }
+
+  if (shapeRank > 0 && orgAxesOrder == nullptr)
+  {
+    return afft_Error_invalidAxes;
+  }
+
+  if (shapeRank > 0 && strides == nullptr)
+  {
+    return afft_Error_invalidStrides;
+  }
+
   afft::makeTransposedStrides(afft::View<std::size_t>{resultShape, shapeRank},
                               afft::View<std::size_t>{orgAxesOrder, shapeRank},
                               fastestAxisStride,

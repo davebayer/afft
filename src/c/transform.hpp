@@ -64,6 +64,16 @@ struct Convert<afft::dft::Parameters<shapeRank, transformRank>>
     cxxType.placement     = Convert<afft::Placement>::fromC(cType.placement);
     cxxType.type          = Convert<afft::dft::Type>::fromC(cType.type);
 
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_invalidShape;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_invalidAxes;
+    }
+
     return cxxType;
   }
 
@@ -84,6 +94,16 @@ struct Convert<afft::dft::Parameters<shapeRank, transformRank>>
     cType.normalization = Convert<afft::Normalization>::toC(cxxType.normalization);
     cType.placement     = Convert<afft::Placement>::toC(cxxType.placement);
     cType.type          = Convert<afft::dft::Type>::toC(cxxType.type);
+
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_internal;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     return cType;
   }
@@ -117,6 +137,16 @@ struct Convert<afft::dht::Parameters<shapeRank, transformRank>>
     cxxType.placement     = Convert<afft::Placement>::fromC(cType.placement);
     cxxType.type          = Convert<afft::dht::Type>::fromC(cType.type);
 
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_invalidShape;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_invalidAxes;
+    }
+
     return cxxType;
   }
 
@@ -137,6 +167,16 @@ struct Convert<afft::dht::Parameters<shapeRank, transformRank>>
     cType.normalization = Convert<afft::Normalization>::toC(cxxType.normalization);
     cType.placement     = Convert<afft::Placement>::toC(cxxType.placement);
     cType.type          = Convert<afft::dht::Type>::toC(cxxType.type);
+
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_internal;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     return cType;
   }
@@ -180,6 +220,21 @@ struct Convert<afft::dtt::Parameters<shapeRank, transformRank>>
     cxxType.placement     = Convert<afft::Placement>::fromC(cType.placement);
     cxxType.types         = afft::View<afft::dtt::Type>{reinterpret_cast<const afft::dtt::Type*>(cType.types), cType.axesRank};
 
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_invalidShape;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_invalidAxes;
+    }
+
+    if (cType.types == nullptr)
+    {
+      throw afft_Error_invalidDttType;
+    }
+
     for (const auto type : cxxType.types)
     {
       if (!afft::detail::isValid(type))
@@ -208,6 +263,21 @@ struct Convert<afft::dtt::Parameters<shapeRank, transformRank>>
     cType.normalization = Convert<afft::Normalization>::toC(cxxType.normalization);
     cType.placement     = Convert<afft::Placement>::toC(cxxType.placement);
     cType.types         = Convert<afft::dtt::Type>::toC(reinterpret_cast<const afft_dtt_Type*>(cxxType.types.data()));
+
+    if (cType.shapeRank > 0 && cType.shape == nullptr)
+    {
+      throw afft_Error_internal;
+    }
+
+    if (cType.axesRank > 0 && cType.axes == nullptr)
+    {
+      throw afft_Error_internal;
+    }
+
+    if (cType.types == nullptr)
+    {
+      throw afft_Error_internal;
+    }
 
     for (const auto type : cxxType.types)
     {

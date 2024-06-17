@@ -61,6 +61,13 @@ typedef enum
   afft_Error_invalidDftType,
   afft_Error_invalidDhtType,
   afft_Error_invalidDttType,
+  afft_Error_invalidShape,
+  afft_Error_invalidAxes,
+  afft_Error_invalidStrides,
+  afft_Error_invalidBackendOrder,
+
+  afft_Error_fftw3_invalidTimeLimit,
+  afft_Error_fftw3_invalidBlockSize,
 } afft_Error;
 
 #ifdef __cplusplus
