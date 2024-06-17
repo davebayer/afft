@@ -31,7 +31,7 @@
 
 #include "detail/utils.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @struct Version
@@ -142,7 +142,7 @@ namespace afft
 
 #ifdef AFFT_HEADER_ONLY
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Get the version of the clFFT library.
