@@ -55,6 +55,8 @@ template<typename CxxE, typename CE, afft_Error cToCxxCvtError = afft_Error_succ
 struct EnumConvertBase
 {
   static_assert(std::is_enum_v<CxxE>, "E must be an enum type");
+
+  // Require C type to be the underlying type of C++ type to enable reinterpret cast of values.
   static_assert(std::is_same_v<CE, std::underlying_type_t<CxxE>>, "CE must be the underlying type of E");
   
   using CxxType = CxxE; ///< C++ enum type.
