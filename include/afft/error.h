@@ -65,6 +65,9 @@ typedef enum
   afft_Error_invalidAxes,
   afft_Error_invalidStrides,
   afft_Error_invalidBackendOrder,
+  afft_Error_invalidArchitectureParameters,
+  afft_Error_invalidExecutionParameters,
+  afft_Error_architectureMismatch,
 
   afft_Error_fftw3_invalidTimeLimit,
   afft_Error_fftw3_invalidBlockSize,

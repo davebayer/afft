@@ -185,8 +185,10 @@ afft_Error _afft_Plan_createWithBackendParameters(afft_TransformParameters    tr
                                                   afft_BackendParameters      backendParams,
                                                   afft_Plan**                 planPtr);
 
-afft_Error _afft_Plan_executeWithParameters(afft_Plan* plan, void* const* src, void* const* dst);
-
+afft_Error _afft_Plan_executeWithParameters(afft_Plan*               plan,
+                                            void* const*             src,
+                                            void* const*             dst,
+                                            afft_ExecutionParameters execParams);
 #ifdef __cplusplus
 }
 #endif
