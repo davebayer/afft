@@ -37,22 +37,24 @@ extern "C"
 #endif
 
 // Backend type
-typedef uint8_t afft_Backend;
+typedef uint16_t afft_Backend;
 
 /// @brief Backend enumeration
 enum
 {
-  afft_Backend_clfft,     ///< clFFT
-  afft_Backend_cufft,     ///< cuFFT
-  afft_Backend_fftw3,     ///< FFTW3
-  afft_Backend_heffte,    ///< HeFFTe
-  afft_Backend_hipfft,    ///< hipFFT
-  afft_Backend_mkl,       ///< Intel MKL
-  afft_Backend_pocketfft, ///< PocketFFT
-  afft_Backend_rocfft,    ///< rocFFT
-  afft_Backend_vkfft,     ///< VkFFT
-  _afft_Backend_count,    ///< number of backends, do not use, only for internal purposes
+  afft_Backend_clfft     = (1 << 0), ///< clFFT
+  afft_Backend_cufft     = (1 << 1), ///< cuFFT
+  afft_Backend_fftw3     = (1 << 2), ///< FFTW3
+  afft_Backend_heffte    = (1 << 3), ///< HeFFTe
+  afft_Backend_hipfft    = (1 << 4), ///< hipFFT
+  afft_Backend_mkl       = (1 << 5), ///< Intel MKL
+  afft_Backend_pocketfft = (1 << 6), ///< PocketFFT
+  afft_Backend_rocfft    = (1 << 7), ///< rocFFT
+  afft_Backend_vkfft     = (1 << 8), ///< VkFFT
 };
+
+/// @brief Backend count
+#define AFFT_BACKEND_COUNT 9
 
 /// @brief Backend mask type
 typedef uint16_t afft_BackendMask;

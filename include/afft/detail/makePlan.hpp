@@ -83,9 +83,9 @@ namespace afft::detail
   auto forEachBackend(BackendMask backendMask, Fn&& fn)
     -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
   {
-    for (BackendUnderlyingType i{}; i < cxx::to_underlying(Backend::_count); ++i)
+    for (std::size_t i{}; i < backendCount; ++i)
     {
-      const Backend backend = static_cast<Backend>(i);
+      const Backend backend = static_cast<Backend>(std::underlying_type_t<Backend>(1) << i);
 
       if ((backendMask & backend) != BackendMask::empty)
       {

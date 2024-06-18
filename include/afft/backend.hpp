@@ -37,19 +37,21 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
-  enum class Backend : detail::BackendUnderlyingType
+  enum class Backend : detail::BackendMaskUnderlyingType
   {
-    clfft,     ///< clFFT
-    cufft,     ///< cuFFT
-    fftw3,     ///< FFTW3
-    heffte,    ///< HeFFTe
-    hipfft,    ///< hipFFT
-    mkl,       ///< Intel MKL
-    pocketfft, ///< PocketFFT
-    rocfft,    ///< rocFFT
-    vkfft,     ///< VkFFT
-    _count,    ///< number of backends, do not use, only for internal purposes
+    clfft     = (1 << 0), ///< clFFT
+    cufft     = (1 << 1), ///< cuFFT
+    fftw3     = (1 << 2), ///< FFTW3
+    heffte    = (1 << 3), ///< HeFFTe
+    hipfft    = (1 << 4), ///< hipFFT
+    mkl       = (1 << 5), ///< Intel MKL
+    pocketfft = (1 << 6), ///< PocketFFT
+    rocfft    = (1 << 7), ///< rocFFT
+    vkfft     = (1 << 8), ///< VkFFT
   };
+
+  /// @brief Number of backends
+  inline constexpr std::size_t backendCount = 9;
 
   /// @brief Bitmask of backends
   enum class BackendMask : detail::BackendMaskUnderlyingType
@@ -59,7 +61,7 @@ AFFT_EXPORT namespace afft
   };
 
   // Check that the BackendMask underlying type has sufficient size to store all Backend values
-  static_assert(detail::backendMaskHasSufficientUnderlyingTypeSize(Backend::_count),
+  static_assert(detail::backendMaskHasSufficientUnderlyingTypeSize(backendCount),
                 "BackendMask does not have sufficient size to store all Backend values");
 
   /// @brief Backend select strategy

@@ -46,6 +46,8 @@ struct Convert<afft::Backend>
   static_assert(afft_Backend_vkfft     == afft::Backend::vkfft);
 };
 
+static_assert(AFFT_BACKEND_COUNT == afft::backendCount);
+
 // BackendMask
 template<>
 struct Convert<afft::BackendMask>
@@ -415,7 +417,7 @@ struct Convert<afft::spst::cpu::BackendParameters>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  [[nodiscard]] static constexpr CxxType fromC(const CType& cValue)
+  [[nodiscard]] static CxxType fromC(const CType& cValue)
   {
     CxxType cxxValue{};
     cxxValue.strategy = Convert<afft::SelectStrategy>::fromC(cValue.strategy);
@@ -444,7 +446,7 @@ struct Convert<afft::spst::cpu::BackendParameters>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  [[nodiscard]] static constexpr CType toC(const CxxType& cxxValue)
+  [[nodiscard]] static CType toC(const CxxType& cxxValue)
   {
     CType cValue{};
     cValue.strategy  = Convert<afft::SelectStrategy>::toC(cxxValue.strategy);
@@ -479,7 +481,7 @@ struct Convert<afft::spst::gpu::BackendParameters>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  [[nodiscard]] static constexpr CxxType fromC(const CType& cValue)
+  [[nodiscard]] static CxxType fromC(const CType& cValue)
   {
     CxxType cxxValue{};
     cxxValue.strategy = Convert<afft::SelectStrategy>::fromC(cValue.strategy);
@@ -509,7 +511,7 @@ struct Convert<afft::spst::gpu::BackendParameters>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  [[nodiscard]] static constexpr CType toC(const CxxType& cxxValue)
+  [[nodiscard]] static CType toC(const CxxType& cxxValue)
   {
     CType cValue{};
     cValue.strategy  = Convert<afft::SelectStrategy>::toC(cxxValue.strategy);
@@ -545,7 +547,7 @@ struct Convert<afft::spmt::gpu::BackendParameters>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  [[nodiscard]] static constexpr CxxType fromC(const CType& cValue)
+  [[nodiscard]] static CxxType fromC(const CType& cValue)
   {
     CxxType cxxValue{};
     cxxValue.strategy = Convert<afft::SelectStrategy>::fromC(cValue.strategy);
@@ -574,7 +576,7 @@ struct Convert<afft::spmt::gpu::BackendParameters>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  [[nodiscard]] static constexpr CType toC(const CxxType& cxxValue)
+  [[nodiscard]] static CType toC(const CxxType& cxxValue)
   {
     CType cValue{};
     cValue.strategy  = Convert<afft::SelectStrategy>::toC(cxxValue.strategy);
@@ -609,7 +611,7 @@ struct Convert<afft::mpst::cpu::BackendParameters>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  [[nodiscard]] static constexpr CxxType fromC(const CType& cValue)
+  [[nodiscard]] static CxxType fromC(const CType& cValue)
   {
     CxxType cxxValue{};
     cxxValue.strategy = Convert<afft::SelectStrategy>::fromC(cValue.strategy);
@@ -639,7 +641,7 @@ struct Convert<afft::mpst::cpu::BackendParameters>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  [[nodiscard]] static constexpr CType toC(const CxxType& cxxValue)
+  [[nodiscard]] static CType toC(const CxxType& cxxValue)
   {
     CType cValue{};
     cValue.strategy  = Convert<afft::SelectStrategy>::toC(cxxValue.strategy);
@@ -675,7 +677,7 @@ struct Convert<afft::mpst::gpu::BackendParameters>
    * @param cValue C struct value.
    * @return C++ struct value.
    */
-  [[nodiscard]] static constexpr CxxType fromC(const CType& cValue)
+  [[nodiscard]] static CxxType fromC(const CType& cValue)
   {
     CxxType cxxValue{};
     cxxValue.strategy = Convert<afft::SelectStrategy>::fromC(cValue.strategy);
@@ -705,7 +707,7 @@ struct Convert<afft::mpst::gpu::BackendParameters>
    * @param cxxValue C++ struct value.
    * @return C struct value.
    */
-  [[nodiscard]] static constexpr CType toC(const CxxType& cxxValue)
+  [[nodiscard]] static CType toC(const CxxType& cxxValue)
   {
     CType cValue{};
     cValue.strategy  = Convert<afft::SelectStrategy>::toC(cxxValue.strategy);
