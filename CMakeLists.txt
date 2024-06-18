@@ -61,7 +61,13 @@ set(AFFT_MP_BACKEND    ""                CACHE STRING "Multi process framework t
 ########################################################################################################################
 # Create targets
 ########################################################################################################################
-add_library(afft ${CMAKE_CURRENT_SOURCE_DIR}/src/afft-cxx.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/afft-c.cpp)
+add_library(afft ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/alloc.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/backend.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/init.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/Plan.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/utils.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/c-library/version.cpp
+                 ${CMAKE_CURRENT_SOURCE_DIR}/src/cxx-library/cxx-library.cpp)
 add_library(afft::afft ALIAS afft)
 add_library(afft-header-only INTERFACE)
 add_library(afft::afft-header-only ALIAS afft-header-only)

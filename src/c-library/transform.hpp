@@ -56,8 +56,8 @@ struct Convert<afft::dft::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft::dft::Parameters<> fromC(const afft_dft_Parameters& cType)
   {
     afft::dft::Parameters<> cxxType;
-    cxxType.direction     = Convert<afft::dft::Type>::fromC(cType.direction);
-    cxxType.precision     = Convert<afft::Precision>::fromC(cType.precision);
+    cxxType.direction     = Convert<afft::Direction>::fromC(cType.direction);
+    cxxType.precision     = Convert<afft::PrecisionTriad>::fromC(cType.precision);
     cxxType.shape         = afft::View<std::size_t>{cType.shape, cType.shapeRank};
     cxxType.axes          = afft::View<std::size_t>{cType.axes, cType.axesRank};
     cxxType.normalization = Convert<afft::Normalization>::fromC(cType.normalization);
@@ -85,8 +85,8 @@ struct Convert<afft::dft::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft_dft_Parameters toC(const afft::dft::Parameters<shapeRank, transformRank>& cxxType)
   {
     afft_dft_Parameters cType;
-    cType.direction     = Convert<afft::dft::Type>::toC(cxxType.direction);
-    cType.precision     = Convert<afft::Precision>::toC(cxxType.precision);
+    cType.direction     = Convert<afft::Direction>::toC(cxxType.direction);
+    cType.precision     = Convert<afft::PrecisionTriad>::toC(cxxType.precision);
     cType.shapeRank     = cxxType.shape.size();
     cType.shape         = cxxType.shape.data();
     cType.axesRank      = cxxType.axes.size();
@@ -129,8 +129,8 @@ struct Convert<afft::dht::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft::dht::Parameters<> fromC(const afft_dht_Parameters& cType)
   {
     afft::dht::Parameters<> cxxType;
-    cxxType.direction     = Convert<afft::dht::Type>::fromC(cType.direction);
-    cxxType.precision     = Convert<afft::Precision>::fromC(cType.precision);
+    cxxType.direction     = Convert<afft::Direction>::fromC(cType.direction);
+    cxxType.precision     = Convert<afft::PrecisionTriad>::fromC(cType.precision);
     cxxType.shape         = afft::View<std::size_t>{cType.shape, cType.shapeRank};
     cxxType.axes          = afft::View<std::size_t>{cType.axes, cType.axesRank};
     cxxType.normalization = Convert<afft::Normalization>::fromC(cType.normalization);
@@ -158,8 +158,8 @@ struct Convert<afft::dht::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft_dht_Parameters toC(const afft::dht::Parameters<shapeRank, transformRank>& cxxType)
   {
     afft_dht_Parameters cType;
-    cType.direction     = Convert<afft::dht::Type>::toC(cxxType.direction);
-    cType.precision     = Convert<afft::Precision>::toC(cxxType.precision);
+    cType.direction     = Convert<afft::Direction>::toC(cxxType.direction);
+    cType.precision     = Convert<afft::PrecisionTriad>::toC(cxxType.precision);
     cType.shapeRank     = cxxType.shape.size();
     cType.shape         = cxxType.shape.data();
     cType.axesRank      = cxxType.axes.size();
@@ -212,8 +212,8 @@ struct Convert<afft::dtt::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft::dtt::Parameters<> fromC(const afft_dtt_Parameters& cType)
   {
     afft::dtt::Parameters<> cxxType;
-    cxxType.direction     = Convert<afft::dtt::Type>::fromC(cType.direction);
-    cxxType.precision     = Convert<afft::Precision>::fromC(cType.precision);
+    cxxType.direction     = Convert<afft::Direction>::fromC(cType.direction);
+    cxxType.precision     = Convert<afft::PrecisionTriad>::fromC(cType.precision);
     cxxType.shape         = afft::View<std::size_t>{cType.shape, cType.shapeRank};
     cxxType.axes          = afft::View<std::size_t>{cType.axes, cType.axesRank};
     cxxType.normalization = Convert<afft::Normalization>::fromC(cType.normalization);
@@ -254,15 +254,15 @@ struct Convert<afft::dtt::Parameters<shapeRank, transformRank>>
   [[nodiscard]] static constexpr afft_dtt_Parameters toC(const afft::dtt::Parameters<shapeRank, transformRank>& cxxType)
   {
     afft_dtt_Parameters cType;
-    cType.direction     = Convert<afft::dtt::Type>::toC(cxxType.direction);
-    cType.precision     = Convert<afft::Precision>::toC(cxxType.precision);
+    cType.direction     = Convert<afft::Direction>::toC(cxxType.direction);
+    cType.precision     = Convert<afft::PrecisionTriad>::toC(cxxType.precision);
     cType.shapeRank     = cxxType.shape.size();
     cType.shape         = cxxType.shape.data();
     cType.axesRank      = cxxType.axes.size();
     cType.axes          = cxxType.axes.data();
     cType.normalization = Convert<afft::Normalization>::toC(cxxType.normalization);
     cType.placement     = Convert<afft::Placement>::toC(cxxType.placement);
-    cType.types         = Convert<afft::dtt::Type>::toC(reinterpret_cast<const afft_dtt_Type*>(cxxType.types.data()));
+    cType.types         = reinterpret_cast<const afft_dtt_Type*>(cxxType.types.data());
 
     if (cType.shapeRank > 0 && cType.shape == nullptr)
     {

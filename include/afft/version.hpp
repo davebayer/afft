@@ -288,7 +288,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version vkfft::getVersion() noexcept
   {
-# if AFFT_BACKEND_IS_ENABLED(VKFFT)
+# if (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP) || AFFT_GPU_BACKEND_IS(OPENCL)) && AFFT_BACKEND_IS_ENABLED(VKFFT)
     const int version = VkFFTGetVersion();
 
     return {version / 10000, (version % 10000) / 100, version % 100};

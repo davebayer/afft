@@ -68,6 +68,16 @@ namespace afft::detail
     }
   };
 
+  /// @brief Validator for the BackendMask enum class.
+  template<>
+  struct Validator<BackendMask>
+  {
+    constexpr bool operator()(BackendMask) const noexcept
+    {
+      return true;
+    }
+  };
+
   /// @brief Validator for the SelectStrategy enum class.
   template<>
   struct Validator<SelectStrategy>

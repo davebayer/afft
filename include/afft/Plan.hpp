@@ -39,6 +39,7 @@ namespace afft
   class Plan : public std::enable_shared_from_this<Plan>
   {
     friend class PlanCache;
+    friend struct detail::DescGetter; 
 
     private:
       /// @brief Default execution parameters helper.

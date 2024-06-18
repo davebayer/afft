@@ -565,7 +565,7 @@ namespace afft::detail
         {
           std::bitset<maxDimCount> seenAxes{};
           
-          for (const auto& axis : axes)
+          for (const auto& axis : axesView)
           {
             if (axis >= shapeRank)
             {
@@ -578,6 +578,8 @@ namespace afft::detail
 
             seenAxes.set(axis);
           }
+
+          std::copy(axesView.begin(), axesView.end(), axes.begin());
         }
         else
         {

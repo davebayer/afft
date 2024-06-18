@@ -36,8 +36,10 @@ int main(void)
   const afft_dft_Parameters dftParams =
   {
     .direction     = afft_Direction_forward,
-    .precision     = afft_Precision_float,
+    .precision     = {afft_Precision_float, afft_Precision_float, afft_Precision_float},
+    .shapeRank     = 3,
     .shape         = shape,
+    .axesRank      = 1,
     .axes          = (size_t[]){1},
     .normalization = afft_Normalization_unitary,
     .placement     = afft_Placement_outOfPlace,
@@ -62,18 +64,19 @@ int main(void)
 
   const afft_cpu_BackendParameters backendParams =
   {
-    .strategy = afft_SelectStrategy_best,
-    .mask     = (afft_Backend_fftw3 | afft_Backend_mkl),
-    .order    = (afft_Backend[]){afft_Backend_mkl, afft_Backend_fftw3},
-    .fftw3    = {.plannerFlag = afft_fftw3_PlannerFlag_exhaustive,
-                 .timeLimit   = 2.0},
+    .strategy  = afft_SelectStrategy_first,
+    .mask      = (afft_Backend_fftw3 | afft_Backend_mkl | afft_Backend_pocketfft),
+    .orderSize = 2,
+    .order     = (afft_Backend[]){afft_Backend_mkl, afft_Backend_fftw3},
+    .fftw3     = {.plannerFlag = afft_fftw3_PlannerFlag_exhaustive,
+                  .timeLimit   = 2.0},
   };
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_makePlanWithBackendParameters(dftParams, cpuParams, backendParams, &plan)); // generate the plan of the transform
+  AFFT_CALL(afft_Plan_createWithBackendParameters(dftParams, cpuParams, backendParams, &plan)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_execute(plan, (void*)src, (void*)dst)); // execute the transform
+  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst)); // execute the transform
 
   // use results from dst vector
 

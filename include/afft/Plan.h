@@ -143,10 +143,11 @@ afft_Error afft_Plan_getBackend(const afft_Plan* plan, afft_Backend* backend);
 /**
  * @brief Get the plan workspace size.
  * @param plan Plan object.
- * @param workspaceSize Pointer to the workspace array the same size as number of targets.
+ * @param count Pointer to the count variable.
+ * @param workspaceSizes Pointer to the workspace sizes.
  * @return Error code.
  */
-afft_Error afft_Plan_getWorkspaceSize(const afft_Plan* plan, size_t* workspaceSize);
+afft_Error afft_Plan_getWorkspaceSize(const afft_Plan* plan, size_t* count, const size_t** workspaceSizes);
 
 /**
  * @brief Execute a plan.

@@ -40,12 +40,12 @@ extern "C"
 #define AFFT_VERSION_FORMAT "%d.%d.%d"
 
 /// @brief Version structure
-struct afft_Version
+typedef struct
 {
   int major; ///< Major version number
   int minor; ///< Minor version number
   int patch; ///< Patch version number
-};
+} afft_Version;
 
 /**
  * @brief Get the version of the AFFT library.
@@ -53,7 +53,9 @@ struct afft_Version
  */
 static inline afft_Version afft_getVersion()
 {
-  return {AFFT_VERSION_MAJOR, AFFT_VERSION_MINOR, AFFT_VERSION_PATCH};
+  afft_Version version = {AFFT_VERSION_MAJOR, AFFT_VERSION_MINOR, AFFT_VERSION_PATCH};
+
+  return version;
 }
 
 /**

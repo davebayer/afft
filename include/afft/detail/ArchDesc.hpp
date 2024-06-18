@@ -1578,7 +1578,7 @@ namespace afft::detail
       [[nodiscard]] static SpmtGpuDesc
       makeArchVariant(const spmt::gpu::Parameters<shapeExt>& params, std::size_t shapeRank)
       {
-        const std::size_t targetCount = params.devices.size();
+        [[maybe_unused]] const std::size_t targetCount = params.devices.size();
 
         SpmtGpuDesc desc{};
         desc.memoryLayout = SpmtMemoryLayout{shapeRank, params.devices.size(), params.memoryLayout};

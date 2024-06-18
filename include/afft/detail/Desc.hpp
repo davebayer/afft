@@ -129,6 +129,64 @@ namespace afft::detail
           cxx::unreachable();
         }
       }
+
+      /**
+       * @brief Get the number of buffers required for the source and destination.
+       * @return A pair of the number of source and destination buffers.
+       */
+      [[nodiscard]] constexpr std::pair<std::size_t, std::size_t> getSrcDstBufferCount() const
+      {
+        const auto complexFormat      = getComplexFormat();
+        const auto [srcCmpl, dstCmpl] = getSrcDstComplexity();
+        const auto targetCount        = getTargetCount();
+
+        auto bufferCounts = std::make_pair(targetCount, targetCount);
+
+        switch (complexFormat)
+        {
+        case ComplexFormat::planar:
+          if (srcCmpl == Complexity::complex)
+          {
+            bufferCounts.first *= 2;
+          }
+          if (dstCmpl == Complexity::complex)
+          {
+            bufferCounts.second *= 2;
+          }
+          break;
+        default:
+          break;
+        }
+
+        return bufferCounts;
+      }
+
+      // [[nodiscard]] friend bool operator==(const Desc& lhs, const Desc& rhs) noexcept
+      // {
+      //   return static_cast<const TransformDesc&>(lhs) == static_cast<const TransformDesc&>(rhs) &&
+      //          static_cast<const ArchDesc&>(lhs) == static_cast<const ArchDesc&>(rhs);
+      // }
+
+      // [[nodiscard]] friend bool operator!=(const Desc& lhs, const Desc& rhs) noexcept
+      // {
+      //   return !(lhs == rhs);
+      // }
+  };
+
+  /// @brief Helper struct to get the Desc object from an object.
+  struct DescGetter
+  {
+    /**
+     * @brief Get the Desc object from an object.
+     * @tparam T The type of the object.
+     * @param obj The object.
+     * @return The Desc object.
+     */
+    template<typename T>
+    [[nodiscard]] static const Desc& get(T& obj)
+    {
+      return obj.getDesc();
+    }
   };
 } // namespace afft::detail
 

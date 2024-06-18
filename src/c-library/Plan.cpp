@@ -25,22 +25,26 @@ try
 
   auto create2 = [&](auto cxxTransformParams, auto cxxArchParams)
   {
-    planPtr = reinterpret_cast<afft_Plan*>(afft::makePlan(cxxTransformParams, cxxArchParams).release());
+    auto cxxPlan = afft::makePlan(cxxTransformParams, cxxArchParams);
+
+    *planPtr = reinterpret_cast<afft_Plan*>(cxxPlan.release());
+    
+    return afft_Error_success;
   };
 
   auto create1 = [&](auto cxxTransformParams)
   {
+    const std::size_t shapeRank = cxxTransformParams.shape.size();
+
     switch (archParams.target)
     {
     case afft_Target_cpu:
       switch (archParams.distribution)
       {
       case afft_Distribution_spst:
-        create2(cxxTransformParams, Convert<afft::spst::cpu::Parameters<>>::fromC(archParams.spstCpu));
-        break;
+        return create2(cxxTransformParams, Convert<afft::spst::cpu::Parameters<>>::fromC(archParams.spstCpu, shapeRank));
       case afft_Distribution_mpst:
-        create2(cxxTransformParams, Convert<afft::mpst::cpu::Parameters<>>::fromC(archParams.mpstCpu));
-        break;
+        return create2(cxxTransformParams, Convert<afft::mpst::cpu::Parameters<>>::fromC(archParams.mpstCpu, shapeRank));
       default:
         return afft_Error_invalidArchitectureParameters;
       }
@@ -48,14 +52,11 @@ try
       switch (archParams.distribution)
       {
       case afft_Distribution_spst:
-        create2(cxxTransformParams, Convert<afft::spst::gpu::Parameters<>>::fromC(archParams.spstGpu));
-        break;
-      case afft_Distribution_spmt:
-        create2(cxxTransformParams, Convert<afft::spmt::gpu::Parameters<>>::fromC(archParams.spmtGpu));
-        break;
+        return create2(cxxTransformParams, Convert<afft::spst::gpu::Parameters<>>::fromC(archParams.spstGpu, shapeRank));
+      // case afft_Distribution_spmt:
+      //   return create2(cxxTransformParams, Convert<afft::spmt::gpu::Parameters<>>::fromC(archParams.spmtGpu, shapeRank));
       case afft_Distribution_mpst:
-        create2(cxxTransformParams, Convert<afft::mpst::gpu::Parameters<>>::fromC(archParams.mpstGpu));
-        break;
+        return create2(cxxTransformParams, Convert<afft::mpst::gpu::Parameters<>>::fromC(archParams.mpstGpu, shapeRank));
       default:
         return afft_Error_invalidArchitectureParameters;
       }
@@ -107,26 +108,30 @@ try
 
   auto create2 = [&](auto cxxTransformParams, auto cxxArchParams, auto cxxBackendParams)
   {
-    planPtr = reinterpret_cast<afft_Plan*>(afft::makePlan(cxxTransformParams, cxxArchParams, cxxBackendParams).release());
+    auto cxxPlan = afft::makePlan(cxxTransformParams, cxxArchParams, cxxBackendParams);
+
+    *planPtr = reinterpret_cast<afft_Plan*>(cxxPlan.release());
+
+    return afft_Error_success;
   };
 
   auto create1 = [&](auto cxxTransformParams)
   {
+    const std::size_t shapeRank = cxxTransformParams.shape.size();
+
     switch (archParams.target)
     {
     case afft_Target_cpu:
       switch (archParams.distribution)
       {
       case afft_Distribution_spst:
-        create2(cxxTransformParams,
-                Convert<afft::spst::cpu::Parameters<>>::fromC(archParams.spstCpu),
-                Convert<afft::spst::cpu::BackendParameters>::fromC(backendParams.spstCpu));
-        break;
+        return create2(cxxTransformParams,
+                       Convert<afft::spst::cpu::Parameters<>>::fromC(archParams.spstCpu, shapeRank),
+                       Convert<afft::spst::cpu::BackendParameters>::fromC(backendParams.spstCpu));
       case afft_Distribution_mpst:
-        create2(cxxTransformParams,
-                Convert<afft::mpst::cpu::Parameters<>>::fromC(archParams.mpstCpu),
-                Convert<afft::mpst::cpu::BackendParameters>::fromC(backendParams.mpstCpu));
-        break;
+        return create2(cxxTransformParams,
+                       Convert<afft::mpst::cpu::Parameters<>>::fromC(archParams.mpstCpu, shapeRank),
+                       Convert<afft::mpst::cpu::BackendParameters>::fromC(backendParams.mpstCpu));
       default:
         return afft_Error_invalidArchitectureParameters;
       }
@@ -134,20 +139,17 @@ try
       switch (archParams.distribution)
       {
       case afft_Distribution_spst:
-        create2(cxxTransformParams,
-                Convert<afft::spst::gpu::Parameters<>>::fromC(archParams.spstGpu),
-                Convert<afft::spst::gpu::BackendParameters>::fromC(backendParams.spstGpu));
-        break;
-      case afft_Distribution_spmt:
-        create2(cxxTransformParams,
-                Convert<afft::spmt::gpu::Parameters<>>::fromC(archParams.spmtGpu),
-                Convert<afft::spmt::gpu::BackendParameters>::fromC(backendParams.spmtGpu));
-        break;
+        return create2(cxxTransformParams,
+                       Convert<afft::spst::gpu::Parameters<>>::fromC(archParams.spstGpu, shapeRank),
+                       Convert<afft::spst::gpu::BackendParameters>::fromC(backendParams.spstGpu));
+      // case afft_Distribution_spmt:
+      //   return create2(cxxTransformParams,
+      //                  Convert<afft::spmt::gpu::Parameters<>>::fromC(archParams.spmtGpu, shapeRank),
+      //                  Convert<afft::spmt::gpu::BackendParameters>::fromC(backendParams.spmtGpu));
       case afft_Distribution_mpst:
-        create2(cxxTransformParams,
-                Convert<afft::mpst::gpu::Parameters<>>::fromC(archParams.mpstGpu),
-                Convert<afft::mpst::gpu::BackendParameters>::fromC(backendParams.mpstGpu));
-        break;
+        return create2(cxxTransformParams,
+                       Convert<afft::mpst::gpu::Parameters<>>::fromC(archParams.mpstGpu, shapeRank),
+                       Convert<afft::mpst::gpu::BackendParameters>::fromC(backendParams.mpstGpu));
       default:
         return afft_Error_invalidArchitectureParameters;
       }
@@ -395,7 +397,13 @@ try
     return afft_Error_invalidArgument;
   }
 
-  reinterpret_cast<afft::Plan*>(plan)->executeUnsafe(src, dst);
+  afft::Plan* cxxPlan = reinterpret_cast<afft::Plan*>(plan);
+
+  const auto& desc = afft::detail::DescGetter::get(*cxxPlan);
+
+  const auto [srcBufferCount, dstBufferCount] = desc.getSrcDstBufferCount();
+
+  cxxPlan->executeUnsafe(afft::View<void*>{src, srcBufferCount}, afft::View<void*>{dst, dstBufferCount});
 
   return afft_Error_success;
 }
@@ -435,7 +443,17 @@ try
 
   auto execute = [&](auto cxxExecParams)
   {
-    reinterpret_cast<afft::Plan*>(plan)->executeUnsafe(src, dst, cxxExecParams);
+    afft::Plan* cxxPlan = reinterpret_cast<afft::Plan*>(plan);
+
+    const auto& desc = afft::detail::DescGetter::get(*cxxPlan);
+
+    const auto [srcBufferCount, dstBufferCount] = desc.getSrcDstBufferCount();
+
+    cxxPlan->executeUnsafe(afft::View<void*>{src, srcBufferCount},
+                           afft::View<void*>{dst, dstBufferCount},
+                           cxxExecParams);
+
+    return afft_Error_success;
   };
 
   switch (execParams.target)
@@ -444,11 +462,9 @@ try
     switch (execParams.distribution)
     {
     case afft_Distribution_spst:
-      execute(Convert<afft::spst::cpu::ExecutionParameters>::fromC(execParams.spstCpu));
-      break;
+      return execute(Convert<afft::spst::cpu::ExecutionParameters>::fromC(execParams.spstCpu));
     case afft_Distribution_mpst:
-      execute(Convert<afft::mpst::cpu::ExecutionParameters>::fromC(execParams.mpstCpu));
-      break;
+      return execute(Convert<afft::mpst::cpu::ExecutionParameters>::fromC(execParams.mpstCpu));
     default:
       return afft_Error_invalidExecutionParameters;
     }
@@ -456,14 +472,11 @@ try
     switch (execParams.distribution)
     {
     case afft_Distribution_spst:
-      execute(Convert<afft::spst::gpu::ExecutionParameters>::fromC(execParams.spstGpu));
-      break;
-    case afft_Distribution_spmt:
-      execute(Convert<afft::spmt::gpu::ExecutionParameters>::fromC(execParams.spmtGpu));
-      break;
+      return execute(Convert<afft::spst::gpu::ExecutionParameters>::fromC(execParams.spstGpu));
+    // case afft_Distribution_spmt:
+    //   return execute(Convert<afft::spmt::gpu::ExecutionParameters>::fromC(execParams.spmtGpu));
     case afft_Distribution_mpst:
-      execute(Convert<afft::mpst::gpu::ExecutionParameters>::fromC(execParams.mpstGpu));
-      break;
+      return execute(Convert<afft::mpst::gpu::ExecutionParameters>::fromC(execParams.mpstGpu));
     default:
       return afft_Error_invalidExecutionParameters;
     }

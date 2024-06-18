@@ -35,13 +35,7 @@
 namespace afft
 {
 namespace detail
-{
-  /// @brief Underlying type of the Backend enum
-  using BackendUnderlyingType = std::uint8_t;
-
-  // Check that the Backend underlying type is unsigned
-  static_assert(std::is_unsigned_v<BackendUnderlyingType>);
-  
+{  
   /// @brief Underlying type of the BackendMask enum
   using BackendMaskUnderlyingType = std::uint16_t;
 
@@ -50,7 +44,7 @@ namespace detail
 } // namespace detail
 
   // Forward declarations
-  AFFT_EXPORT enum class Backend : detail::BackendUnderlyingType;
+  AFFT_EXPORT enum class Backend : detail::BackendMaskUnderlyingType;
   AFFT_EXPORT enum class BackendMask : detail::BackendMaskUnderlyingType;
 
 namespace detail
@@ -59,31 +53,9 @@ namespace detail
    * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
    * @return True if the BackendMask underlying type has sufficient size, false otherwise.
    */
-  [[nodiscard]] constexpr bool backendMaskHasSufficientUnderlyingTypeSize(Backend backendCount)
+  [[nodiscard]] constexpr bool backendMaskHasSufficientUnderlyingTypeSize(std::size_t backendCount)
   {
-    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= cxx::to_underlying(backendCount);
-  }
-
-  /**
-   * @brief Converts Backend or BackednMask to a BackendMask.
-   * @tparam T Type of the value.
-   * @param value Value to convert.
-   * @return BackendMask representation of the value.
-   */
-  template<typename T>
-  [[nodiscard]] constexpr BackendMask toBackendMask(T value)
-  {
-    static_assert(std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>,
-                  "T must be either Backend or BackendMask");
-
-    if constexpr (std::is_same_v<T, Backend>)
-    {
-      return static_cast<BackendMask>(BackendMaskUnderlyingType{1} << detail::cxx::to_underlying(value));
-    }
-    else
-    {
-      return value;
-    }
+    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= backendCount;
   }
 
   /**
@@ -97,7 +69,7 @@ namespace detail
   template<typename UnOp, typename T>
   [[nodiscard]] constexpr BackendMask backendMaskUnaryOp(UnOp fn, T value)
   {
-    const auto val = detail::cxx::to_underlying(detail::toBackendMask(value));
+    const auto val = detail::cxx::to_underlying(value);
 
     return static_cast<BackendMask>(fn(val));
   }
@@ -115,8 +87,8 @@ namespace detail
   template<typename BinFn, typename T, typename U>
   [[nodiscard]] constexpr BackendMask backendMaskBinaryOp(BinFn fn, T lhs, U rhs)
   {
-    const auto left  = detail::cxx::to_underlying(detail::toBackendMask(lhs));
-    const auto right = detail::cxx::to_underlying(detail::toBackendMask(rhs));
+    const auto left  = detail::cxx::to_underlying(lhs);
+    const auto right = detail::cxx::to_underlying(rhs);
 
     return static_cast<BackendMask>(fn(left, right));
   }
