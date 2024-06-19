@@ -82,7 +82,7 @@ if(AFFT_MODULE)
   add_library(afft-module)
   add_library(afft::afft-module ALIAS afft-module)
 
-  target_sources(afft-module PUBLIC FILE_SET CXX_MODULES FILES ${CMAKE_CURRENT_SOURCE_DIR}/mod/afft.cppm)
+  target_sources(afft-module PUBLIC FILE_SET CXX_MODULES FILES ${CMAKE_CURRENT_SOURCE_DIR}/mod/afft.cpp)
 endif()
 
 target_compile_features(afft PUBLIC cxx_std_17)
