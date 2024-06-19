@@ -32,35 +32,35 @@
 #include "architecture.hpp"
 #include "../backend.hpp"
 
-#if AFFT_MP_BACKEND_IS(MPI)
+#ifdef AFFT_ENABLE_MPI
 # include "mpi/init.hpp"
 #endif
 
-#if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#ifdef AFFT_ENABLE_CLFFT
 # include "clfft/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(CUFFT)
+#ifdef AFFT_ENABLE_CUFFT
 # include "cufft/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#ifdef AFFT_ENABLE_FFTW3
 # include "fftw3/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#ifdef AFFT_ENABLE_HEFFTE
 # include "heffte/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#ifdef AFFT_ENABLE_HIPFFT
 # include "hipfft/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(MKL)
+#ifdef AFFT_ENABLE_MKL
 # include "mkl/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#ifdef AFFT_ENABLE_POCKETFFT
 # include "pocketfft/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#ifdef AFFT_ENABLE_ROCFFT
 # include "rocfft/init.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#ifdef AFFT_ENABLE_VKFFT
 # include "vkfft/init.hpp"
 #endif
 
@@ -191,43 +191,43 @@ namespace afft::detail
        */
       void initImpl()
       {
-#     if AFFT_MP_BACKEND_IS(MPI)
+#     ifdef AFFT_ENABLE_MPI
         mpi::init();
 #     endif
 
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         cuda::init();
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         hip::init();
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         opencl::init();
 #     endif
 
-#     if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#     ifdef AFFT_ENABLE_CLFFT
         clfft::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(CUFFT)
+#     ifdef AFFT_ENABLE_CUFFT
         cufft::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#     ifdef AFFT_ENABLE_FFTW3
         fftw3::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#     ifdef AFFT_ENABLE_HEFFTE
         heffte::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#     ifdef AFFT_ENABLE_HIPFFT
         hipfft::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(MKL)
+#     ifdef AFFT_ENABLE_MKL
         mkl::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#     ifdef AFFT_ENABLE_POCKETFFT
         pocketfft::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#     ifdef AFFT_ENABLE_ROCFFT
         rocfft::init();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#     ifdef AFFT_ENABLE_VKFFT
         vkfft::init();
 #     endif
       }
@@ -237,43 +237,43 @@ namespace afft::detail
        */
       void finalizeImpl()
       {
-#     if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#     ifdef AFFT_ENABLE_CLFFT
         clfft::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(CUFFT)
+#     ifdef AFFT_ENABLE_CUFFT
         cufft::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#     ifdef AFFT_ENABLE_FFTW3
         fftw3::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#     ifdef AFFT_ENABLE_HEFFTE
         heffte::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#     ifdef AFFT_ENABLE_HIPFFT
         hipfft::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(MKL)
+#     ifdef AFFT_ENABLE_MKL
         mkl::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#     ifdef AFFT_ENABLE_POCKETFFT
         pocketfft::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#     ifdef AFFT_ENABLE_ROCFFT
         rocfft::finalize();
 #     endif
-#     if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#     ifdef AFFT_ENABLE_VKFFT
         vkfft::finalize();
 #     endif
 
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         cuda::finalize();
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         hip::finalize();
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         opencl::finalize();
 #     endif
 
-#     if AFFT_MP_BACKEND_IS(MPI)
+#     ifdef AFFT_ENABLE_MPI
         mpi::finalize();
 #     endif
 

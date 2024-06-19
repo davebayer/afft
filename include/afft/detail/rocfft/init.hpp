@@ -38,7 +38,7 @@ namespace afft::detail::rocfft
   void finalize();
 } // namespace afft::detail::rocfft
 
-#if AFFT_GPU_IS_ENABLED
+#ifndef AFFT_DISABLE_GPU
 
 #ifdef AFFT_HEADER_ONLY
 
@@ -61,6 +61,6 @@ namespace afft::detail::rocfft
 
 #endif /* AFFT_HEADER_ONLY */
 
-#endif /* AFFT_GPU_IS_ENABLED */
+#endif /* AFFT_DISABLE_GPU */
 
 #endif /* AFFT_DETAIL_ROCFFT_INIT_HPP */

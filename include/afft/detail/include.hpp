@@ -73,13 +73,13 @@ import std;
 #endif
 
 // Include GPU backend headers
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
 # include <cuda.h>
 # include <cuda_runtime.h>
 # include <nvrtc.h>
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
 # include <hip/hip_runtime.h>
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
 # if defined(__APPLE__) || defined(__MACOSX)
 #   include <OpenCL/cl.h>
 # else
@@ -88,81 +88,71 @@ import std;
 #endif
 
 // Include multi-processing backend headers
-#if AFFT_MP_BACKEND_IS(MPI)
+#if defined(AFFT_ENABLE_MPI)
 # include <mpi.h>
 #endif
 
 #ifdef AFFT_HEADER_ONLY
  // Include clFFT header
-# if AFFT_BACKEND_IS_ENABLED(CLFFT)
-#   if AFFT_GPU_BACKEND_IS(OPENCL)
-#     include <clFFT.h>
-#   endif
+# ifdef AFFT_ENABLE_CLFFT
+#   include <clFFT.h>
 # endif
 
  // Include cuFFT header
-# if AFFT_BACKEND_IS_ENABLED(CUFFT)
-#   if AFFT_GPU_BACKEND_IS(CUDA)
-#     ifdef AFFT_CUFFT_HAS_MP
-#       include <cufftMp.h>
-#     else
-#       include <cufftXt.h>
-#     endif
-#     if CUFFT_VERSION < 8000
-#       error "cuFFT version 8.0 or higher is required"
-#     endif
+# ifdef AFFT_ENABLE_CUFFT
+#   ifdef AFFT_CUFFT_HAS_MP
+#     include <cufftMp.h>
+#   else
+#     include <cufftXt.h>
+#   endif
+#   if CUFFT_VERSION < 8000
+#     error "cuFFT version 8.0 or higher is required"
 #   endif
 # endif
 
  // Include FFTW3 header
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
 #   if (defined(AFFT_FFTW3_HAS_FLOAT) || defined(AFFT_FFTW3_HAS_DOUBLE) || defined(AFFT_FFTW3_HAS_LONG) || defined(AFFT_FFTW3_HAS_QUAD))
 #     include <fftw3.h>
 #   endif
-#   if AFFT_MP_BACKEND_IS(MPI) && \
+#   if defined(AFFT_ENABLE_MPI) && \
        (defined(AFFT_FFTW3_HAS_MPI_FLOAT) || defined(AFFT_FFTW3_HAS_MPI_DOUBLE) || defined(AFFT_FFTW3_HAS_MPI_LONG))
 #     include <fftw3-mpi.h>
 #   endif
 # endif
 
  // Include HeFFTe header
-# if AFFT_BACKEND_IS_ENABLED(HEFFTE)
-#   if AFFT_MP_BACKEND_IS(MPI)
-#     include <heffte.h>
-#   endif
+# ifdef AFFT_ENABLE_HEFFTE
+#   include <heffte.h>
 # endif
 
  // Include hipFFT header
-# if AFFT_BACKEND_IS_ENABLED(HIPFFT)
-#   if AFFT_GPU_BACKEND_IS(HIP)
-#     include <hipfft/hipfftXt.h>
-#     include <hipfft/hipfft-version.h>
-#   endif
+# ifdef AFFT_ENABLE_HIPFFT
+#   include <hipfft/hipfftXt.h>
+#   include <hipfft/hipfft-version.h>
 # endif
 
  // Include MKL header
-# if AFFT_BACKEND_IS_ENABLED(MKL)
+# ifdef AFFT_ENABLE_MKL
 #   include <mkl.h>
 # endif
 
  // Include PocketFFT header
-# if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+# ifdef AFFT_ENABLE_POCKETFFT
 #   include <pocketfft_hdronly.h>
 # endif
 
  // Include rocFFT header
-# if AFFT_BACKEND_IS_ENABLED(ROCFFT)
-#   if AFFT_GPU_BACKEND_IS(HIP)
-#     include <rocfft/rocfft.h>
-#     include <rocfft/rocfft-version.h>
-#   endif
+# ifdef AFFT_ENABLE_ROCFFT
+#   include <rocfft/rocfft.h>
+#   include <rocfft/rocfft-version.h>
 # endif
 
  // Include vkFFT header
-# if AFFT_BACKEND_IS_ENABLED(VKFFT)
-#   if AFFT_GPU_BACKEND_IS(CUDA) || \
-       (AFFT_GPU_BACKEND_IS(HIP) && defined(__HIP_PLATFORM_AMD__)) || \
-       AFFT_GPU_BACKEND_IS(OPENCL)
+# ifdef AFFT_ENABLE_VKFFT
+#   if defined(AFFT_ENABLE_CUDA) || \
+       (defined(AFFT_ENABLE_HIP) && defined(__HIP_PLATFORM_AMD__)) || \
+       defined(AFFT_ENABLE_OPENCL)
       // check if AFFT has been included before including vkFFT
 #     ifdef VKFFT_H
 #       error "AFFT and vkFFT cannot be included together in the same translation unit"
@@ -177,14 +167,14 @@ import std;
 #     pragma push_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
 #     undef VKFFT_USE_DOUBLEDOUBLE_FP128
       // define VKFFT_BACKEND based on the current GPU backend
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
 #       define VKFFT_BACKEND 1
 #       ifndef CUDA_TOOLKIT_ROOT_DIR
 #         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_ROOT_DIR
 #       endif
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
 #       define VKFFT_BACKEND 2
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
 #       define VKFFT_BACKEND 3
 #     else
 #       error "vkFFT backend is only supported with CUDA, HIP or OpenCL"

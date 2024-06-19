@@ -31,7 +31,7 @@
 
 #include "../../Plan.hpp"
 
-#if AFFT_GPU_IS_ENABLED
+#ifndef AFFT_DISABLE_GPU
 
 namespace afft::detail::vkfft::spst::gpu
 {
@@ -81,11 +81,11 @@ namespace afft::detail::vkfft::spst::gpu
         const auto shapeRank = mDesc.getShapeRank();
 
         // Set up GPU device variables
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         cuda::checkError(cuDeviceGet(&mCuDevice, gpuDesc.device));
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         hip::checkError(hipGetDevice(&mHipDevice, gpuDesc.device));
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         mContext = gpuDesc.context;
         mDevice  = gpuDesc.device;
 #     endif
@@ -101,15 +101,15 @@ namespace afft::detail::vkfft::spst::gpu
         });
 
         // Set up VkFFT config GPU device
-#    if AFFT_GPU_BACKEND_IS(CUDA)
+#    if defined(AFFT_ENABLE_CUDA)
         vkfftConfig.device      = &mCuDevice;
         vkfftConfig.stream      = &mStream;
         vkfftConfig.num_streams = 1;
-#    elif AFFT_GPU_BACKEND_IS(HIP)
+#    elif defined(AFFT_ENABLE_HIP)
         vkfftConfig.device      = &mHipDevice;
         vkfftConfig.stream      = &mStream;
         vkfftConfig.num_streams = 1;
-#    elif AFFT_GPU_BACKEND_IS(OPENCL)
+#    elif defined(AFFT_ENABLE_OPENCL)
         vkfftConfig.device      = &mDevice;
         vkfftConfig.context     = &mContext;
 #    endif
@@ -124,13 +124,13 @@ namespace afft::detail::vkfft::spst::gpu
         vkfftConfig.outputBufferSeparateComplexComponents = separateComplexComponents;
 
         // Set up VkFFT config GPU memory parameters
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         vkfftConfig.coalescedMemory = 32;
         vkfftConfig.numSharedBanks  = 32;
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         vkfftConfig.coalescedMemory = 32; // same for NVIDIA and AMD
         vkfftConfig.numSharedBanks  = 32; // same for NVIDIA and AMD
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         // set by VkFFT internally
 #     endif
 
@@ -337,25 +337,25 @@ namespace afft::detail::vkfft::spst::gpu
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-#       if AFFT_GPU_BACKEND_IS(CUDA)
+#       if defined(AFFT_ENABLE_CUDA)
           launchParams.inputBuffer = const_cast<void**>(src.data());
           launchParams.buffer      = const_cast<void**>(dst.data());
-#       elif AFFT_GPU_BACKEND_IS(HIP)
+#       elif defined(AFFT_ENABLE_HIP)
           launchParams.inputBuffer = const_cast<void**>(src.data());
           launchParams.buffer      = const_cast<void**>(dst.data());
-#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+#       elif defined(AFFT_ENABLE_OPENCL)
           launchParams.inputBuffer = reinterpret_cast<cl_mem*>(src.data());
           launchParams.buffer      = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
           break;
         case Direction::backward:
-#       if AFFT_GPU_BACKEND_IS(CUDA)
+#       if defined(AFFT_ENABLE_CUDA)
           launchParams.buffer      = const_cast<void**>(src.data());
           launchParams.inputBuffer = const_cast<void**>(dst.data());
-#       elif AFFT_GPU_BACKEND_IS(HIP)
+#       elif defined(AFFT_ENABLE_HIP)
           launchParams.buffer      = const_cast<void**>(src.data());
           launchParams.inputBuffer = const_cast<void**>(dst.data());
-#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+#       elif defined(AFFT_ENABLE_OPENCL)
           launchParams.buffer      = reinterpret_cast<cl_mem*>(src.data());
           launchParams.inputBuffer = reinterpret_cast<cl_mem*>(dst.data());
 #       endif
@@ -364,11 +364,11 @@ namespace afft::detail::vkfft::spst::gpu
           cxx::unreachable();
         }
 
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         mStream = execParams.stream;
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         mStream = execParams.stream;
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         mQueue  = execParams.commandQueue;
 #     endif
 
@@ -383,13 +383,13 @@ namespace afft::detail::vkfft::spst::gpu
     private:
       VkFFTApplication mApp{};
       bool             mInitialized{false};
-#   if AFFT_GPU_BACKEND_IS(CUDA)
+#   if defined(AFFT_ENABLE_CUDA)
       CUdevice         mCuDevice{};
       cudaStream_t     mStream{0};
-#   elif AFFT_GPU_BACKEND_IS(HIP)
+#   elif defined(AFFT_ENABLE_HIP)
       hipDevice_t      mHipDevice{};
       hipStream_t      mStream{0};
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   elif defined(AFFT_ENABLE_OPENCL)
       cl_context       mContext{};
       cl_device_id     mDevice{};
       cl_command_queue mQueue{};
@@ -416,6 +416,6 @@ namespace afft::detail::vkfft::spst::gpu
 
 #endif /* AFFT_HEADER_ONLY */
 
-#endif /* AFFT_GPU_IS_ENABLED */
+#endif /* AFFT_DISABLE_GPU */
 
 #endif /* AFFT_DETAIL_VKFFT_SPST_HPP */

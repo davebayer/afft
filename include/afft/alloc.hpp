@@ -447,16 +447,16 @@ namespace gpu
    */
   template<typename T>
   class UnifiedMemoryAllocator
-#if AFFT_GPU_IS_ENABLED
+#ifndef AFFT_DISABLE_GPU
   {
     public:
       /// @brief Type of the memory
       using value_type = T;
 
-#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
       /// @brief Default constructor
       constexpr UnifiedMemoryAllocator() noexcept = default;
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   elif defined(AFFT_ENABLE_OPENCL)
       /// @brief Default constructor
       UnifiedMemoryAllocator() = delete;
 
@@ -469,8 +469,8 @@ namespace gpu
       /// @brief Copy constructor
       template<typename U>
       constexpr UnifiedMemoryAllocator([[maybe_unused]] const UnifiedMemoryAllocator<U>& other) noexcept
-#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
+#   elif defined(AFFT_ENABLE_OPENCL)
       : mContext(other.context)
 #   endif
       {}
@@ -478,8 +478,8 @@ namespace gpu
       /// @brief Move constructor
       template<typename U>
       constexpr UnifiedMemoryAllocator([[maybe_unused]] UnifiedMemoryAllocator<U>&& other) noexcept
-#   if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
+#   elif defined(AFFT_ENABLE_OPENCL)
       : mContext(std::move(other.context))
 #   endif
       {}
@@ -493,8 +493,8 @@ namespace gpu
       {
         if (this != &other)
         {
-#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
-#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
+#       elif defined(AFFT_ENABLE_OPENCL)
           mContext = other.context;
 #       endif
         }
@@ -507,8 +507,8 @@ namespace gpu
       {
         if (this != &other)
         {
-#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
-#       elif AFFT_GPU_BACKEND_IS(OPENCL)
+#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
+#       elif defined(AFFT_ENABLE_OPENCL)
           mContext = std::move(other.context);
 #       endif
         }
@@ -526,11 +526,11 @@ namespace gpu
 
         [[maybe_unused]] const std::size_t sizeInBytes = n * sizeof(T);
 
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         detail::cuda::checkError(cudaMallocManaged(&ptr, sizeInBytes));
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         detail::hip::checkError(hipMallocManaged(&ptr, sizeInBytes));
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         ptr = static_cast<T*>(clSVMAlloc(mContext, CL_MEM_READ_WRITE, sizeInBytes, 0));
 #     endif
 
@@ -549,16 +549,16 @@ namespace gpu
        */
       void deallocate([[maybe_unused]] T* p, std::size_t) noexcept
       {
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         detail::cuda::checkError(cudaFree(p));
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         detail::hip::checkError(hipFree(p));
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         clSVMFree(mContext, p);
 #     endif
       }
 
-#   if AFFT_GPU_BACKEND_IS(OPENCL)
+#   if defined(AFFT_ENABLE_OPENCL)
       /// @brief Get the OpenCL context
       [[nodiscard]] cl_context getContext() const noexcept
       {
@@ -567,9 +567,9 @@ namespace gpu
 #   endif
     protected:
     private:
-#   if AFFT_GPU_BACKEND_IS(CUDA)
-#   elif AFFT_GPU_BACKEND_IS(HIP)
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   if defined(AFFT_ENABLE_CUDA)
+#   elif defined(AFFT_ENABLE_HIP)
+#   elif defined(AFFT_ENABLE_OPENCL)
       cl_context mContext; ///< OpenCL context
 #   endif  
   }

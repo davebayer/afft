@@ -73,8 +73,7 @@ namespace afft::detail::heffte
       }
       else if constexpr (backendParams.target == Target::gpu)
       {
-#     if AFFT_GPU_IS_ENABLED
-#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
         return mpst::gpu::makePlan(desc, backendParams.heffte);
 #       else
         throw BackendError{Backend::heffte, "unsupported GPU backend, only CUDA and HIP are supported"};

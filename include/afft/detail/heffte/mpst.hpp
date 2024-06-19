@@ -115,17 +115,17 @@ namespace afft::detail::heffte::mpst
        * @param dst The destination buffers.
        * @param execParams The execution parameters.
        */
-#   if AFFT_GPU_IS_ENABLED && (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP))
+#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
       auto executeBackendImpl(View<void*> src, View<void*> dst, const afft::mpst::gpu::ExecutionParameters& execParams) override
         -> AFFT_RET_REQUIRES(void, AFFT_PARAM(HeffteBackend == ::heffte::backend::cufft || \
                                               HeffteBackend == ::heffte::backend::rocfft))
       {
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         if (exceParams.stream != cudaStream_t{0})
         {
           throw BackendError{Backend::heffte, "execution can be launched only to the default stream"};
         }
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         if (exceParams.stream != hipStream_t{0})
         {
           throw BackendError{Backend::heffte, "execution can be launched only to the default stream"};

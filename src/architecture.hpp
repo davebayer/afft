@@ -170,11 +170,11 @@ struct Convert<afft::spst::gpu::Parameters<shapeExt>>
     cxxValue.memoryLayout   = Convert<afft::spst::MemoryLayout<shapeExt>>::fromC(cValue.memoryLayout, shapeRank);
     cxxValue.complexFormat  = Convert<afft::ComplexFormat>::fromC(cValue.complexFormat);
     cxxValue.preserveSource = cValue.preserveSource;
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cxxValue.device         = cValue.device;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cxxValue.device         = cValue.device;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cxxValue.context        = cValue.context;
     cxxValue.device         = cValue.device;
 # endif
@@ -188,11 +188,11 @@ struct Convert<afft::spst::gpu::Parameters<shapeExt>>
     cValue.memoryLayout   = Convert<afft::spst::MemoryLayout<shapeExt>>::toC(cxxValue.memoryLayout);
     cValue.complexFormat  = Convert<afft::ComplexFormat>::toC(cxxValue.complexFormat);
     cValue.preserveSource = cxxValue.preserveSource;
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cValue.device         = cxxValue.device;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cValue.device         = cxxValue.device;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cValue.context        = cxxValue.context;
     cValue.device         = cxxValue.device;
 # endif
@@ -229,13 +229,13 @@ struct Convert<afft::spst::gpu::ExecutionParameters>
   [[nodiscard]] static constexpr CxxType fromC([[maybe_unused]] const CType& cValue)
   {
     CxxType cxxValue{};
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cxxValue.stream       = cValue.stream;
     cxxValue.workspace    = cValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cxxValue.stream       = cValue.stream;
     cxxValue.workspace    = cValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cxxValue.commandQueue = cValue.commandQueue;
     cxxValue.workspace    = cValue.workspace;
 # endif
@@ -246,13 +246,13 @@ struct Convert<afft::spst::gpu::ExecutionParameters>
   [[nodiscard]] static constexpr CType toC([[maybe_unused]] const CxxType& cxxValue)
   {
     CType cValue{};
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cValue.stream       = cxxValue.stream;
     cValue.workspace    = cxxValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cValue.stream       = cxxValue.stream;
     cValue.workspace    = cxxValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cValue.commandQueue = cxxValue.commandQueue;
     cValue.workspace    = cxxValue.workspace;
 # endif
@@ -368,11 +368,11 @@ struct Convert<afft::mpst::gpu::Parameters<shapeExt>>
     cxxValue.memoryLayout   = Convert<afft::mpst::MemoryLayout<shapeExt>>::fromC(cValue.memoryLayout, shapeRank);
     cxxValue.complexFormat  = Convert<afft::ComplexFormat>::fromC(cValue.complexFormat);
     cxxValue.preserveSource = cValue.preserveSource;
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cxxValue.device         = cValue.device;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cxxValue.device         = cValue.device;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cxxValue.context        = cValue.context;
     cxxValue.device         = cValue.device;
 # endif
@@ -386,11 +386,11 @@ struct Convert<afft::mpst::gpu::Parameters<shapeExt>>
     cValue.memoryLayout   = Convert<afft::mpst::MemoryLayout<shapeExt>>::toC(cxxValue.memoryLayout);
     cValue.complexFormat  = Convert<afft::ComplexFormat>::toC(cxxValue.complexFormat);
     cValue.preserveSource = cxxValue.preserveSource;
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cValue.device         = cxxValue.device;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cValue.device         = cxxValue.device;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cValue.context        = cxxValue.context;
     cValue.device         = cxxValue.device;
 # endif
@@ -433,13 +433,13 @@ struct Convert<afft::mpst::gpu::ExecutionParameters>
   [[nodiscard]] static constexpr CxxType fromC([[maybe_unused]] const CType& cValue)
   {
     CxxType cxxValue{};
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cxxValue.stream    = cValue.stream;
     cxxValue.workspace = cValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cxxValue.stream    = cValue.stream;
     cxxValue.workspace = cValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cxxValue.commandQueue = cValue.commandQueue;
     cxxValue.workspace    = cValue.workspace;
 # endif
@@ -450,13 +450,13 @@ struct Convert<afft::mpst::gpu::ExecutionParameters>
   [[nodiscard]] static constexpr CType toC([[maybe_unused]] const CxxType& cxxValue)
   {
     CType cValue{};
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cValue.stream    = cxxValue.stream;
     cValue.workspace = cxxValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     cValue.stream    = cxxValue.stream;
     cValue.workspace = cxxValue.workspace;
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cValue.commandQueue = cxxValue.commandQueue;
     cValue.workspace    = cxxValue.workspace;
 # endif

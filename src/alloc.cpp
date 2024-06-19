@@ -45,7 +45,7 @@ extern "C" void afft_cpu_alignedFree(void* ptr, afft_Alignment alignment)
   ::operator delete[](ptr, static_cast<std::align_val_t>(alignment), std::nothrow);
 }
 
-#if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
 /**
  * @brief Allocate unified memory.
  * @param sizeInBytes Size of the memory block in bytes.
@@ -55,12 +55,12 @@ extern "C" void* afft_gpu_unifiedAlloc(size_t sizeInBytes)
 {
   void* ptr;
 
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   if (cudaMallocManaged(&ptr, sizeInBytes) == cudaSuccess)
   {
     return ptr;
   }
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   if (hipMallocManaged(&ptr, sizeInBytes) == hipSuccess)
   {
     return ptr;
@@ -76,13 +76,13 @@ extern "C" void* afft_gpu_unifiedAlloc(size_t sizeInBytes)
  */
 extern "C" void afft_gpu_unifiedFree(void* ptr)
 {
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   cudaFree(ptr);
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   hipFree(ptr);
 #endif
 }
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
 /**
  * @brief Allocate unified memory.
  * @param sizeInBytes Size of the memory block in bytes.

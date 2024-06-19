@@ -68,7 +68,7 @@ namespace afft::detail::rocfft
     
     if constexpr (BackendParamsT::target == Target::gpu)
     {
-#   if AFFT_GPU_IS_ENABLED
+#   ifndef AFFT_DISABLE_GPU
       if constexpr (BackendParamsT::distribution == Distribution::spst)
       {
         return spst::gpu::makePlan(desc);

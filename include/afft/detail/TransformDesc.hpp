@@ -39,18 +39,48 @@ namespace afft::detail
   struct DftDesc
   {
     dft::Type type{}; ///< Type of the transform.
+
+    [[nodiscard]] friend bool operator==(const DftDesc& lhs, const DftDesc& rhs) noexcept
+    {
+      return lhs.type == rhs.type;
+    }
+
+    [[nodiscard]] friend bool operator!=(const DftDesc& lhs, const DftDesc& rhs) noexcept
+    {
+      return !(lhs == rhs);
+    }
   };
 
   /// @brief Description of a DHT transform.
   struct DhtDesc
   {
     dht::Type type{}; ///< Type of the transform.
+
+    [[nodiscard]] friend bool operator==(const DhtDesc& lhs, const DhtDesc& rhs) noexcept
+    {
+      return lhs.type == rhs.type;
+    }
+
+    [[nodiscard]] friend bool operator!=(const DhtDesc& lhs, const DhtDesc& rhs) noexcept
+    {
+      return !(lhs == rhs);
+    }
   };
 
   /// @brief Description of a DTT transform.
   struct DttDesc
   {
     MaxDimArray<dtt::Type> types{}; ///< Types of the transform.
+
+    [[nodiscard]] friend bool operator==(const DttDesc& lhs, const DttDesc& rhs) noexcept
+    {
+      return lhs.types == rhs.types;
+    }
+
+    [[nodiscard]] friend bool operator!=(const DttDesc& lhs, const DttDesc& rhs) noexcept
+    {
+      return !(lhs == rhs);
+    }
   };
 
   /**
@@ -511,6 +541,23 @@ namespace afft::detail
 
         return sizeOf(getPrecision().destination) * cmplScale;
       }
+
+      // [[nodiscard]] friend bool operator==(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
+      // {
+      //   return (lhs.mDirection == rhs.mDirection) &&
+      //          (lhs.mPrecision == rhs.mPrecision) &&
+      //          std::equal(lhs.getShape().begin(), lhs.getShape().end(), rhs.getShape().begin(), rhs.getShape().end()) &&
+      //          std::equal(lhs.getTransformAxes().begin(), lhs.getTransformAxes().end(), rhs.getTransformAxes().begin(), rhs.getTransformAxes().end()) &&
+      //          (lhs.mNormalization == rhs.mNormalization) &&
+      //          (lhs.mPlacement == rhs.mPlacement) &&
+      //          (lhs.mTransformVariant == rhs.mTransformVariant);
+      // }
+
+      // [[nodiscard]] friend bool operator!=(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
+      // {
+      //   return !(lhs == rhs);
+      // }
+
     private:
       /// @brief Transform variant type.
       using TransformVariant = std::variant<DftDesc, DhtDesc, DttDesc>;

@@ -31,7 +31,7 @@
 
 #include "../../Plan.hpp"
 
-#if AFFT_GPU_IS_ENABLED
+#ifndef AFFT_DISABLE_GPU
 
 namespace afft::detail::rocfft::spmt::gpu
 {
@@ -162,6 +162,6 @@ namespace afft::detail::rocfft::spmt::gpu
 
 #endif /* AFFT_HEADER_ONLY */
 
-#endif /* AFFT_GPU_IS_ENABLED */
+#endif /* AFFT_DISABLE_GPU */
 
 #endif /* AFFT_DETAIL_ROCFFT_SPMT_HPP */

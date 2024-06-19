@@ -31,7 +31,7 @@
 
 #include "exception.hpp"
 #include "typeTraits.hpp"
-#if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#ifdef AFFT_ENABLE_FFTW3
 # include "detail/fftw3/Lib.hpp"
 #endif
 
@@ -41,7 +41,7 @@ AFFT_EXPORT namespace afft::fftw3
    * @brief Does the FFTW3 library support the given precision?
    * @tparam prec Precision of the FFTW3 library.
    */
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
   template<Precision prec>
   inline constexpr bool isSupportedPrecision = detail::fftw3::IsSupportedPrecision<prec>::value;
 # else
@@ -59,7 +59,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
@@ -80,7 +80,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
@@ -103,7 +103,7 @@ AFFT_EXPORT namespace afft::fftw3
 
     std::string wisdom{};
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       struct FreeDeleter
@@ -135,7 +135,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
@@ -156,7 +156,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
@@ -177,7 +177,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
@@ -198,7 +198,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
@@ -218,7 +218,7 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
       detail::fftw3::Lib<typePrecision<PrecT>>::forgetWisdom();
@@ -232,7 +232,7 @@ namespace mpst
    * @brief Does the FFTW3 MPI library support the given precision?
    * @tparam prec Precision of the FFTW3 MPI library.
    */
-#if AFFT_BACKEND_IS_ENABLED(FFTW3) && AFFT_MP_BACKEND_IS(MPI)
+#if defined(AFFT_ENABLE_MPI) && defined(AFFT_ENABLE_FFTW3)
   template<Precision prec>
   inline constexpr bool isSupportedPrecision = detail::fftw3::IsMpiSupportedPrecision<prec>::value;
 #else
@@ -240,7 +240,7 @@ namespace mpst
   inline constexpr bool isSupportedPrecision = false;
 #endif
 
-#if AFFT_MP_BACKEND_IS(MPI)
+#ifdef AFFT_ENABLE_MPI
   /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
    * @tparam PrecT Precision of the FFTW3 library.
@@ -251,7 +251,7 @@ namespace mpst
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
       detail::fftw3::MpiLib<typePrecision<PrecT>>::broadcastWisdom(comm);
@@ -267,7 +267,7 @@ namespace mpst
   template<typename PrecT>
   void gatherWisdom([[maybe_unused]] MPI_Comm comm)
   {
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
       detail::fftw3::MpiLib<typePrecision<PrecT>>::gatherWisdom(comm);

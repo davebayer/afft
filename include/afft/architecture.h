@@ -71,11 +71,11 @@ typedef struct
   afft_ComplexFormat     complexFormat;        ///< Complex format
   bool                   preserveSource;       ///< Preserve source flag
   bool                   useExternalWorkspace; ///< Use external workspace flag
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   int                    device;               ///< CUDA device
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   int                    device;               ///< HIP device
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
   cl_context             context;              ///< OpenCL context
   cl_device_id           device;               ///< OpenCL device
 #endif
@@ -90,13 +90,13 @@ typedef struct
 /// @brief GPU execution parameters structure for spst architecture
 typedef struct
 {
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   cudaStream_t     stream;       ///< CUDA stream
   void*            workspace;    ///< Workspace
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   hipStream_t      stream;       ///< HIP stream
   void*            workspace;    ///< Workspace
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
   cl_command_queue commandQueue; ///< OpenCL command queue
   cl_mem           workspace;    ///< Workspace
 #else
@@ -129,10 +129,10 @@ typedef struct
   afft_ComplexFormat     complexFormat;        ///< Complex format
   bool                   preserveSource;       ///< Preserve source flag
   bool                   useExternalWorkspace; ///< Use external workspace flag
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   size_t                 deviceCount;          ///< Number of CUDA devices
   const int*             devices;              ///< CUDA devices
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   size_t                 deviceCount;          ///< Number of HIP devices
   const int*             devices;              ///< HIP devices
 #endif
@@ -141,10 +141,10 @@ typedef struct
 /// @brief GPU execution parameters structure for spmt architecture
 typedef struct
 {
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   cudaStream_t stream;    ///< CUDA stream
   void* const* workspace; ///< Workspace
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   hipStream_t  stream;    ///< HIP stream
   void* const* workspace; ///< Workspace
 #else
@@ -171,7 +171,7 @@ typedef struct
   afft_ComplexFormat     complexFormat;        ///< Complex format
   bool                   preserveSource;       ///< Preserve source flag
   bool                   useExternalWorkspace; ///< Use external workspace flag
-#if AFFT_MP_BACKEND_IS(MPI)
+#if defined(AFFT_ENABLE_MPI)
   MPI_Comm               communicator;         ///< MPI communicator
 #endif
   afft_Alignment         alignment;            ///< Alignment
@@ -185,14 +185,14 @@ typedef struct
   afft_ComplexFormat     complexFormat;        ///< Complex format
   bool                   preserveSource;       ///< Preserve source flag
   bool                   useExternalWorkspace; ///< Use external workspace flag
-#if AFFT_MP_BACKEND_IS(MPI)
+#if defined(AFFT_ENABLE_MPI)
   MPI_Comm               communicator;         ///< MPI communicator
 #endif
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   int                    device;               ///< CUDA device
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   int                    device;               ///< HIP device
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
   cl_context             context;              ///< OpenCL context
   cl_device_id           device;               ///< OpenCL device
 #endif
@@ -207,13 +207,13 @@ typedef struct
 /// @brief GPU execution parameters structure for mpst architecture
 typedef struct
 {
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
   cudaStream_t     stream;       ///< CUDA stream
   void*            workspace;    ///< Workspace
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
   hipStream_t      stream;       ///< HIP stream
   void*            workspace;    ///< Workspace
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
   cl_command_queue commandQueue; ///< OpenCL command queue
   cl_mem           workspace;    ///< Workspace
 #else

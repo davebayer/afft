@@ -25,24 +25,44 @@
 #ifndef AFFT_AFFT_CONFIG_H
 #define AFFT_AFFT_CONFIG_H
 
+/**********************************************************************************************************************/
+// General defines
+/**********************************************************************************************************************/
 #define AFFT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
 #define AFFT_VERSION_MINOR @PROJECT_VERSION_MINOR@
 #define AFFT_VERSION_PATCH @PROJECT_VERSION_PATCH@
 
 #cmakedefine AFFT_MAX_DIM_COUNT @AFFT_MAX_DIM_COUNT@
 
-#cmakedefine AFFT_GPU_BACKEND   @AFFT_GPU_BACKEND@
-#cmakedefine AFFT_CUDA_ROOT_DIR "@AFFT_CUDA_ROOT_DIR@"
-#cmakedefine AFFT_HIP_ROOT_DIR  "@AFFT_HIP_ROOT_DIR@"
+/**********************************************************************************************************************/
+// GPU backend defines
+/**********************************************************************************************************************/
+#cmakedefine AFFT_ENABLE_CUDA
+#ifdef AFFT_ENABLE_CUDA
+# cmakedefine AFFT_CUDA_ROOT_DIR "@AFFT_CUDA_ROOT_DIR@"
+#endif
 
-#cmakedefine AFFT_MP_BACKEND    @AFFT_MP_BACKEND@
+#cmakedefine AFFT_ENABLE_HIP
+#ifdef AFFT_ENABLE_HIP
+# cmakedefine AFFT_HIP_ROOT_DIR "@AFFT_HIP_ROOT_DIR@"
+#endif
 
-#cmakedefine AFFT_BACKEND_MASK  @AFFT_BACKEND_MASK@
+#cmakedefine AFFT_ENABLE_OPENCL
 
+/**********************************************************************************************************************/
+// Multi-process backend defines
+/**********************************************************************************************************************/
+#cmakedefine AFFT_ENABLE_MPI
+
+/**********************************************************************************************************************/
+// Backend defines
+/**********************************************************************************************************************/
+// clFFT
 #ifdef AFFT_ENABLE_OPENCL
 # cmakedefine AFFT_ENABLE_CLFFT
 #endif
 
+// cuFFT
 #ifdef AFFT_ENABLE_CUDA
 # cmakedefine AFFT_ENABLE_CUFFT
 # if defined(AFFT_ENABLE_CUFFT) && defined(AFFT_ENABLE_MPI)
@@ -50,35 +70,58 @@
 # endif
 #endif
 
+// FFTW3
 #cmakedefine AFFT_ENABLE_FFTW3
 #ifdef AFFT_ENABLE_FFTW3
 # cmakedefine AFFT_FFTW3_HAS_FLOAT
+# ifdef AFFT_FFTW3_HAS_FLOAT
+#   cmakedefine AFFT_FFTW3_HAS_FLOAT_THREADS
+#   ifdef AFFT_ENABLE_MPI
+#     cmakedefine AFFT_FFTW3_HAS_MPI_FLOAT
+#   endif
+# endif
 # cmakedefine AFFT_FFTW3_HAS_DOUBLE
+# ifdef AFFT_FFTW3_HAS_DOUBLE
+#   cmakedefine AFFT_FFTW3_HAS_DOUBLE_THREADS
+#   ifdef AFFT_ENABLE_MPI
+#     cmakedefine AFFT_FFTW3_HAS_MPI_DOUBLE
+#   endif
+# endif
 # cmakedefine AFFT_FFTW3_HAS_LONG
+# ifdef AFFT_FFTW3_HAS_LONG
+#   cmakedefine AFFT_FFTW3_HAS_LONG_THREADS
+#   ifdef AFFT_ENABLE_MPI
+#     cmakedefine AFFT_FFTW3_HAS_MPI_LONG
+#   endif
+# endif
 # cmakedefine AFFT_FFTW3_HAS_QUAD
-# ifdef AFFT_ENABLE_MPI
-#   cmakedefine AFFT_FFTW3_HAS_MPI_FLOAT
-#   cmakedefine AFFT_FFTW3_HAS_MPI_DOUBLE
-#   cmakedefine AFFT_FFTW3_HAS_MPI_LONG
+# ifdef AFFT_FFTW3_HAS_QUAD
+#   cmakedefine AFFT_FFTW3_HAS_QUAD_THREADS
 # endif
 #endif
 
+// HeFFTe
 #ifdef AFFT_ENABLE_MPI
 # cmakedefine AFFT_ENABLE_HEFFTE
 #endif
 
+// hipFFT
 #ifdef AFFT_ENABLE_HIP
 # cmakedefine AFFT_ENABLE_HIPFFT
 #endif
 
+// MKL
 #cmakedefine AFFT_ENABLE_MKL
 
+// PocketFFT
 #cmakedefine AFFT_ENABLE_POCKETFFT
 
+// rocFFT
 #ifdef AFFT_ENABLE_HIP
 # cmakedefine AFFT_ENABLE_ROCFFT
 #endif
 
+// VKFFT
 #if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP) || defined(AFFT_ENABLE_OPENCL)
 # cmakedefine AFFT_ENABLE_VKFFT
 # ifdef AFFT_ENABLE_VKFFT

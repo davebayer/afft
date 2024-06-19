@@ -177,6 +177,19 @@ namespace afft::detail
         return memLayout;
       }
 
+      // [[nodiscard]] friend bool operator==(const SpstMemoryLayout& lhs, const SpstMemoryLayout& rhs) noexcept
+      // {
+      //   return std::equal(lhs.getSrcStrides().begin(), lhs.getSrcStrides().end(),
+      //                     rhs.getSrcStrides().begin(), rhs.getSrcStrides().end()) &&
+      //          std::equal(lhs.getDstStrides().begin(), lhs.getDstStrides().end(),
+      //                     rhs.getDstStrides().begin(), rhs.getDstStrides().end());
+      // }
+
+      // [[nodiscard]] friend bool operator!=(const SpstMemoryLayout& lhs, const SpstMemoryLayout& rhs) noexcept
+      // {
+      //   return !(lhs == rhs);
+      // }
+
     private:
       std::size_t              mShapeRank{};                ///< Shape rank.
       MaxDimArray<std::size_t> mSrcStrides{};               ///< Source strides.
@@ -1096,11 +1109,11 @@ namespace afft::detail
   struct SpstGpuDesc
   {
     SpstMemoryLayout memoryLayout{}; ///< Memory layout.
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     int              device{};       ///< CUDA device.
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     int              device{};       ///< HIP device.
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_context       context{};      ///< OpenCL context.
     cl_device_id     device{};       ///< OpenCL device.
 # endif
@@ -1110,11 +1123,11 @@ namespace afft::detail
   struct SpmtGpuDesc
   {
     SpmtMemoryLayout          memoryLayout{}; ///< Memory layout.
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     std::vector<int>          devices{};      ///< CUDA devices.
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     std::vector<int>          devices{};      ///< HIP devices.
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_context                context{};      ///< OpenCL context.
     std::vector<cl_device_id> devices{};      ///< OpenCL devices.
 # endif
@@ -1124,7 +1137,7 @@ namespace afft::detail
   struct MpstCpuDesc
   {
     MpstMemoryLayout memoryLayout{}; ///< Memory layout.
-# if AFFT_MP_BACKEND_IS(MPI)
+# if defined(AFFT_ENABLE_MPI)
     MPI_Comm         comm{};         ///< MPI communicator.
 # endif
     Alignment        alignment{};    ///< Alignment.
@@ -1135,14 +1148,14 @@ namespace afft::detail
   struct MpstGpuDesc
   {
     MpstMemoryLayout memoryLayout{}; ///< Memory layout.
-# if AFFT_MP_BACKEND_IS(MPI)
+# if defined(AFFT_ENABLE_MPI)
     MPI_Comm         comm{};         ///< MPI communicator.
 # endif
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     int              device{};       ///< CUDA device.
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     int              device{};       ///< HIP device.
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_context       context{};      ///< OpenCL context.
     cl_device_id     device{};       ///< OpenCL device.
 # endif
@@ -1220,7 +1233,7 @@ namespace afft::detail
         case ArchVariantIdx::mpstGpu:
           return 1;
         case ArchVariantIdx::spmtGpu:
-#       if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
           return std::get<SpmtGpuDesc>(mArchVariant).devices.size();
 #       else
           return 0;
@@ -1382,7 +1395,7 @@ namespace afft::detail
           {
             const auto& desc = getArchDesc<Target::cpu, Distribution::mpst>();
             params.memoryLayout = desc.memoryLayout.getView();
-#         if AFFT_MP_BACKEND_IS(MPI)
+#         if defined(AFFT_ENABLE_MPI)
             params.communicator = desc.comm;
 #         endif
             params.alignment    = desc.alignment;
@@ -1395,11 +1408,11 @@ namespace afft::detail
           {
             const auto& desc = getArchDesc<Target::gpu, Distribution::spst>();
             params.memoryLayout = desc.memoryLayout.getView();
-#         if AFFT_GPU_BACKEND_IS(CUDA)
+#         if defined(AFFT_ENABLE_CUDA)
             params.device = desc.device;
-#         elif AFFT_GPU_BACKEND_IS(HIP)
+#         elif defined(AFFT_ENABLE_HIP)
             params.device = desc.device;
-#         elif AFFT_GPU_BACKEND_IS(OPENCL)
+#         elif defined(AFFT_ENABLE_OPENCL)
             params.context = desc.context;
             params.device  = desc.device;
 #         endif
@@ -1408,9 +1421,9 @@ namespace afft::detail
           {
             const auto& desc = getArchDesc<Target::gpu, Distribution::spmt>();
             params.memoryLayout = desc.memoryLayout.getView();
-#         if AFFT_GPU_BACKEND_IS(CUDA)
+#         if defined(AFFT_ENABLE_CUDA)
             params.devices = desc.devices;
-#         elif AFFT_GPU_BACKEND_IS(HIP)
+#         elif defined(AFFT_ENABLE_HIP)
             params.devices = desc.devices;
 #         endif
           }
@@ -1418,14 +1431,14 @@ namespace afft::detail
           {
             const auto& desc = getArchDesc<Target::gpu, Distribution::mpst>();
             params.memoryLayout = desc.memoryLayout.getView();
-#         if AFFT_MP_BACKEND_IS(MPI)
+#         if defined(AFFT_ENABLE_MPI)
             params.communicator = desc.comm;
 #         endif
-#         if AFFT_GPU_BACKEND_IS(CUDA)
+#         if defined(AFFT_ENABLE_CUDA)
             params.device = desc.device;
-#         elif AFFT_GPU_BACKEND_IS(HIP)
+#         elif defined(AFFT_ENABLE_HIP)
             params.device = desc.device;
-#         elif AFFT_GPU_BACKEND_IS(OPENCL)
+#         elif defined(AFFT_ENABLE_OPENCL)
             params.context = desc.context;
             params.device  = desc.device;
 #         endif
@@ -1491,6 +1504,19 @@ namespace afft::detail
         }
       }
 
+      // [[nodiscard]] friend bool operator==(const ArchDesc& lhs, const ArchDesc& rhs) noexcept
+      // {
+      //   return lhs.mComplexFormat == rhs.mComplexFormat &&
+      //          lhs.mPreserveSource == rhs.mPreserveSource &&
+      //          lhs.mUseExternalWorkspace == rhs.mUseExternalWorkspace &&
+      //          lhs.mArchVariant == rhs.mArchVariant;
+      // }
+
+      // [[nodiscard]] friend bool operator!=(const ArchDesc& lhs, const ArchDesc& rhs) noexcept
+      // {
+      //   return !(lhs == rhs);
+      // }
+
     private:
       /// @brief Architecture variant.
       using ArchVariant = std::variant<SpstCpuDesc,
@@ -1539,19 +1565,19 @@ namespace afft::detail
       {
         SpstGpuDesc desc{};
         desc.memoryLayout = SpstMemoryLayout{shapeRank, params.memoryLayout};
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         if (!cuda::isValidDevice(params.device))
         {
           throw std::invalid_argument{"invalid CUDA device"};
         }
         desc.device = params.device;
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         if (!hip::isValidDevice(params.device))
         {
           throw std::invalid_argument{"invalid CUDA device"};
         }
         desc.device = params.device;
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         if (!opencl::isValidContext(params.context))
         {
           throw std::invalid_argument{"invalid CUDA device"};
@@ -1582,10 +1608,10 @@ namespace afft::detail
 
         SpmtGpuDesc desc{};
         desc.memoryLayout = SpmtMemoryLayout{shapeRank, params.devices.size(), params.memoryLayout};
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         desc.devices.resize(targetCount);
         std::copy(params.devices.begin(), params.devices.end(), desc.devices);
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         desc.devices.resize(targetCount);
         std::copy(params.devices.begin(), params.devices.end(), desc.devices);
 #     endif
@@ -1605,7 +1631,7 @@ namespace afft::detail
       {
         MpstCpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};
-#     if AFFT_MP_BACKEND_IS(MPI)
+#     if defined(AFFT_ENABLE_MPI)
         if (!mpi::isValidComm(params.comm))
         {
           throw std::invalid_argument{"invalid MPI communicator"};
@@ -1630,26 +1656,26 @@ namespace afft::detail
       {
         MpstGpuDesc desc{};
         desc.memoryLayout = MpstMemoryLayout{shapeRank, params.memoryLayout};
-#     if AFFT_MP_BACKEND_IS(MPI)
+#     if defined(AFFT_ENABLE_MPI)
         if (!mpi::isValidComm(params.comm))
         {
           throw std::invalid_argument{"invalid MPI communicator"};
         }
         desc.comm         = params.comm;
 #     endif
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         if (!cuda::isValidDevice(params.device))
         {
           throw std::invalid_argument{"invalid CUDA device"};
         }
         desc.device = params.device;
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         if (!hip::isValidDevice(params.device))
         {
           throw std::invalid_argument{"invalid CUDA device"};
         }
         desc.device = params.device;
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         if (!opencl::isValidContext(params.context))
         {
           throw std::invalid_argument{"invalid CUDA device"};

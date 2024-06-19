@@ -33,15 +33,15 @@
 #include "detail/architecture.hpp"
 #include "detail/utils.hpp"
 
-#if AFFT_MP_BACKEND_IS(MPI)
+#ifdef AFFT_ENABLE_MPI
 # include "detail/mpi/mpi.hpp"
 #endif
 
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
 # include "cuda.hpp"
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
 # include "hip.hpp"
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
 # include "detail/opencl/opencl.hpp"
 #endif
 
@@ -121,11 +121,11 @@ inline namespace spst
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     int                    device{cuda::getCurrentDevice()};          ///< CUDA device
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     int                    device{hip::getCurrentDevice()};           ///< HIP device
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_context             context{};                                 ///< OpenCL context
     cl_device_id           device{};                                  ///< OpenCL device
 # endif
@@ -134,13 +134,13 @@ inline namespace spst
   /// @brief Execution parameters for spst gpu architecture
   struct gpu::ExecutionParameters : detail::ArchitectureExecutionParametersBase<Target::gpu, Distribution::spst>
   {
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cudaStream_t     stream{0};   ///< CUDA stream
     void*            workspace{}; ///< workspace for spst gpu transform
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     hipStream_t      stream{0};   ///< HIP stream
     void*            workspace{}; ///< workspace for spst gpu transform
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_command_queue queue{};     ///< OpenCL command queue
     cl_mem           workspace{}; ///< workspace for spst gpu transform
 # endif
@@ -186,9 +186,9 @@ namespace spmt
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     View<int>              devices{};                                 ///< CUDA devices
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     View<int>              devices{};                                 ///< HIP devices
 # endif
   };
@@ -196,10 +196,10 @@ namespace spmt
   /// @brief Execution parameters for spmt gpu architecture
   struct gpu::ExecutionParameters : detail::ArchitectureExecutionParametersBase<Target::gpu, Distribution::spmt>
   {
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cudaStream_t stream{0};    ///< CUDA stream
     View<void*>  workspaces{}; ///< workspaces for spmt gpu transform
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     hipStream_t  stream{0};    ///< HIP stream
     View<void*>  workspaces{}; ///< workspaces for spmt gpu transform
 # endif
@@ -251,7 +251,7 @@ namespace mpst
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace
-# if AFFT_MP_BACKEND_IS(MPI)
+# ifdef AFFT_ENABLE_MPI
     MPI_Comm               communicator{MPI_COMM_WORLD};              ///< MPI communicator
 # endif
     Alignment              alignment{Alignment::defaultNew};          ///< Alignment for CPU memory allocation
@@ -275,14 +275,14 @@ namespace mpst
     ComplexFormat          complexFormat{ComplexFormat::interleaved}; ///< complex number format
     bool                   preserveSource{true};                      ///< preserve source data
     bool                   useExternalWorkspace{false};               ///< use external workspace
-# if AFFT_MP_BACKEND_IS(MPI)
+# ifdef AFFT_ENABLE_MPI
     MPI_Comm               communicator{MPI_COMM_WORLD};              ///< MPI communicator
 # endif
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     int                    device{cuda::getCurrentDevice()};          ///< CUDA device
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     int                    device{hip::getCurrentDevice()};           ///< HIP device
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_context             context{};                                 ///< OpenCL context
     cl_device_id           device{};                                  ///< OpenCL device
 # endif
@@ -291,13 +291,13 @@ namespace mpst
   /// @brief Execution parameters for mpst gpu architecture
   struct gpu::ExecutionParameters : detail::ArchitectureExecutionParametersBase<Target::gpu, Distribution::mpst>
   {
-# if AFFT_GPU_BACKEND_IS(CUDA)
+# if defined(AFFT_ENABLE_CUDA)
     cudaStream_t     stream{0};   ///< CUDA stream
     void*            workspace{}; ///< workspace for mpst gpu transform
-# elif AFFT_GPU_BACKEND_IS(HIP)
+# elif defined(AFFT_ENABLE_HIP)
     hipStream_t      stream{0};   ///< HIP stream
     void*            workspace{}; ///< workspace for mpst gpu transform
-# elif AFFT_GPU_BACKEND_IS(OPENCL)
+# elif defined(AFFT_ENABLE_OPENCL)
     cl_command_queue queue{};     ///< OpenCL command queue
     cl_mem           workspace{}; ///< workspace for mpst gpu transform
 # endif

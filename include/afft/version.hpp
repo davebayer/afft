@@ -150,7 +150,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version clfft::getVersion() noexcept
   {
-# if AFFT_GPU_BACKEND_IS(OPENCL) && AFFT_BACKEND_IS_ENABLED(CLFFT)
+# ifdef AFFT_ENABLE_CLFFT
     return {clfftVersionMajor, clfftVersionMinor, clfftVersionPatch};
 # else
     return {};
@@ -163,7 +163,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version cufft::getVersion() noexcept
   {
-# if AFFT_GPU_BACKEND_IS(CUDA) && AFFT_BACKEND_IS_ENABLED(CUFFT)
+# ifdef AFFT_ENABLE_CUFFT
     return {CUFFT_VERSION / 1000, (CUFFT_VERSION % 1000) / 10, CUFFT_VERSION % 10};
 # else
     return {};
@@ -178,7 +178,7 @@ AFFT_EXPORT namespace afft
   {
     Version version{};
 
-# if AFFT_BACKEND_IS_ENABLED(FFTW3)
+# ifdef AFFT_ENABLE_FFTW3
     const char* versionString{};
 
     switch (precision)
@@ -225,7 +225,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version heffte::getVersion() noexcept
   {
-# if AFFT_MP_BACKEND_IS(MPI) && AFFT_BACKEND_IS_ENABLED(HEFFTE)
+# ifdef AFFT_ENABLE_HEFFTE
     return {Heffte_VERSION_MAJOR, Heffte_VERSION_MINOR, Heffte_VERSION_PATCH};
 # else
     return {};
@@ -238,7 +238,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version hipfft::getVersion() noexcept
   {
-# if AFFT_GPU_BACKEND_IS(HIP) && AFFT_BACKEND_IS_ENABLED(HIPFFT)
+# ifdef AFFT_ENABLE_HIPFFT
     return {hipfftVersionMajor, hipfftVersionMinor, hipfftVersionPatch};
 # else
     return {};
@@ -251,7 +251,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version mkl::getVersion() noexcept
   {
-# if AFFT_BACKEND_IS_ENABLED(MKL)
+# ifdef AFFT_ENABLE_MKL
     MKLVersion version;
     mkl_get_version(&version);
     return {version.MajorVersion, version.MinorVersion, version.UpdateVersion};
@@ -275,7 +275,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version rocfft::getVersion() noexcept
   {
-# if AFFT_GPU_BACKEND_IS(HIP) && AFFT_BACKEND_IS_ENABLED(ROCFFT)
+# ifdef AFFT_ENABLE_ROCFFT
     return {rocfft_version_major, rocfft_version_minor, rocfft_version_patch};
 # else
     return {};
@@ -288,7 +288,7 @@ AFFT_EXPORT namespace afft
    */
   AFFT_HEADER_ONLY_INLINE Version vkfft::getVersion() noexcept
   {
-# if (AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP) || AFFT_GPU_BACKEND_IS(OPENCL)) && AFFT_BACKEND_IS_ENABLED(VKFFT)
+# ifdef AFFT_ENABLE_VKFFT
     const int version = VkFFTGetVersion();
 
     return {version / 10000, (version % 10000) / 100, version % 100};

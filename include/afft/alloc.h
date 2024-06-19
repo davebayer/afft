@@ -51,7 +51,7 @@ void* afft_cpu_alignedAlloc(size_t sizeInBytes, afft_Alignment alignment);
  */
 void afft_cpu_alignedFree(void* ptr, afft_Alignment alignment);
 
-#if AFFT_GPU_BACKEND_IS(CUDA) || AFFT_GPU_BACKEND_IS(HIP)
+#if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
 /**
  * @brief Allocate unified memory.
  * @param sizeInBytes Size of the memory block in bytes.
@@ -64,7 +64,7 @@ void* afft_gpu_unifiedAlloc(size_t sizeInBytes);
  * @param ptr Pointer to the memory block.
  */
 void afft_gpu_unifiedFree(void* ptr);
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
 /**
  * @brief Allocate unified memory.
  * @param sizeInBytes Size of the memory block in bytes.

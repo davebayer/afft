@@ -395,10 +395,10 @@ inline namespace spst
 
     /// @brief Default backend order for spst gpu architecture
     inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if AFFT_GPU_BACKEND_IS(CUDA)
+#   if defined(AFFT_ENABLE_CUDA)
       Backend::cufft,  // prefer cufft
       Backend::vkfft   // fallback to vkfft
-#   elif AFFT_GPU_BACKEND_IS(HIP)
+#   elif defined(AFFT_ENABLE_HIP)
 #     if defined(__HIP_PLATFORM_AMD__)
       Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
       Backend::rocfft  // fallback to rocfft
@@ -407,7 +407,7 @@ inline namespace spst
       Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
       Backend::rocfft  // fallback to rocfft
 #     endif
-#   elif AFFT_GPU_BACKEND_IS(OPENCL)
+#   elif defined(AFFT_ENABLE_OPENCL)
       Backend::vkfft,  // prefer vkfft
       Backend::clfft   // fallback to clfft
 #   endif
@@ -455,9 +455,9 @@ namespace spmt
 
     /// @brief Order of initialization of backends
     inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if AFFT_GPU_BACKEND_IS(CUDA)
+#   if defined(AFFT_ENABLE_CUDA)
       Backend::cufft  // just cufft
-#   elif AFFT_GPU_BACKEND_IS(HIP)
+#   elif defined(AFFT_ENABLE_HIP)
 #     if defined(__HIP_PLATFORM_AMD__)
       Backend::rocfft, // prefer rocfft
       Backend::hipfft  // fallback to hipfft
@@ -527,10 +527,10 @@ namespace mpst
 
     /// @brief Order of initialization of backends
     inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if AFFT_GPU_BACKEND_IS(CUDA)
+#   if defined(AFFT_ENABLE_CUDA)
       Backend::cufft, // try cufft first
       Backend::heffte // fallback to heffte
-#   elif AFFT_GPU_BACKEND_IS(HIP)
+#   elif defined(AFFT_ENABLE_HIP)
       Backend::heffte
 #   endif
     );

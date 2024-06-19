@@ -34,31 +34,31 @@
 #include "../Plan.hpp"
 #include "../backend.hpp"
 
-#if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#ifdef AFFT_ENABLE_CLFFT
 # include "clfft/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(CUFFT)
+#ifdef AFFT_ENABLE_CUFFT
 # include "cufft/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#ifdef AFFT_ENABLE_FFTW3
 # include "fftw3/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#ifdef AFFT_ENABLE_HEFFTE
 # include "heffte/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#ifdef AFFT_ENABLE_HIPFFT
 # include "hipfft/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(MKL)
+#ifdef AFFT_ENABLE_MKL
 # include "mkl/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#ifdef AFFT_ENABLE_POCKETFFT
 # include "pocketfft/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#ifdef AFFT_ENABLE_ROCFFT
 # include "rocfft/makePlan.hpp"
 #endif
-#if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#ifdef AFFT_ENABLE_VKFFT
 # include "vkfft/makePlan.hpp"
 #endif
 
@@ -201,47 +201,47 @@ namespace afft::detail
       {
         switch (backend)
         {
-#       if AFFT_BACKEND_IS_ENABLED(CLFFT)
+#       ifdef AFFT_ENABLE_CLFFT
         case Backend::clfft:
           plan = clfft::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(CUFFT)
+#       ifdef AFFT_ENABLE_CUFFT
         case Backend::cufft:
           plan = cufft::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(FFTW3)
+#       ifdef AFFT_ENABLE_FFTW3
         case Backend::fftw3:
           plan = fftw3::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(HEFFTE)
+#       ifdef AFFT_ENABLE_HEFFTE
         case Backend::heffte:
           plan = heffte::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(HIPFFT)
+#       ifdef AFFT_ENABLE_HIPFFT
         case Backend::hipfft:
           plan = hipfft::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(MKL)
+#       ifdef AFFT_ENABLE_MKL
         case Backend::mkl:
           plan = mkl::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(POCKETFFT)
+#       ifdef AFFT_ENABLE_POCKETFFT
         case Backend::pocketfft:
           plan = pocketfft::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(ROCFFT)
+#       ifdef AFFT_ENABLE_ROCFFT
         case Backend::rocfft:
           plan = rocfft::makePlan(desc, backendParams);
           break;
 #       endif
-#       if AFFT_BACKEND_IS_ENABLED(VKFFT)
+#       ifdef AFFT_ENABLE_VKFFT
         case Backend::vkfft:
           plan = vkfft::makePlan(desc, backendParams);
           break;

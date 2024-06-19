@@ -155,13 +155,13 @@ AFFT_EXPORT namespace afft
        */
       static std::string makeMessage(std::string_view msg) noexcept
       {
-        std::string_view gpuBackendName = "<Invalid GPU backend>";
+        std::string_view gpuBackendName = "<invalid GPU backend>";
 
-#     if AFFT_GPU_BACKEND_IS(CUDA)
+#     if defined(AFFT_ENABLE_CUDA)
         gpuBackendName = "CUDA";
-#     elif AFFT_GPU_BACKEND_IS(HIP)
+#     elif defined(AFFT_ENABLE_HIP)
         gpuBackendName = "HIP";
-#     elif AFFT_GPU_BACKEND_IS(OPENCL)
+#     elif defined(AFFT_ENABLE_OPENCL)
         gpuBackendName = "OpenCL";
 #     endif
 
@@ -218,7 +218,7 @@ AFFT_EXPORT namespace afft
       {
         std::string_view mpBackendName = "<Invalid multi-process backend>";
 
-#     if AFFT_MP_BACKEND_IS(MPI)
+#     ifdef AFFT_ENABLE_MPI
         mpBackendName = "MPI";
 #     endif
 

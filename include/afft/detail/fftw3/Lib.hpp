@@ -80,6 +80,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto destroyPlan              = fftwf_destroy_plan;
 
+    static constexpr auto cleanUp                  = fftwf_cleanup;
     static constexpr auto cleanUpThreads           = fftwf_cleanup_threads;
 
     static constexpr auto exportWisdomToFilename   = fftwf_export_wisdom_to_filename;
@@ -125,6 +126,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto destroyPlan              = fftw_destroy_plan;
 
+    static constexpr auto cleanUp                  = fftw_cleanup;
     static constexpr auto cleanUpThreads           = fftw_cleanup_threads;
 
     static constexpr auto exportWisdomToFilename   = fftw_export_wisdom_to_filename;
@@ -170,6 +172,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto destroyPlan              = fftwl_destroy_plan;
 
+    static constexpr auto cleanUp                  = fftwl_cleanup;
     static constexpr auto cleanUpThreads           = fftwl_cleanup_threads;
 
     static constexpr auto exportWisdomToFilename   = fftwl_export_wisdom_to_filename;
@@ -215,6 +218,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto destroyPlan              = fftwq_destroy_plan;
 
+    static constexpr auto cleanUp                  = fftwq_cleanup;
     static constexpr auto cleanUpThreads           = fftwq_cleanup_threads;
 
     static constexpr auto exportWisdomToFilename   = fftwq_export_wisdom_to_filename;
@@ -230,7 +234,7 @@ namespace afft::detail::fftw3
 
   struct MpiFloatLib
   {
-# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
+# ifdef AFFT_FFTW3_HAS_MPI_FLOAT
     using DDim                            = fftwf_mpi_ddim;
 
     static constexpr auto init            = fftwf_mpi_init;
@@ -254,7 +258,7 @@ namespace afft::detail::fftw3
 
   struct MpiDoubleLib
   {
-# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
+# ifdef AFFT_FFTW3_HAS_MPI_DOUBLE
     using DDim                            = fftw_mpi_ddim;
 
     static constexpr auto init            = fftw_mpi_init;
@@ -278,7 +282,7 @@ namespace afft::detail::fftw3
 
   struct LongMpiLib
   {
-# if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
+# ifdef AFFT_FFTW3_HAS_MPI_LONG
     using DDim                            = fftwl_mpi_ddim;
 
     static constexpr auto init            = fftwl_mpi_init;
@@ -378,7 +382,7 @@ namespace afft::detail::fftw3
   };
 
   /// @brief Specialization of MpiLibSelect for Precision::f32.
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
+#ifdef AFFT_FFTW3_HAS_MPI_FLOAT
   template<>
   struct MpiLibSelect<Precision::f32>
   {
@@ -390,16 +394,16 @@ namespace afft::detail::fftw3
   template<>
   struct MpiLibSelect<Precision::f64>
   {
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
+#if defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
     using Type = MpiDoubleLib;
-#elif AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
+#elif defined(AFFT_FFTW3_HAS_MPI_LONG)
     using Type = std::conditional_t<(typePrecision<long double> == Precision::f64), LongMpiLib, void>;
 #else
     using Type = void;
 #endif
   };
 
-#if AFFT_MP_BACKEND_IS(MPI) && defined(AFFT_FFTW3_HAS_MPI_LONG)
+#ifdef AFFT_FFTW3_HAS_MPI_LONG
   /// @brief Specialization of MpiLibSelect for Precision::f80.
   template<>
   struct MpiLibSelect<Precision::f80>

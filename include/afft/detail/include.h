@@ -27,11 +27,11 @@
 
 #include "config.h"
 
-#if AFFT_GPU_BACKEND_IS(CUDA)
+#if defined(AFFT_ENABLE_CUDA)
 # include <cuda_runtime.h>
-#elif AFFT_GPU_BACKEND_IS(HIP)
+#elif defined(AFFT_ENABLE_HIP)
 # include <hip/hip_runtime.h>
-#elif AFFT_GPU_BACKEND_IS(OPENCL)
+#elif defined(AFFT_ENABLE_OPENCL)
 # if defined(__APPLE__) || defined(__MACOSX)
 #   include <OpenCL/cl.h>
 # else
@@ -39,7 +39,7 @@
 # endif
 #endif
 
-#if AFFT_MP_BACKEND_IS(MPI)
+#if defined(AFFT_ENABLE_MPI)
 # include <mpi.h>
 #endif
 
