@@ -27,7 +27,7 @@
 
 #include "detail/hip/hip.hpp"
 
-namespace afft::hip
+AFFT_EXPORT namespace afft::hip
 {
   /**
    * @brief Get the current HIP device.

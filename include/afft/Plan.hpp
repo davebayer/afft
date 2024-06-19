@@ -34,7 +34,7 @@
 #include "transform.hpp"
 #include "detail/Desc.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   class Plan : public std::enable_shared_from_this<Plan>
   {

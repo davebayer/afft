@@ -27,7 +27,7 @@
 
 #include "detail/cuda/cuda.hpp"
 
-namespace afft::cuda
+AFFT_EXPORT namespace afft::cuda
 {
   /**
    * @brief Get the current CUDA device.

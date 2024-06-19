@@ -32,7 +32,7 @@
 #include "common.hpp"
 #include "detail/transform.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /// @brief Named constant representing all axes (is empty view)
   template<std::size_t transformExt = dynamicRank>

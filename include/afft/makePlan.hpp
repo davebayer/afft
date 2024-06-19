@@ -31,7 +31,7 @@
 
 #include "detail/makePlan.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Create a plan for the given transform, architecture and backend parameters

@@ -45,7 +45,7 @@
 # include "detail/opencl/opencl.hpp"
 #endif
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /**
    * @brief Memory block

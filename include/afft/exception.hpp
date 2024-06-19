@@ -32,7 +32,7 @@
 #include "backend.hpp"
 #include "detail/utils.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {  
   /// @brief Exception base class for afft library.
   struct Exception : public std::exception

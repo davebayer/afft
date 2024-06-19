@@ -62,6 +62,8 @@ if(NOT (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28) AND AFFT_MODULE)
   message(FATAL_ERROR "C++20 module support requires CMake 3.28 or later")
 endif()
 
+set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
 ########################################################################################################################
 # Create targets
 ########################################################################################################################
@@ -376,6 +378,13 @@ if(AFFT_BUILD_EXAMPLES)
   add_executable(cpu_c_dft_3D_C2C_transpose examples/cpu/dft_3D_C2C_transpose.c)
   set_target_properties(cpu_c_dft_3D_C2C_transpose PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
   target_link_libraries(cpu_c_dft_3D_C2C_transpose PRIVATE afft::afft)
+
+  if(AFFT_MODULE)
+    add_executable(cpu_dft_1D_C2C_simple_mod examples/cpu/dft_1D_C2C_simple_mod.cpp)
+    set_target_properties(cpu_dft_1D_C2C_simple_mod PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
+    target_compile_features(cpu_dft_1D_C2C_simple_mod PRIVATE cxx_std_20)
+    target_link_libraries(cpu_dft_1D_C2C_simple_mod PRIVATE afft::afft-module)
+  endif()
 
   if(NOT (AFFT_GPU_BACKEND STREQUAL ""))
     if(AFFT_GPU_BACKEND STREQUAL "CUDA")

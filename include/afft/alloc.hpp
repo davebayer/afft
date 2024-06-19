@@ -31,7 +31,7 @@
 
 #include "architecture.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
 namespace cpu
 {
