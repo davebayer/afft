@@ -38,7 +38,6 @@ namespace afft
 {
   class Plan : public std::enable_shared_from_this<Plan>
   {
-    friend class PlanCache;
     friend struct detail::DescGetter; 
 
     private:
@@ -195,7 +194,7 @@ namespace afft
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View{srcDst}, View{srcDst}, execParams);
+        executeImpl1(View<SrcDstT*>{&srcDst, 1}, View<SrcDstT*>{&srcDst, 1}, execParams);
       }
 
       /**
@@ -212,7 +211,9 @@ namespace afft
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View{srcDst}, View{srcDst}, execParams);
+        executeImpl1(View<PlanarComplex<SrcDstT>>{&srcDst, 1},
+                     View<PlanarComplex<SrcDstT>>{&srcDst, 1},
+                     execParams);
       }
 
       /**
@@ -266,7 +267,7 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View<SrcT*>(&src, 1), View<DstT*>(&dst, 1), execParams);
+        executeImpl1(View<SrcT*>{&src, 1}, View<DstT*>{&dst, 1}, execParams);
       }
 
       /**
@@ -286,7 +287,7 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<SrcT>>{&src, 1}, View<DstT*>{&dst, 1}, execParams);
       }
 
       /**
@@ -306,7 +307,7 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View{src}, View{dst}, execParams);
+        executeImpl1(View<SrcT*>{&src, 1}, View<PlanarComplex<DstT>>{&dst, 1}, execParams);
       }
 
       /**
@@ -326,7 +327,7 @@ namespace afft
         static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View(src), View(dst), execParams);
+        executeImpl1(View<PlanarComplex<SrcT>>{&src, 1}, View<PlanarComplex<DstT>>{&dst, 1}, execParams);
       }
 
       /**
@@ -421,7 +422,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View<const void*>(&src, 1), View<void*>(&dst, 1), execParams);
+        executeImpl1(View<const void*>{&src, 1}, View<void*>{&dst, 1}, execParams);
       }
 
       /**
@@ -436,7 +437,7 @@ namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(View<void*>(&src, 1), View<void*>(&dst, 1), execParams);
+        executeImpl1(View<void*>{&src, 1}, View<void*>{&dst, 1}, execParams);
       }
 
       /**

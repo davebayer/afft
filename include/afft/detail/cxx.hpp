@@ -317,7 +317,7 @@ inline namespace cxx20
   template<class InputIt, class UnaryPred>
   constexpr bool all_of(InputIt first, InputIt last, UnaryPred p)
   {
-    return std::find_if_not(first, last, p) == last;
+    return cxx::find_if_not(first, last, p) == last;
   }
 
   /**
@@ -332,7 +332,7 @@ inline namespace cxx20
   template<class InputIt, class UnaryPred>
   constexpr bool any_of(InputIt first, InputIt last, UnaryPred p = std::equal_to<>{})
   {
-    return find_if(first, last, p) != last;
+    return cxx::find_if(first, last, p) != last;
   }
 
   /**
@@ -347,7 +347,7 @@ inline namespace cxx20
   template<class InputIt, class UnaryPred>
   constexpr bool none_of(InputIt first, InputIt last, UnaryPred p)
   {
-    return std::find_if(first, last, p) == last;
+    return cxx::find_if(first, last, p) == last;
   }
 } // namespace cxx20
 
