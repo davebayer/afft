@@ -25,6 +25,9 @@
 // Define the header only mode
 #define AFFT_HEADER_ONLY
 
+// Define the export macro.
+#define AFFT_EXPORT export
+
 // Global module fragment.
 module;
 
@@ -51,9 +54,6 @@ export module afft;
 #ifdef AFFT_CXX_HAS_IMPORT_STD
 import std;
 #endif
-
-// Define the export macro.
-#define AFFT_EXPORT export
 
 // Include all public headers.
 #include <afft/afft.hpp>
