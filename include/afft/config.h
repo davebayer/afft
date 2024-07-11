@@ -40,22 +40,10 @@
 # define AFFT_MAX_DIM_COUNT     4
 #endif
 
-#if defined(AFFT_ENABLE_CUDA) && !defined(AFFT_ENABLE_HIP) && !defined(AFFT_ENABLE_OPENCL)
+#ifdef AFFT_ENABLE_CUDA
 # ifndef AFFT_CUDA_ROOT_DIR
 #   error "AFFT_CUDA_ROOT_DIR must be defined"
 # endif
-#elif !defined(AFFT_ENABLE_CUDA) && defined(AFFT_ENABLE_HIP) && !defined(AFFT_ENABLE_OPENCL)
-# ifndef AFFT_HIP_ROOT_DIR
-#   error "AFFT_HIP_ROOT_DIR must be defined"
-# endif
-#elif !defined(AFFT_ENABLE_CUDA) && !defined(AFFT_ENABLE_HIP) && defined(AFFT_ENABLE_OPENCL)
-#elif !defined(AFFT_ENABLE_CUDA) && !defined(AFFT_ENABLE_HIP) && !defined(AFFT_ENABLE_OPENCL)
-# define AFFT_DISABLE_GPU
-#else
-# error "Exactly one GPU backend must be enabled"
-#endif
-
-#if defined(AFFT_ENABLE_MPI)
 #endif
 
 /**
