@@ -92,18 +92,6 @@ namespace detail
 
     return static_cast<BackendMask>(fn(left, right));
   }
-
-  /**
-   * @brief Base class for backend parameters.
-   * @tparam _target Target of the backend.
-   * @tparam _distrib Distribution of the backend.
-   */
-  template<Target _target, Distribution _distrib>
-  struct BackendParametersBase
-  {
-    static constexpr Target       target{_target};
-    static constexpr Distribution distribution{_distrib};
-  };
 } // namespace detail
 } // namespace afft
 
