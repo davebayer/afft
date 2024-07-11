@@ -22,17 +22,72 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_ALLOC_HPP
-#define AFFT_ALLOC_HPP
+#ifndef AFFT_MEMORY_HPP
+#define AFFT_MEMORY_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "detail/include.hpp"
 #endif
 
-#include "architecture.hpp"
+#include "common.hpp"
+#include "Span.hpp"
+#include "detail/cxx.hpp"
 
-AFFT_EXPORT namespace afft
+namespace afft
 {
+  /// @brief Alignment of a data type
+  enum class Alignment : std::size_t
+  {
+    defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
+    simd128    = 16,                               ///< 128-bit SIMD alignment
+    simd256    = 32,                               ///< 256-bit SIMD alignment
+    simd512    = 64,                               ///< 512-bit SIMD alignment
+    simd1024   = 128,                              ///< 1024-bit SIMD alignment
+    simd2048   = 256,                              ///< 2048-bit SIMD alignment
+
+    sse    = simd128,  ///< SSE alignment
+    sse2   = simd128,  ///< SSE2 alignment
+    sse3   = simd128,  ///< SSE3 alignment
+    sse4   = simd128,  ///< SSE4 alignment
+    sse4_1 = simd128,  ///< SSE4.1 alignment
+    sse4_2 = simd128,  ///< SSE4.2 alignment
+    avx    = simd256,  ///< AVX alignment
+    avx2   = simd256,  ///< AVX2 alignment
+    avx512 = simd512,  ///< AVX-512 alignment
+    neon   = simd128,  ///< NEON alignment
+    sve    = simd2048, ///< SVE alignment
+  };
+  
+  /// @brief Memory layout of the centralized transform
+  struct MemoryLayout
+  {
+    ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    Alignment     alignment{};                               ///< alignment of the memory
+    View<Size>    srcStrides{};                              ///< strides of the source memory
+    View<Size>    dstStrides{};                              ///< strides of the destination memory
+  };
+
+  /// @brief Memory block
+  struct MemoryBlock
+  {
+    View<Size> starts{};    ///< starts of the memory block
+    View<Size> sizes{};     ///< sizes of the memory block
+    View<Size> strides{};   ///< strides of the memory block
+  };
+
+  /// @brief Memory layout of the distributed transform
+  struct DistribMemoryLayout
+  {
+    ComplexFormat     complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    Alignment         alignment{};                               ///< alignment of the memory
+    View<MemoryBlock> srcBlocks{};                               ///< source memory blocks
+    View<Axis>        srcDistribAxes{};                          ///< axes along which the source data are distributed
+    View<Axis>        srcAxesOrder{};                            ///< order of the source axes
+    View<MemoryBlock> dstBlocks{};                               ///< destination memory blocks
+    View<Axis>        dstDistribAxes{};                          ///< axes along which the destination data are distributed
+    View<Axis>        dstAxesOrder{};                            ///< order of the destination axes
+  };
+
 namespace cpu
 {
   /// @brief Default alignment for memory allocation
@@ -351,7 +406,7 @@ namespace cpu
    *        others.
    * @tparam T Type of the memory
    */
-  template<typename T = void>
+  template<typename T>
   class AlignedAllocator
   {
     public:
@@ -437,51 +492,47 @@ namespace cpu
   };
 } // namespace cpu
 
-namespace gpu
-{
+  namespace cuda
+  {
+    /**
+     * @class UnifiedMemoryAllocator
+     * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
+     *        others.
+     * @tparam T Type of the memory
+     */
+    template<typename T>
+    class UnifiedMemoryAllocator;
+  } // namespace cuda
+
+#ifdef AFFT_ENABLE_CUDA
   /**
    * @class UnifiedMemoryAllocator
-   * @brief Allocator named concept implementation implementation for unified GPU memory to be used with std::vector and
+   * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
    *        others.
    * @tparam T Type of the memory
    */
   template<typename T>
-  class UnifiedMemoryAllocator
-#ifndef AFFT_DISABLE_GPU
+  class cuda::UnifiedMemoryAllocator
   {
     public:
       /// @brief Type of the memory
       using value_type = T;
-
-#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
+      
       /// @brief Default constructor
-      constexpr UnifiedMemoryAllocator() noexcept = default;
-#   elif defined(AFFT_ENABLE_OPENCL)
-      /// @brief Default constructor
-      UnifiedMemoryAllocator() = delete;
-
-      /// @brief Constructor
-      constexpr UnifiedMemoryAllocator(cl_context context) noexcept
-      : mContext(context)
+      constexpr UnifiedMemoryAllocator(unsigned flags = cudaMemAttachGlobal) noexcept
+      : mFlags{flags}
       {}
-#   endif
 
       /// @brief Copy constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator([[maybe_unused]] const UnifiedMemoryAllocator<U>& other) noexcept
-#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
-#   elif defined(AFFT_ENABLE_OPENCL)
-      : mContext(other.context)
-#   endif
+      constexpr UnifiedMemoryAllocator(const UnifiedMemoryAllocator<U>& other) noexcept
+      : mFlags{other.mFlags}
       {}
 
       /// @brief Move constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator([[maybe_unused]] UnifiedMemoryAllocator<U>&& other) noexcept
-#   if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
-#   elif defined(AFFT_ENABLE_OPENCL)
-      : mContext(std::move(other.context))
-#   endif
+      constexpr UnifiedMemoryAllocator(UnifiedMemoryAllocator<U>&& other) noexcept
+      : mFlags{std::move(other.mFlags)}
       {}
 
       /// @brief Destructor
@@ -491,13 +542,7 @@ namespace gpu
       template<typename U>
       constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
       {
-        if (this != &other)
-        {
-#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
-#       elif defined(AFFT_ENABLE_OPENCL)
-          mContext = other.context;
-#       endif
-        }
+        mFlags = other.mFlags;
         return *this;
       }
 
@@ -505,13 +550,7 @@ namespace gpu
       template<typename U>
       constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
       {
-        if (this != &other)
-        {
-#       if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP)
-#       elif defined(AFFT_ENABLE_OPENCL)
-          mContext = std::move(other.context);
-#       endif
-        }
+        mFlags = std::move(other.mFlags);
         return *this;
       }
 
@@ -524,15 +563,233 @@ namespace gpu
       {
         T* ptr{};
 
-        [[maybe_unused]] const std::size_t sizeInBytes = n * sizeof(T);
+        detail::cuda::checkError(cudaMallocManaged(&ptr, n * sizeof(T), mFlags));
 
-#     if defined(AFFT_ENABLE_CUDA)
-        detail::cuda::checkError(cudaMallocManaged(&ptr, sizeInBytes));
-#     elif defined(AFFT_ENABLE_HIP)
-        detail::hip::checkError(hipMallocManaged(&ptr, sizeInBytes));
-#     elif defined(AFFT_ENABLE_OPENCL)
-        ptr = static_cast<T*>(clSVMAlloc(mContext, CL_MEM_READ_WRITE, sizeInBytes, 0));
-#     endif
+        return ptr;
+      }
+
+      /**
+       * @brief Deallocate memory
+       * @param p Pointer to the memory
+       * @param n Number of elements
+       */
+      void deallocate(T* p, std::size_t) noexcept
+      {
+        detail::cuda::checkError(cudaFree(p));
+      }
+
+      /**
+       * @brief Get flags
+       * @return Flags
+       */
+      [[nodiscard]] constexpr unsigned getFlags() const noexcept
+      {
+        return mFlags;
+      }
+    private:
+      unsigned mFlags{}; ///< Flags for memory allocation
+  };
+#endif
+
+  namespace hip
+  {
+    /**
+     * @class UnifiedMemoryAllocator
+     * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
+     *        others.
+     * @tparam T Type of the memory
+     */
+    template<typename T>
+    class UnifiedMemoryAllocator;
+  } // namespace hip
+
+#ifdef AFFT_ENABLE_HIP
+  /**
+   * @class UnifiedMemoryAllocator
+   * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
+   *        others.
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class hip::UnifiedMemoryAllocator
+  {
+    public:
+      /// @brief Type of the memory
+      using value_type = T;
+      
+      /// @brief Default constructor
+      constexpr UnifiedMemoryAllocator(unsigned flags = hipMemAttachGlobal) noexcept
+      : mFlags{flags}
+      {}
+
+      /// @brief Copy constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator(const UnifiedMemoryAllocator<U>& other) noexcept
+      : mFlags{other.mFlags}
+      {}
+
+      /// @brief Move constructor
+      template<typename U>
+      constexpr UnifiedMemoryAllocator(UnifiedMemoryAllocator<U>&& other) noexcept
+      : mFlags{std::move(other.mFlags)}
+      {}
+
+      /// @brief Destructor
+      ~UnifiedMemoryAllocator() noexcept = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
+      {
+        mFlags = other.mFlags;
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+      constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
+      {
+        mFlags = std::move(other.mFlags);
+        return *this;
+      }
+
+      /**
+       * @brief Allocate memory
+       * @param n Number of elements
+       * @return Pointer to the allocated memory
+       */
+      [[nodiscard]] T* allocate(std::size_t n)
+      {
+        T* ptr{};
+
+        detail::hip::checkError(hipMallocManaged(&ptr, n * sizeof(T)));
+
+        return ptr;
+      }
+
+      /**
+       * @brief Deallocate memory
+       * @param p Pointer to the memory
+       * @param n Number of elements
+       */
+      void deallocate(T* p, std::size_t) noexcept
+      {
+        detail::hip::checkError(hipFree(p));
+      }
+
+      /**
+       * @brief Get flags
+       * @return Flags
+       */
+      [[nodiscard]] constexpr unsigned getFlags() const noexcept
+      {
+        return mFlags;
+      }
+    private:
+      unsigned mFlags{}; ///< Flags for memory allocation
+  };
+#endif
+
+  namespace opencl
+  {
+    /**
+     * @class SvmAllocator
+     * @brief Allocator named concept implementation implementation for opencl shared virtual memory to be used with std::vector and
+     *        others.
+     * @tparam T Type of the memory
+     */
+    template<typename T>
+    class SvmAllocator;
+  } // namespace opencl
+
+#if defined(AFFT_ENABLE_HIP) && defined(CL_VERSION_2_0)
+  /**
+   * @class SvmAllocator
+   * @brief Allocator named concept implementation implementation for opencl shared virtual memory to be used with std::vector and
+   *        others.
+   * @tparam T Type of the memory
+   */
+  template<typename T>
+  class opencl::SvmAllocator
+  {
+    public:
+      /// @brief Type of the memory
+      using value_type = T;
+      
+      /// @brief Default constructor not allowed
+      SvmAllocator() = delete;
+
+      /// @brief Default constructor not allowed
+      SvmAllocator(cl_context context, cl_svm_mem_flags flags = CL_MEM_READ_WRITE, Alignment alignment = {})
+      : mFlags{flags},
+        mAlignment{alignment}
+      {
+        detail::opencl::checkError(clRetainContext(context));
+        mContext.reset(context);
+      }
+
+      /// @brief Copy constructor
+      template<typename U>
+      SvmAllocator(const SvmAllocator<U>& other)
+      : mFlags{other.getFlags()},
+        mAlignment{other.getAlignment()}
+      {
+        detail::opencl::checkError(clRetainContext(other.getContext()));
+        mContext.reset(other.getContext());
+      }
+
+      /// @brief Move constructor
+      template<typename U>
+      SvmAllocator(SvmAllocator<U>&& other) noexcept
+      : mContext{std::move(other.mContext)},
+        mFlags{std::move(other.mFlags)},
+        mAlignment{std::move(other.mAlignment)}
+      {}
+
+      /// @brief Destructor
+      ~SvmAllocator() = default;
+
+      /// @brief Copy assignment operator
+      template<typename U>
+      SvmAllocator& operator=(const SvmAllocator<U>& other)
+      {
+        if (this != std::addressof(other))
+        {
+          detail::opencl::checkError(clRetainContext(other.getContext()));
+          mContext.reset(other.getContext());
+
+          mFlags     = other.getFlags();
+          mAlignment = other.getAlignment();
+        }
+
+        return *this;
+      }
+
+      /// @brief Move assignment operator
+      template<typename U>
+      constexpr SvmAllocator& operator=(SvmAllocator<U>&& other) noexcept
+      {
+        if (this != std::addressof(other))
+        {
+          mContext   = std::move(other.mContext);
+          mFlags     = std::move(other.mFlags);
+          mAlignment = std::move(other.mAlignment);
+        }
+
+        return *this;
+      }
+
+      /**
+       * @brief Allocate memory
+       * @param n Number of elements
+       * @return Pointer to the allocated memory
+       */
+      [[nodiscard]] T* allocate(std::size_t n)
+      {
+        T* const ptr = static_cast<T*>(clSVMAlloc(mContext.get(),
+                                                  mFlags,
+                                                  n * sizeof(T),
+                                                  static_cast<cl_uint>(mAlignment)));
 
         if (ptr == nullptr)
         {
@@ -547,35 +804,34 @@ namespace gpu
        * @param p Pointer to the memory
        * @param n Number of elements
        */
-      void deallocate([[maybe_unused]] T* p, std::size_t) noexcept
+      void deallocate(T* p, std::size_t) noexcept
       {
-#     if defined(AFFT_ENABLE_CUDA)
-        detail::cuda::checkError(cudaFree(p));
-#     elif defined(AFFT_ENABLE_HIP)
-        detail::hip::checkError(hipFree(p));
-#     elif defined(AFFT_ENABLE_OPENCL)
-        clSVMFree(mContext, p);
-#     endif
+        clSVMFree(mContext.get(), p);
       }
 
-#   if defined(AFFT_ENABLE_OPENCL)
       /// @brief Get the OpenCL context
       [[nodiscard]] cl_context getContext() const noexcept
       {
-        return mContext;
+        return mContext.get();
       }
-#   endif
-    protected:
+
+      /// @brief Get the flags
+      [[nodiscard]] cl_svm_mem_flags getFlags() const noexcept
+      {
+        return mFlags;
+      }
+
+      /// @brief Get the alignment
+      [[nodiscard]] Alignment getAlignment() const noexcept
+      {
+        return mAlignment;
+      }
     private:
-#   if defined(AFFT_ENABLE_CUDA)
-#   elif defined(AFFT_ENABLE_HIP)
-#   elif defined(AFFT_ENABLE_OPENCL)
-      cl_context mContext; ///< OpenCL context
-#   endif  
-  }
+      std::unique_ptr<std::remove_pointer_t<cl_context>, ContextDeleter> mContext;     ///< OpenCL context
+      cl_svm_mem_flags                                                   mFlags{};     ///< Flags for memory allocation
+      Alignment                                                          mAlignment{}; ///< Alignment for memory allocation
+  };
 #endif
-   ;
-} // namespace gpu
 } // namespace afft
 
-#endif /* AFFT_ALLOC_HPP */
+#endif /* AFFT_MEMORY_HPP */
