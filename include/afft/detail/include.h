@@ -27,11 +27,16 @@
 
 #include "config.h"
 
-#if defined(AFFT_ENABLE_CUDA)
+// Include target backend headers
+#ifdef AFFT_ENABLE_CUDA
+# include <cuda.h>
 # include <cuda_runtime.h>
-#elif defined(AFFT_ENABLE_HIP)
+# include <nvrtc.h>
+#endif
+#ifdef AFFT_ENABLE_HIP
 # include <hip/hip_runtime.h>
-#elif defined(AFFT_ENABLE_OPENCL)
+#endif
+#ifdef AFFT_ENABLE_OPENCL
 # if defined(__APPLE__) || defined(__MACOSX)
 #   include <OpenCL/cl.h>
 # else
@@ -39,7 +44,8 @@
 # endif
 #endif
 
-#if defined(AFFT_ENABLE_MPI)
+// Include multi-process backend headers
+#ifdef AFFT_ENABLE_MPI
 # include <mpi.h>
 #endif
 

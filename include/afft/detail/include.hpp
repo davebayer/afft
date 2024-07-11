@@ -72,14 +72,16 @@ import std;
 # endif
 #endif
 
-// Include GPU backend headers
-#if defined(AFFT_ENABLE_CUDA)
+// Include target backend headers
+#ifdef AFFT_ENABLE_CUDA
 # include <cuda.h>
 # include <cuda_runtime.h>
 # include <nvrtc.h>
-#elif defined(AFFT_ENABLE_HIP)
+#endif
+#ifdef AFFT_ENABLE_HIP
 # include <hip/hip_runtime.h>
-#elif defined(AFFT_ENABLE_OPENCL)
+#endif
+#ifdef AFFT_ENABLE_OPENCL
 # if defined(__APPLE__) || defined(__MACOSX)
 #   include <OpenCL/cl.h>
 # else
@@ -87,8 +89,8 @@ import std;
 # endif
 #endif
 
-// Include multi-processing backend headers
-#if defined(AFFT_ENABLE_MPI)
+// Include multi-process backend headers
+#ifdef AFFT_ENABLE_MPI
 # include <mpi.h>
 #endif
 
@@ -135,6 +137,9 @@ import std;
  // Include MKL header
 # ifdef AFFT_ENABLE_MKL
 #   include <mkl.h>
+#   ifdef AFFT_ENABLE_MPI
+#     include <mkl_cdft.h>
+#   endif
 # endif
 
  // Include PocketFFT header
