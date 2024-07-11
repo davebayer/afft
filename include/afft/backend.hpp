@@ -33,6 +33,8 @@
 #include "detail/utils.hpp"
 
 #include "common.hpp"
+#include "mp.hpp"
+#include "target.hpp"
 
 AFFT_EXPORT namespace afft
 {
@@ -52,6 +54,13 @@ AFFT_EXPORT namespace afft
 
   /// @brief Number of backends
   inline constexpr std::size_t backendCount = 9;
+
+  /// @brief Backend constant
+  template<Backend _backend>
+  struct BackendConstant
+  {
+    static constexpr Backend backend = _backend;
+  };
 
   /// @brief Bitmask of backends
   enum class BackendMask : detail::BackendMaskUnderlyingType
@@ -135,85 +144,79 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
 // clFFT
 /**********************************************************************************************************************/
-namespace clfft
-{
-  namespace spst::gpu
+  namespace clfft
   {
-    struct Parameters;
-  } // namespace spst::gpu
+    namespace opencl
+    {
+      struct BackendParameters;
+    } // namespace opencl
+  } // namespace clfft
 
-  /// @brief clFFT initialization parameters
-  struct spst::gpu::Parameters
+  struct clfft::opencl::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>, BackendConstant<Backend::clfft>
   {
     bool useFastMath{true}; ///< Use fast math.
   };
-} // namespace clfft
 
 /**********************************************************************************************************************/
 // cuFFT
 /**********************************************************************************************************************/
-namespace cufft
-{
-  enum class WorkspacePolicy : std::uint8_t;
-  namespace spst::gpu
+  namespace cufft
   {
-    struct Parameters;
-  } // namespace spst::gpu
-  namespace spmt::gpu
-  {
-    struct Parameters;
-  } // namespace spmt::gpu
-  namespace mpst::gpu
-  {
-    struct Parameters;
-  } // namespace mpst::gpu
+    enum class WorkspacePolicy : std::uint8_t;
 
-  /// @brief cuFFT Workspace policy
-  enum class WorkspacePolicy : std::uint8_t
+    namespace cuda
+    {
+      struct BackendParameters;
+    } // namespace cuda
+
+    namespace mpi::cuda
+    {
+      struct BackendParameters;
+    } // namespace mpi::cuda
+  } // namespace cufft
+
+  enum class cufft::WorkspacePolicy : std::uint8_t
   {
     performance, ///< Use the workspace for performance
     minimal,     ///< Use the minimal workspace
     user,        ///< Use the user-defined workspace size
   };
 
-  /// @brief cuFFT initialization parameters for the spst gpu architecture
-  struct spst::gpu::Parameters
+  struct cufft::cuda::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>, BackendConstant<Backend::cufft>
   {
-    WorkspacePolicy workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
-    bool            usePatientJit{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
-    std::size_t     userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
+    WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
+    bool              usePatientJit{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+    View<std::size_t> userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
   };
 
-  /// @brief cuFFT initialization parameters for the spmt gpu architecture
-  struct spmt::gpu::Parameters
+  struct cufft::mpi::cuda::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>, BackendConstant<Backend::cufft>
   {
     bool usePatientJit{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
   };
-
-  /// @brief cuFFT initialization parameters for the mpst gpu architecture
-  struct mpst::gpu::Parameters
-  {
-    bool usePatientJit{true}; ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
-  };
-} // namespace cufft  
 
 /**********************************************************************************************************************/
 // FFTW3
 /**********************************************************************************************************************/
-namespace fftw3
-{
-  enum class PlannerFlag : std::uint8_t;
-  namespace spst::cpu
+  namespace fftw3
   {
-    struct Parameters;
-  } // namespace cpu
-  namespace mpst::cpu
-  {
-    struct Parameters;
-  } // namespace cpu
+    enum class PlannerFlag : std::uint8_t;
+
+    namespace cpu
+    {
+      struct BackendParameters;
+    } // namespace cpu
+
+    namespace mpi::cpu
+    {
+      struct BackendParameters;
+    } // namespace mpi::cpu
+  } // namespace fftw3
 
   /// @brief FFTW3 planner flags
-  enum class PlannerFlag : std::uint8_t
+  enum class fftw3::PlannerFlag : std::uint8_t
   {
     estimate,        ///< Estimate plan flag
     measure,         ///< Measure plan flag
@@ -222,8 +225,8 @@ namespace fftw3
     estimatePatient, ///< Estimate and patient plan flag
   };
 
-  /// @brief FFTW3 initialization parameters for the spst cpu architecture
-  struct spst::cpu::Parameters
+  struct fftw3::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>, BackendConstant<Backend::fftw3>
   {
     PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
     bool                          conserveMemory{false};              ///< Conserve memory flag
@@ -233,8 +236,8 @@ namespace fftw3
     std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
   };
 
-  /// @brief FFTW3 initialization parameters for the mpst cpu architecture
-  struct mpst::cpu::Parameters
+  struct fftw3::mpi::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<Backend::fftw3>
   {
     PlannerFlag                   plannerFlag{PlannerFlag::estimate}; ///< FFTW3 planner flag
     bool                          conserveMemory{false};              ///< Conserve memory flag
@@ -242,321 +245,215 @@ namespace fftw3
     bool                          allowLargeGeneric{false};           ///< Allow large generic flag
     bool                          allowPruning{false};                ///< Allow pruning flag
     std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
-    std::size_t                   blockSize{};                        ///< Decomposition block size
+    Size                          blockSize{};                        ///< Decomposition block size
   };
-} // namespace fftw3
 
 /**********************************************************************************************************************/
 // HeFFTe
 /**********************************************************************************************************************/
-namespace heffte
-{
-  namespace cpu
+  namespace heffte
   {
-    enum class Backend : std::uint8_t;
-  } // namespace cpu
-  namespace gpu
-  {
-    enum class Backend : std::uint8_t;
-  } // namespace gpu
-  namespace mpst::cpu
-  {
-    struct Parameters;
-  } // namespace mpst::cpu
-  namespace mpst::gpu
-  {
-    struct Parameters;
-  } // namespace mpst::gpu
+    namespace cpu
+    {
+      enum class Backend : std::uint8_t;
+    } // namespace cpu
+    namespace mpi::cpu
+    {
+      using heffte::cpu::Backend;
+      struct BackendParameters;
+    } // namespace mpi::cpu
+    namespace cuda
+    {
+      enum class Backend : std::uint8_t;
+    } // namespace cuda
+    namespace mpi::cuda
+    {
+      using heffte::cuda::Backend;
+      struct BackendParameters;
+    } // namespace mpi::cuda
+    namespace hip
+    {
+      enum class Backend : std::uint8_t;
+    } // namespace hip
+    namespace mpi::hip
+    {
+      using heffte::hip::Backend;
+      struct BackendParameters;
+    } // namespace mpi::hip
+  } // namespace heffte
 
-  /// @brief HeFFTe cpu backends
-  enum class cpu::Backend : std::uint8_t
+  /// @brief HeFFTe cpu backend
+  enum class heffte::cpu::Backend : std::uint8_t
   {
-    fftw3,  ///< FFTW3 backend
-    mkl,    ///< Intel MKL backend
+    fftw3, ///< FFTW3 backend
+    mkl,   ///< MKL backend
   };
 
-  /// @brief HeFFTe gpu backends
-  enum class gpu::Backend : std::uint8_t
+  struct heffte::mpi::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<afft::Backend::heffte>
   {
-    cufft,  ///< cuFFT backend
+    cpu::Backend backend{cpu::Backend::fftw3}; ///< Backend
+    bool         useReorder{true};  ///< Use reorder flag
+    bool         useAllToAll{true}; ///< Use alltoall flag
+    bool         usePencils{true};  ///< Use pencils flag
+  };
+
+  /// @brief HeFFTe CUDA backend
+  enum class heffte::cuda::Backend : std::uint8_t
+  {
+    cufft, ///< cuFFT backend
+  };
+
+  struct heffte::mpi::cuda::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>, BackendConstant<afft::Backend::heffte>
+  {
+    cuda::Backend backend{cuda::Backend::cufft}; ///< Backend
+    bool          useReorder{true};  ///< Use reorder flag
+    bool          useAllToAll{true}; ///< Use alltoall flag
+    bool          usePencils{true};  ///< Use pencils flag
+  };
+
+  /// @brief HeFFTe HIP backend
+  enum class heffte::hip::Backend : std::uint8_t
+  {
     rocfft, ///< rocFFT backend
   };
 
-  /// @brief HeFFTe initialization parameters for the mpst cpu architecture
-  struct mpst::cpu::Parameters
+  struct heffte::mpi::hip::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>, BackendConstant<afft::Backend::heffte>
   {
-    using Backend = heffte::cpu::Backend;
-
-    [[nodiscard]] static Parameters makeDefault(Backend backend)
-    {
-      switch (backend)
-      {
-#     ifdef Heffte_ENABLE_FFTW
-      case Backend::fftw3:
-      {
-        const auto options = ::heffte::default_options<::heffte::backend::fftw>();
-        return Parameters{Backend::fftw3, options.use_reorder, options.use_alltoall, options.use_pencils};
-      }
-#     endif
-#     ifdef Heffte_ENABLE_MKL
-      case Backend::mkl:
-      {
-        const auto options = ::heffte::default_options<::heffte::backend::mkl>();
-        return Parameters{Backend::mkl, options.use_reorder, options.use_alltoall, options.use_pencils};
-      }
-#     endif
-      default:
-        return Parameters{};
-      }
-    }
-
-    Backend backend{};         ///< Backend
-    bool    useReorder{true};  ///< Use reorder flag
-    bool    useAllToAll{true}; ///< Use alltoall flag
-    bool    usePencils{true};  ///< Use pencils flag
+    hip::Backend backend{hip::Backend::rocfft}; ///< Backend
+    bool         useReorder{true};  ///< Use reorder flag
+    bool         useAllToAll{true}; ///< Use alltoall flag
+    bool         usePencils{true};  ///< Use pencils flag
   };
 
-  /// @brief HeFFTe initialization parameters for the mpst gpu architecture
-  struct mpst::gpu::Parameters
-  {
-    using Backend = heffte::gpu::Backend;
-
-    [[nodiscard]] static Parameters makeDefault(Backend backend)
-    {
-      switch (backend)
-      {
-#     ifdef Heffte_ENABLE_CUDA
-      case Backend::cufft:
-      {
-        const auto options = ::heffte::default_options<::heffte::backend::cufft>();
-        return Parameters{Backend::cufft, options.use_reorder, options.use_alltoall, options.use_pencils};
-      }
-#     endif
-#     ifdef Heffte_ENABLE_ROCM
-      case Backend::rocfft:
-      {
-        const auto options = ::heffte::default_options<::heffte::backend::rocfft>();
-        return Parameters{Backend::rocfft, options.use_reorder, options.use_alltoall, options.use_pencils};
-      }
-#     endif
-      default:
-        return Parameters{};
-      }
-    }
-
-    Backend backend{};         ///< Backend
-    bool    useReorder{true};  ///< Use reorder flag
-    bool    useAllToAll{true}; ///< Use alltoall flag
-    bool    usePencils{true};  ///< Use pencils flag
-  };
-} // namespace heffte
-
 /**********************************************************************************************************************/
-// Backend parameters for spst distribution
+// Backend parameters
 /**********************************************************************************************************************/
-inline namespace spst
-{
   namespace cpu
   {
     namespace fftw3
     {
-      using afft::fftw3::spst::cpu::Parameters;
+      using afft::fftw3::cpu::BackendParameters;
     } // namespace fftw3
-
-    /// @brief Supported backends for spst cpu architecture
-    inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
-                                                        Backend::mkl |
-                                                        Backend::pocketfft;
-
-    /// @brief Default backend order for spst cpu architecture
-    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(Backend::mkl,
-                                                                                 Backend::fftw3,
-                                                                                 Backend::pocketfft);
-
     struct BackendParameters;
   } // namespace cpu
-  namespace gpu
+  namespace cuda
+  {
+    namespace cufft
+    {
+      using afft::cufft::cuda::BackendParameters;
+    } // namespace cufft
+    struct BackendParameters;
+  } // namespace cuda
+  namespace hip
+  {
+    struct BackendParameters;
+  } // namespace hip
+  namespace opencl
   {
     namespace clfft
     {
-      using afft::clfft::spst::gpu::Parameters;
+      using afft::clfft::opencl::BackendParameters;
     } // namespace clfft
-    namespace cufft
-    {
-      using afft::cufft::spst::gpu::Parameters;
-    } // namespace cufft
-
-    /// @brief Supported backends for spst gpu architecture
-    inline constexpr BackendMask supportedBackendMask = Backend::clfft |
-                                                        Backend::cufft |
-                                                        Backend::hipfft |
-                                                        Backend::rocfft |
-                                                        Backend::vkfft;
-
-    /// @brief Default backend order for spst gpu architecture
-    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if defined(AFFT_ENABLE_CUDA)
-      Backend::cufft,  // prefer cufft
-      Backend::vkfft   // fallback to vkfft
-#   elif defined(AFFT_ENABLE_HIP)
-#     if defined(__HIP_PLATFORM_AMD__)
-      Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
-      Backend::rocfft  // fallback to rocfft
-#     elif defined(__HIP_PLATFORM_NVIDIA__)
-      Backend::hipfft, // prefer cufft (it is used by hipfft on CUDA)
-      Backend::vkfft,  // prefer vkfft as it should be faster than rocfft
-      Backend::rocfft  // fallback to rocfft
-#     endif
-#   elif defined(AFFT_ENABLE_OPENCL)
-      Backend::vkfft,  // prefer vkfft
-      Backend::clfft   // fallback to clfft
-#   endif
-    );
-
     struct BackendParameters;
-  } // namespace gpu
+  } // namespace opencl
 
-  /// @brief Backend parameters for the spst distribution on the CPU
-  struct cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::spst>
+  struct cpu::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
-    fftw3::Parameters fftw3{};                         ///< FFTW3 backend initialization parameters
+    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask              mask{BackendMask::all};          ///< Backend mask
+    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    fftw3::BackendParameters fftw3{};                         ///< FFTW3 backend initialization parameters
   };
 
-  /// @brief Backend parameters for the spst distribution on the GPU
-  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spst>
+  struct cuda::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
-    clfft::Parameters clfft{};                         ///< clFFT backend initialization parameters
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
-  };
-} // inline namespace spst
-
-/**********************************************************************************************************************/
-// Backend parameters for spmt distribution
-/**********************************************************************************************************************/
-namespace spmt
-{
-  namespace gpu
-  {
-    namespace cufft
-    {
-      using afft::cufft::spmt::gpu::Parameters;
-    } // namespace cufft
-
-    /// @brief Supported backends for spmt gpu architecture
-    inline constexpr BackendMask supportedBackendMask = Backend::cufft |
-                                                        Backend::hipfft |
-                                                        Backend::rocfft;
-
-    /// @brief Order of initialization of backends
-    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if defined(AFFT_ENABLE_CUDA)
-      Backend::cufft  // just cufft
-#   elif defined(AFFT_ENABLE_HIP)
-#     if defined(__HIP_PLATFORM_AMD__)
-      Backend::rocfft, // prefer rocfft
-      Backend::hipfft  // fallback to hipfft
-#     elif defined(__HIP_PLATFORM_NVIDIA__)
-      Backend::hipfft, // prefer hipfft
-      Backend::rocfft  // fallback to rocfft
-#     endif
-#   endif
-    );
-
-    struct BackendParameters;
-  } // namespace gpu
-
-  /// @brief Backend parameters for the spmt distribution on the GPU
-  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::spmt>
-  {
-    SelectStrategy    strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask       mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>     order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
-    cufft::Parameters cufft{};                         ///< cuFFT backend initialization parameters
-  };
-} // namespace spmt
-
-/**********************************************************************************************************************/
-// Backend parameters for mpst distribution
-/**********************************************************************************************************************/
-namespace mpst
-{
-  namespace cpu
-  {
-    namespace fftw3
-    {
-      using afft::fftw3::mpst::cpu::Parameters;
-    } // namespace fftw3
-    namespace heffte
-    {
-      using afft::heffte::mpst::cpu::Parameters;
-    } // namespace heffte
-
-    /// @brief Supported backends for mpst cpu transform
-    inline constexpr BackendMask supportedBackendMask = Backend::fftw3 |
-                                                        Backend::mkl |
-                                                        Backend::heffte;
-    /// @brief Default backend initialization order for mpst cpu transform
-    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-      Backend::mkl,    // prefer mkl
-      Backend::heffte, // if mkl cannot create plan, fallback heffte
-      Backend::fftw3   // if heffte cannot create plan, fallback fftw3
-    );
-
-    struct BackendParameters;
-  } // namespace cpu
-  namespace gpu
-  {
-    namespace cufft
-    {
-      using afft::cufft::mpst::gpu::Parameters;
-    } // namespace cufft
-    namespace heffte
-    {
-      using afft::heffte::mpst::gpu::Parameters;
-    } // namespace heffte
-
-    /// @brief Supported backends for mpst gpu transform
-    inline constexpr BackendMask supportedBackendMask = Backend::cufft |
-                                                        Backend::heffte;
-
-    /// @brief Order of initialization of backends
-    inline constexpr std::array defaultBackendOrder = detail::makeArray<Backend>(
-#   if defined(AFFT_ENABLE_CUDA)
-      Backend::cufft, // try cufft first
-      Backend::heffte // fallback to heffte
-#   elif defined(AFFT_ENABLE_HIP)
-      Backend::heffte
-#   endif
-    );
-    struct BackendParameters;
-  } // namespace gpu
-
-  /// @brief Backend parameters for the mpst distribution on the CPU
-  struct cpu::BackendParameters : detail::BackendParametersBase<Target::cpu, Distribution::mpst>
-  {
-    SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask        mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>      order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
-    fftw3::Parameters  fftw3{};                         ///< FFTW3 backend initialization parameters
-    heffte::Parameters heffte{};                        ///< HeFFTe backend initialization parameters
+    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask              mask{BackendMask::all};          ///< Backend mask
+    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    cufft::BackendParameters cufft{};                         ///< cuFFT backend initialization parameters
   };
 
-  /// @brief Backend parameters for the mpst distribution on the GPU
-  struct gpu::BackendParameters : detail::BackendParametersBase<Target::gpu, Distribution::mpst>
+  struct hip::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
-    SelectStrategy     strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask        mask{supportedBackendMask};      ///< Backend mask
-    View<Backend>      order{defaultBackendOrder};      ///< Backend initialization order, empty view means default order for the target
-    cufft::Parameters  cufft{};                         ///< cuFFT backend initialization parameters
-    heffte::Parameters heffte{};                        ///< HeFFTe backend initialization parameters
+    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask              mask{BackendMask::all};          ///< Backend mask
+    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
   };
-} // namespace mpst
+
+  namespace mpi
+  {
+    namespace cpu
+    {
+      namespace fftw3
+      {
+        using afft::fftw3::mpi::cpu::BackendParameters;
+      } // namespace fftw3
+      namespace heffte
+      {
+        using afft::heffte::mpi::cpu::BackendParameters;
+      } // namespace heffte
+      struct BackendParameters;
+    } // namespace cpu
+    namespace cuda
+    {
+      namespace cufft
+      {
+        using afft::cufft::mpi::cuda::BackendParameters;
+      } // namespace cufft
+      namespace heffte
+      {
+        using afft::heffte::mpi::cuda::BackendParameters;
+      } // namespace heffte
+      struct BackendParameters;
+    } // namespace cuda
+    namespace hip
+    {
+      namespace heffte
+      {
+        using afft::heffte::mpi::hip::BackendParameters;
+      } // namespace heffte
+      namespace rocfft
+      {
+        using afft::heffte::mpi::hip::BackendParameters;
+      } // namespace rocfft
+      struct BackendParameters;
+    } // namespace hip
+  } // namespace mpi
+
+  struct mpi::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
+  {
+    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask               mask{BackendMask::all};          ///< Backend mask
+    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    fftw3::BackendParameters  fftw3{};                         ///< FFTW3 backend initialization parameters
+    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+  };
+
+  struct mpi::cuda::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
+  {
+    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask               mask{BackendMask::all};          ///< Backend mask
+    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    cufft::BackendParameters  cufft{};                         ///< cuFFT backend initialization parameters
+    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+  };
+
+  struct mpi::hip::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
+  {
+    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask               mask{BackendMask::all};          ///< Backend mask
+    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+  };
 
   /**
    * @brief Feedback from the backend initialization.
