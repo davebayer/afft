@@ -28,14 +28,10 @@
 /**********************************************************************************************************************/
 // General defines
 /**********************************************************************************************************************/
-#define AFFT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define AFFT_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define AFFT_VERSION_PATCH @PROJECT_VERSION_PATCH@
-
-#cmakedefine AFFT_MAX_DIM_COUNT @AFFT_MAX_DIM_COUNT@
+#define AFFT_MAX_DIM_COUNT @AFFT_MAX_DIM_COUNT@
 
 /**********************************************************************************************************************/
-// GPU backend defines
+// Target defines
 /**********************************************************************************************************************/
 #cmakedefine AFFT_ENABLE_CUDA
 #ifdef AFFT_ENABLE_CUDA
@@ -43,9 +39,6 @@
 #endif
 
 #cmakedefine AFFT_ENABLE_HIP
-#ifdef AFFT_ENABLE_HIP
-# cmakedefine AFFT_HIP_ROOT_DIR "@AFFT_HIP_ROOT_DIR@"
-#endif
 
 #cmakedefine AFFT_ENABLE_OPENCL
 
