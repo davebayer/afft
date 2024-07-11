@@ -209,7 +209,7 @@ AFFT_EXPORT namespace afft
 
     if (version != nullptr)
     {
-      if (std::sscanf(version, "%d.%d.%d", &version.major, &version.minor, &version.patch) != 3)
+      if (std::sscanf(version, "fftw-%d.%d.%d", &version.major, &version.minor, &version.patch) != 3)
       {
         version = {};
       }
