@@ -29,8 +29,75 @@
 # include "include.hpp"
 #endif
 
-#include "architecture.hpp"
-#include "../backend.hpp"
+namespace afft::detail
+{
+  class Initializer
+  {
+    public:
+      /// @brief Clock type.
+      using Clock     = std::chrono::steady_clock;
+
+      /// @brief Time stamp type.
+      using TimeStamp = std::chrono::time_point<Clock>;
+
+      /**
+       * @brief Get the singleton instance of the Initializer.
+       * @return The singleton instance of the Initializer.
+       */
+      [[nodiscard]] static Initializer& getInstance()
+      {
+        static Initializer instance{};
+        return instance;
+      }
+
+      /**
+       * @brief Get the time stamp of the initialization.
+       * @return The time stamp of the initialization.
+       */
+      [[nodiscard]] TimeStamp getTimeStamp()
+      {
+        return mTimeStamp;
+      }
+
+      void init();
+
+      void finalize();
+
+      /**
+       * @brief Check if the library is initialized. Requires the mutex to be locked.
+       * @return True if the library is initialized, false otherwise.
+       */
+      [[nodiscard]] bool isInitialized() const
+      {
+        return mTimeStamp != TimeStamp{};
+      }
+    private:
+      /// @brief Default constructor.
+      Initializer() = default;
+
+      /// @brief Deleted copy constructor.
+      Initializer(const Initializer&) = delete;
+
+      /// @brief Deleted move constructor.
+      Initializer(Initializer&&) = delete;
+
+      /// @brief Destructor finalizing the library if it was initialized.
+      ~Initializer()
+      {
+        finalize();
+      }
+
+      /// @brief Deleted copy assignment operator.
+      Initializer& operator=(const Initializer&) = delete;
+
+      /// @brief Deleted move assignment operator.
+      Initializer& operator=(Initializer&&) = delete;
+
+      TimeStamp mTimeStamp{}; ///< Time stamp of the initialization.
+  };
+} // namespace afft::detail
+
+#ifdef AFFT_HEADER_ONLY
 
 #ifdef AFFT_ENABLE_MPI
 # include "mpi/init.hpp"
@@ -66,255 +133,109 @@
 
 namespace afft::detail
 {
-  class Initializer
+  AFFT_HEADER_ONLY_INLINE void Initializer::init()
   {
-    public:
-      /// @brief Clock type.
-      using Clock     = std::chrono::steady_clock;
+    if (isInitialized())
+    {
+      return;
+    }
 
-      /// @brief Time stamp type.
-      using TimeStamp = std::chrono::time_point<Clock>;
+# ifdef AFFT_ENABLE_MPI
+    mpi::init();
+# endif
 
-      /**
-       * @brief Get the singleton instance of the Initializer.
-       * @return The singleton instance of the Initializer.
-       */
-      [[nodiscard]] static Initializer& getInstance()
-      {
-        static Initializer instance{};
-        return instance;
-      }
+# ifdef AFFT_ENABLE_CUDA
+    cuda::init();
+# endif
+# ifdef AFFT_ENABLE_HIP
+    hip::init();
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+    opencl::init();
+# endif
 
-      /**
-       * @brief Initialize the library.
-       */
-      void init()
-      {
-        // std::scoped_lock lock{mMutex};
+# ifdef AFFT_ENABLE_CLFFT
+    clfft::init();
+# endif
+# ifdef AFFT_ENABLE_CUFFT
+    cufft::init();
+# endif
+# ifdef AFFT_ENABLE_FFTW3
+    fftw3::init();
+# endif
+# ifdef AFFT_ENABLE_HEFFTE
+    heffte::init();
+# endif
+# ifdef AFFT_ENABLE_HIPFFT
+    hipfft::init();
+# endif
+# ifdef AFFT_ENABLE_MKL
+    mkl::init();
+# endif
+# ifdef AFFT_ENABLE_POCKETFFT
+    pocketfft::init();
+# endif
+# ifdef AFFT_ENABLE_ROCFFT
+    rocfft::init();
+# endif
+# ifdef AFFT_ENABLE_VKFFT
+    vkfft::init();
+# endif
+  }
 
-        if (isInitialized())
-        {
-          return;
-        }
+  AFFT_HEADER_ONLY_INLINE void Initializer::finalize()
+  {
+    if (!isInitialized())
+    {
+      return;
+    }
 
-        initImpl();
-      }
+# ifdef AFFT_ENABLE_CLFFT
+    clfft::finalize();
+# endif
+# ifdef AFFT_ENABLE_CUFFT
+    cufft::finalize();
+# endif
+# ifdef AFFT_ENABLE_FFTW3
+    fftw3::finalize();
+# endif
+# ifdef AFFT_ENABLE_HEFFTE
+    heffte::finalize();
+# endif
+# ifdef AFFT_ENABLE_HIPFFT
+    hipfft::finalize();
+# endif
+# ifdef AFFT_ENABLE_MKL
+    mkl::finalize();
+# endif
+# ifdef AFFT_ENABLE_POCKETFFT
+    pocketfft::finalize();
+# endif
+# ifdef AFFT_ENABLE_ROCFFT
+    rocfft::finalize();
+# endif
+# ifdef AFFT_ENABLE_VKFFT
+    vkfft::finalize();
+# endif
 
-      /**
-       * @brief Finalize the library.
-       */
-      void finalize()
-      {
-        // std::unique_lock lock{mMutex};
+# ifdef AFFT_ENABLE_CUDA
+    cuda::finalize();
+# endif
+# ifdef AFFT_ENABLE_HIP
+    hip::finalize();
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+    opencl::finalize();
+# endif
 
-        // mCondition.wait(lock, [this]() { return mActiveThreads != 0; });
+# ifdef AFFT_ENABLE_MPI
+    mpi::finalize();
+# endif
 
-        if (!isInitialized())
-        {
-          return;
-        }
-
-        finalizeImpl();
-      }
-
-      /**
-       * @brief Get the time stamp of the initialization.
-       * @return The time stamp of the initialization.
-       */
-      [[nodiscard]] TimeStamp getTimeStamp()
-      {
-        // std::scoped_lock lock{mMutex};
-
-        return mTimeStamp;
-      }
-
-      /**
-       * @brief Increment the number of active plans.
-       */
-      // void incrementActiveThreads()
-      // {
-      //   std::scoped_lock lock{mMutex};
-
-      //   incrementActiveThreadsImpl();
-      // }
-
-      /**
-       * @brief Decrement the number of active plans.
-       */
-      // void decrementActivePlans()
-      // {
-      //   std::scoped_lock lock{mMutex};
-
-      //   decrementActiveThreadsImpl();
-      // }
-    private:
-      /// @brief Default constructor.
-      Initializer() = default;
-
-      /// @brief Deleted copy constructor.
-      Initializer(const Initializer&) = delete;
-
-      /// @brief Deleted move constructor.
-      Initializer(Initializer&&) = delete;
-
-      /// @brief Destructor finalizing the library if it was initialized.
-      ~Initializer()
-      {
-        // Do not lock the mutex here to avoid deadlocks.
-
-        finalize();
-
-        // Notify all waiting potentially blocking threads.
-        // mCondition.notify_all();
-
-        // Wait for all threads to finish.
-        // std::unique_lock lock{mMutex};
-      }
-
-      /// @brief Deleted copy assignment operator.
-      Initializer& operator=(const Initializer&) = delete;
-
-      /// @brief Deleted move assignment operator.
-      Initializer& operator=(Initializer&&) = delete;
-
-      /**
-       * @brief Check if the library is initialized. Requires the mutex to be locked.
-       * @return True if the library is initialized, false otherwise.
-       */
-      [[nodiscard]] bool isInitialized() const
-      {
-        return mTimeStamp != TimeStamp{};
-      }
-
-      /**
-       * @brief Initialize the library implementation. Requires the mutex to be locked.
-       */
-      void initImpl()
-      {
-#     ifdef AFFT_ENABLE_MPI
-        mpi::init();
-#     endif
-
-#     if defined(AFFT_ENABLE_CUDA)
-        cuda::init();
-#     elif defined(AFFT_ENABLE_HIP)
-        hip::init();
-#     elif defined(AFFT_ENABLE_OPENCL)
-        opencl::init();
-#     endif
-
-#     ifdef AFFT_ENABLE_CLFFT
-        clfft::init();
-#     endif
-#     ifdef AFFT_ENABLE_CUFFT
-        cufft::init();
-#     endif
-#     ifdef AFFT_ENABLE_FFTW3
-        fftw3::init();
-#     endif
-#     ifdef AFFT_ENABLE_HEFFTE
-        heffte::init();
-#     endif
-#     ifdef AFFT_ENABLE_HIPFFT
-        hipfft::init();
-#     endif
-#     ifdef AFFT_ENABLE_MKL
-        mkl::init();
-#     endif
-#     ifdef AFFT_ENABLE_POCKETFFT
-        pocketfft::init();
-#     endif
-#     ifdef AFFT_ENABLE_ROCFFT
-        rocfft::init();
-#     endif
-#     ifdef AFFT_ENABLE_VKFFT
-        vkfft::init();
-#     endif
-      }
-
-      /**
-       * @brief Finalize the library implementation. Requires the mutex to be locked.
-       */
-      void finalizeImpl()
-      {
-#     ifdef AFFT_ENABLE_CLFFT
-        clfft::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_CUFFT
-        cufft::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_FFTW3
-        fftw3::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_HEFFTE
-        heffte::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_HIPFFT
-        hipfft::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_MKL
-        mkl::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_POCKETFFT
-        pocketfft::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_ROCFFT
-        rocfft::finalize();
-#     endif
-#     ifdef AFFT_ENABLE_VKFFT
-        vkfft::finalize();
-#     endif
-
-#     if defined(AFFT_ENABLE_CUDA)
-        cuda::finalize();
-#     elif defined(AFFT_ENABLE_HIP)
-        hip::finalize();
-#     elif defined(AFFT_ENABLE_OPENCL)
-        opencl::finalize();
-#     endif
-
-#     ifdef AFFT_ENABLE_MPI
-        mpi::finalize();
-#     endif
-
-        mTimeStamp   = TimeStamp{};
-        // mActiveThreads = 0;
-      }
-
-      /**
-       * @brief Increment the number of active threads implementation. Requires the mutex to be locked.
-       */
-      // void incrementActiveThreadsImpl()
-      // {
-      //   if (!isInitialized())
-      //   {
-      //     initImpl();
-      //   }
-
-      //   ++mActiveThreads;
-      // }
-
-      /**
-       * @brief Decrement the number of active threads implementation. Requires the mutex to be locked.
-       */
-      // void decrementActiveThreadsImpl()
-      // {
-      //   if (mActiveThreads > 0)
-      //   {
-      //     --mActiveThreads;
-      //   }
-
-      //   if (mActiveThreads == 0)
-      //   {
-      //     mCondition.notify_all();
-      //   }
-      // }
-
-      // std::mutex              mMutex{};         ///< Mutex.
-      // std::atomic_size_t      mActiveThreads{}; ///< Disable finalize flag. 
-      TimeStamp               mTimeStamp{};     ///< Time stamp of the initialization.
-      // std::condition_variable mCondition{};     ///< Condition variable.
-  };
+    mTimeStamp = TimeStamp{};
+  }
 } // namespace afft::detail
+
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_INIT_HPP */
