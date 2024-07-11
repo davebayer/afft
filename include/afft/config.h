@@ -25,6 +25,8 @@
 #ifndef AFFT_CONFIG_H
 #define AFFT_CONFIG_H
 
+#include "afft-version.h"
+
 #ifndef AFFT_EXTERNAL_CONFIG
 # include "afft-config.h"
 #endif

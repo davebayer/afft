@@ -381,8 +381,11 @@ if(TARGET afft-module)
 endif()
 
 ########################################################################################################################
-# Make the library configuration the library
+# Make the library configuration files
 ########################################################################################################################
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-version.h.in
+               ${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-version.h)
+               
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h)
 
