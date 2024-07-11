@@ -39,6 +39,12 @@ AFFT_EXPORT namespace afft
   /// @brief Dynamic rank
   inline constexpr std::size_t dynamicRank{dynamicExtent};
 
+  /// @brief Axis type
+  using Axis = std::uint8_t;
+
+  /// @brief Size type
+  using Size = std::uint64_t;
+
   /// @brief Precision of a floating-point number
   enum class Precision : std::uint8_t
   {
@@ -67,29 +73,6 @@ AFFT_EXPORT namespace afft
 # endif
     _doubleDouble = f64f64, ///< Precision of double double
     _quad         = f128,   ///< Precision of quad
-  };
-
-  /// @brief Alignment of a data type
-  enum class Alignment : std::size_t
-  {
-    defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
-    simd128    = 16,                               ///< 128-bit SIMD alignment
-    simd256    = 32,                               ///< 256-bit SIMD alignment
-    simd512    = 64,                               ///< 512-bit SIMD alignment
-    simd1024   = 128,                              ///< 1024-bit SIMD alignment
-    simd2048   = 256,                              ///< 2048-bit SIMD alignment
-
-    sse    = simd128,  ///< SSE alignment
-    sse2   = simd128,  ///< SSE2 alignment
-    sse3   = simd128,  ///< SSE3 alignment
-    sse4   = simd128,  ///< SSE4 alignment
-    sse4_1 = simd128,  ///< SSE4.1 alignment
-    sse4_2 = simd128,  ///< SSE4.2 alignment
-    avx    = simd256,  ///< AVX alignment
-    avx2   = simd256,  ///< AVX2 alignment
-    avx512 = simd512,  ///< AVX-512 alignment
-    neon   = simd128,  ///< NEON alignment
-    sve    = simd2048, ///< SVE alignment
   };
 
   /// @brief Complexity of a data type
@@ -133,20 +116,10 @@ AFFT_EXPORT namespace afft
   /// @brief Target
   enum class Target : std::uint8_t
   {
-    cpu, ///< CPU target
-    gpu, ///< GPU target
-  };
-
-  /// @brief Distribution type
-  enum class Distribution : std::uint8_t
-  {
-    spst,           ///< single process, single target
-    spmt,           ///< single process, multiple targets
-    mpst,           ///< multiple processes, single target
-    
-    single = spst,  ///< alias for single process, single target
-    multi  = spmt,  ///< alias for single process, multiple targets
-    mpi    = mpst,  ///< alias for multiple processes, single target
+    cpu,    ///< native CPU target
+    cuda,   ///< CUDA target
+    hip,    ///< HIP target
+    opencl, ///< OpenCL target
   };
 
   /// @brief Normalization
