@@ -35,6 +35,18 @@
 AFFT_EXPORT namespace afft
 {
   /**
+   * @brief Make a scalar view
+   * @tparam T Type
+   * @param scalar Scalar
+   * @return Scalar view
+   */
+  template<typename T>
+  View<T> makeScalarView(const T& scalar) noexcept
+  {
+    return View<T>{&scalar, 1};
+  }
+
+  /**
    * @brief Get the alignment of the pointers
    * @param ptrs Pointers
    * @return Alignment
