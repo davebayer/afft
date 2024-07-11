@@ -1,10 +1,12 @@
 # afft library
 ## Introduction
-`afft` is a C++17 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
+`afft` is a C/C++17 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
 - user friendly interface,
 - support for wide range of the features offered by the backend libraries,
-- low overhead,
-- and being multiplatform (`Linux`, `Windows` and `MacOS`).
+- low overhead and
+- being multiplatform (`Linux`, `Windows` and `MacOS`).
+
+The library can be used as a header only library (C++17 or newer), static/dynamic library (C99/C++17 or newer) or a C++ module (C++20 or newer, CMake 3.28.0 or newer).
 
 Currently supported transfors are:
 - *Discrete Fourier Transform* (DFT) for real and complex inputs (in interleaved or plannar format),
@@ -39,23 +41,16 @@ int main(void)
   constexpr auto srcPaddedShape = std::to_array<std::size_t>({500, 250, 1024});
   constexpr auto dstPaddedShape = std::to_array<std::size_t>({500, 1020, 256});
 
-  constexpr auto srcElemCount = std::accumulate(srcPaddedShape.begin(),
-                                                srcPaddedShape.end(),
-                                                std::size_t{1},
-                                                std::multiplies<>{});
-  constexpr auto dstElemCount = std::accumulate(dstPaddedShape.begin(),
-                                                dstPaddedShape.end(),
-                                                std::size_t{1},
-                                                std::multiplies<>{});
-
   afft::init(); // initialize afft library
 
-  AlignedVector<std::complex<PrecT>> src(srcElemCount); // source vector
-  AlignedVector<std::complex<PrecT>> dst(dstElemCount); // destination vector
+  const afft::cpu::AlignedAllocator<PrecT> allocator{afft::Alignment::simd256};
+
+  AlignedVector<std::complex<PrecT>> src{allocator}; // source vector
+  AlignedVector<std::complex<PrecT>> dst{allocator}; // destination vector
 
   // initialize source vector
 
-  const afft::dft::Parameters<3, 1> dftParams
+  const afft::dft::Parameters dftParams
   {
     .direction     = afft::Direction::forward,
     .precision     = afft::makePrecision<PrecT>(),
@@ -64,31 +59,38 @@ int main(void)
     .normalization = afft::Normalization::unitary,
     .placement     = afft::Placement::outOfPlace,
     .type          = afft::dft::Type::complexToComplex,
+    .destructive   = false,
   };
 
-  const afft::cpu::Parameters<3> cpuParams
+  const auto srcStrides = afft::makeStrides(srcPaddedShape);
+  const auto dstStrides = afft::makeTransposedStrides(dstPaddedShape,
+                                                      {{0, 2, 1}});
+
+  const afft::cpu::Parameters cpuParams
   {
-    .memoryLayout   = {.srcStrides = afft::makeStrides(srcPaddedShape),
-                       .dstStrides = afft::makeTransposedStrides(
-                         dstPaddedShape, {{0, 2, 1}})},
-    .complexFormat  = afft::ComplexFormat::interleaved,
-    .preserveSource = true,
-    .alignment      = afft::getAlignment(src.data(), dst.data()),
-    .threadLimit    = 8;
+    .threadLimit   = 8;
   };
 
-  const afft::cpu::BackendParameters backendParams
+  const afft::MemoryLayout memoryLayout
   {
-    .strategy = afft::SelectStrategy::best,
-    .mask     = (afft::Backend::fftw3 | afft::Backend::mkl),
-    .order    = {{afft::Backend::mkl, afft::Backend::fftw3}},
-    .fftw3    = {.plannerFlag = afft::fftw3::PlannerFlag::exhaustive,
-                 .timeLimit   = std::chrono::seconds{30}},
+    .complexFormat = afft::ComplexFormat::interleaved;
+    .alignment     = allocator.getAlignment();
+    .srcStrides    = 
+  };
+
+  const afft::cpu::BackendParameters cpuBackendParams
+  {
+    .strategy      = afft::SelectStrategy::best,
+    .mask          = (afft::Backend::fftw3 | afft::Backend::mkl),
+    .order         = {{afft::Backend::mkl, afft::Backend::fftw3}},
+    .fftw3         = {.plannerFlag = afft::fftw3::PlannerFlag::exhaustive,
+                      .timeLimit   = std::chrono::seconds{30}},
   };
 
   // create scope just to make sure the plan is destroyed before afft::finalize() is called
+  
   {
-    auto plan = afft::makePlan(dftParams, cpuParams, backendParams); // generate the plan of the transform
+    auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout, cpuBackendParams); // generate the plan of the transform
 
     plan.execute(src.data(), dst.data()); // execute the transform
   }
