@@ -32,6 +32,7 @@
 #include "cxx.hpp"
 #include "../backend.hpp"
 #include "../common.hpp"
+#include "../memory.hpp"
 #include "../Span.hpp"
 #include "../transform.hpp"
 
@@ -222,7 +223,9 @@ namespace afft::detail
       switch (target)
       {
       case Target::cpu:
-      case Target::gpu:
+      case Target::cuda:
+      case Target::hip:
+      case Target::opencl:
         return true;
       default:
         return false;
@@ -317,24 +320,6 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the Distribution enum class.
-  template<>
-  struct Validator<Distribution>
-  {
-    constexpr bool operator()(Distribution distrib) const noexcept
-    {
-      switch (distrib)
-      {
-      case Distribution::spst:
-      case Distribution::spmt:
-      case Distribution::mpst:
-        return true;
-      default:
-        return false;
-      }
-    }
-  };
-
   /// @brief Validator for the afft::cufft::WorkspacePolicy enum class.
   template<>
   struct Validator<afft::cufft::WorkspacePolicy>
@@ -390,16 +375,31 @@ namespace afft::detail
     }
   };
 
-  /// @brief Validator for the afft::heffte::gpu::Backend enum class.
+  /// @brief Validator for the afft::heffte::cuda::Backend enum class.
   template<>
-  struct Validator<afft::heffte::gpu::Backend>
+  struct Validator<afft::heffte::cuda::Backend>
   {
-    constexpr bool operator()(afft::heffte::gpu::Backend backend) const noexcept
+    constexpr bool operator()(afft::heffte::cuda::Backend backend) const noexcept
     {
       switch (backend)
       {
-      case afft::heffte::gpu::Backend::cufft:
-      case afft::heffte::gpu::Backend::rocfft:
+      case afft::heffte::cuda::Backend::cufft:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
+  /// @brief Validator for the afft::heffte::hip::Backend enum class.
+  template<>
+  struct Validator<afft::heffte::hip::Backend>
+  {
+    constexpr bool operator()(afft::heffte::hip::Backend backend) const noexcept
+    {
+      switch (backend)
+      {
+      case afft::heffte::hip::Backend::rocfft:
         return true;
       default:
         return false;
