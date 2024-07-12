@@ -37,15 +37,28 @@ extern "C"
 /// @brief Error enumeration
 typedef enum
 {
+  // General errors
   afft_Error_success,         ///< No error
   afft_Error_internal,        ///< Internal error
   afft_Error_invalidArgument, ///< Invalid argument
   afft_Error_invalidPlan,     ///< Invalid plan
+  // Multi-process errors
+  afft_Error_mpi,             ///< MPI error
+  // Target errors
   afft_Error_cudaDriver,      ///< CUDA driver error
   afft_Error_cudaRuntime,     ///< CUDA runtime error
   afft_Error_hip,             ///< HIP error
   afft_Error_opencl,          ///< OpenCL error
-  afft_Error_mpi,             ///< MPI error
+  // Backend errors
+  afft_Error_clfft,           ///< clFFT error
+  afft_Error_cufft,           ///< cuFFT error
+  afft_Error_fftw3,           ///< FFTW3 error
+  afft_Error_heffte,          ///< HeFFTe error
+  afft_Error_hipfft,          ///< hipFFT error
+  afft_Error_mkl,             ///< MKL error
+  afft_Error_pocketfft,       ///< PocketFFT error
+  afft_Error_rocfft,          ///< rocFFT error
+  afft_Error_vkfft,           ///< VkFFT error
 } afft_Error;
 
 /// @brief Error detail structure
@@ -54,6 +67,9 @@ typedef struct
   const char* what;          ///< Error message
   union
   {
+# ifdef AFFT_ENABLE_MPI
+    int         mpi;         ///< MPI return value, valid only if afft_Error_mpi emitted
+# endif
 # ifdef AFFT_ENABLE_CUDA
     CUresult    cudaDriver;  ///< CUDA driver return value, valid only if afft_Error_cudaDriver emitted
     cudaError_t cudaRuntime; ///< CUDA runtime return value, valid only if afft_Error_cudaRuntime emitted
@@ -63,9 +79,6 @@ typedef struct
 # endif
 # ifdef AFFT_ENABLE_OPENCL
     cl_int      opencl;      ///< OpenCL return value, valid only if afft_Error_opencl emitted
-# endif
-# ifdef AFFT_ENABLE_MPI
-    int         mpi;         ///< MPI return value, valid only if afft_Error_mpi emitted
 # endif
     int         _dummy;      ///< Dummy value to ensure the union is not empty, do not use
   } retval;
