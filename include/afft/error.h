@@ -37,41 +37,39 @@ extern "C"
 /// @brief Error enumeration
 typedef enum
 {
-  afft_Error_success,
-  afft_Error_internal,
-  afft_Error_invalidPlan,
-  afft_Error_invalidArgument,
-
-  afft_Error_invalidPrecision,
-  afft_Error_invalidAlignment,
-  afft_Error_invalidComplexity,
-  afft_Error_invalidComplexFormat,
-  afft_Error_invalidDirection,
-  afft_Error_invalidPlacement,
-  afft_Error_invalidTransform,
-  afft_Error_invalidTarget,
-  afft_Error_invalidDistribution,
-  afft_Error_invalidNormalization,
-  afft_Error_invalidBackend,
-  afft_Error_invalidSelectStrategy,
-  afft_Error_invalidCufftWorkspacePolicy,
-  afft_Error_invalidFftw3PlannerFlag,
-  afft_Error_invalidHeffteCpuBackend,
-  afft_Error_invalidHeffteGpuBackend,
-  afft_Error_invalidDftType,
-  afft_Error_invalidDhtType,
-  afft_Error_invalidDttType,
-  afft_Error_invalidShape,
-  afft_Error_invalidAxes,
-  afft_Error_invalidStrides,
-  afft_Error_invalidBackendOrder,
-  afft_Error_invalidArchitectureParameters,
-  afft_Error_invalidExecutionParameters,
-  afft_Error_architectureMismatch,
-
-  afft_Error_fftw3_invalidTimeLimit,
-  afft_Error_fftw3_invalidBlockSize,
+  afft_Error_success,         ///< No error
+  afft_Error_internal,        ///< Internal error
+  afft_Error_invalidArgument, ///< Invalid argument
+  afft_Error_invalidPlan,     ///< Invalid plan
+  afft_Error_cudaDriver,      ///< CUDA driver error
+  afft_Error_cudaRuntime,     ///< CUDA runtime error
+  afft_Error_hip,             ///< HIP error
+  afft_Error_opencl,          ///< OpenCL error
+  afft_Error_mpi,             ///< MPI error
 } afft_Error;
+
+/// @brief Error detail structure
+typedef struct
+{
+  const char* what;          ///< Error message
+  union
+  {
+# ifdef AFFT_ENABLE_CUDA
+    CUresult    cudaDriver;  ///< CUDA driver return value, valid only if afft_Error_cudaDriver emitted
+    cudaError_t cudaRuntime; ///< CUDA runtime return value, valid only if afft_Error_cudaRuntime emitted
+# endif
+# ifdef AFFT_ENABLE_HIP
+    hipError_t  hip;         ///< HIP return value, valid only if afft_Error_hip emitted
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+    cl_int      opencl;      ///< OpenCL return value, valid only if afft_Error_opencl emitted
+# endif
+# ifdef AFFT_ENABLE_MPI
+    int         mpi;         ///< MPI return value, valid only if afft_Error_mpi emitted
+# endif
+    int         _dummy;      ///< Dummy value to ensure the union is not empty, do not use
+  } retval;
+} afft_ErrorDetail;
 
 #ifdef __cplusplus
 }
