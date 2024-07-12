@@ -25,15 +25,21 @@ int main(void)
   dftParams.shape         = {{size}}; // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
   dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
+  dftParams.destructive   = true; // allow to destroy source data
 
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
-  cpuParams.preserveSource = true; // allow to destroy source data
-  cpuParams.alignment      = afft::alignmentOf(src.data(), dst.data()); // get alignment of the pointers
-  cpuParams.threadLimit    = 4; // we will use up to 4 threads
+  cpuParams.threadLimit = 4;
 
-  auto plan = afft::makePlan(dftParams, cpuParams); // generate the plan of the transform
+  afft::MemoryLayout memoryLayout{}; // set up memory layout
+  memoryLayout.alignment = afft::alignmentOf(src.data(), dst.data());
 
-  plan->execute(src.data(), dst.data()); // execute the transform
+  {
+    auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout); // generate the plan of the transform
+
+    plan->execute(src.data(), dst.data()); // execute the transform
+  }
 
   // use results from dst vector
+
+  afft::finalize(); // finalize afft library
 }

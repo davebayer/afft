@@ -1,5 +1,5 @@
-#include <complex>
-#include <vector>
+import <complex>;
+import <vector>;
 
 import afft;
 
@@ -25,9 +25,9 @@ int main(void)
   dftParams.shape         = {{size}}; // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
   dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
+  dftParams.destructive   = false; // do not allow to destroy source data
 
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
-  cpuParams.preserveSource = true; // allow to destroy source data
   cpuParams.alignment      = afft::alignmentOf(src.data(), dst.data()); // get alignment of the pointers
   cpuParams.threadLimit    = 4; // we will use up to 4 threads
 
