@@ -67,30 +67,6 @@ enum
   afft_Precision_quad         = afft_Precision_f128,   ///< Precision of quad
 };
 
-/// @brief Alignment type
-typedef size_t afft_Alignment;
-
-/// @brief Alignment enumeration
-enum
-{
-  afft_Alignment_simd128  = 16,  ///< 128-bit SIMD alignment
-  afft_Alignment_simd256  = 32,  ///< 256-bit SIMD alignment
-  afft_Alignment_simd512  = 64,  ///< 512-bit SIMD alignment
-  afft_Alignment_simd1024 = 128, ///< 1024-bit SIMD alignment
-  afft_Alignment_simd2048 = 256, ///< 2048-bit SIMD alignment
-
-  afft_Alignment_sse    = afft_Alignment_simd128,  ///< SSE alignment
-  afft_Alignment_sse2   = afft_Alignment_simd128,  ///< SSE2 alignment
-  afft_Alignment_sse3   = afft_Alignment_simd128,  ///< SSE3 alignment
-  afft_Alignment_sse4   = afft_Alignment_simd128,  ///< SSE4 alignment
-  afft_Alignment_sse4_1 = afft_Alignment_simd128,  ///< SSE4.1 alignment
-  afft_Alignment_sse4_2 = afft_Alignment_simd128,  ///< SSE4.2 alignment
-  afft_Alignment_avx    = afft_Alignment_simd256,  ///< AVX alignment
-  afft_Alignment_avx2   = afft_Alignment_simd256,  ///< AVX2 alignment
-  afft_Alignment_avx512 = afft_Alignment_simd512,  ///< AVX-512 alignment
-  afft_Alignment_neon   = afft_Alignment_simd128,  ///< NEON alignment
-  afft_Alignment_sve    = afft_Alignment_simd2048, ///< SVE alignment
-};
 
 /// @brief Complexity type
 typedef uint8_t afft_Complexity;
