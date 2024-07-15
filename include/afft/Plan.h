@@ -33,6 +33,7 @@
 #include "backend.h"
 #include "error.h"
 #include "common.h"
+#include "mp.h"
 #include "transform.h"
 
 #ifdef __cplusplus
@@ -43,56 +44,27 @@ extern "C"
 /// @brief Opaque plan structure
 typedef struct _afft_Plan afft_Plan;
 
-#if defined(__cplusplus) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
-  /**
-   * @brief Create a plan for a given transform and architecture.
-   * @param transformParams Transform parameters. May be any of afft_*transform*_Parameters or general parameters.
-   * @param archParams Architecture parameters. May be any of afft_*target*_*distribution*_Parameters or general parameters.
-   * @param planPtr Pointer to the plan.
-   * @return Error code.
-   */
-# define afft_Plan_create(transformParams, archParams, planPtr) \
-    _afft_Plan_create(afft_makeTransformParameters(transformParams), \
-                      afft_makeArchitectureParameters(archParams), \
-                      planPtr)
-#else
-  /**
-   * @brief Create a plan for a given transform and architecture.
-   * @param transformParams Transform parameters.
-   * @param archParams Architecture parameters.
-   * @param planPtr Pointer to the plan.
-   * @return Error code.
-   */
-# define afft_Plan_create(transformParams, archParams, planPtr) \
-    _afft_Plan_create(transformParams, archParams, planPtr)
-#endif
+/// @brief Plan parameters
+typedef struct
+{
+  afft_Transform transform;       ///< Transform type
+  afft_MpBackend mpBackend;       ///< Multi-process backend
+  afft_Target    target;          ///< Target architecture
+  const void*    transformParams; ///< Transform parameters
+  const void*    mpBackendParams; ///< Multi-process backend parameters
+  const void*    targetParams;    ///< Target parameters
+  const void*    memoryLayout;    ///< Memory layout
+  const void*    backendParams;   ///< Backend parameters
+} afft_Plan_Parameters;
 
-#if defined(__cplusplus) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
-  /**
-   * @brief Create a plan for a given transform, architecture, and backend.
-   * @param transformParams Transform parameters. May be any of afft_*transform*_Parameters or general parameters.
-   * @param archParams Architecture parameters. May be any of afft_*target*_*distribution*_Parameters or general parameters.
-   * @param backendParams Backend parameters. May be any of afft_*target*_*distribution*_Parameters or general parameters.
-   * @param planPtr Pointer to the plan.
-   * @return Error code.
-   */
-# define afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr) \
-    _afft_Plan_createWithBackendParameters(afft_makeTransformParameters(transformParams), \
-                                           afft_makeArchitectureParameters(archParams), \
-                                           afft_makeBackendParameters(backendParams), \
-                                           planPtr)
-#else
-  /**
-   * @brief Create a plan for a given transform, architecture, and backend.
-   * @param transformParams Transform parameters.
-   * @param archParams Architecture parameters.
-   * @param backendParams Backend parameters.
-   * @param planPtr Pointer to the plan.
-   * @return Error code.
-   */
-# define afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr) \
-    _afft_Plan_createWithBackendParameters(transformParams, archParams, backendParams, planPtr)
-#endif
+/**
+ * @brief Create a plan for given parameters.
+ * @param planParams Plan parameters.
+ * @param planPtr Pointer to the plan.
+ * @param errorDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_Plan_create(afft_Plan_Parameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errorDetails);
 
 /**
  * @brief Destroy a plan.
@@ -101,12 +73,36 @@ typedef struct _afft_Plan afft_Plan;
 void afft_Plan_destroy(afft_Plan* plan);
 
 /**
+ * @brief Get the plan multi-process backend.
+ * @param plan Plan object.
+ * @param mpBackend Pointer to the multi-process backend variable.
+ * @return Error code.
+ */
+afft_Error afft_Plan_getMpBackend(afft_Plan* plan, afft_MpBackend* mpBackend);
+
+/**
+ * @brief Get the plan multi-process backend parameters.
+ * @param plan Plan object.
+ * @param mpBackendParams Pointer to the multi-process backend parameters.
+ * @return Error code.
+ */
+afft_Error afft_Plan_getMpBackendParameters(afft_Plan* plan, void* mpBackendParams);
+
+/**
  * @brief Get the plan transform.
  * @param plan Plan object.
  * @param transform Pointer to the transform variable.
  * @return Error code.
  */
-afft_Error afft_Plan_getTransform(const afft_Plan* plan, afft_Transform* transform);
+afft_Error afft_Plan_getTransform(afft_Plan* plan, afft_Transform* transform);
+
+/**
+ * @brief Get the plan transform parameters.
+ * @param plan Plan object.
+ * @param transformParams Pointer to the transform parameters.
+ * @return Error code.
+ */
+afft_Error afft_Plan_getTransformParameters(afft_Plan* plan, void* transformParams);
 
 /**
  * @brief Get the plan target.
@@ -114,7 +110,7 @@ afft_Error afft_Plan_getTransform(const afft_Plan* plan, afft_Transform* transfo
  * @param target Pointer to the target variable.
  * @return Error code.
  */
-afft_Error afft_Plan_getTarget(const afft_Plan* plan, afft_Target* target);
+afft_Error afft_Plan_getTarget(afft_Plan* plan, afft_Target* target);
 
 /**
  * @brief Get the target count.
@@ -122,15 +118,15 @@ afft_Error afft_Plan_getTarget(const afft_Plan* plan, afft_Target* target);
  * @param targetCount Pointer to the target count variable.
  * @return Error code.
  */
-afft_Error afft_Plan_getTargetCount(const afft_Plan* plan, size_t* targetCount);
+afft_Error afft_Plan_getTargetCount(afft_Plan* plan, size_t* targetCount);
 
 /**
- * @brief Get the plan distribution.
+ * @brief Get the plan target parameters.
  * @param plan Plan object.
- * @param distribution Pointer to the distribution variable.
+ * @param targetParams Pointer to the target parameters.
  * @return Error code.
  */
-afft_Error afft_Plan_getDistribution(const afft_Plan* plan, afft_Distribution* distribution);
+afft_Error afft_Plan_getTargetParameters(afft_Plan* plan, void* targetParams);
 
 /**
  * @brief Get the plan backend.
@@ -138,58 +134,26 @@ afft_Error afft_Plan_getDistribution(const afft_Plan* plan, afft_Distribution* d
  * @param backend Pointer to the backend variable.
  * @return Error code.
  */
-afft_Error afft_Plan_getBackend(const afft_Plan* plan, afft_Backend* backend);
+afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend);
 
 /**
  * @brief Get the plan workspace size.
  * @param plan Plan object.
- * @param count Pointer to the count variable.
- * @param workspaceSizes Pointer to the workspace sizes.
+ * @param workspaceSizes Pointer to the workspace sizes of target count size.
  * @return Error code.
  */
-afft_Error afft_Plan_getWorkspaceSize(const afft_Plan* plan, size_t* count, const size_t** workspaceSizes);
+afft_Error afft_Plan_getWorkspaceSize(afft_Plan* plan, const size_t** workspaceSizes);
 
 /**
  * @brief Execute a plan.
  * @param plan Plan object.
  * @param src Source data pointer array of target count size (x2 if planar complex).
  * @param dst Destination data pointer array of target count size (x2 if planar complex).
+ * @param execParams Execution parameters.
  * @return Error code.
  */
-afft_Error afft_Plan_execute(afft_Plan* plan, void* const* src, void* const* dst);
+afft_Error afft_Plan_execute(afft_Plan* plan, void* const* src, void* const* dst, const void* execParams);
 
-#if defined(__cplusplus) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L)
-  /**
-   * @brief Execute a plan with execution parameters.
-   * @param plan Plan object.
-   * @param src Source data pointer array of target count size (x2 if planar complex).
-   * @param dst Destination data pointer array of target count size (x2 if planar complex).
-   * @param execParams Execution parameters. Any of afft_*target*_*distribution*_Parameters or generic parameters.
-   * @return Error code.
-   */
-# define afft_Plan_executeWithParameters(plan, src, dst, execParams) \
-    _afft_Plan_executeWithParameters(plan, src, dst, afft_makeExecutionParameters(execParams))
-#else
-# define afft_Plan_executeWithParameters(plan, src, dst, execParams) \
-    _afft_Plan_executeWithParameters(plan, src, dst, execParams)
-#endif
-
-/**********************************************************************************************************************/
-// Private functions
-/**********************************************************************************************************************/
-afft_Error _afft_Plan_create(afft_TransformParameters    transformParams,
-                             afft_ArchitectureParameters archParams,
-                             afft_Plan**                 planPtr);
-
-afft_Error _afft_Plan_createWithBackendParameters(afft_TransformParameters    transformParams,
-                                                  afft_ArchitectureParameters archParams,
-                                                  afft_BackendParameters      backendParams,
-                                                  afft_Plan**                 planPtr);
-
-afft_Error _afft_Plan_executeWithParameters(afft_Plan*               plan,
-                                            void* const*             src,
-                                            void* const*             dst,
-                                            afft_ExecutionParameters execParams);
 #ifdef __cplusplus
 }
 #endif

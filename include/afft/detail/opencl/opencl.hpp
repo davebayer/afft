@@ -97,6 +97,15 @@ namespace afft::detail::opencl
 
     return flags & CL_MEM_READ_WRITE;
   }
+
+  /// @brief Deleter for cl_context objects
+  struct ContextDeleter
+  {
+    void operator()(cl_context context) const
+    {
+      clReleaseContext(context);
+    }
+  };
 } // namespace afft::detail::opencl
 
 #endif /* AFFT_DETAIL_OPENCL_OPENCL_HPP */
