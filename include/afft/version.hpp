@@ -165,7 +165,7 @@ AFFT_EXPORT namespace afft
   AFFT_HEADER_ONLY_INLINE Version cufft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_CUFFT
-    return {CUFFT_VERSION / 1000, (CUFFT_VERSION % 1000) / 10, CUFFT_VERSION % 10};
+    return {CUFFT_VER_MAJOR, CUFFT_VER_MINOR, CUFFT_VER_PATCH};
 # else
     return {};
 # endif
