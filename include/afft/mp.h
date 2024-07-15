@@ -26,7 +26,7 @@
 #define AFFT_MP_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include "detail/include.h"
 #endif
 
 #ifdef __cplusplus

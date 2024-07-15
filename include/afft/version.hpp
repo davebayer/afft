@@ -29,6 +29,7 @@
 # include "detail/include.hpp"
 #endif
 
+#include "common.hpp"
 #include "detail/utils.hpp"
 
 AFFT_EXPORT namespace afft
