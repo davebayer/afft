@@ -30,6 +30,7 @@
 #endif
 
 #include "common.hpp"
+#include "memory.hpp"
 #include "detail/utils.hpp"
 
 AFFT_EXPORT namespace afft
@@ -48,13 +49,14 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Get the alignment of the pointers
+   * @tparam PtrTs Pointer types
    * @param ptrs Pointers
    * @return Alignment
    */
-  template<typename... Args>
-  [[nodiscard]] Alignment alignmentOf(const Args*... ptrs) noexcept
+  template<typename... PtrTs>
+  [[nodiscard]] Alignment alignmentOf(const PtrTs*... ptrs) noexcept
   {
-    static_assert(sizeof...(Args) > 0, "At least one pointer must be provided");
+    static_assert(sizeof...(ptrs) > 0, "At least one pointer must be provided");
 
     const auto bitOredPtrs = (0 | ... | reinterpret_cast<std::uintptr_t>(ptrs));
 
