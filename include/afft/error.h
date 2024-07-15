@@ -82,7 +82,7 @@ typedef struct
 # endif
     int         _dummy;      ///< Dummy value to ensure the union is not empty, do not use
   } retval;
-} afft_ErrorDetail;
+} afft_ErrorDetails;
 
 #ifdef __cplusplus
 }

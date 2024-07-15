@@ -495,52 +495,52 @@ namespace cpu
   namespace cuda
   {
     /**
-     * @class UnifiedMemoryAllocator
+     * @class ManagedAllocator
      * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
      *        others.
      * @tparam T Type of the memory
      */
     template<typename T>
-    class UnifiedMemoryAllocator;
+    class ManagedAllocator;
   } // namespace cuda
 
 #ifdef AFFT_ENABLE_CUDA
   /**
-   * @class UnifiedMemoryAllocator
+   * @class ManagedAllocator
    * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
    *        others.
    * @tparam T Type of the memory
    */
   template<typename T>
-  class cuda::UnifiedMemoryAllocator
+  class cuda::ManagedAllocator
   {
     public:
       /// @brief Type of the memory
       using value_type = T;
       
       /// @brief Default constructor
-      constexpr UnifiedMemoryAllocator(unsigned flags = cudaMemAttachGlobal) noexcept
+      constexpr ManagedAllocator(unsigned flags = cudaMemAttachGlobal) noexcept
       : mFlags{flags}
       {}
 
       /// @brief Copy constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator(const UnifiedMemoryAllocator<U>& other) noexcept
+      constexpr ManagedAllocator(const ManagedAllocator<U>& other) noexcept
       : mFlags{other.mFlags}
       {}
 
       /// @brief Move constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator(UnifiedMemoryAllocator<U>&& other) noexcept
+      constexpr ManagedAllocator(ManagedAllocator<U>&& other) noexcept
       : mFlags{std::move(other.mFlags)}
       {}
 
       /// @brief Destructor
-      ~UnifiedMemoryAllocator() noexcept = default;
+      ~ManagedAllocator() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
-      constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
+      constexpr ManagedAllocator& operator=(const ManagedAllocator<U>& other) noexcept
       {
         mFlags = other.mFlags;
         return *this;
@@ -548,7 +548,7 @@ namespace cpu
 
       /// @brief Move assignment operator
       template<typename U>
-      constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
+      constexpr ManagedAllocator& operator=(ManagedAllocator<U>&& other) noexcept
       {
         mFlags = std::move(other.mFlags);
         return *this;
@@ -594,52 +594,52 @@ namespace cpu
   namespace hip
   {
     /**
-     * @class UnifiedMemoryAllocator
+     * @class ManagedAllocator
      * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
      *        others.
      * @tparam T Type of the memory
      */
     template<typename T>
-    class UnifiedMemoryAllocator;
+    class ManagedAllocator;
   } // namespace hip
 
 #ifdef AFFT_ENABLE_HIP
   /**
-   * @class UnifiedMemoryAllocator
+   * @class ManagedAllocator
    * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
    *        others.
    * @tparam T Type of the memory
    */
   template<typename T>
-  class hip::UnifiedMemoryAllocator
+  class hip::ManagedAllocator
   {
     public:
       /// @brief Type of the memory
       using value_type = T;
       
       /// @brief Default constructor
-      constexpr UnifiedMemoryAllocator(unsigned flags = hipMemAttachGlobal) noexcept
+      constexpr ManagedAllocator(unsigned flags = hipMemAttachGlobal) noexcept
       : mFlags{flags}
       {}
 
       /// @brief Copy constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator(const UnifiedMemoryAllocator<U>& other) noexcept
+      constexpr ManagedAllocator(const ManagedAllocator<U>& other) noexcept
       : mFlags{other.mFlags}
       {}
 
       /// @brief Move constructor
       template<typename U>
-      constexpr UnifiedMemoryAllocator(UnifiedMemoryAllocator<U>&& other) noexcept
+      constexpr ManagedAllocator(ManagedAllocator<U>&& other) noexcept
       : mFlags{std::move(other.mFlags)}
       {}
 
       /// @brief Destructor
-      ~UnifiedMemoryAllocator() noexcept = default;
+      ~ManagedAllocator() noexcept = default;
 
       /// @brief Copy assignment operator
       template<typename U>
-      constexpr UnifiedMemoryAllocator& operator=(const UnifiedMemoryAllocator<U>& other) noexcept
+      constexpr ManagedAllocator& operator=(const ManagedAllocator<U>& other) noexcept
       {
         mFlags = other.mFlags;
         return *this;
@@ -647,7 +647,7 @@ namespace cpu
 
       /// @brief Move assignment operator
       template<typename U>
-      constexpr UnifiedMemoryAllocator& operator=(UnifiedMemoryAllocator<U>&& other) noexcept
+      constexpr ManagedAllocator& operator=(ManagedAllocator<U>&& other) noexcept
       {
         mFlags = std::move(other.mFlags);
         return *this;

@@ -31,6 +31,7 @@
 
 #include "common.h"
 #include "error.h"
+#include "memory.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -70,10 +71,10 @@ static inline afft_Alignment afft_alignmentOf(size_t count, ...)
  * @param strides Strides of the array.
  * @return Error code.
  */
-afft_Error afft_makeStrides(const size_t  shapeRank,
-                            const size_t* shape,
-                            const size_t  fastestAxisStride,
-                            size_t*       strides);
+afft_Error afft_makeStrides(const size_t     shapeRank,
+                            const afft_Size* shape,
+                            const afft_Size  fastestAxisStride,
+                            afft_Size*       strides);
 
 /**
  * @brief Make transposed strides.
@@ -84,11 +85,11 @@ afft_Error afft_makeStrides(const size_t  shapeRank,
  * @param strides Strides of the array.
  * @return Error code.
  */
-afft_Error afft_makeTransposedStrides(const size_t  shapeRank,
-                                      const size_t* resultShape,
-                                      const size_t* orgAxesOrder,
-                                      const size_t  fastestAxisStride,
-                                      size_t*       strides);
+afft_Error afft_makeTransposedStrides(const size_t     shapeRank,
+                                      const afft_Size* resultShape,
+                                      const afft_Size* orgAxesOrder,
+                                      const afft_Size  fastestAxisStride,
+                                      afft_Size*       strides);
 
 #ifdef __cplusplus
 }

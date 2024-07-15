@@ -6,20 +6,20 @@
 #include <afft/afft.hpp>
 
 template<typename T>
-using UnifiedMemoryVector = std::vector<T, afft::cuda::UnifiedMemoryAllocator<T>>;
+using ManagedVector = std::vector<T, afft::cuda::ManagedAllocator<T>>;
 
 int main(void)
 {
   using PrecT = float;
 
-  constexpr std::size_t size{1024}; // size of the transform
+  constexpr afft::Size size{1024}; // size of the transform
 
   afft::init(); // initialize afft library, also initializes CUDA if uninitialized
 
   afft::dft::Parameters dftParams{}; // parameters for dft
   dftParams.direction     = afft::Direction::forward; // it will be a forward transform
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
-  dftParams.shape         = {{size}}; // set up the dimensions
+  dftParams.shape         = afft::makeScalarView(size); // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
   dftParams.placement     = afft::Placement::inPlace; // it will be an in-place transform
   dftParams.destructive   = true; // allow to destroy source data
@@ -36,10 +36,10 @@ int main(void)
   const auto srcElemCounts = plan->getSrcElemCounts(); // get the number of elements in the source buffers
   const auto dstElemCounts = plan->getDstElemCounts(); // get the number of elements in the destination buffers
 
-  UnifiedMemoryVector<std::complex<PrecT>> src0(srcElemCounts[0]); // device 0 source vector
-  UnifiedMemoryVector<std::complex<PrecT>> src1(srcElemCounts[1]); // device 1 source vector
-  UnifiedMemoryVector<std::complex<PrecT>> dst0(dstElemCounts[0]); // device 0 destination vector
-  UnifiedMemoryVector<std::complex<PrecT>> dst1(dstElemCounts[1]); // device 1 destination vector
+  ManagedVector<std::complex<PrecT>> src0(srcElemCounts[0]); // device 0 source vector
+  ManagedVector<std::complex<PrecT>> src1(srcElemCounts[1]); // device 1 source vector
+  ManagedVector<std::complex<PrecT>> dst0(dstElemCounts[0]); // device 0 destination vector
+  ManagedVector<std::complex<PrecT>> dst1(dstElemCounts[1]); // device 1 destination vector
 
   // initialize source vectors
 

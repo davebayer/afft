@@ -4,25 +4,25 @@
 #include <afft/afft.hpp>
 
 template<typename T>
-using UnifiedMemoryVector = std::vector<T, afft::gpu::UnifiedMemoryAllocator<T>>;
+using ManagedVector = std::vector<T, afft::gpu::ManagedAllocator<T>>;
 
 int main(void)
 {
   using PrecT = float;
 
-  constexpr std::size_t size{1024}; // size of the transform
+  constexpr afft::Size size{1024}; // size of the transform
 
   afft::init(); // initialize afft library, also initializes CUDA
 
-  UnifiedMemoryVector<std::complex<PrecT>> src(size); // source vector
-  UnifiedMemoryVector<std::complex<PrecT>> dst(size); // destination vector
+  ManagedVector<std::complex<PrecT>> src(size); // source vector
+  ManagedVector<std::complex<PrecT>> dst(size); // destination vector
 
   // initialize source vector
 
   afft::dft::Parameters dftParams{}; // parameters for dft
   dftParams.direction     = afft::Direction::forward; // it will be a forward transform
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
-  dftParams.shape         = {{size}}; // set up the dimensions
+  dftParams.shape         = afft::makeScalarView(size); // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
 
   afft::gpu::Parameters gpuParams{}; // it will run on a gpu

@@ -6,6 +6,15 @@
 
 #include <afft/afft.h>
 
+#define CUDA_CALL(call) do { \
+    cudaError_t _err = (call); \
+    if (_err != cudaSuccess) \
+    { \
+      fprintf(stderr, "cuda error (%s:%d): %s\n", __FILE__, __LINE__, cudaGetErrorString(_err)); \
+      exit(EXIT_FAILURE); \
+    } \
+  } while (0)
+
 #define AFFT_CALL(call) do { \
     afft_Error _err = (call); \
     if (_err != afft_Error_success) \
@@ -17,19 +26,22 @@
 
 int main(void)
 {
-  const size_t shape[]          = {500, 250, 1020};
-  const size_t srcPaddedShape[] = {500, 250, 1024};
-  const size_t dstPaddedShape[] = {500, 1020, 256};
+  const afft_Size shape[]          = {500, 250, 1020};
+  const afft_Size srcPaddedShape[] = {500, 250, 1024};
+  const afft_Size dstPaddedShape[] = {500, 1020, 256};
 
-  const size_t srcElemCount = srcPaddedShape[0] * srcPaddedShape[1] * srcPaddedShape[2];
-  const size_t dstElemCount = dstPaddedShape[0] * dstPaddedShape[1] * dstPaddedShape[2];
+  const afft_Size srcElemCount = srcPaddedShape[0] * srcPaddedShape[1] * srcPaddedShape[2];
+  const afft_Size dstElemCount = dstPaddedShape[0] * dstPaddedShape[1] * dstPaddedShape[2];
 
   const afft_Alignment alignment = afft_Alignment_avx2;
 
   AFFT_CALL(afft_init()); // initialize afft library
 
-  cuComplex* src = afft_gpu_unifiedAlloc(srcElemCount * sizeof(cuComplex)); // source vector
-  cuComplex* dst = afft_gpu_unifiedAlloc(dstElemCount * sizeof(cuComplex)); // destination vector
+  cuComplex* src;
+  cuComplex* dst;
+
+  CUDA_CALL(cudaMallocManaged(&src, srcElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
+  CUDA_CALL(cudaMallocManaged(&dst, dstElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
 
   // check if src and dst are not NULL
   // initialize source vector
@@ -41,17 +53,17 @@ int main(void)
     .shapeRank     = 3,
     .shape         = shape,
     .axesRank      = 1,
-    .axes          = (size_t[]){2},
+    .axes          = (afft_Axis[]){2},
     .normalization = afft_Normalization_none,
     .placement     = afft_Placement_outOfPlace,
     .type          = afft_dft_Type_complexToComplex,
   };
 
-  size_t srcStrides[3] = {0};
-  size_t dstStrides[3] = {0};
+  afft_Size srcStrides[3] = {0};
+  afft_Size dstStrides[3] = {0};
 
   AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (size_t[]){0, 2, 1}, 1, dstStrides));
+  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides));
 
   const afft_gpu_Parameters gpuParams =
   {
@@ -80,8 +92,8 @@ int main(void)
 
   afft_Plan_destroy(plan); // destroy the plan of the transform
 
-  afft_gpu_unifiedFree(src); // free source vector
-  afft_gpu_unifiedFree(dst); // free destination vector
+  CUDA_CALL(cudaFree(src)); // free source vector
+  CUDA_CALL(cudaFree(dst)); // free destination vector
 
   AFFT_CALL(afft_finalize()); // deinitialize afft library
 }
