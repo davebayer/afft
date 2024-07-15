@@ -123,8 +123,8 @@ AFFT_EXPORT namespace afft
 
   struct opencl::ExecutionParameters : TargetConstant<Target::opencl>
   {
-    cl_command_queue queue{};     ///< OpenCL command queue
-    View<cl_mem>     workspace{}; ///< Workspaces
+    cl_command_queue queue{};      ///< OpenCL command queue
+    View<cl_mem>     workspaces{}; ///< Workspaces
   };
 #endif
 } // namespace afft
