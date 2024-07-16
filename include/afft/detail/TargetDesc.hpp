@@ -37,14 +37,9 @@ namespace afft::detail
   /// @brief CPU description
   struct CpuDesc
   {
-    unsigned threadLimit{}; ///< Thread limit
+    static constexpr std::size_t targetCount{1}; ///< Number of targets
+    unsigned threadLimit{};                      ///< Thread limit
 
-    /**
-     * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
-     * @return True if equal, false otherwise
-     */
     [[nodiscard]] constexpr friend bool operator==(const CpuDesc& lhs, const CpuDesc& rhs)
     {
       return lhs.threadLimit == rhs.threadLimit;
@@ -54,72 +49,62 @@ namespace afft::detail
   /// @brief CUDA description
   struct CudaDesc
   {
+    std::size_t            targetCount{}; ///< Number of targets
 # ifdef AFFT_ENABLE_CUDA
-    std::vector<int> devices{}; ///< CUDA devices
+    std::unique_ptr<int[]> devices{};     ///< CUDA devices
 # endif
 
-    /**
-     * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
-     * @return True if equal, false otherwise
-     */
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const CudaDesc& lhs,
                                                    [[maybe_unused]] const CudaDesc& rhs)
     {
-# ifdef AFFT_ENABLE_CUDA
-      return lhs.devices == rhs.devices;
-# else
+#   ifdef AFFT_ENABLE_CUDA
+      return lhs.targetCount == rhs.targetCount &&
+             std::equal(lhs.devices.get(), lhs.devices.get() + lhs.targetCount, rhs.devices.get());
+#   else
       return true;
-# endif
+#   endif
     }
   };
 
   /// @brief HIP description
   struct HipDesc
   {
+    std::size_t            targetCount{}; ///< Number of targets
 # ifdef AFFT_ENABLE_HIP
-    std::vector<int> devices{}; ///< HIP devices
+    std::unique_ptr<int[]> devices{}; ///< HIP devices
 # endif
 
-    /**
-     * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
-     * @return True if equal, false otherwise
-     */
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const HipDesc& lhs,
                                                    [[maybe_unused]] const HipDesc& rhs)
     {
-# ifdef AFFT_ENABLE_HIP
-      return lhs.devices == rhs.devices;
-# else
+#   ifdef AFFT_ENABLE_HIP
+      return lhs.targetCount == rhs.targetCount &&
+             std::equal(lhs.devices.get(), lhs.devices.get() + lhs.targetCount, rhs.devices.get());
+#   else
       return true;
-# endif
+#   endif
     }
   };
   
   /// @brief OpenCL description
   struct OpenclDesc
   {
+    std::size_t                                                                targetCount{}; ///< Number of targets
 # ifdef AFFT_ENABLE_OPENCL
     std::unique_ptr<std::remove_pointer_t<cl_context>, opencl::ContextDeleter> context{}; ///< OpenCL context
-    std::vector<cl_device_id>                                                  devices{}; ///< OpenCL devices
+    std::unique_ptr<cl_device_id[]>                                            devices{}; ///< OpenCL devices
 # endif
 
-    /**
-     * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
-     * @return True if equal, false otherwise
-     */
-    [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const OpenclDesc& lhs, [[maybe_unused]] const OpenclDesc& rhs)
+    [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const OpenclDesc& lhs,
+                                                   [[maybe_unused]] const OpenclDesc& rhs)
     {
-# ifdef AFFT_ENABLE_OPENCL
-      return lhs.context == rhs.context && lhs.devices == rhs.devices;
-# else
+#   ifdef AFFT_ENABLE_OPENCL
+      return lhs.targetCount == rhs.targetCount &&
+             lhs.context == rhs.context &&
+             std::equal(lhs.devices.get(), lhs.devices.get() + lhs.targetCount, rhs.devices.get());
+#   else
       return true;
-# endif
+#   endif
     }
   };
 
@@ -137,7 +122,7 @@ namespace afft::detail
        */
       template<typename TargetParamsT>
       TargetDesc(const TargetParamsT& targetParams)
-      : mTargetVariant(makeTargetVariant(targetParams))
+      : mTargetVariant{makeTargetVariant(targetParams)}
       {
         static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters type");
       }
@@ -184,25 +169,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr std::size_t getTargetCount() const
       {
-        switch (mTargetVariant.index())
-        {
-        case 0:
-          return 1;
-#       ifdef AFFT_ENABLE_CUDA
-        case 1:
-          return std::get<CudaDesc>(mTargetVariant).devices.size();
-#       endif
-#       ifdef AFFT_ENABLE_HIP
-        case 2:
-          return std::get<HipDesc>(mTargetVariant).devices.size();
-#       endif
-#       ifdef AFFT_ENABLE_OPENCL
-        case 3:
-          return std::get<OpenclDesc>(mTargetVariant).devices.size();
-#       endif        
-        default:
-          return 0;
-        }
+        return std::visit([](const auto& desc) { return desc.targetCount; }, mTargetVariant);
       }
 
       /**
@@ -231,10 +198,6 @@ namespace afft::detail
         {
           return std::get<OpenclDesc>(mTargetVariant);
         }
-        else
-        {
-          throw std::runtime_error("invalid target");
-        }
       }
 
       /**
@@ -248,42 +211,37 @@ namespace afft::detail
         static_assert(isValid(target), "invalid target");
 
         TargetParameters<target> targetParams{};
-        
-        switch (target)
+
+        if constexpr (target == Target::cpu)
         {
-          case Target::cpu:
-          {
-            const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
-            targetParams.threadLimit = cpuDesc.threadLimit;
-            break;
-          }
-          case Target::cuda:
-          {
-#         ifdef AFFT_ENABLE_CUDA
-            const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
-            targetParams.devices = cudaDesc.devices;
-#         endif
-            break;
-          }
-          case Target::hip:
-          {
-#         ifdef AFFT_ENABLE_HIP
-            const auto& hipDesc = std::get<HipDesc>(mTargetVariant);
-            targetParams.devices = hipDesc.devices;
-#         endif
-            break;
-          }
-          case Target::opencl:
-          {
-#         ifdef AFFT_ENABLE_OPENCL
-            const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
-            targetParams.context = openclDesc.context.get();
-            targetParams.devices = openclDesc.devices;
-#         endif
-            break;
-          }
-          default:
-            cxx::unreachable();
+          const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
+          targetParams.threadLimit = cpuDesc.threadLimit;
+        }
+        else if constexpr (target == Target::cuda)
+        {
+#       ifdef AFFT_ENABLE_CUDA
+          const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
+          targetParams.devices = View{cudaDesc.devices.get(), cudaDesc.targetCount};
+#       endif
+        }
+        else if constexpr (target == Target::hip)
+        {
+#       ifdef AFFT_ENABLE_HIP
+          const auto& hipDesc = std::get<HipDesc>(mTargetVariant);
+          targetParams.devices = View{hipDesc.devices.get(), hipDesc.targetCount};
+#       endif
+        }
+        else if constexpr (target == Target::opencl)
+        {
+#       ifdef AFFT_ENABLE_OPENCL
+          const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
+          targetParams.context = openclDesc.context.get();
+          targetParams.devices = View{openclDesc.devices.get(), openclDesc.targetCount};
+#       endif
+        }
+        else
+        {
+          cxx::unreachable();
         }
 
         return targetParams;
@@ -305,8 +263,10 @@ namespace afft::detail
       using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc>;
 
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
+      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams, std::size_t& targetCount)
       {
+        targetCount = 1;
+
         CpuDesc cpuDesc{};
         cpuDesc.threadLimit = cpuParams.threadLimit;
 
@@ -314,41 +274,47 @@ namespace afft::detail
       }
 
 #     ifdef AFFT_ENABLE_CUDA
-      [[nodiscard]] static TargetVariant makeTargetVariant([[maybe_unused]] const afft::cuda::Parameters& cudaParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams, std::size_t& targetCount)
       {
         CudaDesc cudaDesc{};
-        cudaDesc.devices.resize(cudaParams.devices.size());
-        std::copy(cudaParams.devices.begin(), cudaParams.devices.end(), cudaDesc.devices.begin());
+        cudaDesc.targetCount = cudaParams.devices.size();
+        cudaDesc.devices     = std::make_unique<int[]>(targetCount);
+
+        std::copy(cudaParams.devices.begin(), cudaParams.devices.end(), cudaDesc.devices.get());
 
         return cudaDesc;
       }
 #     endif
 
 #     ifdef AFFT_ENABLE_HIP
-      [[nodiscard]] static TargetVariant makeTargetVariant([[maybe_unused]] const afft::hip::Parameters& hipParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::hip::Parameters& hipParams)
       {
         HipDesc hipDesc{};
-        hipDesc.devices.resize(hipParams.devices.size());
-        std::copy(hipParams.devices.begin(), hipParams.devices.end(), hipDesc.devices.begin());
+        hipDesc.targetCount = hipParams.devices.size();
+        hipDesc.devices     = std::make_unique<int[]>(targetCount);
+
+        std::copy(hipParams.devices.begin(), hipParams.devices.end(), hipDesc.devices.get());
 
         return hipDesc;
       }
 #     endif
 
 #     ifdef AFFT_ENABLE_OPENCL
-      [[nodiscard]] static TargetVariant makeTargetVariant([[maybe_unused]] const afft::opencl::Parameters& openclParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::opencl::Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
+        openclDesc.targetCount = openclParams.devices.size();
         opencl::checkError(clRetainContext(openclParams.context));
         openclDesc.context.reset(openclParams.context);
-        openclDesc.devices.resize(openclParams.devices.size());
-        std::copy(openclParams.devices.begin(), openclParams.devices.end(), openclDesc.devices.begin());
+        openclDesc.devices = std::make_unique<cl_device_id[]>(targetCount);
+
+        std::copy(openclParams.devices.begin(), openclParams.devices.end(), openclDesc.devices.get());
 
         return openclDesc;
       }
 #     endif
 
-      TargetVariant mTargetVariant;
+      TargetVariant mTargetVariant; ///< Target variant
   };
 } // namespace afft::detail
 
