@@ -29,26 +29,38 @@
 # include "include.hpp"
 #endif
 
-#include "ArchDesc.hpp"
+#include "MemDesc.hpp"
+#include "MpDesc.hpp"
+#include "TargetDesc.hpp"
 #include "TransformDesc.hpp"
 #include "../utils.hpp"
 
 namespace afft::detail
 {
-  class Desc : public TransformDesc, public ArchDesc
+  class Desc : public TransformDesc, public MpDesc, public TargetDesc, public MemDesc
   {
     public:
       /// @brief Default constructor is deleted.
       Desc() = delete;
 
       /// @brief Constructor.
-      template<typename TransformParamsT, typename ArchParamsT>
-      Desc(const TransformParamsT& transformParameters, const ArchParamsT& archParameters)
-      : TransformDesc{transformParameters},
-        ArchDesc{archParameters, getShapeRank()}
+      template<typename TransformParamsT,
+               typename MpBackendParamsT,
+               typename TargetParamsT,
+               typename MemoryLayoutT>
+      Desc(const TransformParamsT& transformParams,
+           const MpBackendParamsT& mpBackendParams,
+           const TargetParamsT&    targetParams,
+           const MemoryLayoutT&    memoryLayout)
+      : TransformDesc{transformParams},
+        MpDesc{mpBackendParams},
+        TargetDesc{targetParams},
+        MemDesc{memoryLayout, getShapeRank(), getTargetCount()}
       {
-        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a TransformParameters type.");
-        static_assert(isArchitectureParameters<ArchParamsT>, "ArchParamsT must be an ArchParameters type.");
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
       }
 
       /// @brief Copy constructor.
