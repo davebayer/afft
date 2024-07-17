@@ -78,11 +78,11 @@ namespace helpers::hip
    * @brief Make a HIP stream
    * @return HIP stream
    */
-  inline Stream makeStream() noexcept
+  inline Stream makeStream(unsigned flags = hipStreamDefault) noexcept
   {
     hipStream_t stream{};
 
-    HIP_CALL(hipStreamCreate(&stream));
+    HIP_CALL(hipStreamCreateWithFlags(&stream, flags));
 
     return Stream{std::move(stream)};
   }

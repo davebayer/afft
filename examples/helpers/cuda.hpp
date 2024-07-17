@@ -78,11 +78,11 @@ namespace helpers::cuda
    * @brief Make a CUDA stream
    * @return CUDA stream
    */
-  inline Stream makeStream() noexcept
+  inline Stream makeStream(unsigned flags = cudaStreamDefault) noexcept
   {
     cudaStream_t stream{};
 
-    CUDART_CALL(cudaStreamCreate(&stream));
+    CUDART_CALL(cudaStreamCreateWithFlags(&stream, flags));
 
     return Stream{std::move(stream)};
   }
