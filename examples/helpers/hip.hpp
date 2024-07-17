@@ -44,7 +44,7 @@
     const hipError_t _error = (call); \
     if (_error != hipSuccess) \
     { \
-      throw cformatNothrow("HIP error (%s:%d): %s", __FILE__, __LINE__, hipGetErrorString(_error)); \
+      throw cformatNothrow("HIP error (%s:%d) - %s", __FILE__, __LINE__, hipGetErrorString(_error)); \
     } \
   } while (0)
 

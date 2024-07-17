@@ -44,7 +44,7 @@
     const cudaError_t _error = (call); \
     if (_error != cudaSuccess) \
     { \
-      throw cformatNothrow("CUDA error (%s:%d): %s", __FILE__, __LINE__, cudaGetErrorString(_error)); \
+      throw cformatNothrow("CUDA error (%s:%d) - %s", __FILE__, __LINE__, cudaGetErrorString(_error)); \
     } \
   } while (0)
 

@@ -11,6 +11,7 @@
 #include <afft/afft.hpp>
 
 #include <helpers/cuda.hpp>
+#include <helpers/mpi.hpp>
 
 /// @brief PrecT is the precision of the transform
 using PrecT = float;
@@ -33,24 +34,22 @@ constexpr auto freqDomainDecompAxes = std::array<afft::Axis, 1>{1};
 
 int main(void)
 {
-  // return value
-  int retval = EXIT_SUCCESS;
-
-  // initialize MPI library
-  MPI_Init(nullptr, nullptr);
-
-  // initialize afft library
-  afft::init();
+  // return value, initialized to failure
+  int retval = EXIT_FAILURE;
 
   try
   {
+    // initialize MPI library
+    MPI_Init(nullptr, nullptr);
+
+    // initialize afft library
+    afft::init();
 
     // set MPI communicator
     const MPI_Comm comm = MPI_COMM_WORLD;
 
     // get the rank of the MPI process in MPI_COMM_WORLD communicator
-    int rank{};
-    MPI_Comm_rank(comm, &rank);
+    const int rank = helpers::mpi::getRank(comm);
 
     // select CUDA device
     const int cudaDevice = rank % helpers::cuda::getDeviceCount();
@@ -106,16 +105,17 @@ int main(void)
 
     // execute the forward transform
     fwdPlan->execute(src.data(), dst.data(), cudaExecParams);
+
+    // set the return value to success
+    retval = EXIT_SUCCESS;
   }
   catch (const std::exception& e)
   {
     std::fprintf(stderr, "Error: %s\n", e.what());
-    retval = EXIT_FAILURE;
   }
   catch (...)
   {
     std::fprintf(stderr, "Unknown error\n");
-    retval = EXIT_FAILURE;
   }
 
   // finalize afft library
