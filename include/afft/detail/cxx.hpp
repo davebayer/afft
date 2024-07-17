@@ -183,63 +183,6 @@ inline namespace cxx20
     return !cmp_less(t, u);
   }
 
-  namespace detail2
-  {
-    /**
-     * @brief Implementation of the to_array() function. Taken from https://en.cppreference.com/w/cpp/container/array/to_array
-     * @tparam T Array element type.
-     * @tparam N Array size.
-     * @tparam I Index sequence.
-     * @param a Array.
-     * @return std::array with the same elements as the input array.
-     */
-    template<class T, std::size_t N, std::size_t... I>
-    [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&a)[N], std::index_sequence<I...>)
-    {
-      return {{a[I]...}};
-    }
-
-    /**
-     * @brief Implementation of the to_array() function. Taken from https://en.cppreference.com/w/cpp/container/array/to_array
-     * @tparam T Array element type.
-     * @tparam N Array size.
-     * @tparam I Index sequence.
-     * @param a Array.
-     * @return std::array with the same elements as the input array.
-     */
-    template<class T, std::size_t N, std::size_t... I>
-    [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array_impl(T (&&a)[N], std::index_sequence<I...>)
-    {
-      return {{std::move(a[I])...}};
-    }
-  }
-  
-  /**
-   * @brief Converts a C-style array to std::array. Taken from https://en.cppreference.com/w/cpp/container/array/to_array
-   * @tparam T Array element type.
-   * @tparam N Array size.
-   * @param a Array.
-   * @return std::array with the same elements as the input array.
-   */
-  template<class T, std::size_t N>
-  [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&a)[N])
-  {
-    return detail2::to_array_impl(a, std::make_index_sequence<N>{});
-  }
- 
-  /**
-   * @brief Converts a C-style array to std::array. Taken from https://en.cppreference.com/w/cpp/container/array/to_array
-   * @tparam T Array element type.
-   * @tparam N Array size.
-   * @param a Array.
-   * @return std::array with the same elements as the input array.
-   */
-  template<class T, std::size_t N>
-  [[nodiscard]] constexpr std::array<std::remove_cv_t<T>, N> to_array(T (&&a)[N])
-  {
-    return detail2::to_array_impl(std::move(a), std::make_index_sequence<N>{});
-  }
-
   /**
    * @brief Checks if the given value is a power of two. Taken from https://en.cppreference.com/w/cpp/numeric/has_single_bit
    * @tparam T Type of the value.
