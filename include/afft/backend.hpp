@@ -224,6 +224,9 @@ AFFT_EXPORT namespace afft
     estimatePatient, ///< Estimate and patient plan flag
   };
 
+  /// @brief No time limit for the planner
+  inline constexpr std::chrono::duration<double> noTimeLimit{-1.0};
+
   struct fftw3::cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>, BackendConstant<Backend::fftw3>
   {
@@ -232,7 +235,7 @@ AFFT_EXPORT namespace afft
     bool                          wisdomOnly{false};                  ///< Wisdom only flag
     bool                          allowLargeGeneric{false};           ///< Allow large generic flag
     bool                          allowPruning{false};                ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
+    std::chrono::duration<double> timeLimit{noTimeLimit};             ///< Time limit for the planner
   };
 
   struct fftw3::mpi::cpu::BackendParameters
@@ -243,7 +246,7 @@ AFFT_EXPORT namespace afft
     bool                          wisdomOnly{false};                  ///< Wisdom only flag
     bool                          allowLargeGeneric{false};           ///< Allow large generic flag
     bool                          allowPruning{false};                ///< Allow pruning flag
-    std::chrono::duration<double> timeLimit{};                        ///< Time limit for the planner
+    std::chrono::duration<double> timeLimit{noTimeLimit};             ///< Time limit for the planner
     Size                          blockSize{};                        ///< Decomposition block size
   };
 
