@@ -99,15 +99,16 @@ namespace afft::detail
        */
       template<typename TransformParamsT>
       TransformDesc(const TransformParamsT& transformParams)
-      : mDirection(validateAndReturn(transformParams.direction)),
-        mPrecision(validateAndReturn(transformParams.precision)),
-        mShapeRank(transformParams.shape.size()),
+      : mDirection{validateAndReturn(transformParams.direction)},
+        mPrecision{validateAndReturn(transformParams.precision)},
+        mShapeRank{transformParams.shape.size()},
         mShape(makeShape(transformParams.shape)),
-        mTransformRank(transformParams.axes.empty() ? mShapeRank : transformParams.axes.size()),
+        mTransformRank{transformParams.axes.empty() ? mShapeRank : transformParams.axes.size()},
         mTransformAxes(makeTransformAxes(transformParams.axes, mShapeRank)),
-        mNormalization(validateAndReturn(transformParams.normalization)),
-        mPlacement(validateAndReturn(transformParams.placement)),
-        mTransformVariant(makeTransformVariant(transformParams, mTransformRank))
+        mNormalization{validateAndReturn(transformParams.normalization)},
+        mPlacement{validateAndReturn(transformParams.placement)},
+        mDestructive{transformParams.destructive},
+        mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
       {}
 
       /// @brief Copy constructor.
@@ -195,7 +196,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr View<std::size_t> getShape() const noexcept
       {
-        return View<std::size_t>{mShape.data(), mShapeRank};
+        return View<std::size_t>{mShape.data, mShapeRank};
       }
 
       /**
@@ -204,11 +205,11 @@ namespace afft::detail
        * @return Shape of the transform as a different integral type. Only first getShapeRank() elements are valid.
        */
       template<typename I>
-      [[nodiscard]] constexpr MaxDimArray<I> getShapeAs() const
+      [[nodiscard]] constexpr MaxDimBuffer<I> getShapeAs() const
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        return mShape.cast<I>();
+        return cast<I>(getShape());
       }
 
       /**
@@ -292,7 +293,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr View<std::size_t> getTransformAxes() const noexcept
       {
-        return View<std::size_t>{mTransformAxes.data(), mTransformRank};
+        return View<std::size_t>{mTransformAxes.data, mTransformRank};
       }
 
       /**
@@ -366,6 +367,15 @@ namespace afft::detail
       [[nodiscard]] constexpr Placement getPlacement() const noexcept
       {
         return mPlacement;
+      }
+
+      /**
+       * @brief Check if the transform is destructive.
+       * @return True if the transform is destructive, false otherwise.
+       */
+      [[nodiscard]] constexpr bool isDestructive() const noexcept
+      {
+        return mDestructive;
       }
 
       /**
@@ -503,6 +513,8 @@ namespace afft::detail
         transformParams.shape         = getShape();
         transformParams.axes          = getTransformAxes();
         transformParams.normalization = getNormalization();
+        transformParams.placement     = getPlacement();
+        transformParams.destructive   = isDestructive();
 
         if constexpr (transform == Transform::dft)
         {
@@ -638,45 +650,36 @@ namespace afft::detail
 
       /**
        * @brief Make the transform variant.
-       * @tparam shapeExt Extent of the shape.
-       * @tparam transformExt Extent of the transform axes.
        * @param dftParams DFT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dft::Parameters<shapeExt, transformExt>& dftParams, std::size_t)
+      makeTransformVariant(const dft::Parameters& dftParams, std::size_t)
       {
         return DftDesc{validateAndReturn(dftParams.type)};
       }
 
       /**
        * @brief Make the transform variant.
-       * @tparam shapeExt Extent of the shape.
-       * @tparam transformExt Extent of the transform axes.
        * @param dhtParams DHT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dht::Parameters<shapeExt, transformExt>& dhtParams, std::size_t)
+      makeTransformVariant(const dht::Parameters& dhtParams, std::size_t)
       {
         return DhtDesc{validateAndReturn(dhtParams.type)};
       }
 
       /**
        * @brief Make the transform variant.
-       * @tparam shapeExt Extent of the shape.
-       * @tparam transformExt Extent of the transform axes.
        * @param dttParams DTT parameters.
        * @param transformRank Rank of the transform.
        * @return Transform variant.
        */
-      template<std::size_t shapeExt, std::size_t transformExt>
       [[nodiscard]] static TransformVariant
-      makeTransformVariant(const dtt::Parameters<shapeExt, transformExt>& dttParams, std::size_t transformRank)
+      makeTransformVariant(const dtt::Parameters& dttParams, std::size_t transformRank)
       {
         if ((dttParams.types.size() != 1) && (dttParams.types.size() != transformRank))
         {
@@ -693,15 +696,16 @@ namespace afft::detail
         return dttDesc;
       }
 
-      Direction                mDirection{};      ///< Direction of the transform.
-      PrecisionTriad           mPrecision{};      ///< Precision triad of the transform.
-      std::size_t              mShapeRank{};      ///< Rank of the shape.
-      MaxDimArray<std::size_t> mShape{};          ///< Shape of the transform.
-      std::size_t              mTransformRank{};  ///< Rank of the transform.
-      MaxDimArray<std::size_t> mTransformAxes{};  ///< Axes of the transform.
-      Normalization            mNormalization{};  ///< Normalization of the transform.
-      Placement                mPlacement{};      ///< Placement of the transform.
-      TransformVariant         mTransformVariant; ///< Transform variant.
+      Direction                 mDirection{};      ///< Direction of the transform.
+      PrecisionTriad            mPrecision{};      ///< Precision triad of the transform.
+      std::size_t               mShapeRank{};      ///< Rank of the shape.
+      MaxDimBuffer<std::size_t> mShape{};          ///< Shape of the transform.
+      std::size_t               mTransformRank{};  ///< Rank of the transform.
+      MaxDimBuffer<std::size_t> mTransformAxes{};  ///< Axes of the transform.
+      Normalization             mNormalization{};  ///< Normalization of the transform.
+      Placement                 mPlacement{};      ///< Placement of the transform.
+      bool                      mDestructive{};    ///< Destructive transform.
+      TransformVariant          mTransformVariant; ///< Transform variant.
   };
 } // namespace afft::detail
 

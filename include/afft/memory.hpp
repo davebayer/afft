@@ -57,29 +57,43 @@ namespace afft
     neon   = simd128,  ///< NEON alignment
     sve    = simd2048, ///< SVE alignment
   };
+
+  /// @brief Memory layout type
+  enum class MemoryLayout
+  {
+    centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
+    distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
+  };
+
+  /// @brief Complex number format
+  enum class ComplexFormat : std::uint8_t
+  {
+    interleaved, ///< interleaved complex format
+    planar,      ///< planar complex format
+  };
   
   /// @brief Memory layout of the centralized transform
-  struct MemoryLayout
+  struct CentralizedMemoryLayout
   {
-    ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
     Alignment     alignment{};                               ///< alignment of the memory
+    ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
     View<Size>    srcStrides{};                              ///< strides of the source memory
     View<Size>    dstStrides{};                              ///< strides of the destination memory
   };
 
-  /// @brief Memory block
+  /// @brief Memory block of the distributed transform
   struct MemoryBlock
   {
-    View<Size> starts{};    ///< starts of the memory block
-    View<Size> sizes{};     ///< sizes of the memory block
-    View<Size> strides{};   ///< strides of the memory block
+    View<Size> starts{};  ///< starts of the memory block
+    View<Size> sizes{};   ///< sizes of the memory block
+    View<Size> strides{}; ///< strides of the memory block
   };
 
   /// @brief Memory layout of the distributed transform
-  struct DistribMemoryLayout
+  struct DistributedMemoryLayout
   {
-    ComplexFormat     complexFormat{ComplexFormat::interleaved}; ///< complex number format
     Alignment         alignment{};                               ///< alignment of the memory
+    ComplexFormat     complexFormat{ComplexFormat::interleaved}; ///< complex number format
     View<MemoryBlock> srcBlocks{};                               ///< source memory blocks
     View<Axis>        srcDistribAxes{};                          ///< axes along which the source data are distributed
     View<Axis>        srcAxesOrder{};                            ///< order of the source axes

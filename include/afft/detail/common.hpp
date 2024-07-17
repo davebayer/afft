@@ -29,46 +29,35 @@
 # include "include.hpp"
 #endif
 
-#include "utils.hpp"
 #include "validate.hpp"
 #include "../common.hpp"
 
 namespace afft::detail
 {
   /**
+   * @brief Buffer is a simple buffer with a fixed size.
+   * @tparam T The type of the elements.
+   * @tparam size The number of elements.
+   */
+  template<typename T, std::size_t size>
+  struct Buffer
+  {
+    T data[size]; ///< The data.
+  };
+
+  /**
+   * @brief MaxDimBuffer is a Buffer with a maximum number of elements defined by maxDimCount.
+   * @tparam T The type of the elements.
+   */
+  template<typename T>
+  using MaxDimBuffer = Buffer<T, maxDimCount>;
+
+  /**
    * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxDimCount.
    * @tparam T The type of the elements.
    */
   template<typename T>
-  struct MaxDimArray : std::array<T, maxDimCount>
-  {
-    /**
-     * @brief Safely casts the elements of the array to a different type.
-     * @tparam U The type to cast to.
-     * @return A new MaxDimArray with the elements cast to the new type.
-     */
-    template<typename U>
-    [[nodiscard]] constexpr MaxDimArray<U> cast() const noexcept(std::is_same_v<T, U>)
-    {
-      static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Both types must be integral.");
-
-      if constexpr (std::is_same_v<T, U>)
-      {
-        return *this;
-      }
-      else
-      {
-        MaxDimArray<U> result{};
-
-        for (std::size_t i{}; i < this->size(); ++i)
-        {
-          result[i] = safeIntCast<U>((*this)[i]);
-        }
-
-        return result;
-      }
-    }
-  };
+  using MaxDimArray = std::array<T, maxDimCount>;
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_COMMON_HPP */

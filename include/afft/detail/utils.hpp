@@ -29,53 +29,60 @@
 # include "include.hpp"
 #endif
 
+#include "common.hpp"
 #include "cxx.hpp"
 #include "../Span.hpp"
 
 namespace afft::detail
 {
   /**
-   * @brief Creates a view over a single element.
-   * @tparam T Type of the element.
-   * @tparam extent Number of elements in the view.
-   * @param value Element to create the view from.
-   * @return View containing the element.
+   * @brief Casts a view of values to a buffer of a different type.
+   * @tparam DstT Type of the destination buffer.
+   * @tparam SrcT Type of the source view.
+   * @tparam size Size of the view and buffer.
+   * @tparam CastFnT Type of the casting function.
+   * @param view View of values to cast.
+   * @param fn Casting function.
+   * @return Buffer of casted values.
    */
-  template<typename T, std::size_t extent = dynamicExtent>
-  [[nodiscard]] constexpr View<T, extent> makeView(const T& value) noexcept
+  template<typename DstT, typename SrcT, std::size_t size, typename CastFnT>
+  [[nodiscard]] constexpr auto cast(View<SrcT, size> view, CastFnT&& fn)
+    noexcept(std::is_nothrow_invocable_r_v<DstT, CastFnT, SrcT>)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(Buffer<DstT, size>),
+                         AFFT_PARAM(std::is_default_constructible_v<DstT> &&
+                                    size != dynamicExtent &&
+                                    std::is_invocable_r_v<DstT, CastFnT, SrcT>))
   {
-    return View<T, extent>{&value, 1};
+    Buffer<DstT, size> buffer{};
+
+    for (std::size_t i = 0; i < size; ++i)
+    {
+      buffer.data[i] = std::invoke(std::forward<CastFnT>(fn), view[i]);
+    }
+
+    return buffer;
   }
 
   /**
-   * @brief Creates an array from list of arguments
-   * @tparam T Resulting array type.
-   * @tparam Args Types of the arguments.
-   * @param args Arguments to create the array from.
-   * @return Array containing the arguments.
+   * @brief Casts a view of values to a buffer of a different type.
+   * @tparam DstT Type of the destination buffer.
+   * @tparam SrcT Type of the source view.
+   * @tparam size Size of the view and buffer.
+   * @param view View of values to cast.
+   * @return Buffer of casted values.
    */
-  template<typename T, typename... Args>
-  [[nodiscard]] constexpr std::array<T, sizeof...(Args)> makeArray(Args&&... args)
+  template<typename DstT, typename SrcT, std::size_t size>
+  [[nodiscard]] constexpr auto cast(View<SrcT, size> view)
+    noexcept(std::is_nothrow_constructible_v<SrcT, DstT>)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(Buffer<DstT, size>),
+                         AFFT_PARAM(std::is_constructible_v<DstT, SrcT> &&
+                                    std::is_default_constructible_v<DstT> &&
+                                    size != dynamicExtent))
   {
-    static_assert(!std::is_reference_v<T>, "Array type must not be a reference");
-    static_assert(std::conjunction_v<std::is_convertible<Args, T>...>,
-                  "Arguments must be convertible to the array type");
-
-    return std::array<T, sizeof...(Args)>{std::forward<Args>(args)...};
-  }
-
-  /**
-   * @brief Reinterprets a span of elements as a span of a different type.
-   * @tparam T Target type.
-   * @tparam U Source type.
-   * @tparam extent Number of elements in the span.
-   * @param span Span to reinterpret.
-   * @return Reinterpreted span.
-   */
-  template<typename T, typename U, std::size_t extent>
-  View<T, extent> reinterpretViewCast(View<U, extent> span)
-  {
-    return View<T, extent>{reinterpret_cast<const T*>(span.data()), span.size()};
+    return cast(view, [](const SrcT& value) noexcept(std::is_nothrow_constructible_v<SrcT, DstT>)
+    {
+      return static_cast<DstT>(value);
+    });
   }
 
   /**

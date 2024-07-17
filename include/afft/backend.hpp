@@ -30,7 +30,6 @@
 #endif
 
 #include "detail/backend.hpp"
-#include "detail/utils.hpp"
 
 #include "common.hpp"
 #include "mp.hpp"
