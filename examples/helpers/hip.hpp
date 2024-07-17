@@ -22,16 +22,18 @@
   SOFTWARE.
 */
 
-#ifndef HELPERS_HIP_HPP
-#define HELPERS_HIP_HPP
+#ifndef HELPERS_CUDA_HPP
+#define HELPERS_CUDA_HPP
 
 #include <cstdio>
-#include <cstdlib>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
 #include <hip_runtime.h>
+
+#include "cformat.hpp"
 
 /**
  * @brief Macro for checking HIP errors. The call cannot contain _error variable.
@@ -42,8 +44,7 @@
     const hipError_t _error = (call); \
     if (_error != hipSuccess) \
     { \
-      std::fprintf(stderr, "HIP error (%s:%d): %s\n", __FILE__, __LINE__, hipGetErrorString(_error)); \
-      std::exit(EXIT_FAILURE); \
+      throw cformatNothrow("HIP error (%s:%d): %s", __FILE__, __LINE__, hipGetErrorString(_error)); \
     } \
   } while (0)
 
@@ -78,7 +79,7 @@ namespace helpers::hip
    * @brief Make a HIP stream
    * @return HIP stream
    */
-  inline Stream makeStream(unsigned flags = hipStreamDefault) noexcept
+  inline Stream makeStream(unsigned flags = hipStreamDefault)
   {
     hipStream_t stream{};
 

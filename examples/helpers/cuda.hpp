@@ -26,24 +26,25 @@
 #define HELPERS_CUDA_HPP
 
 #include <cstdio>
-#include <cstdlib>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
 #include <cuda_runtime.h>
 
+#include "cformat.hpp"
+
 /**
- * @brief Macro for checking CUDA errors. The call cannot contain _error variable.
- * @param call CUDA function call
+ * @brief Macro for checking CUDA runtime errors. The call cannot contain _error variable.
+ * @param call CUDA runtime function call
  */
 #define CUDART_CALL(call) \
   do { \
     const cudaError_t _error = (call); \
     if (_error != cudaSuccess) \
     { \
-      std::fprintf(stderr, "CUDA error (%s:%d): %s\n", __FILE__, __LINE__, cudaGetErrorString(_error)); \
-      std::exit(EXIT_FAILURE); \
+      throw cformatNothrow("CUDA error (%s:%d): %s", __FILE__, __LINE__, cudaGetErrorString(_error)); \
     } \
   } while (0)
 
@@ -78,7 +79,7 @@ namespace helpers::cuda
    * @brief Make a CUDA stream
    * @return CUDA stream
    */
-  inline Stream makeStream(unsigned flags = cudaStreamDefault) noexcept
+  inline Stream makeStream(unsigned flags = cudaStreamDefault)
   {
     cudaStream_t stream{};
 
