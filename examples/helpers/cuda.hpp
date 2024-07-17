@@ -38,14 +38,14 @@
  * @param call CUDA function call
  */
 #define CUDART_CALL(call) \
-do { \
-  const cudaError_t _error = (call); \
-  if (_error != cudaSuccess) \
-  { \
-    std::fprintf(stderr, "CUDA error (%s:%d): %s\n", __FILE__, __LINE__, cudaGetErrorString(_error)); \
-    std::exit(EXIT_FAILURE); \
-  } \
-} while (0)
+  do { \
+    const cudaError_t _error = (call); \
+    if (_error != cudaSuccess) \
+    { \
+      std::fprintf(stderr, "CUDA error (%s:%d): %s\n", __FILE__, __LINE__, cudaGetErrorString(_error)); \
+      std::exit(EXIT_FAILURE); \
+    } \
+  } while (0)
 
 namespace helpers::cuda
 {
