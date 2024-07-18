@@ -25,18 +25,25 @@
 #ifndef AFFT_H
 #define AFFT_H
 
+// Include the version header.
+#include "afft-version.h"
+
+// Include the config header.
+#include "detail/config.h"
+
 // Include only once in the top-level header.
 #include "detail/include.h"
 #define AFFT_TOP_LEVEL_INCLUDE
 
 // Include all public headers.
-#include "alloc.h"
-#include "architecture.h"
 #include "backend.h"
 #include "common.h"
 #include "error.h"
 #include "init.h"
+#include "memory.h"
 #include "Plan.h"
+#include "PlanCache.h"
+#include "target.h"
 #include "transform.h"
 #include "utils.h"
 #include "version.h"
