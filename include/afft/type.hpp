@@ -29,7 +29,7 @@
 # include "detail/include.hpp"
 #endif
 
-#include "detail/common.hpp"
+#include "error.hpp"
 
 AFFT_EXPORT namespace afft
 {
@@ -90,64 +90,49 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Gets the size of a floating-point type.
-   * @tparam prec The precision.
-   * @tparam cmpl The complexity.
-   * @return The size of the floating-point type. If the precision is not supported, returns 0.
-   */
-  template<Precision prec, Complexity cmpl = Complexity::real>
-  [[nodiscard]] constexpr std::size_t sizeOf() noexcept
-  {
-    static_assert(detail::isValid(prec), "Invalid precision.");
-    static_assert(detail::isValid(cmpl), "Invalid complexity.");
-
-    constexpr std::size_t cmplScale = (cmpl == Complexity::real) ? 1 : 2;
-
-    switch (prec)
-    {
-    case Precision::bf16:
-      return cmplScale * 2;
-    case Precision::f16:
-      return cmplScale * 2;
-    case Precision::f32:
-      return cmplScale * 4;
-    case Precision::f64:
-      return cmplScale * 8;
-    case Precision::f64f64:
-      return cmplScale * 16;
-    case Precision::f80: // fixme: size may vary depending on the platform
-      return cmplScale * 16;
-    case Precision::f128:
-      return cmplScale * 16;
-    default:
-      return 0;
-    }
-  }
-
-  /**
-   * @brief Gets the size of a floating-point type.
    * @param prec The precision.
+   * @param cmpl The complexity. Default is real.
    * @return The size of the floating-point type. If the precision is not supported, returns 0.
    */
-  [[nodiscard]] constexpr std::size_t sizeOf(Precision prec)
+  [[nodiscard]] constexpr std::size_t sizeOf(Precision prec, Complexity cmpl = Complexity::real)
   {
+    std::size_t sizeInBytes{};
+
     switch (prec)
     {
     case Precision::bf16:
-      return sizeOf<Precision::bf16>();
+      sizeInBytes = 2;
+      break;
     case Precision::f16:
-      return sizeOf<Precision::f16>();
+      sizeInBytes = 2;
+      break;
     case Precision::f32:
-      return sizeOf<Precision::f32>();
+      sizeInBytes = 4;
+      break;
     case Precision::f64:
-      return sizeOf<Precision::f64>();
+      sizeInBytes = 8;
+      break;
     case Precision::f64f64:
-      return sizeOf<Precision::f64f64>();
-    case Precision::f80:
-      return sizeOf<Precision::f80>();
+      sizeInBytes = 16;
+      break;
+    case Precision::f80: // fixme: size may vary depending on the platform
+      sizeInBytes = 16;
+      break;
     case Precision::f128:
-      return sizeOf<Precision::f128>();
+      sizeInBytes = 16;
+      break;
     default:
-      throw Exception{Error::invalidArgument, "invalid precision"};
+      throw Exception{Error::invalidArgument, "unsupported precision"};
+    }
+
+    switch (cmpl)
+    {
+    case Complexity::real:
+      return sizeInBytes;
+    case Complexity::complex:
+      return 2 * sizeInBytes;
+    default:
+      throw Exception{Error::invalidArgument, "unsupported complexity"};
     }
   }
 
@@ -175,14 +160,8 @@ AFFT_EXPORT namespace afft
     static_assert(!std::is_abstract_v<T>, "Type T cannot be abstract");
 
     // Ensure the size of the type matches the given precision and complexity
-    static_assert(sizeof(T) == sizeOf<prec, cmpl>(),
+    static_assert(sizeof(T) == sizeOf(prec, cmpl),
                   "Size of the type must match the given precision and complexity");
-
-    // Ensure the precision is valid
-    static_assert(detail::isValid(prec), "Invalid precision");
-
-    // Ensure the complexity is valid
-    static_assert(detail::isValid(cmpl), "Invalid complexity");
 
     static constexpr Precision  precision{prec};  ///< The precision.
     static constexpr Complexity complexity{cmpl}; ///< The complexity.

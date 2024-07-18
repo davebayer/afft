@@ -72,29 +72,29 @@ enum
   
   /// @brief native alignment
 #if defined(__AVX512F__)
-  afft_Alignment_cpuNative = afft_Alignment_avx512;
+  afft_Alignment_cpuNative = afft_Alignment_avx512,
 #elif defined(__AVX2__)
-  afft_Alignment_cpuNative = afft_Alignment_avx2;
+  afft_Alignment_cpuNative = afft_Alignment_avx2,
 #elif defined(__AVX__)
-  afft_Alignment_cpuNative = afft_Alignment_avx;
+  afft_Alignment_cpuNative = afft_Alignment_avx,
 #elif defined(__SSE4_2__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4_2;
+  afft_Alignment_cpuNative = afft_Alignment_sse4_2,
 #elif defined(__SSE4_1__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4_1;
+  afft_Alignment_cpuNative = afft_Alignment_sse4_1,
 #elif defined(__SSE4__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4;
+  afft_Alignment_cpuNative = afft_Alignment_sse4,
 #elif defined(__SSE3__)
-  afft_Alignment_cpuNative = afft_Alignment_sse3;
+  afft_Alignment_cpuNative = afft_Alignment_sse3,
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-  afft_Alignment_cpuNative = afft_Alignment_sse2;
+  afft_Alignment_cpuNative = afft_Alignment_sse2,
 #elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-  afft_Alignment_cpuNative = afft_Alignment_sse;
+  afft_Alignment_cpuNative = afft_Alignment_sse,
 #elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-  afft_Alignment_cpuNative = afft_Alignment_neon;
+  afft_Alignment_cpuNative = afft_Alignment_neon,
 #elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
-  afft_Alignment_cpuNative = afft_Alignment_sve;
+  afft_Alignment_cpuNative = afft_Alignment_sve,
 #else
-  afft_Alignment_cpuNative = afft_Alignment_simd128;
+  afft_Alignment_cpuNative = afft_Alignment_simd128,
 #endif
 };
 

@@ -66,29 +66,29 @@ namespace afft
 
     /// @brief native alignment
 # if defined(__AVX512F__)
-    cpuNative = avx512;
+    cpuNative = avx512,
 # elif defined(__AVX2__)
-    cpuNative = avx2;
+    cpuNative = avx2,
 # elif defined(__AVX__)
-    cpuNative = avx;
+    cpuNative = avx,
 # elif defined(__SSE4_2__)
-    cpuNative = sse4_2;
+    cpuNative = sse4_2,
 # elif defined(__SSE4_1__)
-    cpuNative = sse4_1;
+    cpuNative = sse4_1,
 # elif defined(__SSE4__)
-    cpuNative = sse4;
+    cpuNative = sse4,
 # elif defined(__SSE3__)
-    cpuNative = sse3;
+    cpuNative = sse3,
 # elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-    cpuNative = sse2;
+    cpuNative = sse2,
 # elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-    cpuNative = sse;
+    cpuNative = sse,
 # elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-    cpuNative = neon;
+    cpuNative = neon,
 # elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
-    cpuNative = sve;
+    cpuNative = sve,
 # else
-    cpuNative = defaultNew;
+    cpuNative = defaultNew,
 # endif
   };
 

@@ -29,11 +29,10 @@
 # include "detail/include.hpp"
 #endif
 
-#include "detail/backend.hpp"
-
 #include "common.hpp"
 #include "mp.hpp"
 #include "target.hpp"
+#include "detail/backend.hpp"
 
 AFFT_EXPORT namespace afft
 {

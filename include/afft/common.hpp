@@ -29,8 +29,6 @@
 # include "detail/include.hpp"
 #endif
 
-#include "Span.hpp"
-
 AFFT_EXPORT namespace afft
 {
   /// @brief Maximum number of dimensions
