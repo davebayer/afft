@@ -36,7 +36,7 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Multi-process backend
-  enum class MpBackend
+  enum class MpBackend : std::uint8_t
   {
     none, ///< No multi-process backend (single-process)
     mpi,  ///< MPI multi-process backend

@@ -151,6 +151,7 @@ AFFT_EXPORT namespace afft
     } // namespace opencl
   } // namespace clfft
 
+  /// @brief clFFT OpenCL backend parameters
   struct clfft::opencl::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>, BackendConstant<Backend::clfft>
   {
@@ -175,6 +176,7 @@ AFFT_EXPORT namespace afft
     } // namespace mpi::cuda
   } // namespace cufft
 
+  /// @brief cuFFT workspace policy
   enum class cufft::WorkspacePolicy : std::uint8_t
   {
     performance, ///< Use the workspace for performance
@@ -182,6 +184,7 @@ AFFT_EXPORT namespace afft
     user,        ///< Use the user-defined workspace size
   };
 
+  /// @brief cuFFT CUDA backend parameters
   struct cufft::cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>, BackendConstant<Backend::cufft>
   {
@@ -190,6 +193,7 @@ AFFT_EXPORT namespace afft
     View<std::size_t> userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
   };
 
+  /// @brief cuFFT MPI CUDA backend parameters
   struct cufft::mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>, BackendConstant<Backend::cufft>
   {
@@ -227,6 +231,7 @@ AFFT_EXPORT namespace afft
   /// @brief No time limit for the planner
   inline constexpr std::chrono::duration<double> noTimeLimit{-1.0};
 
+  /// @brief FFTW3 cpu backend parameters
   struct fftw3::cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>, BackendConstant<Backend::fftw3>
   {
@@ -238,6 +243,7 @@ AFFT_EXPORT namespace afft
     std::chrono::duration<double> timeLimit{noTimeLimit};             ///< Time limit for the planner
   };
 
+  /// @brief FFTW3 MPI cpu backend parameters
   struct fftw3::mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<Backend::fftw3>
   {
@@ -291,6 +297,7 @@ AFFT_EXPORT namespace afft
     mkl,   ///< MKL backend
   };
 
+  /// @brief HeFFTe MPI cpu backend parameters
   struct heffte::mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<afft::Backend::heffte>
   {
@@ -306,6 +313,7 @@ AFFT_EXPORT namespace afft
     cufft, ///< cuFFT backend
   };
 
+  /// @brief HeFFTe MPI CUDA backend parameters
   struct heffte::mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>, BackendConstant<afft::Backend::heffte>
   {
@@ -321,13 +329,14 @@ AFFT_EXPORT namespace afft
     rocfft, ///< rocFFT backend
   };
 
+  /// @brief HeFFTe MPI HIP backend parameters
   struct heffte::mpi::hip::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>, BackendConstant<afft::Backend::heffte>
   {
     hip::Backend backend{hip::Backend::rocfft}; ///< Backend
-    bool         useReorder{true};  ///< Use reorder flag
-    bool         useAllToAll{true}; ///< Use alltoall flag
-    bool         usePencils{true};  ///< Use pencils flag
+    bool         useReorder{true};              ///< Use reorder flag
+    bool         useAllToAll{true};             ///< Use alltoall flag
+    bool         usePencils{true};              ///< Use pencils flag
   };
 
 /**********************************************************************************************************************/
@@ -362,6 +371,7 @@ AFFT_EXPORT namespace afft
     struct BackendParameters;
   } // namespace opencl
 
+  /// @brief CPU backend parameters
   struct cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
@@ -371,6 +381,7 @@ AFFT_EXPORT namespace afft
     fftw3::BackendParameters fftw3{};                         ///< FFTW3 backend initialization parameters
   };
 
+  /// @brief CUDA backend parameters
   struct cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
@@ -380,12 +391,23 @@ AFFT_EXPORT namespace afft
     cufft::BackendParameters cufft{};                         ///< cuFFT backend initialization parameters
   };
 
+  /// @brief HIP backend parameters
   struct hip::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask              mask{BackendMask::all};          ///< Backend mask
     View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+  };
+
+  /// @brief OpenCL backend parameters
+  struct opencl::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>
+  {
+    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask              mask{BackendMask::all};          ///< Backend mask
+    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    clfft::BackendParameters clfft{};                         ///< clFFT backend initialization parameters
   };
 
   namespace mpi
@@ -426,8 +448,13 @@ AFFT_EXPORT namespace afft
       } // namespace rocfft
       struct BackendParameters;
     } // namespace hip
+    namespace opencl
+    {
+      struct BackendParameters;
+    } //
   } // namespace mpi
 
+  /// @brief MPI CPU backend parameters
   struct mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
@@ -438,6 +465,7 @@ AFFT_EXPORT namespace afft
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
 
+  /// @brief MPI CUDA backend parameters
   struct mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
   {
@@ -448,6 +476,7 @@ AFFT_EXPORT namespace afft
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
 
+  /// @brief MPI HIP backend parameters
   struct mpi::hip::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
   {
@@ -455,6 +484,15 @@ AFFT_EXPORT namespace afft
     BackendMask               mask{BackendMask::all};          ///< Backend mask
     View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+  };
+
+  /// @brief MPI OpenCL backend parameters
+  struct mpi::opencl::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::opencl>
+  {
+    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask    mask{BackendMask::all};          ///< Backend mask
+    View<Backend>  order{};                         ///< Backend initialization order, empty view means default order for the target
   };
 
   /**

@@ -30,17 +30,81 @@
 #endif
 
 #include "common.h"
+#include "type.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+/// @brief Transform type
+typedef uint8_t afft_Transform;
+
+/// @brief Transform enumeration
+enum
+{
+  afft_Transform_dft, ///< Discrete Fourier Transform
+  afft_Transform_dht, ///< Discrete Hartley Transform
+  afft_Transform_dtt, ///< Discrete Trigonometric Transform
+};
+
+/// @brief Direction type
+typedef uint8_t afft_Direction;
+
+/// @brief Direction enumeration
+enum
+{
+  afft_Direction_forward, ///< Forward
+  afft_Direction_inverse, ///< Inverse
+
+  afft_Direction_backward = afft_Direction_inverse, ///< Alias for inverse
+};
+
+/// @brief Normalization type
+typedef uint8_t afft_Normalization;
+
+/// @brief Normalization enumeration
+enum
+{
+  afft_Normalization_none,       ///< No normalization
+  afft_Normalization_orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
+  afft_Normalization_unitary,    ///< 1/N normalization applied to inverse transform
+};
+
+/// @brief Placement type
+typedef uint8_t afft_Placement;
+
+/// @brief Placement enumeration
+enum
+{
+  afft_Placement_inPlace,    ///< In-place
+  afft_Placement_outOfPlace, ///< Out-of-place
+
+  afft_Placement_notInPlace = afft_Placement_outOfPlace, ///< Alias for outOfPlace
+};
+
+/// @brief Precision triad type
+typedef struct afft_PrecisionTriad afft_PrecisionTriad;
+
+/// @brief Precision triad structure
+struct afft_PrecisionTriad
+{
+  afft_Precision execution;   ///< Precision of the execution
+  afft_Precision source;      ///< Precision of the source data
+  afft_Precision destination; ///< Precision of the destination data
+};
+
+/// @brief Named constant representing all axes
+#define AFFT_ALL_AXES ((afft_Axis*)0)
+
 /**********************************************************************************************************************/
 // Discrete Fourier Transform (DFT)
 /**********************************************************************************************************************/
 /// @brief DFT transform type
 typedef uint8_t afft_dft_Type;
+
+/// @brief DFT transform parameters structure
+typedef struct afft_dft_Parameters afft_dft_Parameters;
 
 /// @brief DFT transform enumeration
 enum
@@ -54,25 +118,28 @@ enum
   afft_dft_Type_c2r = afft_dft_Type_complexToReal,    ///< Alias for complex-to-real transform
 };
 
-/// @brief DFT parameters enumeration
-typedef struct
+/// @brief DFT parameters structure
+struct afft_dft_Parameters
 {
   afft_Direction      direction;     ///< Direction of the transform
   afft_PrecisionTriad precision;     ///< Precision triad
   size_t              shapeRank;     ///< Rank of the shape
-  const size_t*       shape;         ///< Shape of the transform
+  const afft_Size*    shape;         ///< Shape of the transform
   size_t              axesRank;      ///< Rank of the axes
-  const size_t*       axes;          ///< Axes of the transform
+  const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
   afft_dft_Type       type;          ///< Type of the transform
-} afft_dft_Parameters;
+};
 
 /**********************************************************************************************************************/
 // Discrete Hartley Transform (DHT)
 /**********************************************************************************************************************/
 /// @brief DHT transform type
 typedef uint8_t afft_dht_Type;
+
+/// @brief DHT transform parameters structure
+typedef struct afft_dht_Parameters afft_dht_Parameters;
 
 /// @brief DHT transform enumeration
 enum
@@ -81,24 +148,27 @@ enum
 };
 
 /// @brief DHT parameters structure
-typedef struct
+struct afft_dht_Parameters
 {
   afft_Direction      direction;     ///< Direction of the transform
   afft_PrecisionTriad precision;     ///< Precision triad
   size_t              shapeRank;     ///< Rank of the shape
-  const size_t*       shape;         ///< Shape of the transform
+  const afft_Size*    shape;         ///< Shape of the transform
   size_t              axesRank;      ///< Rank of the axes
-  const size_t*       axes;          ///< Axes of the transform
+  const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
   afft_dht_Type       type;          ///< Type of the transform
-} afft_dht_Parameters;
+};
 
 /**********************************************************************************************************************/
 // Discrete Trigonometric Transform (DTT)
 /**********************************************************************************************************************/
 /// @brief DTT transform type
 typedef uint8_t afft_dtt_Type;
+
+/// @brief DTT transform parameters structure
+typedef struct afft_dtt_Parameters afft_dtt_Parameters;
 
 /// @brief DTT transform enumeration
 enum
@@ -118,7 +188,7 @@ enum
 };
 
 /// @brief DTT parameters structure
-typedef struct
+struct afft_dtt_Parameters
 {
   afft_Direction       direction;     ///< Direction of the transform
   afft_PrecisionTriad  precision;     ///< Precision triad
@@ -129,118 +199,7 @@ typedef struct
   afft_Normalization   normalization; ///< Normalization
   afft_Placement       placement;     ///< Placement of the transform
   const afft_dtt_Type* types;         ///< Types of the transform
-} afft_dtt_Parameters;
-
-/**********************************************************************************************************************/
-// General transform parameters
-/**********************************************************************************************************************/
-/// @brief Transform parameters structure
-typedef struct
-{
-  union
-  {
-    afft_dft_Parameters dft;
-    afft_dht_Parameters dht;
-    afft_dtt_Parameters dtt;
-  };
-  afft_Transform        transform;
-} afft_TransformParameters;
-
-/**********************************************************************************************************************/
-// Private functions
-/**********************************************************************************************************************/
-static inline afft_TransformParameters _afft_makeTransformParametersDft(afft_dft_Parameters params)
-{
-  afft_TransformParameters result;
-  result.dft       = params;
-  result.transform = afft_Transform_dft;
-
-  return result;
-}
-
-static inline afft_TransformParameters _afft_makeTransformParametersDht(afft_dht_Parameters params)
-{
-  afft_TransformParameters result;
-  result.dht       = params;
-  result.transform = afft_Transform_dht;
-
-  return result;
-}
-
-static inline afft_TransformParameters _afft_makeTransformParametersDtt(afft_dtt_Parameters params)
-{
-  afft_TransformParameters result;
-  result.dtt       = params;
-  result.transform = afft_Transform_dtt;
-
-  return result;
-}
-
-static inline afft_TransformParameters _afft_makeTransformParametersAny(afft_TransformParameters params)
-{
-  return params;
-}
-
-/**********************************************************************************************************************/
-// Public functions
-/**********************************************************************************************************************/
-#ifdef __cplusplus
-} // extern "C"
-
-/**
- * @brief Make transform parameters
- * @param params DFT parameters
- * @return Transform parameters
- */
-static inline afft_TransformParameters afft_makeTransformParameters(afft_dft_Parameters params)
-{
-  return _afft_makeTransformParametersDft(params);
-}
-
-/**
- * @brief Make transform parameters
- * @param params DHT parameters
- * @return Transform parameters
- */
-static inline afft_TransformParameters afft_makeTransformParameters(afft_dht_Parameters params)
-{
-  return _afft_makeTransformParametersDht(params);
-}
-
-/**
- * @brief Make transform parameters
- * @param params DTT parameters
- * @return Transform parameters
- */
-static inline afft_TransformParameters afft_makeTransformParameters(afft_dtt_Parameters params)
-{
-  return _afft_makeTransformParametersDtt(params);
-}
-
-/**
- * @brief Make transform parameters
- * @param params Transform parameters
- * @return Transform parameters
- */
-static inline afft_TransformParameters afft_makeTransformParameters(afft_TransformParameters params)
-{
-  return _afft_makeTransformParametersAny(params);
-}
-
-extern "C"
-{
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-  /**
-   * @brief Make transform parameters
-   * @param params DFT, DHT, DTT or general parameters
-   * @return Transform parameters
-   */
-# define afft_makeTransformParameters(params) _Generic((params), \
-    afft_dft_Parameters:      _afft_makeTransformParametersDft, \
-    afft_dht_Parameters:      _afft_makeTransformParametersDht, \
-    afft_dtt_Parameters:      _afft_makeTransformParametersDtt, \
-    afft_TransformParameters: _afft_makeTransformParametersAny)(params)
-#endif
+};
 
 #ifdef __cplusplus
 }

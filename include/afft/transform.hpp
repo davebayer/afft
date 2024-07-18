@@ -34,22 +34,6 @@
 
 AFFT_EXPORT namespace afft
 {
-  /// @brief Direction of the transform
-  enum class Direction : std::uint8_t
-  {
-    forward,            ///< forward transform
-    inverse,            ///< inverse transform
-    backward = inverse, ///< alias for inverse transform
-  };
-
-  /// @brief Placement of the transform
-  enum class Placement : std::uint8_t
-  {
-    inPlace,                 ///< in-place transform
-    outOfPlace,              ///< out-of-place transform
-    notInPlace = outOfPlace, ///< alias for outOfPlace transform
-  };
-
   /// @brief Transform type
   enum class Transform : std::uint8_t
   {
@@ -58,12 +42,28 @@ AFFT_EXPORT namespace afft
     dtt, ///< Discrete Trigonometric Transform
   };
 
+  /// @brief Direction of the transform
+  enum class Direction : std::uint8_t
+  {
+    forward,            ///< forward transform
+    inverse,            ///< inverse transform
+    backward = inverse, ///< alias for inverse transform
+  };
+
   /// @brief Normalization
   enum class Normalization : std::uint8_t
   {
     none,       ///< no normalization
     orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
     unitary,    ///< 1/N normalization applied to inverse transform
+  };
+
+  /// @brief Placement of the transform
+  enum class Placement : std::uint8_t
+  {
+    inPlace,                 ///< in-place transform
+    outOfPlace,              ///< out-of-place transform
+    notInPlace = outOfPlace, ///< alias for outOfPlace transform
   };
 
   /**

@@ -29,8 +29,6 @@
 # include "detail/include.h"
 #endif
 
-#include "common.h"
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -79,11 +77,14 @@ enum
 /**********************************************************************************************************************/
 // clFFT
 /**********************************************************************************************************************/
-/// @brief clFFT backend parameters for spst gpu architecture
-typedef struct
+/// @brief clFFT backend parameters for opencl target
+typedef struct afft_clfft_opencl_Parameters afft_clfft_opencl_Parameters;
+
+/// @brief clFFT backend parameters for opencl target
+struct afft_clfft_opencl_Parameters
 {
   bool useFastMath;
-} afft_spst_gpu_clfft_Parameters;
+};
 
 /**********************************************************************************************************************/
 // cuFFT
@@ -99,25 +100,25 @@ enum
   afft_cufft_WorkspacePolicy_user,        ///< Use the user-defined workspace size
 };
 
-/// @brief cuFFT backend parameters for spst gpu architecture
-typedef struct
+/// @brief cuFFT backend parameters for cuda target
+typedef struct afft_cufft_cuda_Parameters afft_cufft_cuda_Parameters;
+
+/// @brief cuFFT backend parameters for mpi cuda target
+typedef struct afft_cufft_mpi_cuda_Parameters afft_cufft_mpi_cuda_Parameters;
+
+/// @brief cuFFT backend parameters for cuda target
+struct afft_cufft_cuda_Parameters
 {
   afft_cufft_WorkspacePolicy workspacePolicy;   ///< Workspace policy
   bool                       usePatientJit;     ///< Use patient JIT
   size_t                     userWorkspaceSize; ///< User-defined workspace size
-} afft_spst_gpu_cufft_Parameters;
+};
 
-/// @brief cuFFT backend parameters for spmt gpu architecture
-typedef struct
+/// @brief cuFFT backend parameters for mpi cuda target
+struct afft_cufft_mpi_cuda_Parameters
 {
   bool usePatientJit; ///< Use patient JIT
-} afft_spmt_gpu_cufft_Parameters;
-
-/// @brief cuFFT backend parameters for mpst gpu architecture
-typedef struct
-{
-  bool usePatientJit; ///< Use patient JIT
-} afft_mpst_gpu_cufft_Parameters;
+};
 
 /**********************************************************************************************************************/
 // FFTW3
@@ -135,19 +136,17 @@ enum
   afft_fftw3_PlannerFlag_estimatePatient, ///< Estimate and patient plan flag
 };
 
-/// @brief FFTW3 backend parameters for spst cpu architecture
-typedef struct
-{
-  afft_fftw3_PlannerFlag plannerFlag;       ///< FFTW3 planner flag
-  bool                   conserveMemory;    ///< Conserve memory flag
-  bool                   wisdomOnly;        ///< Wisdom only flag
-  bool                   allowLargeGeneric; ///< Allow large generic flag
-  bool                   allowPruning;      ///< Allow pruning flag
-  double                 timeLimit;         ///< Time limit for the planner
-} afft_spst_cpu_fftw3_Parameters;
+/// @brief FFTW3 backend parameters for cpu target
+typedef struct afft_fftw3_cpu_Parameters afft_fftw3_cpu_Parameters;
 
-/// @brief FFTW3 backend parameters for mpst cpu architecture
-typedef struct
+/// @brief FFTW3 backend parameters for mpi cpu target
+typedef struct afft_fftw3_mpi_cpu_Parameters afft_fftw3_mpi_cpu_Parameters;
+
+/// @brief No time limit for the planner
+#define AFFT_FFTW3_NO_TIME_LIMIT -1.0
+
+/// @brief FFTW3 backend parameters for cpu target
+struct afft_fftw3_cpu_Parameters
 {
   afft_fftw3_PlannerFlag plannerFlag;       ///< FFTW3 planner flag
   bool                   conserveMemory;    ///< Conserve memory flag
@@ -155,8 +154,19 @@ typedef struct
   bool                   allowLargeGeneric; ///< Allow large generic flag
   bool                   allowPruning;      ///< Allow pruning flag
   double                 timeLimit;         ///< Time limit for the planner
-  size_t                 blockSize;         ///< Decomposition block size
-} afft_mpst_cpu_fftw3_Parameters;
+};
+
+/// @brief FFTW3 backend parameters for mpi cpu target
+struct afft_fftw3_mpi_cpu_Parameters
+{
+  afft_fftw3_PlannerFlag plannerFlag;       ///< FFTW3 planner flag
+  bool                   conserveMemory;    ///< Conserve memory flag
+  bool                   wisdomOnly;        ///< Wisdom only flag
+  bool                   allowLargeGeneric; ///< Allow large generic flag
+  bool                   allowPruning;      ///< Allow pruning flag
+  double                 timeLimit;         ///< Time limit for the planner
+  afft_Size              blockSize;         ///< Decomposition block size
+};
 
 /**********************************************************************************************************************/
 // HeFFTe
@@ -171,121 +181,169 @@ enum
   afft_heffte_cpu_Backend_mkl,   ///< MKL backend
 };
 
-/// @brief HeFFTe gpu backend type
-typedef uint8_t afft_heffte_gpu_Backend;
+/// @brief HeFFTe cuda backend type
+typedef uint8_t afft_heffte_cuda_Backend;
 
 /// @brief HeFFTe gpu backend enumeration
 enum
 {
   afft_heffte_gpu_Backend_cufft,  ///< cuFFT backend
-  afft_heffte_gpu_Backend_rocfft, ///< rocFFT backend
 };
 
-/// @brief HeFFTe backend parameters for mpst cpu architecture
-typedef struct
+/// @brief HeFFTe hip backend type
+typedef uint8_t afft_heffte_hip_Backend;
+
+/// @brief HeFFTe hip backend enumeration
+enum
+{
+  afft_heffte_hip_Backend_rocfft, ///< rocFFT backend
+};
+
+/// @brief HeFFTe backend parameters for mpi cpu target
+typedef struct afft_heffte_mpi_cpu_Parameters afft_heffte_mpi_cpu_Parameters;
+
+/// @brief HeFFTe backend parameters for mpi cuda target
+typedef struct afft_heffte_mpi_cuda_Parameters afft_heffte_mpi_cuda_Parameters;
+
+/// @brief HeFFTe backend parameters for mpi hip target
+typedef struct afft_heffte_mpi_hip_Parameters afft_heffte_mpi_hip_Parameters;
+
+/// @brief HeFFTe backend parameters for mpi cpu target
+struct afft_heffte_mpi_cpu_Parameters
 {
   afft_heffte_cpu_Backend backend;     ///< HeFFTe backend
   bool                    useReorder;  ///< Use reorder flag
   bool                    useAllToAll; ///< Use all-to-all flag
   bool                    usePencils;  ///< Use pencils flag
-} afft_mpst_cpu_heffte_Parameters;
+};
 
-/// @brief HeFFTe backend parameters for mpst gpu architecture
-typedef struct
+/// @brief HeFFTe backend parameters for mpi cuda target
+struct afft_heffte_mpi_cuda_Parameters
 {
-  afft_heffte_gpu_Backend backend;     ///< HeFFTe backend
+  afft_heffte_cuda_Backend backend;     ///< HeFFTe backend
+  bool                     useReorder;  ///< Use reorder flag
+  bool                     useAllToAll; ///< Use all-to-all flag
+  bool                     usePencils;  ///< Use pencils flag
+};
+
+/// @brief HeFFTe backend parameters for mpi hip target
+struct afft_heffte_mpi_hip_Parameters
+{
+  afft_heffte_hip_Backend backend;     ///< HeFFTe backend
   bool                    useReorder;  ///< Use reorder flag
   bool                    useAllToAll; ///< Use all-to-all flag
   bool                    usePencils;  ///< Use pencils flag
-} afft_mpst_gpu_heffte_Parameters;
+};
 
 /**********************************************************************************************************************/
-// Backend parameters for spst distribution
+// Backend parameters for single process targets
 /**********************************************************************************************************************/
-/// @brief Backend parameters for spst cpu architecture
-typedef struct
+/// @brief Backend parameters for cpu target
+typedef struct afft_cpu_BackendParameters afft_cpu_BackendParameters;
+
+/// @brief Backend parameters for cuda target
+typedef struct afft_cuda_BackendParameters afft_cuda_BackendParameters;
+
+/// @brief Backend parameters for hip target
+typedef struct afft_hip_BackendParameters afft_hip_BackendParameters;
+
+/// @brief Backend parameters for opencl target
+typedef struct afft_opencl_BackendParameters afft_opencl_BackendParameters;
+
+/// @brief Backend parameters for cpu target
+struct afft_cpu_BackendParameters
+{
+  afft_SelectStrategy       strategy;  ///< Select strategy
+  afft_BackendMask          mask;      ///< Backend mask
+  size_t                    orderSize; ///< Number of backends in the order
+  const afft_Backend*       order;     ///< Order of the backends
+  afft_fftw3_cpu_Parameters fftw3;     ///< FFTW3 parameters
+};
+
+/// @brief Backend parameters for cuda target
+struct afft_cuda_BackendParameters
+{
+  afft_SelectStrategy        strategy;  ///< Select strategy
+  afft_BackendMask           mask;      ///< Backend mask
+  size_t                     orderSize; ///< Number of backends in the order
+  const afft_Backend*        order;     ///< Order of the backends
+  afft_cufft_cuda_Parameters cufft;     ///< cuFFT parameters
+};
+
+/// @brief Backend parameters for hip target
+struct afft_hip_BackendParameters
+{
+  afft_SelectStrategy        strategy;  ///< Select strategy
+  afft_BackendMask           mask;      ///< Backend mask
+  size_t                     orderSize; ///< Number of backends in the order
+  const afft_Backend*        order;     ///< Order of the backends
+};
+
+/// @brief Backend parameters for cuda target
+struct afft_opencl_BackendParameters
+{
+  afft_SelectStrategy          strategy;  ///< Select strategy
+  afft_BackendMask             mask;      ///< Backend mask
+  size_t                       orderSize; ///< Number of backends in the order
+  const afft_Backend*          order;     ///< Order of the backends
+  afft_clfft_opencl_Parameters clfft;     ///< clFFT parameters
+};
+
+/**********************************************************************************************************************/
+// Backend parameters for mpi targets
+/**********************************************************************************************************************/
+/// @brief Backend parameters for mpi cpu target
+typedef struct afft_mpi_cpu_BackendParameters afft_mpi_cpu_BackendParameters;
+
+/// @brief Backend parameters for mpi cuda target
+typedef struct afft_mpi_cuda_BackendParameters afft_mpi_cuda_BackendParameters;
+
+/// @brief Backend parameters for mpi hip target
+typedef struct afft_mpi_hip_BackendParameters afft_mpi_hip_BackendParameters;
+
+/// @brief Backend parameters for mpi opencl target
+typedef struct afft_mpi_opencl_BackendParameters afft_mpi_opencl_BackendParameters;
+
+/// @brief Backend parameters for cpu target
+struct afft_mpi_cpu_BackendParameters
 {
   afft_SelectStrategy            strategy;  ///< Select strategy
   afft_BackendMask               mask;      ///< Backend mask
   size_t                         orderSize; ///< Number of backends in the order
   const afft_Backend*            order;     ///< Order of the backends
-  afft_spst_cpu_fftw3_Parameters fftw3;     ///< FFTW3 parameters
-} afft_spst_cpu_BackendParameters;
+  afft_fftw3_mpi_cpu_Parameters  fftw3;     ///< FFTW3 parameters
+  afft_heffte_mpi_cpu_Parameters heffte;    ///< HeFFTe parameters
+};
 
-/// @brief Backend parameters for spst gpu architecture
-typedef struct
-{
-  afft_SelectStrategy            strategy;  ///< Select strategy
-  afft_BackendMask               mask;      ///< Backend mask
-  size_t                         orderSize; ///< Number of backends in the order
-  const afft_Backend*            order;     ///< Order of the backends
-  afft_spst_gpu_clfft_Parameters clfft;     ///< clFFT parameters
-  afft_spst_gpu_cufft_Parameters cufft;     ///< cuFFT parameters
-} afft_spst_gpu_BackendParameters;
-
-/**********************************************************************************************************************/
-// Backend parameters for spmt distribution
-/**********************************************************************************************************************/
-/// @brief Backend parameters for spmt gpu architecture
-typedef struct
-{
-  afft_SelectStrategy            strategy;  ///< Select strategy
-  afft_BackendMask               mask;      ///< Backend mask
-  size_t                         orderSize; ///< Number of backends in the order
-  const afft_Backend*            order;     ///< Order of the backends
-  afft_spmt_gpu_cufft_Parameters cufft;     ///< cuFFT parameters
-} afft_spmt_gpu_BackendParameters;
-
-/**********************************************************************************************************************/
-// Backend parameters for mpst distribution
-/**********************************************************************************************************************/
-/// @brief Backend parameters for mpst cpu architecture
-typedef struct
+/// @brief Backend parameters for cuda target
+struct afft_mpi_cuda_BackendParameters
 {
   afft_SelectStrategy             strategy;  ///< Select strategy
   afft_BackendMask                mask;      ///< Backend mask
   size_t                          orderSize; ///< Number of backends in the order
   const afft_Backend*             order;     ///< Order of the backends
-  afft_mpst_cpu_fftw3_Parameters  fftw3;     ///< FFTW3 parameters
-  afft_mpst_cpu_heffte_Parameters heffte;    ///< HeFFTe parameters
-} afft_mpst_cpu_BackendParameters;
+  afft_cufft_mpi_cuda_Parameters  cufft;     ///< cuFFT parameters
+  afft_heffte_mpi_cuda_Parameters heffte;    ///< HeFFTe parameters
+};
 
-/// @brief Backend parameters for mpst gpu architecture
-typedef struct
+/// @brief Backend parameters for hip target
+struct afft_mpi_hip_BackendParameters
 {
-  afft_SelectStrategy             strategy;  ///< Select strategy
-  afft_BackendMask                mask;      ///< Backend mask
-  size_t                          orderSize; ///< Number of backends in the order
-  const afft_Backend*             order;     ///< Order of the backends
-  afft_mpst_gpu_cufft_Parameters  cufft;     ///< cuFFT parameters
-  afft_mpst_gpu_heffte_Parameters heffte;    ///< HeFFTe parameters
-} afft_mpst_gpu_BackendParameters;
+  afft_SelectStrategy            strategy;  ///< Select strategy
+  afft_BackendMask               mask;      ///< Backend mask
+  size_t                         orderSize; ///< Number of backends in the order
+  const afft_Backend*            order;     ///< Order of the backends
+  afft_heffte_mpi_hip_Parameters heffte;    ///< HeFFTe parameters
+};
 
-/**********************************************************************************************************************/
-// General backend parameters
-/**********************************************************************************************************************/
-
-/// @brief Backend parameters structure
-typedef struct
+/// @brief Backend parameters for cuda target
+struct afft_mpi_opencl_BackendParameters
 {
-  union
-  {
-    afft_spst_cpu_BackendParameters spstCpu;
-    afft_spst_gpu_BackendParameters spstGpu;
-    afft_spmt_gpu_BackendParameters spmtGpu;
-    afft_mpst_cpu_BackendParameters mpstCpu;
-    afft_mpst_gpu_BackendParameters mpstGpu;
-  };
-  afft_Target                       target;
-  afft_Distribution                 distribution;
-} afft_BackendParameters;
-
-typedef afft_spst_gpu_clfft_Parameters afft_gpu_clfft_Parameters;
-typedef afft_spst_gpu_cufft_Parameters afft_gpu_cufft_Parameters;
-typedef afft_spst_cpu_fftw3_Parameters afft_cpu_fftw3_Parameters;
-
-typedef afft_spst_cpu_BackendParameters afft_cpu_BackendParameters;
-typedef afft_spst_gpu_BackendParameters afft_gpu_BackendParameters;
+  afft_SelectStrategy          strategy;  ///< Select strategy
+  afft_BackendMask             mask;      ///< Backend mask
+  size_t                       orderSize; ///< Number of backends in the order
+  const afft_Backend*          order;     ///< Order of the backends
+};
 
 /// @brief Feedback structure
 typedef struct
@@ -294,147 +352,6 @@ typedef struct
   const char*  message;      ///< Message from the backend
   double       measuredTime; ///< Measured time in seconds
 } afft_Feedback;
-
-/**********************************************************************************************************************/
-// Private functions
-/**********************************************************************************************************************/
-static inline afft_BackendParameters _afft_makeBackendParametersSpstCpu(afft_spst_cpu_BackendParameters params)
-{
-  afft_BackendParameters result;
-  result.spstCpu      = params;
-  result.target       = afft_Target_cpu;
-  result.distribution = afft_Distribution_spst;
-
-  return result;
-}
-
-static inline afft_BackendParameters _afft_makeBackendParametersSpstGpu(afft_spst_gpu_BackendParameters params)
-{
-  afft_BackendParameters result;
-  result.spstGpu      = params;
-  result.target       = afft_Target_gpu;
-  result.distribution = afft_Distribution_spst;
-
-  return result;
-}
-
-static inline afft_BackendParameters _afft_makeBackendParametersSpmtGpu(afft_spmt_gpu_BackendParameters params)
-{
-  afft_BackendParameters result;
-  result.spmtGpu      = params;
-  result.target       = afft_Target_gpu;
-  result.distribution = afft_Distribution_spmt;
-
-  return result;
-}
-
-static inline afft_BackendParameters _afft_makeBackendParametersMpstCpu(afft_mpst_cpu_BackendParameters params)
-{
-  afft_BackendParameters result;
-  result.mpstCpu      = params;
-  result.target       = afft_Target_cpu;
-  result.distribution = afft_Distribution_mpst;
-
-  return result;
-}
-
-static inline afft_BackendParameters _afft_makeBackendParametersMpstGpu(afft_mpst_gpu_BackendParameters params)
-{
-  afft_BackendParameters result;
-  result.mpstGpu      = params;
-  result.target       = afft_Target_gpu;
-  result.distribution = afft_Distribution_mpst;
-
-  return result;
-}
-
-static inline afft_BackendParameters _afft_makeBackendParametersAny(afft_BackendParameters params)
-{
-  return params;
-}
-
-/**********************************************************************************************************************/
-// Public functions
-/**********************************************************************************************************************/
-#ifdef __cplusplus
-} // extern "C"
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_spst_cpu_BackendParameters params)
-{
-  return _afft_makeBackendParametersSpstCpu(params);
-}
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_spst_gpu_BackendParameters params)
-{
-  return _afft_makeBackendParametersSpstGpu(params);
-}
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_spmt_gpu_BackendParameters params)
-{
-  return _afft_makeBackendParametersSpmtGpu(params);
-}
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_mpst_cpu_BackendParameters params)
-{
-  return _afft_makeBackendParametersMpstCpu(params);
-}
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_mpst_gpu_BackendParameters params)
-{
-  return _afft_makeBackendParametersMpstGpu(params);
-}
-
-/**
- * @brief Make backend parameters
- * @param params Backend parameters
- * @return Backend parameters
- */
-static inline afft_BackendParameters afft_makeBackendParameters(afft_BackendParameters params)
-{
-  return _afft_makeBackendParametersAny(params);
-}
-
-extern "C"
-{
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-  /**
-   * @brief Make backend parameters
-   * @param params Backend parameters
-   * @return Backend parameters
-   */
-# define afft_makeBackendParameters(params) _Generic((params), \
-    afft_spst_cpu_BackendParameters: _afft_makeBackendParametersSpstCpu, \
-    afft_spst_gpu_BackendParameters: _afft_makeBackendParametersSpstGpu, \
-    afft_spmt_gpu_BackendParameters: _afft_makeBackendParametersSpmtGpu, \
-    afft_mpst_cpu_BackendParameters: _afft_makeBackendParametersMpstCpu, \
-    afft_mpst_gpu_BackendParameters: _afft_makeBackendParametersMpstGpu, \
-    afft_BackendParameters:          _afft_makeBackendParametersAny)(params)
-#endif
 
 /**
  * @brief Get the name of the backend

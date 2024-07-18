@@ -29,6 +29,16 @@
 # include "detail/include.h"
 #endif
 
+/// @brief Target type
+typedef uint8_t afft_Target;
+
+/// @brief Target enumeration
+enum
+{
+  afft_Target_cpu, ///< CPU
+  afft_Target_gpu, ///< GPU
+};
+
 /// @brief CPU parameters
 typedef struct afft_cpu_Parameters afft_cpu_Parameters;
 

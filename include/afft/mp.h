@@ -34,21 +34,27 @@ extern "C"
 {
 #endif
 
+/// @brief Multi-process backend
+typedef uint8_t afft_MpBackend;
+
 /**
  * @brief Multi-process backend
  */
-typedef enum
+enum
 {
   afft_MpBackend_none, ///< No multi-process backend (single-process)
   afft_MpBackend_mpi,  ///< MPI multi-process backend
-} afft_MpBackend;
+};
+
+/// @brief MPI multi-process parameters
+typedef struct afft_mpi_Parameters afft_mpi_Parameters;
 
 #ifdef AFFT_ENABLE_MPI
 /// @brief MPI multi-process parameters
-typedef struct
+struct afft_mpi_Parameters
 {
   MPI_Comm comm; ///< MPI communicator
-} afft_mpi_Parameters;
+};
 #endif
 
 #ifdef __cplusplus
