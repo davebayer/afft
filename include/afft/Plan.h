@@ -44,18 +44,21 @@ extern "C"
 /// @brief Opaque plan structure
 typedef struct _afft_Plan afft_Plan;
 
-/// @brief Plan parameters
-typedef struct
+/// @brief Plan parameters structure
+typedef struct afft_Plan_Parameters afft_Plan_Parameters;
+
+/// @brief Plan parameters structure
+struct afft_Plan_Parameters
 {
   afft_Transform transform;       ///< Transform type
   afft_MpBackend mpBackend;       ///< Multi-process backend
   afft_Target    target;          ///< Target architecture
-  const void*    transformParams; ///< Transform parameters
-  const void*    mpBackendParams; ///< Multi-process backend parameters
-  const void*    targetParams;    ///< Target parameters
-  const void*    memoryLayout;    ///< Memory layout
-  const void*    backendParams;   ///< Backend parameters
-} afft_Plan_Parameters;
+  void*          transformParams; ///< Transform parameters
+  void*          mpBackendParams; ///< Multi-process backend parameters
+  void*          targetParams;    ///< Target parameters
+  void*          memoryLayout;    ///< Memory layout
+  void*          backendParams;   ///< Backend parameters
+};
 
 /**
  * @brief Create a plan for given parameters.
@@ -142,7 +145,7 @@ afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend);
  * @param workspaceSizes Pointer to the workspace sizes of target count size.
  * @return Error code.
  */
-afft_Error afft_Plan_getWorkspaceSize(afft_Plan* plan, const size_t** workspaceSizes);
+afft_Error afft_Plan_getWorkspaceSizes(afft_Plan* plan, const size_t** workspaceSizes);
 
 /**
  * @brief Execute a plan.

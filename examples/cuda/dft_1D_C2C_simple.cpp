@@ -3,9 +3,6 @@
 
 #include <afft/afft.hpp>
 
-template<typename T>
-using ManagedVector = std::vector<T, afft::cuda::ManagedAllocator<T>>;
-
 int main(void)
 {
   using PrecT = float;
@@ -14,8 +11,8 @@ int main(void)
 
   afft::init(); // initialize afft library, also initializes CUDA if uninitialized
 
-  ManagedVector<std::complex<PrecT>> src(size); // source vector
-  ManagedVector<std::complex<PrecT>> dst(size); // destination vector
+  std::vector<std::complex<PrecT>> src(size); // source vector
+  std::vector<std::complex<PrecT>> dst(size); // destination vector
 
   // initialize source vector
 

@@ -25,7 +25,7 @@ int main(void)
 
   const afft_Alignment alignment = afft_Alignment_avx2;
 
-  AFFT_CALL(afft_init()); // initialize afft library
+  AFFT_CALL(afft_init(NULL)); // initialize afft library
 
   FloatComplex* src = afft_cpu_alignedAlloc(srcElemCount * sizeof(FloatComplex), alignment); // source vector
   FloatComplex* dst = afft_cpu_alignedAlloc(dstElemCount * sizeof(FloatComplex), alignment); // destination vector
@@ -40,17 +40,17 @@ int main(void)
     .shapeRank     = 3,
     .shape         = shape,
     .axesRank      = 1,
-    .axes          = (size_t[]){1},
+    .axes          = (afft_Axis[]){1},
     .normalization = afft_Normalization_unitary,
     .placement     = afft_Placement_outOfPlace,
     .type          = afft_dft_Type_complexToComplex,
   };
 
-  size_t srcStrides[3] = {0};
-  size_t dstStrides[3] = {0};
+  afft_Size srcStrides[3] = {0};
+  afft_Size dstStrides[3] = {0};
 
   AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (size_t[]){0, 2, 1}, 1, dstStrides));
+  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides));
 
   const afft_cpu_Parameters cpuParams =
   {
@@ -74,9 +74,16 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
+  AFFT_CALL(afft_Plan_create({.transform       = afft_Transform_dft,
+                              .target          = afft_Target_cpu,
+                              .transformParams = &dftParams,
+                              .targetParams    = &cpuParams,
+                              .memoryLayout    = NULL,
+                              .backendParams   = &backendParams}, &plan, NULL));
+
   AFFT_CALL(afft_Plan_createWithBackendParameters(dftParams, cpuParams, backendParams, &plan)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst)); // execute the transform
+  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst, NULL)); // execute the transform
 
   // use results from dst vector
 
@@ -85,5 +92,5 @@ int main(void)
   afft_cpu_alignedFree(src, alignment); // free source vector
   afft_cpu_alignedFree(dst, alignment); // free destination vector
 
-  AFFT_CALL(afft_finalize()); // deinitialize afft library
+  AFFT_CALL(afft_finalize(NULL)); // deinitialize afft library
 }

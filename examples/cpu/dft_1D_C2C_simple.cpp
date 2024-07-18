@@ -22,7 +22,7 @@ int main(void)
   afft::dft::Parameters dftParams{}; // parameters for dft
   dftParams.direction     = afft::Direction::forward; // it will be a forward transform
   dftParams.precision     = afft::makePrecision<PrecT>(); // set up precision of the transform
-  dftParams.shape         = {{size}}; // set up the dimensions
+  dftParams.shape         = afft::makeScalarView(size); // set up the dimensions
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
   dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
   dftParams.destructive   = true; // allow to destroy source data

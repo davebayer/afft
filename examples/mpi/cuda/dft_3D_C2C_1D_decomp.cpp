@@ -16,13 +16,6 @@
 /// @brief PrecT is the precision of the transform
 using PrecT = float;
 
-/// @brief ManagedVector is a vector using CUDA unified memory
-template<typename T>
-using ManagedVector = std::vector<T, afft::cuda::ManagedAllocator<T>>;
-
-/// @brief Complex managed vector
-using ComplexManagedVector = ManagedVector<std::complex<PrecT>>;
-
 /// @brief The shape of the transform
 constexpr auto shape = std::array<afft::Size, 3>{128, 128, 128};
 
@@ -39,10 +32,10 @@ int main(void)
 
   try
   {
-    // initialize MPI library
+    // initialize the MPI library
     MPI_Init(nullptr, nullptr);
 
-    // initialize afft library
+    // initialize the afft library after initializing the MPI library
     afft::init();
 
     // set MPI communicator
@@ -92,10 +85,10 @@ int main(void)
     const std::size_t dstElemCount = fwdPlan->getDstElemCounts().front();
 
     // make source vector
-    ComplexManagedVector src(srcElemCount, ComplexManagedVector::allocator_type{cudaMemAttachHost});
+    std::vector<std::complex<PrecT>> src(srcElemCount);
 
     // make destination vector
-    ComplexManagedVector dst(dstElemCount, ComplexManagedVector::allocator_type{cudaMemAttachHost});
+    std::vector<std::complex<PrecT>> dst(dstElemCount);
 
     // initialize source vector accoring to memory layout specified in memoryLayout variable (it was filled by makePlan function)
 
@@ -118,10 +111,10 @@ int main(void)
     std::fprintf(stderr, "Unknown error\n");
   }
 
-  // finalize afft library
+  // explicitly finalize the afft library before finalizing the MPI library
   afft::finalize();
 
-  // finalize MPI library
+  // finalize the MPI library
   MPI_Finalize();
 
   return retval;

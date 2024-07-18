@@ -153,14 +153,14 @@ struct afft_DistributedMemoryLayout
  * @param alignment Alignment of the memory block.
  * @return Pointer to the allocated memory block or NULL if the allocation failed.
  */
-void* afft_cpu_alignedAlloc(size_t sizeInBytes, afft_Alignment alignment);
+void* afft_alignedAlloc(size_t sizeInBytes, afft_Alignment alignment);
 
 /**
  * @brief Free aligned memory.
  * @param ptr Pointer to the memory block.
  * @param alignment Alignment of the memory block.
  */
-void afft_cpu_alignedFree(void* ptr, afft_Alignment alignment);
+void afft_alignedFree(void* ptr, afft_Alignment alignment);
 
 #ifdef __cplusplus
 }

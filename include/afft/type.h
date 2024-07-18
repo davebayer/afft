@@ -25,6 +25,15 @@
 #ifndef AFFT_TYPE_H
 #define AFFT_TYPE_H
 
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.h"
+#endif
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /// @brief Precision type
 typedef uint8_t afft_Precision;
 
@@ -67,5 +76,9 @@ enum
   afft_Complexity_real,    ///< Real
   afft_Complexity_complex, ///< Complex
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AFFT_TYPE_H */

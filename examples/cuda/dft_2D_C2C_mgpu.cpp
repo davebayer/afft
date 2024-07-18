@@ -5,9 +5,6 @@
 
 #include <afft/afft.hpp>
 
-template<typename T>
-using ManagedVector = std::vector<T, afft::cuda::ManagedAllocator<T>>;
-
 int main(void)
 {
   using PrecT = float;
@@ -27,7 +24,7 @@ int main(void)
   afft::cuda::Parameters cudaParams{}; // it will run on a gpu
   cudaParams.devices = {{0, 1}}; // use devices 0 and 1
 
-  afft::DistribMemoryLayout memoryLayout{};
+  afft::DistributedMemoryLayout memoryLayout{};
   memoryLayout.dstDistribAxes = {{0}}; // distribute the transform along the first axis
   memoryLayout.srcDistribAxes = {{1}}; // distribute the transform along the second axis
 
@@ -36,10 +33,10 @@ int main(void)
   const auto srcElemCounts = plan->getSrcElemCounts(); // get the number of elements in the source buffers
   const auto dstElemCounts = plan->getDstElemCounts(); // get the number of elements in the destination buffers
 
-  ManagedVector<std::complex<PrecT>> src0(srcElemCounts[0]); // device 0 source vector
-  ManagedVector<std::complex<PrecT>> src1(srcElemCounts[1]); // device 1 source vector
-  ManagedVector<std::complex<PrecT>> dst0(dstElemCounts[0]); // device 0 destination vector
-  ManagedVector<std::complex<PrecT>> dst1(dstElemCounts[1]); // device 1 destination vector
+  std::vector<std::complex<PrecT>> src0(srcElemCounts[0]); // device 0 source vector
+  std::vector<std::complex<PrecT>> src1(srcElemCounts[1]); // device 1 source vector
+  std::vector<std::complex<PrecT>> dst0(dstElemCounts[0]); // device 0 destination vector
+  std::vector<std::complex<PrecT>> dst1(dstElemCounts[1]); // device 1 destination vector
 
   // initialize source vectors
 

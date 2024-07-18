@@ -29,12 +29,26 @@
 # include "../include.hpp"
 #endif
 
+namespace afft::detail::cufft
+{
+  /// @brief Initialize the cuFFT library.
+  void init();
+
+  /// @brief Finalize the cuFFT library.
+  inline void finalize()
+  {
+    // Do nothing
+  }
+} // namespace afft::detail::cufft
+
+#ifdef AFFT_HEADER_ONLY
+
 #include "error.hpp"
 
 namespace afft::detail::cufft
 {
   /// @brief Initialize the cuFFT library.
-  inline void init()
+  AFFT_HEADER_ONLY_INLINE void init()
   {
     int version{};
 
@@ -46,13 +60,14 @@ namespace afft::detail::cufft
     {
       throw BackendError{Backend::cufft, "library version mismatch"};
     }
-  }
 
-  /// @brief Finalize the cuFFT library.
-  inline void finalize()
-  {
-    // Do nothing
+    std::size_t workspaceSize{};
+
+    // Initialize the cuFFT library using cheap function call
+    checkError(cufftEstimate1d(1, CUFFT_C2C, 1, &workspaceSize));
   }
 } // namespace afft::detail::cufft
+
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_CUFFT_INIT_HPP */

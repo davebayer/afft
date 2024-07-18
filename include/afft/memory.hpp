@@ -129,8 +129,6 @@ namespace afft
     View<Axis>        dstAxesOrder{};                            ///< order of the destination axes
   };
 
-namespace cpu
-{
   /**
    * @brief Aligned memory deleter
    * @tparam T Type of the memory
@@ -205,7 +203,7 @@ namespace cpu
         }
       }
     private:
-      Alignment mAlignment{Alignment::cpuNative}; ///< Alignment for memory allocation
+      Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
 
   /**
@@ -284,7 +282,7 @@ namespace cpu
         }
       }
     private:
-      Alignment mAlignment{Alignment::cpuNative}; ///< Alignment for memory allocation
+      Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
 
   /**
@@ -322,7 +320,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUnique(Args&&... args)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUnique<T>(Alignment::cpuNative, std::forward<Args>(args)...);
+    return makeAlignedUnique<T>(Alignment::defaultNew, std::forward<Args>(args)...);
   }
 
   /**
@@ -353,7 +351,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUnique(std::size_t n)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUnique<T>(Alignment::cpuNative, n);
+    return makeAlignedUnique<T>(Alignment::defaultNew, n);
   }
 
   /**
@@ -380,7 +378,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUniqueForOverwrite()
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUniqueForOverwrite<T>(Alignment::cpuNative);
+    return makeAlignedUniqueForOverwrite<T>(Alignment::defaultNew);
   }
 
   /**
@@ -411,12 +409,12 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUniqueForOverwrite(std::size_t n)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUniqueForOverwrite<T>(Alignment::cpuNative, n);
+    return makeAlignedUniqueForOverwrite<T>(Alignment::defaultNew, n);
   }
 
   /**
    * @class AlignedAllocator
-   * @brief Allocator named concept implementation implementation for aligned CPU memory to be used with std::vector and
+   * @brief Allocator named concept implementation implementation for aligned memory to be used with std::vector and
    *        others.
    * @tparam T Type of the memory
    */
@@ -504,348 +502,6 @@ namespace cpu
     private:
       Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
-} // namespace cpu
-
-  namespace cuda
-  {
-    /**
-     * @class ManagedAllocator
-     * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
-     *        others.
-     * @tparam T Type of the memory
-     */
-    template<typename T>
-    class ManagedAllocator;
-  } // namespace cuda
-
-#ifdef AFFT_ENABLE_CUDA
-  /**
-   * @class ManagedAllocator
-   * @brief Allocator named concept implementation implementation for unified cuda memory to be used with std::vector and
-   *        others.
-   * @tparam T Type of the memory
-   */
-  template<typename T>
-  class cuda::ManagedAllocator
-  {
-    public:
-      /// @brief Type of the memory
-      using value_type = T;
-      
-      /// @brief Default constructor
-      constexpr ManagedAllocator(unsigned flags = cudaMemAttachGlobal) noexcept
-      : mFlags{flags}
-      {}
-
-      /// @brief Copy constructor
-      template<typename U>
-      constexpr ManagedAllocator(const ManagedAllocator<U>& other) noexcept
-      : mFlags{other.mFlags}
-      {}
-
-      /// @brief Move constructor
-      template<typename U>
-      constexpr ManagedAllocator(ManagedAllocator<U>&& other) noexcept
-      : mFlags{std::move(other.mFlags)}
-      {}
-
-      /// @brief Destructor
-      ~ManagedAllocator() noexcept = default;
-
-      /// @brief Copy assignment operator
-      template<typename U>
-      constexpr ManagedAllocator& operator=(const ManagedAllocator<U>& other) noexcept
-      {
-        mFlags = other.mFlags;
-        return *this;
-      }
-
-      /// @brief Move assignment operator
-      template<typename U>
-      constexpr ManagedAllocator& operator=(ManagedAllocator<U>&& other) noexcept
-      {
-        mFlags = std::move(other.mFlags);
-        return *this;
-      }
-
-      /**
-       * @brief Allocate memory
-       * @param n Number of elements
-       * @return Pointer to the allocated memory
-       */
-      [[nodiscard]] T* allocate(std::size_t n)
-      {
-        T* ptr{};
-
-        detail::cuda::checkError(cudaMallocManaged(&ptr, n * sizeof(T), mFlags));
-
-        return ptr;
-      }
-
-      /**
-       * @brief Deallocate memory
-       * @param p Pointer to the memory
-       * @param n Number of elements
-       */
-      void deallocate(T* p, std::size_t) noexcept
-      {
-        detail::cuda::checkError(cudaFree(p));
-      }
-
-      /**
-       * @brief Get flags
-       * @return Flags
-       */
-      [[nodiscard]] constexpr unsigned getFlags() const noexcept
-      {
-        return mFlags;
-      }
-    private:
-      unsigned mFlags{}; ///< Flags for memory allocation
-  };
-#endif
-
-  namespace hip
-  {
-    /**
-     * @class ManagedAllocator
-     * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
-     *        others.
-     * @tparam T Type of the memory
-     */
-    template<typename T>
-    class ManagedAllocator;
-  } // namespace hip
-
-#ifdef AFFT_ENABLE_HIP
-  /**
-   * @class ManagedAllocator
-   * @brief Allocator named concept implementation implementation for unified hip memory to be used with std::vector and
-   *        others.
-   * @tparam T Type of the memory
-   */
-  template<typename T>
-  class hip::ManagedAllocator
-  {
-    public:
-      /// @brief Type of the memory
-      using value_type = T;
-      
-      /// @brief Default constructor
-      constexpr ManagedAllocator(unsigned flags = hipMemAttachGlobal) noexcept
-      : mFlags{flags}
-      {}
-
-      /// @brief Copy constructor
-      template<typename U>
-      constexpr ManagedAllocator(const ManagedAllocator<U>& other) noexcept
-      : mFlags{other.mFlags}
-      {}
-
-      /// @brief Move constructor
-      template<typename U>
-      constexpr ManagedAllocator(ManagedAllocator<U>&& other) noexcept
-      : mFlags{std::move(other.mFlags)}
-      {}
-
-      /// @brief Destructor
-      ~ManagedAllocator() noexcept = default;
-
-      /// @brief Copy assignment operator
-      template<typename U>
-      constexpr ManagedAllocator& operator=(const ManagedAllocator<U>& other) noexcept
-      {
-        mFlags = other.mFlags;
-        return *this;
-      }
-
-      /// @brief Move assignment operator
-      template<typename U>
-      constexpr ManagedAllocator& operator=(ManagedAllocator<U>&& other) noexcept
-      {
-        mFlags = std::move(other.mFlags);
-        return *this;
-      }
-
-      /**
-       * @brief Allocate memory
-       * @param n Number of elements
-       * @return Pointer to the allocated memory
-       */
-      [[nodiscard]] T* allocate(std::size_t n)
-      {
-        T* ptr{};
-
-        detail::hip::checkError(hipMallocManaged(&ptr, n * sizeof(T)));
-
-        return ptr;
-      }
-
-      /**
-       * @brief Deallocate memory
-       * @param p Pointer to the memory
-       * @param n Number of elements
-       */
-      void deallocate(T* p, std::size_t) noexcept
-      {
-        detail::hip::checkError(hipFree(p));
-      }
-
-      /**
-       * @brief Get flags
-       * @return Flags
-       */
-      [[nodiscard]] constexpr unsigned getFlags() const noexcept
-      {
-        return mFlags;
-      }
-    private:
-      unsigned mFlags{}; ///< Flags for memory allocation
-  };
-#endif
-
-  namespace opencl
-  {
-    /**
-     * @class SvmAllocator
-     * @brief Allocator named concept implementation implementation for opencl shared virtual memory to be used with std::vector and
-     *        others.
-     * @tparam T Type of the memory
-     */
-    template<typename T>
-    class SvmAllocator;
-  } // namespace opencl
-
-#if defined(AFFT_ENABLE_HIP) && defined(CL_VERSION_2_0)
-  /**
-   * @class SvmAllocator
-   * @brief Allocator named concept implementation implementation for opencl shared virtual memory to be used with std::vector and
-   *        others.
-   * @tparam T Type of the memory
-   */
-  template<typename T>
-  class opencl::SvmAllocator
-  {
-    public:
-      /// @brief Type of the memory
-      using value_type = T;
-      
-      /// @brief Default constructor not allowed
-      SvmAllocator() = delete;
-
-      /// @brief Default constructor not allowed
-      SvmAllocator(cl_context context, cl_svm_mem_flags flags = CL_MEM_READ_WRITE, Alignment alignment = {})
-      : mFlags{flags},
-        mAlignment{alignment}
-      {
-        detail::opencl::checkError(clRetainContext(context));
-        mContext.reset(context);
-      }
-
-      /// @brief Copy constructor
-      template<typename U>
-      SvmAllocator(const SvmAllocator<U>& other)
-      : mFlags{other.getFlags()},
-        mAlignment{other.getAlignment()}
-      {
-        detail::opencl::checkError(clRetainContext(other.getContext()));
-        mContext.reset(other.getContext());
-      }
-
-      /// @brief Move constructor
-      template<typename U>
-      SvmAllocator(SvmAllocator<U>&& other) noexcept
-      : mContext{std::move(other.mContext)},
-        mFlags{std::move(other.mFlags)},
-        mAlignment{std::move(other.mAlignment)}
-      {}
-
-      /// @brief Destructor
-      ~SvmAllocator() = default;
-
-      /// @brief Copy assignment operator
-      template<typename U>
-      SvmAllocator& operator=(const SvmAllocator<U>& other)
-      {
-        if (this != std::addressof(other))
-        {
-          detail::opencl::checkError(clRetainContext(other.getContext()));
-          mContext.reset(other.getContext());
-
-          mFlags     = other.getFlags();
-          mAlignment = other.getAlignment();
-        }
-
-        return *this;
-      }
-
-      /// @brief Move assignment operator
-      template<typename U>
-      constexpr SvmAllocator& operator=(SvmAllocator<U>&& other) noexcept
-      {
-        if (this != std::addressof(other))
-        {
-          mContext   = std::move(other.mContext);
-          mFlags     = std::move(other.mFlags);
-          mAlignment = std::move(other.mAlignment);
-        }
-
-        return *this;
-      }
-
-      /**
-       * @brief Allocate memory
-       * @param n Number of elements
-       * @return Pointer to the allocated memory
-       */
-      [[nodiscard]] T* allocate(std::size_t n)
-      {
-        T* const ptr = static_cast<T*>(clSVMAlloc(mContext.get(),
-                                                  mFlags,
-                                                  n * sizeof(T),
-                                                  static_cast<cl_uint>(mAlignment)));
-
-        if (ptr == nullptr)
-        {
-          throw std::bad_alloc();
-        }
-
-        return ptr;
-      }
-
-      /**
-       * @brief Deallocate memory
-       * @param p Pointer to the memory
-       * @param n Number of elements
-       */
-      void deallocate(T* p, std::size_t) noexcept
-      {
-        clSVMFree(mContext.get(), p);
-      }
-
-      /// @brief Get the OpenCL context
-      [[nodiscard]] cl_context getContext() const noexcept
-      {
-        return mContext.get();
-      }
-
-      /// @brief Get the flags
-      [[nodiscard]] cl_svm_mem_flags getFlags() const noexcept
-      {
-        return mFlags;
-      }
-
-      /// @brief Get the alignment
-      [[nodiscard]] Alignment getAlignment() const noexcept
-      {
-        return mAlignment;
-      }
-    private:
-      std::unique_ptr<std::remove_pointer_t<cl_context>, ContextDeleter> mContext;     ///< OpenCL context
-      cl_svm_mem_flags                                                   mFlags{};     ///< Flags for memory allocation
-      Alignment                                                          mAlignment{}; ///< Alignment for memory allocation
-  };
-#endif
 } // namespace afft
 
 #endif /* AFFT_MEMORY_HPP */

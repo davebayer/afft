@@ -21,8 +21,6 @@ int main()
 
   constexpr afft::Alignment alignment = afft::Alignment::avx2;
 
-  afft::init(); // initialize afft library
-
   afft::dft::Parameters dftParams{};
   dftParams.direction     = afft::Direction::forward;
   dftParams.precision     = afft::makePrecision<PrecT>();
@@ -58,17 +56,13 @@ int main()
   backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::exhaustive;
   backendParams.fftw3.timeLimit   = std::chrono::seconds{2};
 
-  {
-    AlignedVector<std::complex<PrecT>> src(srcElemCount, afft::cpu::AlignedAllocator{alignment}); // source vector
-    AlignedVector<std::complex<PrecT>> dst(dstElemCount, afft::cpu::AlignedAllocator{alignment}); // destination vector
+  AlignedVector<std::complex<PrecT>> src(srcElemCount, afft::cpu::AlignedAllocator{alignment}); // source vector
+  AlignedVector<std::complex<PrecT>> dst(dstElemCount, afft::cpu::AlignedAllocator{alignment}); // destination vector
 
-    // check if src and dst are not NULL
-    // initialize source vector
+  // check if src and dst are not NULL
+  // initialize source vector
 
-    auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout, backendParams); // generate the plan of the transform
+  auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout, backendParams); // generate the plan of the transform
 
-    plan->execute(src.data(), dst.data()); // execute the transform
-  }
-
-  afft::finalize(); // finalize afft library
+  plan->execute(src.data(), dst.data()); // execute the transform
 }

@@ -6,7 +6,7 @@
 #include <afft/afft.hpp>
 
 template<typename T>
-using AlignedVector = std::vector<T, afft::cpu::AlignedAllocator<T>>;
+using AlignedVector = std::vector<T, afft::AlignedAllocator<T>>;
 
 int main(void)
 {
@@ -34,8 +34,8 @@ int main(void)
   afft::cpu::Parameters cpuParams{}; // parameters for CPU
   cpuParams.threadLimit = 2; // we will use up to 4 threads
 
-  afft::DistribMemoryLayout memoryLayout{}; // set up memory layout
-  memoryLayout.alignment = afft::cpu::defaultAlignment; // set up the alignment
+  afft::DistributedMemoryLayout memoryLayout{}; // set up memory layout
+  memoryLayout.alignment = afft::Alignment::cpuNative; // set up the alignment
   
   {
     auto plan = afft::makePlan(dftParams, mpiParams, cpuParams); // generate the plan of the transform, also sets up the memory layout in cpuParams
