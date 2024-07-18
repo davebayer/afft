@@ -31,9 +31,9 @@
 
 #include "cxx.hpp"
 #include "../backend.hpp"
-#include "../common.hpp"
 #include "../memory.hpp"
 #include "../Span.hpp"
+#include "../target.hpp"
 #include "../transform.hpp"
 
 namespace afft::detail

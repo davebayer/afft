@@ -29,7 +29,7 @@
 # include "detail/include.h"
 #endif
 
-#include "common.h"
+#include "type.h"
 
 #ifdef __cplusplus
 extern "C"

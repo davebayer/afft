@@ -22,41 +22,9 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_COMMON_HPP
-#define AFFT_DETAIL_COMMON_HPP
+#ifndef AFFT_DETAIL_MPI_MPI_HPP
+#define AFFT_DETAIL_MPI_MPI_HPP
 
-#ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "include.hpp"
-#endif
+#include "error.hpp"
 
-#include "../common.hpp"
-
-namespace afft::detail
-{
-  /**
-   * @brief Buffer is a simple buffer with a fixed size.
-   * @tparam T The type of the elements.
-   * @tparam size The number of elements.
-   */
-  template<typename T, std::size_t size>
-  struct Buffer
-  {
-    T data[size]; ///< The data.
-  };
-
-  /**
-   * @brief MaxDimBuffer is a Buffer with a maximum number of elements defined by maxDimCount.
-   * @tparam T The type of the elements.
-   */
-  template<typename T>
-  using MaxDimBuffer = Buffer<T, maxDimCount>;
-
-  /**
-   * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxDimCount.
-   * @tparam T The type of the elements.
-   */
-  template<typename T>
-  using MaxDimArray = std::array<T, maxDimCount>;
-} // namespace afft::detail
-
-#endif /* AFFT_DETAIL_COMMON_HPP */
+#endif /* AFFT_DETAIL_MPI_MPI_HPP */

@@ -31,8 +31,11 @@
 
 #include "backend.hpp"
 #include "common.hpp"
+#include "memory.hpp"
+#include "target.hpp"
 #include "transform.hpp"
 #include "detail/Desc.hpp"
+#include "detail/validate.hpp"
 
 AFFT_EXPORT namespace afft
 {
@@ -77,22 +80,34 @@ AFFT_EXPORT namespace afft
       /// @brief Move assignment operator.
       Plan& operator=(Plan&&) = default;
 
+      /// @brief Get multi-process backend.
+      [[nodiscard]] constexpr MpBackend getMpBackend() const
+      {
+        return mDesc.getMpBackend();
+      }
+
+      /**
+       * @brief Get multi-process backend parameters.
+       * @tparam mpBackend Multi-process backend type
+       * @return Multi-process backend parameters
+       */
+      template<MpBackend mpBackend>
+      [[nodiscard]] constexpr MpBackendParameters<mpBackend> getMpBackendParameters() const
+      {
+        static_assert(detail::isValid(mpBackend), "invalid multi-process backend type");
+
+        if (mpBackend != getMpBackend())
+        {
+          throw std::invalid_argument("plan multi-process backend does not match requested multi-process backend");
+        }
+
+        return mDesc.getMpParameters<mpBackend>();
+      }
+
       /// @brief Get the transform.
       [[nodiscard]] constexpr Transform getTransform() const
       {
         return mDesc.getTransform();
-      }
-
-      /// @brief Get shape rank.
-      [[nodiscard]] constexpr std::size_t getShapeRank() const noexcept
-      {
-        return mDesc.getShapeRank();
-      }
-
-      /// @brief Get transform rank.
-      [[nodiscard]] constexpr std::size_t getTransformRank() const noexcept
-      {
-        return mDesc.getTransformRank();
       }
 
       /**
@@ -132,37 +147,30 @@ AFFT_EXPORT namespace afft
       }
 
       /**
-       * @brief Get distribution.
-       * @return Distribution
+       * @brief Get target parameters.
+       * @tparam target Target type
+       * @return Target parameters
        */
-      [[nodiscard]] constexpr Distribution getDistribution() const noexcept
-      {
-        return mDesc.getDistribution();
-      }
-
-      /**
-       * @brief Get architecture parameters.
-       * @tparam target Target type.
-       * @tparam distribution Distribution type.
-       * @return Architecture parameters.
-       */
-      template<Target target, Distribution distribution>
-      [[nodiscard]] constexpr ArchitectureParameters<target, distribution> getArchitectureParameters() const
+      template<Target target>
+      [[nodiscard]] constexpr TargetParameters<target> getTargetParameters() const
       {
         static_assert(detail::isValid(target), "invalid target type");
-        static_assert(detail::isValid(distribution), "invalid distribution type");
 
         if (target != getTarget())
         {
           throw std::invalid_argument("plan target does not match requested target");
         }
 
-        if (distribution != getDistribution())
-        {
-          throw std::invalid_argument("plan distribution does not match requested distribution");
-        }
+        return mDesc.getTargetParameters<target>();
+      }
 
-        return mDesc.getArchitectureParameters<target, distribution>();
+      /**
+       * @brief Get memory layout.
+       * @return Memory layout.
+       */
+      [[nodiscard]] MemoryLayout getMemoryLayout() const noexcept
+      {
+        return mDesc.getMemoryLayout();
       }
 
       /**
@@ -172,13 +180,22 @@ AFFT_EXPORT namespace afft
       [[nodiscard]] virtual Backend getBackend() const noexcept = 0;
 
       /**
+       * @brief Get element count of the source buffers.
+       * @return Element count of the source buffers.
+       */
+      [[nodiscard]] virtual View<std::size_t> getSrcElemCounts() const noexcept = 0;
+
+      /**
+       * @brief Get element count of the destination buffers.
+       * @return Element count of the destination buffers.
+       */
+      [[nodiscard]] virtual View<std::size_t> getDstElemCounts() const noexcept = 0;
+
+      /**
        * @brief Get workspace size.
        * @return Workspace size.
        */
-      [[nodiscard]] virtual View<std::size_t> getWorkspaceSize() const noexcept
-      {
-        return {};
-      }
+      [[nodiscard]] virtual View<std::size_t> getWorkspaceSizes() const noexcept = 0;
 
       /**
        * @brief Execute the plan.
@@ -671,11 +688,11 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
-                                      [[maybe_unused]] View<void*>                                 dst,
-                                      [[maybe_unused]] const afft::spst::cpu::ExecutionParameters& execParams)
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                     src,
+                                      [[maybe_unused]] View<void*>                     dst,
+                                      [[maybe_unused]] const cpu::ExecutionParameters& execParams)
       {
-        throw std::logic_error{"backend does not implement spst cpu execution"};
+        throw std::logic_error{"backend does not implement cpu execution"};
       }
 
       /**
@@ -684,11 +701,11 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
-                                      [[maybe_unused]] View<void*>                                 dst,
-                                      [[maybe_unused]] const afft::spst::gpu::ExecutionParameters& execParams)
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                            src,
+                                      [[maybe_unused]] View<void*>                            dst,
+                                      [[maybe_unused]] const afft::cuda::ExecutionParameters& execParams)
       {
-        throw std::logic_error{"backend does not implement spst gpu execution"};
+        throw std::logic_error{"backend does not implement cuda execution"};
       }
 
       /**
@@ -697,11 +714,11 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
-                                      [[maybe_unused]] View<void*>                                 dst,
-                                      [[maybe_unused]] const afft::spmt::gpu::ExecutionParameters& execParams)
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                           src,
+                                      [[maybe_unused]] View<void*>                           dst,
+                                      [[maybe_unused]] const afft::hip::ExecutionParameters& execParams)
       {
-        throw std::logic_error{"backend does not implement spmt gpu execution"};
+        throw std::logic_error{"backend does not implement hip execution"};
       }
 
       /**
@@ -710,25 +727,13 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
-                                      [[maybe_unused]] View<void*>                                 dst,
-                                      [[maybe_unused]] const afft::mpst::cpu::ExecutionParameters& execParams)
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                              src,
+                                      [[maybe_unused]] View<void*>                              dst,
+                                      [[maybe_unused]] const afft::opencl::ExecutionParameters& execParams)
       {
-        throw std::logic_error{"backend does not implement mpst cpu execution"};
+        throw std::logic_error{"backend does not implement opencl execution"};
       }
 
-      /**
-       * @brief Execute the plan backend implementation.
-       * @param src Source buffers.
-       * @param dst Destination buffers.
-       * @param execParams Execution parameters.
-       */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                                 src,
-                                      [[maybe_unused]] View<void*>                                 dst,
-                                      [[maybe_unused]] const afft::mpst::gpu::ExecutionParameters& execParams)
-      {
-        throw std::logic_error{"backend does not implement mpst gpu execution"};
-      }
     
       detail::Desc mDesc;
     private:
@@ -789,7 +794,7 @@ AFFT_EXPORT namespace afft
       /// @brief Check if the source is preserved.
       void checkSrcIsPreserved() const
       {
-        if (!mDesc.getPreserveSource())
+        if (mDesc.isDestructive())
         {
           throw std::invalid_argument("running destructive transform on const source data");
         }
@@ -1023,36 +1028,25 @@ AFFT_EXPORT namespace afft
           switch (getTarget())
           {
           case Target::cpu:
-            switch (getDistribution())
-            {
-            case Distribution::spst:
-              executeBackendImpl(srcVoid, dstVoid, afft::spst::cpu::ExecutionParameters{});
-              break;
-            case Distribution::mpst:
-              executeBackendImpl(srcVoid, dstVoid, afft::mpst::cpu::ExecutionParameters{});
-              break;
-            default:
-              detail::cxx::unreachable();
-            }
+            executeBackendImpl(srcVoid, dstVoid, afft::cpu::ExecutionParameters{});
             break;
-          case Target::gpu:
-            switch (getDistribution())
-            {
-            case Distribution::spst:
-              executeBackendImpl(srcVoid, dstVoid, afft::spst::gpu::ExecutionParameters{});
-              break;
-            case Distribution::spmt:
-              executeBackendImpl(srcVoid, dstVoid, afft::spmt::gpu::ExecutionParameters{});
-              break;
-            case Distribution::mpst:
-              executeBackendImpl(srcVoid, dstVoid, afft::mpst::gpu::ExecutionParameters{});
-              break;
-            default:
-              detail::cxx::unreachable();
-            }
+#         ifdef AFFT_ENABLE_CUDA
+          case Target::cuda:
+            executeBackendImpl(srcVoid, dstVoid, afft::cuda::ExecutionParameters{});
             break;
+#         endif
+#         ifdef AFFT_ENABLE_HIP
+          case Target::hip:
+            executeBackendImpl(srcVoid, dstVoid, afft::hip::ExecutionParameters{});
+            break;
+#         endif
+#         ifdef AFFT_ENABLE_OPENCL
+          case Target::opencl:
+            executeBackendImpl(srcVoid, dstVoid, afft::opencl::ExecutionParameters{});
+            break;
+#         endif
           default:
-            detail::cxx::unreachable();
+            throw std::logic_error{"disabled target"};
           }
         }
         else
@@ -1060,11 +1054,6 @@ AFFT_EXPORT namespace afft
           if (execParams.target != getTarget())
           {
             throw std::invalid_argument("execution parameters target does not match plan target");
-          }
-
-          if (execParams.distribution != getDistribution())
-          {
-            throw std::invalid_argument("execution parameters distribution does not match plan distribution");
           }
 
           executeBackendImpl(srcVoid, dstVoid, execParams);

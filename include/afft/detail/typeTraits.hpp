@@ -30,7 +30,10 @@
 #endif
 
 #include "common.hpp"
-#include "../architecture.hpp"
+#include "../backend.hpp"
+#include "../memory.hpp"
+#include "../mp.hpp"
+#include "../target.hpp"
 #include "../transform.hpp"
 #include "../type.hpp"
 
@@ -60,21 +63,21 @@ namespace afft::detail
   template<>
   struct TransformParametersSelect<Transform::dft>
   {
-    using Type = dft::Parameters<>;
+    using Type = afft::dft::Parameters;
   };
 
   /// @brief Specialization for dht transform.
   template<>
   struct TransformParametersSelect<Transform::dht>
   {
-    using Type = dht::Parameters<>;
+    using Type = afft::dht::Parameters;
   };
 
   /// @brief Specialization for dtt transform.
   template<>
   struct TransformParametersSelect<Transform::dtt>
   {
-    using Type = dtt::Parameters<>;
+    using Type = afft::dtt::Parameters;
   };
 
   /**
@@ -82,186 +85,221 @@ namespace afft::detail
    * @tparam T The type.
    */
   template<typename T>
-  struct IsTransformParameters : std::false_type {};
-
-  /// @brief Specialization for dft transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt>
-  struct IsTransformParameters<afft::dft::Parameters<shapeExt, transformExt>> : std::true_type {};
-
-  /// @brief Specialization for dht transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt>
-  struct IsTransformParameters<afft::dht::Parameters<shapeExt, transformExt>> : std::true_type {};
-
-  /// @brief Specialization for dtt transform parameters.
-  template<std::size_t shapeExt, std::size_t transformExt>
-  struct IsTransformParameters<afft::dtt::Parameters<shapeExt, transformExt>> : std::true_type {};
+  struct IsTransformParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::dft::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::dht::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::dtt::Parameters>> {};
 
   /**
-   * @brief ArchitectureParameters type selection based on given target and distribution.
-   * @tparam target The target type.
-   * @tparam distrib The distribution type.
+   * @brief MpBackendParameters type for given backend.
+   * @tparam mpBackend The backend type.
    */
-  template<Target target, Distribution distrib>
-  struct ArchParametersSelect;
+  template<MpBackend mpBackend>
+  struct MpBackendParametersSelect;
 
-  /// @brief Specialization for spst cpu target.
+  /// @brief Specialization for none backend.
   template<>
-  struct ArchParametersSelect<Target::cpu, Distribution::spst>
+  struct MpBackendParametersSelect<MpBackend::none>
   {
-    using Type = afft::cpu::Parameters<>;
+    using Type = afft::SingleProcessParameters;
   };
 
-  /// @brief Specialization for spst gpu target.
+  /// @brief Specialization for mpi backend.
   template<>
-  struct ArchParametersSelect<Target::gpu, Distribution::spst>
+  struct MpBackendParametersSelect<MpBackend::mpi>
   {
-    using Type = afft::gpu::Parameters<>;
-  };
-
-  /// @brief Specialization for distributed spmt gpu target.
-  template<>
-  struct ArchParametersSelect<Target::gpu, Distribution::spmt>
-  {
-    using Type = afft::spmt::gpu::Parameters<>;
-  };
-
-  /// @brief Specialization for distributed mpst cpu target.
-  template<>
-  struct ArchParametersSelect<Target::cpu, Distribution::mpst>
-  {
-    using Type = afft::mpst::cpu::Parameters<>;
-  };
-
-  /// @brief Specialization for distributed mpst gpu target.
-  template<>
-  struct ArchParametersSelect<Target::gpu, Distribution::mpst>
-  {
-    using Type = afft::mpst::gpu::Parameters<>;
+    using Type = afft::mpi::Parameters;
   };
 
   /**
-   * @brief Check if the type is ArchitectureParameters.
+   * @brief Check if the type is MpBackendParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsArchParameters : std::false_type {};
-
-  /// @brief Specialization for cpu target parameters.
-  template<std::size_t shapeExt>
-  struct IsArchParameters<afft::spst::cpu::Parameters<shapeExt>> : std::true_type {};
-
-  /// @brief Specialization for gpu target parameters.
-  template<std::size_t shapeExt>
-  struct IsArchParameters<afft::spst::gpu::Parameters<shapeExt>> : std::true_type {};
-
-  /// @brief Specialization for distributed spmt gpu target parameters.
-  template<std::size_t shapeExt>
-  struct IsArchParameters<afft::spmt::gpu::Parameters<shapeExt>> : std::true_type {};
-
-  /// @brief Specialization for distributed mpst cpu target parameters.
-  template<std::size_t shapeExt>
-  struct IsArchParameters<afft::mpst::cpu::Parameters<shapeExt>> : std::true_type {};
-
-  /// @brief Specialization for distributed cpu target parameters.
-  template<std::size_t shapeExt>
-  struct IsArchParameters<afft::mpst::gpu::Parameters<shapeExt>> : std::true_type {};
+  struct IsMpBackendParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::SingleProcessParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::Parameters>> {};
 
   /**
-   * @brief BackendParameters type for given architecture.
+   * @brief TargetParameters type for given target.
    * @tparam target The target type.
-   * @tparam distrib The distribution type.
    */
-  template<Target target, Distribution distrib>
+  template<Target target>
+  struct TargetParametersSelect;
+
+  /// @brief Specialization for cpu target.
+  template<>
+  struct TargetParametersSelect<Target::cpu>
+  {
+    using Type = afft::cpu::Parameters;
+  };
+
+  /// @brief Specialization for CUDA target.
+  template<>
+  struct TargetParametersSelect<Target::cuda>
+  {
+    using Type = afft::cuda::Parameters;
+  };
+
+  /// @brief Specialization for HIP target.
+  template<>
+  struct TargetParametersSelect<Target::hip>
+  {
+    using Type = afft::hip::Parameters;
+  };
+
+  /// @brief Specialization for OpenCL target.
+  template<>
+  struct TargetParametersSelect<Target::opencl>
+  {
+    using Type = afft::opencl::Parameters;
+  };
+
+  /**
+   * @brief Check if the type is TargetParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsTargetParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters>> {};
+
+  /**
+   * @brief MemoryLayoutParameters type for given memory layout.
+   * @tparam memoryLayout The memory layout type.
+   */
+  template<MemoryLayout memoryLayout>
+  struct MemoryLayoutParametersSelect;
+
+  /// @brief Specialization for centralized memory layout.
+  template<>
+  struct MemoryLayoutParametersSelect<MemoryLayout::centralized>
+  {
+    using Type = afft::CentralizedMemoryLayout;
+  };
+
+  /// @brief Specialization for distributed memory layout.
+  template<>
+  struct MemoryLayoutParametersSelect<MemoryLayout::distributed>
+  {
+    using Type = afft::DistributedMemoryLayout;
+  };
+
+  /**
+   * @brief Check if the type is MemoryLayoutParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsMemoryLayoutParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::CentralizedMemoryLayout> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::DistributedMemoryLayout>> {};
+
+  /**
+   * @brief BackendParameters type for given multi-process backend and target.
+   * @tparam mpBackend The multi-process backend type.
+   * @tparam target The target type.
+   */
+  template<MpBackend mpBackend, Target target>
   struct BackendParametersSelect;
 
-  /// @brief Specialization for spst cpu target.
+  /// @brief Specialization for single-process cpu target.
   template<>
-  struct BackendParametersSelect<Target::cpu, Distribution::spst>
+  struct BackendParametersSelect<MpBackend::none, Target::cpu>
   {
-    using Type = afft::spst::cpu::BackendParameters;
+    using Type = afft::cpu::BackendParameters;
   };
 
-  /// @brief Specialization for spst gpu target.
+  /// @brief Specialization for single-process CUDA target.
   template<>
-  struct BackendParametersSelect<Target::gpu, Distribution::spst>
+  struct BackendParametersSelect<MpBackend::none, Target::cuda>
   {
-    using Type = afft::spst::gpu::BackendParameters;
+    using Type = afft::cuda::BackendParameters;
   };
 
-  /// @brief Specialization for spmt gpu target.
+  /// @brief Specialization for single-process HIP target.
   template<>
-  struct BackendParametersSelect<Target::gpu, Distribution::spmt>
+  struct BackendParametersSelect<MpBackend::none, Target::hip>
   {
-    using Type = afft::spmt::gpu::BackendParameters;
+    using Type = afft::hip::BackendParameters;
   };
 
-  /// @brief Specialization for mpst cpu target.
+  /// @brief Specialization for single-process OpenCL target.
   template<>
-  struct BackendParametersSelect<Target::cpu, Distribution::mpst>
+  struct BackendParametersSelect<MpBackend::none, Target::opencl>
   {
-    using Type = afft::mpst::cpu::BackendParameters;
+    using Type = afft::opencl::BackendParameters;
   };
 
-  /// @brief Specialization for mpst gpu target.
+  /// @brief Specialization for MPI cpu target.
   template<>
-  struct BackendParametersSelect<Target::gpu, Distribution::mpst>
+  struct BackendParametersSelect<MpBackend::mpi, Target::cpu>
   {
-    using Type = afft::mpst::gpu::BackendParameters;
+    using Type = afft::mpi::cpu::BackendParameters;
+  };
+
+  /// @brief Specialization for MPI CUDA target.
+  template<>
+  struct BackendParametersSelect<MpBackend::mpi, Target::cuda>
+  {
+    using Type = afft::mpi::cuda::BackendParameters;
+  };
+
+  /// @brief Specialization for MPI HIP target.
+  template<>
+  struct BackendParametersSelect<MpBackend::mpi, Target::hip>
+  {
+    using Type = afft::mpi::hip::BackendParameters;
   };
 
   /**
-   * @brief Check if the type is BackendParametersSelect.
+   * @brief Check if the type is BackendParameters.
    * @tparam T The type.
    */
   template<typename T>
   struct IsBackendParameters
-    : std::bool_constant<std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::BackendParameters> ||
-                         std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::BackendParameters> ||
-                         std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::BackendParameters> ||
-                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::BackendParameters> ||
-                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::BackendParameters>> {};
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cpu::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cuda::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::hip::BackendParameters>> {};
 
   /**
    * @brief ExecutionParameters type for given architecture.
    * @tparam target The target type.
-   * @tparam distrib The distribution type.
    */
-  template<Target target, Distribution distrib>
-  struct ArchExecutionParametersSelect;
+  template<Target target>
+  struct ExecutionParametersSelect;
 
   /// @brief Specialization for cpu target.
   template<>
-  struct ArchExecutionParametersSelect<Target::cpu, Distribution::spst>
+  struct ExecutionParametersSelect<Target::cpu>
   {
     using Type = afft::cpu::ExecutionParameters;
   };
 
-  /// @brief Specialization for gpu target.
+  /// @brief Specialization for CUDA target.
   template<>
-  struct ArchExecutionParametersSelect<Target::gpu, Distribution::spst>
+  struct ExecutionParametersSelect<Target::cuda>
   {
-    using Type = afft::gpu::ExecutionParameters;
+    using Type = afft::cuda::ExecutionParameters;
   };
 
-  /// @brief Specialization for distributed spmt gpu target.
+  /// @brief Specialization for HIP target.
   template<>
-  struct ArchExecutionParametersSelect<Target::gpu, Distribution::spmt>
+  struct ExecutionParametersSelect<Target::hip>
   {
-    using Type = afft::spmt::gpu::ExecutionParameters;
+    using Type = afft::hip::ExecutionParameters;
   };
 
-  /// @brief Specialization for distributed mpst cpu target.
+  /// @brief Specialization for OpenCL target.
   template<>
-  struct ArchExecutionParametersSelect<Target::cpu, Distribution::mpst>
+  struct ExecutionParametersSelect<Target::opencl>
   {
-    using Type = afft::mpst::cpu::ExecutionParameters;
-  };
-
-  /// @brief Specialization for distributed mpst gpu target.
-  template<>
-  struct ArchExecutionParametersSelect<Target::gpu, Distribution::mpst>
-  {
-    using Type = afft::mpst::gpu::ExecutionParameters;
+    using Type = afft::opencl::ExecutionParameters;
   };
 
   /**
@@ -270,11 +308,10 @@ namespace afft::detail
    */
   template<typename T>
   struct IsExecutionParameters
-    : std::bool_constant<std::is_same_v<std::remove_cv_t<T>, afft::spst::cpu::ExecutionParameters> || 
-                         std::is_same_v<std::remove_cv_t<T>, afft::spst::gpu::ExecutionParameters> || 
-                         std::is_same_v<std::remove_cv_t<T>, afft::spmt::gpu::ExecutionParameters> || 
-                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::cpu::ExecutionParameters> || 
-                         std::is_same_v<std::remove_cv_t<T>, afft::mpst::gpu::ExecutionParameters>> {};
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::ExecutionParameters>> {};
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

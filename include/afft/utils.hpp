@@ -175,7 +175,7 @@ AFFT_EXPORT namespace afft
    */
   template<typename I, std::size_t shapeExt>
   [[nodiscard]] constexpr auto makeStrides(View<I, shapeExt> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicRank)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicExtent)
   {
     std::array<I, shapeExt> strides{};
 
@@ -193,7 +193,7 @@ AFFT_EXPORT namespace afft
    */
   template<typename I, std::size_t shapeExt>
   [[nodiscard]] auto makeStrides(View<I, shapeExt> shape, std::size_t fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicRank)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicExtent)
   {
     static_assert(std::is_integral_v<I>, "I must be an integral type");
 
@@ -299,7 +299,7 @@ AFFT_EXPORT namespace afft
   constexpr auto makeTransposedStrides(View<I, shapeExt> shape,
                                        View<A, axesExt>  orgAxesOrder,
                                        std::size_t       fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicRank)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::array<I, shapeExt>), shapeExt != dynamicExtent)
   {
     static_assert(std::is_integral_v<I>, "I must be an integral type");
     static_assert(std::is_integral_v<A>, "A must be an integral type");
@@ -325,7 +325,7 @@ AFFT_EXPORT namespace afft
   auto makeTransposedStrides(View<I, shapeExt> shape,
                              View<A, axesExt>  orgAxesOrder,
                              std::size_t       fastestAxisStride = 1)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicRank)
+    -> AFFT_RET_REQUIRES(AFFT_PARAM(std::vector<I>), shapeExt == dynamicExtent)
   {
     static_assert(std::is_integral_v<I>, "I must be an integral type");
     static_assert(std::is_integral_v<A>, "A must be an integral type");
