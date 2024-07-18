@@ -35,6 +35,13 @@
 
 namespace afft
 {
+  /// @brief Memory layout type
+  enum class MemoryLayout : std::uint8_t
+  {
+    centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
+    distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
+  };
+
   /// @brief Alignment of a data type
   enum class Alignment : std::size_t
   {
@@ -56,13 +63,33 @@ namespace afft
     avx512 = simd512,  ///< AVX-512 alignment
     neon   = simd128,  ///< NEON alignment
     sve    = simd2048, ///< SVE alignment
-  };
 
-  /// @brief Memory layout type
-  enum class MemoryLayout
-  {
-    centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
-    distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
+    /// @brief native alignment
+# if defined(__AVX512F__)
+    cpuNative = avx512;
+# elif defined(__AVX2__)
+    cpuNative = avx2;
+# elif defined(__AVX__)
+    cpuNative = avx;
+# elif defined(__SSE4_2__)
+    cpuNative = sse4_2;
+# elif defined(__SSE4_1__)
+    cpuNative = sse4_1;
+# elif defined(__SSE4__)
+    cpuNative = sse4;
+# elif defined(__SSE3__)
+    cpuNative = sse3;
+# elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
+    cpuNative = sse2;
+# elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
+    cpuNative = sse;
+# elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
+    cpuNative = neon;
+# elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
+    cpuNative = sve;
+# else
+    cpuNative = defaultNew;
+# endif
   };
 
   /// @brief Complex number format
@@ -104,33 +131,6 @@ namespace afft
 
 namespace cpu
 {
-  /// @brief Default alignment for memory allocation
-#if defined(__AVX512F__)
-  inline constexpr auto defaultAlignment = Alignment::avx512;
-#elif defined(__AVX2__)
-  inline constexpr auto defaultAlignment = Alignment::avx2;
-#elif defined(__AVX__)
-  inline constexpr auto defaultAlignment = Alignment::avx;
-#elif defined(__SSE4_2__)
-  inline constexpr auto defaultAlignment = Alignment::sse4_2;
-#elif defined(__SSE4_1__)
-  inline constexpr auto defaultAlignment = Alignment::sse4_1;
-#elif defined(__SSE4__)
-  inline constexpr auto defaultAlignment = Alignment::sse4;
-#elif defined(__SSE3__)
-  inline constexpr auto defaultAlignment = Alignment::sse3;
-#elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-  inline constexpr auto defaultAlignment = Alignment::sse2;
-#elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-  inline constexpr auto defaultAlignment = Alignment::sse;
-#elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-  inline constexpr auto defaultAlignment = Alignment::neon;
-#elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
-  inline constexpr auto defaultAlignment = Alignment::sve;
-#else
-  inline constexpr auto defaultAlignment = Alignment::defaultNew;
-#endif
-
   /**
    * @brief Aligned memory deleter
    * @tparam T Type of the memory
@@ -205,7 +205,7 @@ namespace cpu
         }
       }
     private:
-      Alignment mAlignment{defaultAlignment}; ///< Alignment for memory allocation
+      Alignment mAlignment{Alignment::cpuNative}; ///< Alignment for memory allocation
   };
 
   /**
@@ -284,7 +284,7 @@ namespace cpu
         }
       }
     private:
-      Alignment mAlignment{defaultAlignment}; ///< Alignment for memory allocation
+      Alignment mAlignment{Alignment::cpuNative}; ///< Alignment for memory allocation
   };
 
   /**
@@ -322,7 +322,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUnique(Args&&... args)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUnique<T>(defaultAlignment, std::forward<Args>(args)...);
+    return makeAlignedUnique<T>(Alignment::cpuNative, std::forward<Args>(args)...);
   }
 
   /**
@@ -353,7 +353,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUnique(std::size_t n)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUnique<T>(defaultAlignment, n);
+    return makeAlignedUnique<T>(Alignment::cpuNative, n);
   }
 
   /**
@@ -380,7 +380,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUniqueForOverwrite()
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, !detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUniqueForOverwrite<T>(defaultAlignment);
+    return makeAlignedUniqueForOverwrite<T>(Alignment::cpuNative);
   }
 
   /**
@@ -411,7 +411,7 @@ namespace cpu
   [[nodiscard]] auto makeAlignedUniqueForOverwrite(std::size_t n)
     -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_unbounded_array_v<T>)
   {
-    return makeAlignedUniqueForOverwrite<T>(defaultAlignment, n);
+    return makeAlignedUniqueForOverwrite<T>(Alignment::cpuNative, n);
   }
 
   /**

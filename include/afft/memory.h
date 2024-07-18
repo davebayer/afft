@@ -36,6 +36,16 @@ extern "C"
 {
 #endif
 
+/// @brief Memory layout type
+typedef uint8_t afft_MemoryLayout;
+
+/// @brief Memory layout enumeration
+enum
+{
+  afft_MemoryLayout_centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
+  afft_MemoryLayout_distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
+};
+
 /// @brief Alignment type
 typedef size_t afft_Alignment;
 
@@ -59,36 +69,83 @@ enum
   afft_Alignment_avx512 = afft_Alignment_simd512,  ///< AVX-512 alignment
   afft_Alignment_neon   = afft_Alignment_simd128,  ///< NEON alignment
   afft_Alignment_sve    = afft_Alignment_simd2048, ///< SVE alignment
+  
+  /// @brief native alignment
+#if defined(__AVX512F__)
+  afft_Alignment_cpuNative = afft_Alignment_avx512;
+#elif defined(__AVX2__)
+  afft_Alignment_cpuNative = afft_Alignment_avx2;
+#elif defined(__AVX__)
+  afft_Alignment_cpuNative = afft_Alignment_avx;
+#elif defined(__SSE4_2__)
+  afft_Alignment_cpuNative = afft_Alignment_sse4_2;
+#elif defined(__SSE4_1__)
+  afft_Alignment_cpuNative = afft_Alignment_sse4_1;
+#elif defined(__SSE4__)
+  afft_Alignment_cpuNative = afft_Alignment_sse4;
+#elif defined(__SSE3__)
+  afft_Alignment_cpuNative = afft_Alignment_sse3;
+#elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
+  afft_Alignment_cpuNative = afft_Alignment_sse2;
+#elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
+  afft_Alignment_cpuNative = afft_Alignment_sse;
+#elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
+  afft_Alignment_cpuNative = afft_Alignment_neon;
+#elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
+  afft_Alignment_cpuNative = afft_Alignment_sve;
+#else
+  afft_Alignment_cpuNative = afft_Alignment_simd128;
+#endif
 };
 
-/// @brief Memory layout of the centralized transform.
-typedef struct
-{
-  afft_ComplexFormat complexFormat; ///< Complex number format
-  const afft_Size*   srcStrides;    ///< Source strides
-  afft_Alignment     srcAlignment;  ///< Source alignment
-  const afft_Size*   dstStrides;    ///< Destination strides
-  afft_Alignment     dstAlignment;  ///< Destination alignment      
-} afft_MemoryLayout;
+/// @brief Complex format type
+typedef uint8_t afft_ComplexFormat;
 
-/// @brief Memory block
-typedef struct
+/// @brief Complex format enumeration
+enum
 {
-  const afft_Size* starts;    ///< Start indices
-  const afft_Size* sizes;     ///< Sizes
-  const afft_Size* strides;   ///< Strides
-  afft_Alignment   alignment; ///< Alignment
-} afft_MemoryBlock;
+  afft_ComplexFormat_interleaved, ///< Interleaved
+  afft_ComplexFormat_planar       ///< Planar
+};
 
-/// @brief Memory layout of the distributed transform.
-typedef struct
+/// @brief Centralized memory layout structure
+typedef struct afft_CentralizedMemoryLayout afft_CentralizedMemoryLayout;
+
+/// @brief Memory block structure
+typedef struct afft_MemoryBlock afft_MemoryBlock;
+
+/// @brief Distributed memory layout structure
+typedef struct afft_DistributedMemoryLayout afft_DistributedMemoryLayout;
+
+/// @brief Centralized memory layout structure
+struct afft_CentralizedMemoryLayout
 {
-  afft_ComplexFormat      complexFormat;  ///< Complex number format
-  const afft_MemoryBlock* srcBlocks;      ///< Source blocks
-  const afft_Axis*        srcDistribAxes; ///< Source distributed axes
-  const afft_MemoryBlock* dstBlocks;      ///< Destination blocks
-  const afft_Axis*        dstDistribAxes; ///< Destination distributed axes
-} afft_DistribMemoryLayout;
+  afft_Alignment     alignment;     ///< Memory alignment
+  afft_ComplexFormat complexFormat; ///< Complex format
+  const afft_Size*   srcStrides;    ///< Source strides (null for default or array of size shapeRank)
+  const afft_Size*   dstStrides;    ///< Destination strides (null for default or array of size shapeRank)
+};
+
+/// @brief Memory block structure
+struct afft_MemoryBlock
+{
+  const afft_Size* starts; ///< Start indices (null for default or array of size shapeRank)
+  const afft_Size* sizes;  ///< Sizes (null for default or array of size shapeRank)
+  const afft_Size* strides;///< Strides (null for default or array of size shapeRank)
+};
+
+/// @brief Distributed memory layout structure
+struct afft_DistributedMemoryLayout
+{
+  afft_Alignment          alignment;      ///< Memory alignment
+  afft_ComplexFormat      complexFormat;  ///< Complex format
+  const afft_MemoryBlock* srcBlocks;      ///< Source blocks (null for default or array of size targetCount)
+  const afft_Axis*        srcDistribAxes; ///< Source distribution axes (null for default or array of size targetCount)
+  const afft_Axis*        srcAxesOrder;   ///< Source axes order (null for default or array of size shapeRank)
+  const afft_MemoryBlock* dstBlocks;      ///< Destination blocks (null for default or array of size targetCount)
+  const afft_Axis*        dstDistribAxes; ///< Destination distribution axes (null for default or array of size targetCount)
+  const afft_Axis*        dstAxesOrder;   ///< Destination axes order (null for default or array of size shapeRank)
+};
 
 /**
  * @brief Allocate aligned memory.
