@@ -36,116 +36,11 @@ AFFT_EXPORT namespace afft
   /// @brief Maximum number of dimensions
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
 
-  /// @brief Dynamic rank
-  inline constexpr std::size_t dynamicRank{dynamicExtent};
-
   /// @brief Axis type
   using Axis = std::uint8_t;
 
   /// @brief Size type
   using Size = std::uint64_t;
-
-  /// @brief Precision of a floating-point number
-  enum class Precision : std::uint8_t
-  {
-    bf16,        ///< Google Brain's brain floating-point format
-    f16,         ///< IEEE 754 half-precision binary floating-point format
-    f32,         ///< IEEE 754 single-precision binary floating-point format
-    f64,         ///< IEEE 754 double-precision binary floating-point format
-    f80,         ///< x86 80-bit extended precision format
-    f64f64,      ///< double double precision (f128 simulated with two f64)
-    f128,        ///< IEEE 754 quadruple-precision binary floating-point format
-
-    _float        = f32,    ///< Precision of float
-    _double       = f64,    ///< Precision of double
-#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 && LDBL_MIN_EXP == -1021
-    _longDouble   = f64,    ///< Precision of long double
-#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
-    _longDouble   = f80,    ///< Precision of long double
-#elif (LDBL_MANT_DIG >=   105 && LDBL_MANT_DIG <=   107) && \
-      (LDBL_MAX_EXP  >=  1023 && LDBL_MAX_EXP  <=  1025) && \
-      (LDBL_MIN_EXP  >= -1022 && LDBL_MIN_EXP  <= -1020)
-    _longDouble   = f64f64, ///< Precision of long double
-#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
-    _longDouble   = f128,   ///< Precision of long double
-#else
-# error "Unrecognized long double format"
-#endif
-    _doubleDouble = f64f64, ///< Precision of double double
-    _quad         = f128,   ///< Precision of quad
-  };
-
-  /// @brief Complexity of a data type
-  enum class Complexity : std::uint8_t
-  {
-    real,    ///< real
-    complex, ///< complex
-  };
-
-  /// @brief Direction of the transform
-  enum class Direction : std::uint8_t
-  {
-    forward,            ///< forward transform
-    inverse,            ///< inverse transform
-    backward = inverse, ///< alias for inverse transform
-  };
-
-  /// @brief Placement of the transform
-  enum class Placement : std::uint8_t
-  {
-    inPlace,                 ///< in-place transform
-    outOfPlace,              ///< out-of-place transform
-    notInPlace = outOfPlace, ///< alias for outOfPlace transform
-  };
-
-  /// @brief Transform type
-  enum class Transform : std::uint8_t
-  {
-    dft, ///< Discrete Fourier Transform
-    dht, ///< Discrete Hartley Transform
-    dtt, ///< Discrete Trigonometric Transform
-  };
-
-  /// @brief Target
-  enum class Target : std::uint8_t
-  {
-    cpu,    ///< native CPU target
-    cuda,   ///< CUDA target
-    hip,    ///< HIP target
-    opencl, ///< OpenCL target
-  };
-
-  /// @brief Normalization
-  enum class Normalization : std::uint8_t
-  {
-    none,       ///< no normalization
-    orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
-    unitary,    ///< 1/N normalization applied to inverse transform
-  };
-
-  /**
-   * @struct PrecisionTriad
-   * @brief Precision triad
-   */
-  struct PrecisionTriad
-  {
-    Precision execution{};   ///< precision of the execution
-    Precision source{};      ///< precision of the source data
-    Precision destination{}; ///< precision of the destination data
-  };
-
-  /**
-   * @brief Equality operator for PrecisionTriad
-   * @param lhs left-hand side
-   * @param rhs right-hand side
-   * @return true if the precision triads are equal, false otherwise
-   */
-  [[nodiscard]] constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
-  {
-    return (lhs.execution == rhs.execution) &&
-           (lhs.source == rhs.source) &&
-           (lhs.destination == rhs.destination);
-  }
 } // namespace afft
 
 #endif /* AFFT_COMMON_HPP */

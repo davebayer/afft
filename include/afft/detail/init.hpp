@@ -181,6 +181,8 @@ namespace afft::detail
 # ifdef AFFT_ENABLE_VKFFT
     vkfft::init();
 # endif
+
+    mTimeStamp = Clock::now();
   }
 
   AFFT_HEADER_ONLY_INLINE void Initializer::finalize()

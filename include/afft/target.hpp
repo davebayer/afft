@@ -44,6 +44,15 @@
 
 AFFT_EXPORT namespace afft
 {
+  /// @brief Target
+  enum class Target : std::uint8_t
+  {
+    cpu,    ///< native CPU target
+    cuda,   ///< CUDA target
+    hip,    ///< HIP target
+    opencl, ///< OpenCL target
+  };
+  
   /**
    * @brief Target constant
    * @tparam _target Target

@@ -29,10 +29,47 @@
 # include "detail/include.hpp"
 #endif
 
-#include "detail/type.hpp"
+#include "detail/common.hpp"
 
 AFFT_EXPORT namespace afft
 {
+  /// @brief Precision of a floating-point number
+  enum class Precision : std::uint8_t
+  {
+    bf16,   ///< Google Brain's brain floating-point format
+    f16,    ///< IEEE 754 half-precision binary floating-point format
+    f32,    ///< IEEE 754 single-precision binary floating-point format
+    f64,    ///< IEEE 754 double-precision binary floating-point format
+    f80,    ///< x86 80-bit extended precision format
+    f64f64, ///< double double precision (f128 simulated with two f64)
+    f128,   ///< IEEE 754 quadruple-precision binary floating-point format
+
+    _float        = f32,    ///< Precision of float
+    _double       = f64,    ///< Precision of double
+#if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 && LDBL_MIN_EXP == -1021
+    _longDouble   = f64,    ///< Precision of long double
+#elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
+    _longDouble   = f80,    ///< Precision of long double
+#elif (LDBL_MANT_DIG >=   105 && LDBL_MANT_DIG <=   107) && \
+      (LDBL_MAX_EXP  >=  1023 && LDBL_MAX_EXP  <=  1025) && \
+      (LDBL_MIN_EXP  >= -1022 && LDBL_MIN_EXP  <= -1020)
+    _longDouble   = f64f64, ///< Precision of long double
+#elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
+    _longDouble   = f128,   ///< Precision of long double
+#else
+# error "Unrecognized long double format"
+#endif
+    _doubleDouble = f64f64, ///< Precision of double double
+    _quad         = f128,   ///< Precision of quad
+  };
+
+  /// @brief Complexity of a data type
+  enum class Complexity : std::uint8_t
+  {
+    real,    ///< real
+    complex, ///< complex
+  };
+
   /**
    * @brief Planar complex data type.
    * @tparam T The real type.
@@ -52,6 +89,75 @@ AFFT_EXPORT namespace afft
   PlanarComplex(T* r, T* i) -> PlanarComplex<T>;
 
   /**
+   * @brief Gets the size of a floating-point type.
+   * @tparam prec The precision.
+   * @tparam cmpl The complexity.
+   * @return The size of the floating-point type. If the precision is not supported, returns 0.
+   */
+  template<Precision prec, Complexity cmpl = Complexity::real>
+  [[nodiscard]] constexpr std::size_t sizeOf() noexcept
+  {
+    static_assert(detail::isValid(prec), "Invalid precision.");
+    static_assert(detail::isValid(cmpl), "Invalid complexity.");
+
+    constexpr std::size_t cmplScale = (cmpl == Complexity::real) ? 1 : 2;
+
+    switch (prec)
+    {
+    case Precision::bf16:
+      return cmplScale * 2;
+    case Precision::f16:
+      return cmplScale * 2;
+    case Precision::f32:
+      return cmplScale * 4;
+    case Precision::f64:
+      return cmplScale * 8;
+    case Precision::f64f64:
+      return cmplScale * 16;
+    case Precision::f80: // fixme: size may vary depending on the platform
+      return cmplScale * 16;
+    case Precision::f128:
+      return cmplScale * 16;
+    default:
+      return 0;
+    }
+  }
+
+  /**
+   * @brief Gets the size of a floating-point type.
+   * @param prec The precision.
+   * @return The size of the floating-point type. If the precision is not supported, returns 0.
+   */
+  [[nodiscard]] constexpr std::size_t sizeOf(Precision prec)
+  {
+    switch (prec)
+    {
+    case Precision::bf16:
+      return sizeOf<Precision::bf16>();
+    case Precision::f16:
+      return sizeOf<Precision::f16>();
+    case Precision::f32:
+      return sizeOf<Precision::f32>();
+    case Precision::f64:
+      return sizeOf<Precision::f64>();
+    case Precision::f64f64:
+      return sizeOf<Precision::f64f64>();
+    case Precision::f80:
+      return sizeOf<Precision::f80>();
+    case Precision::f128:
+      return sizeOf<Precision::f128>();
+    default:
+      throw Exception{Error::invalidArgument, "invalid precision"};
+    }
+  }
+
+  /// @brief Base structure for unknown type properties.
+  struct UnknownTypePropertiesBase {};
+
+  /// @brief Base structure for known type properties.
+  struct KnownTypePropertiesBase {};
+
+  /**
    * @struct TypePropertiesBase
    * @brief Type properties base structure implementing TypeProperties's static members. Should not be used directly,
    *        only as the base class for the TypeProperties specialization.
@@ -60,7 +166,7 @@ AFFT_EXPORT namespace afft
    * @tparam cmpl The complexity.
    */
   template<typename T, Precision prec, Complexity cmpl>
-  struct TypePropertiesBase : detail::KnownTypePropertiesBase
+  struct TypePropertiesBase : KnownTypePropertiesBase
   {
     // Check if type is an object
     static_assert(std::is_object_v<T>, "Type T must be an object");
@@ -69,7 +175,7 @@ AFFT_EXPORT namespace afft
     static_assert(!std::is_abstract_v<T>, "Type T cannot be abstract");
 
     // Ensure the size of the type matches the given precision and complexity
-    static_assert(sizeof(T) == detail::sizeOf<prec, cmpl>(),
+    static_assert(sizeof(T) == sizeOf<prec, cmpl>(),
                   "Size of the type must match the given precision and complexity");
 
     // Ensure the precision is valid
@@ -89,7 +195,7 @@ AFFT_EXPORT namespace afft
    */
   template<typename>
   struct TypeProperties
-    : detail::UnknownTypePropertiesBase {};
+    : UnknownTypePropertiesBase {};
 
   /// Specialization of TypeProperties for float.
   template<>

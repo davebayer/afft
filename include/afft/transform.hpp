@@ -30,12 +30,56 @@
 #endif
 
 #include "common.hpp"
+#include "type.hpp"
 
 AFFT_EXPORT namespace afft
 {
+  /// @brief Direction of the transform
+  enum class Direction : std::uint8_t
+  {
+    forward,            ///< forward transform
+    inverse,            ///< inverse transform
+    backward = inverse, ///< alias for inverse transform
+  };
+
+  /// @brief Placement of the transform
+  enum class Placement : std::uint8_t
+  {
+    inPlace,                 ///< in-place transform
+    outOfPlace,              ///< out-of-place transform
+    notInPlace = outOfPlace, ///< alias for outOfPlace transform
+  };
+
+  /// @brief Transform type
+  enum class Transform : std::uint8_t
+  {
+    dft, ///< Discrete Fourier Transform
+    dht, ///< Discrete Hartley Transform
+    dtt, ///< Discrete Trigonometric Transform
+  };
+
+  /// @brief Normalization
+  enum class Normalization : std::uint8_t
+  {
+    none,       ///< no normalization
+    orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
+    unitary,    ///< 1/N normalization applied to inverse transform
+  };
+
+  /**
+   * @struct PrecisionTriad
+   * @brief Precision triad
+   */
+  struct PrecisionTriad
+  {
+    Precision execution{};   ///< precision of the execution
+    Precision source{};      ///< precision of the source data
+    Precision destination{}; ///< precision of the destination data
+  };
+
   /// @brief Named constant representing all axes (is empty view)
   inline constexpr View<Axis> allAxes{};
-
+  
 /**********************************************************************************************************************/
 // Discrete Fourier Transform (DFT)
 /**********************************************************************************************************************/
@@ -136,6 +180,22 @@ AFFT_EXPORT namespace afft
     bool           destructive{placement == Placement::inPlace}; ///< destructive transform
     View<Type>     types{};                                      ///< types of the transform, must have size 1 or size equal to the number of axes
   };
+
+/**********************************************************************************************************************/
+// Equality operators
+/**********************************************************************************************************************/
+  /**
+   * @brief Equality operator for PrecisionTriad
+   * @param lhs left-hand side
+   * @param rhs right-hand side
+   * @return true if the precision triads are equal, false otherwise
+   */
+  [[nodiscard]] constexpr bool operator==(const PrecisionTriad& lhs, const PrecisionTriad& rhs)
+  {
+    return (lhs.execution == rhs.execution) &&
+           (lhs.source == rhs.source) &&
+           (lhs.destination == rhs.destination);
+  }
 } // namespace afft
 
 #endif /* AFFT_TRANSFORM_HPP */
