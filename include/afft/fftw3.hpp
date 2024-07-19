@@ -29,7 +29,9 @@
 # include "detail/include.hpp"
 #endif
 
-#include "exception.hpp"
+#include "error.hpp"
+#include "init.hpp"
+#include "type.hpp"
 #include "typeTraits.hpp"
 #ifdef AFFT_ENABLE_FFTW3
 # include "detail/fftw3/Lib.hpp"
@@ -59,6 +61,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -80,6 +84,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -100,6 +106,8 @@ AFFT_EXPORT namespace afft::fftw3
   [[nodiscard]] std::string exportWisdom()
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
+    init();
 
     std::string wisdom{};
 
@@ -135,6 +143,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -155,6 +165,8 @@ AFFT_EXPORT namespace afft::fftw3
   void importWisdomFromFilename([[maybe_unused]] std::string_view filename)
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
+    init();
 
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
@@ -177,6 +189,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -198,6 +212,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -218,6 +234,8 @@ AFFT_EXPORT namespace afft::fftw3
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
     {
@@ -226,7 +244,7 @@ AFFT_EXPORT namespace afft::fftw3
 # endif
   }
 
-namespace mpst
+namespace mpi
 {
   /**
    * @brief Does the FFTW3 MPI library support the given precision?
@@ -251,6 +269,8 @@ namespace mpst
   {
     static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
 
+    init();
+
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
@@ -267,6 +287,10 @@ namespace mpst
   template<typename PrecT>
   void gatherWisdom([[maybe_unused]] MPI_Comm comm)
   {
+    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+
+    init();
+    
 # ifdef AFFT_ENABLE_FFTW3
     if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
     {
@@ -275,10 +299,7 @@ namespace mpst
 # endif
   }
 #endif
-} // namespace mpst
-
-  /// @brief Namespace alias for mpst namespace
-  namespace mpi = mpst;
+} // namespace mpi
 } // namespace afft
 
 #endif /* AFFT_FFTW3_HPP */

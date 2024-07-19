@@ -25,6 +25,9 @@
 #ifndef AFFT_AFFT_HPP
 #define AFFT_AFFT_HPP
 
+// Include the version header.
+#include "afft-version.h"
+
 // Include the config header.
 #include "detail/config.hpp"
 
@@ -38,16 +41,21 @@
 #define AFFT_TOP_LEVEL_INCLUDE
 
 // Include all public headers.
-#include "alloc.hpp"
-#include "architecture.hpp"
 #include "backend.hpp"
-#include "fftw3.hpp"
 #include "common.hpp"
+#include "error.hpp"
+#include "fftw3.hpp"
 #include "init.hpp"
-#include "type.hpp"
-#include "Plan.hpp"
 #include "makePlan.hpp"
-#include "PlanCache.hpp"
+#include "memory.hpp"
+#include "mp.hpp"
+#include "Plan.hpp"
+// #include "PlanCache.hpp"
+#include "Span.hpp"
+#include "target.hpp"
+#include "transform.hpp"
+#include "type.hpp"
+#include "typeTraits.hpp"
 #include "utils.hpp"
 #include "version.hpp"
 
