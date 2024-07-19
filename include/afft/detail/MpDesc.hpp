@@ -29,6 +29,7 @@
 # include "include.hpp"
 #endif
 
+#include "validate.hpp"
 #include "../mp.hpp"
 
 namespace afft::detail

@@ -29,88 +29,183 @@
 # include "detail/include.hpp"
 #endif
 
+#include "init.hpp"
+#include "memory.hpp"
 #include "detail/makePlan.hpp"
 
 AFFT_EXPORT namespace afft
 {
   /**
-   * @brief Create a plan for the given transform, architecture and backend parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam ArchParamsT Architecture parameters type
-   * @tparam BackendParamsT Backend parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @param backendParams Backend parameters
-   * @return Plan
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param targetParams Target parameters.
+   * @param backendParams Backend parameters.
+   * @return The plan.
    */
-  template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT = detail::DefaultBackendParameters>
-  std::unique_ptr<Plan> makePlan(const TransformParamsT& transformParams,
-                                 ArchParamsT&            archParams,
-                                 const BackendParamsT&   backendParams = {})
+  template<typename TransformParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                          transformParams,
+                              const TargetParamsT&                                             targetParams,
+                              const BackendParameters<MpBackend::none, TargetParamsT::target>& backendParams = {});
+
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param targetParams Target parameters.
+   * @param memoryLayout Memory layout.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                          transformParams,
+                              const TargetParamsT&                                             targetParams,
+                              const CentralizedMemoryLayout&                                   memoryLayout,
+                              const BackendParameters<MpBackend::none, TargetParamsT::target>& backendParams = {});
+
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters
+   * @tparam MultiProcessParamsT Multi-process parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param multiProcessParams Multi-process parameters.
+   * @param targetParams Target parameters.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename MultiProcessParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                                         transformParams,
+                              const MultiProcessParamsT&                                                      multiProcessParams,
+                              const TargetParamsT&                                                            targetParams,
+                              const BackendParameters<MultiProcessParamsT::mpBackend, TargetParamsT::target>& backendParams = {});
+
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters
+   * @tparam MultiProcessParamsT Multi-process parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @tparam MemoryLayoutT Memory layout.
+   * @param transformParams Transform parameters.
+   * @param multiProcessParams Multi-process parameters.
+   * @param targetParams Target parameters.
+   * @param memoryLayout Memory layout.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename MultiProcessParamsT, typename TargetParamsT, typename MemoryLayoutT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                                         transformParams,
+                              const MultiProcessParamsT&                                                      multiProcessParams,
+                              const TargetParamsT&                                                            targetParams,
+                              const MemoryLayoutT&                                                            memoryLayout,
+                              const BackendParameters<MultiProcessParamsT::mpBackend, TargetParamsT::target>& backendParams = {});
+
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param targetParams Target parameters.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                          transformParams,
+                              const TargetParamsT&                                             targetParams,
+                              const BackendParameters<MpBackend::none, TargetParamsT::target>& backendParams)
   {
-    static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-    static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
-    static_assert(isBackendParameters<BackendParamsT> ||
-                  std::is_same_v<BackendParamsT, detail::DefaultBackendParameters>,
-                  "Invalid backend parameters type");
+    static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters");
+    static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters");
 
-    static_assert(std::is_same_v<BackendParamsT, detail::DefaultBackendParameters> ||
-                  ((ArchParamsT::target == BackendParamsT::target) &&
-                   (ArchParamsT::distribution == BackendParamsT::distribution)),
-                  "Architecture and backend parameters must share the same target and distribution");
-
-    static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
-                  (ArchParamsT::shapeExtent == dynamicRank) ||
-                  (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
-                  "Transform and target parameters must have the same shape rank");
-
-    const detail::Desc desc{transformParams, archParams};
-
-    if constexpr (std::is_same_v<BackendParamsT, detail::DefaultBackendParameters>)
-    {
-      return detail::makePlan(desc, BackendParameters<ArchParamsT::target, ArchParamsT::distribution>{});
-    }
-    else
-    {
-      return detail::makePlan(desc, backendParams);
-    }
+    return makePlan(transformParams, SingleProcessParameters{}, targetParams, backendParams);
   }
 
   /**
-   * @brief Create a plan with feedback for the given transform, architecture and backend parameters
-   * @tparam TransformParamsT Transform parameters type
-   * @tparam ArchParamsT Architecture parameters type
-   * @tparam BackendParamsT Backend parameters type
-   * @param transformParams Transform parameters
-   * @param archParams Architecutre parameters
-   * @param backendParams Backend parameters
-   * @return Plan and feedback
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param targetParams Target parameters.
+   * @param memoryLayout Memory layout.
+   * @param backendParams Backend parameters.
+   * @return The plan.
    */
-  // template<typename TransformParamsT, typename ArchParamsT, typename BackendParamsT>
-  // std::pair<std::unique_ptr<Plan>, std::vector<Feedback>>
-  // makePlanWithFeedback(const TransformParamsT& transformParams,
-  //                      ArchParamsT&            archParams,
-  //                      const BackendParamsT&   backendParams)
-  // {
-  //   static_assert(isTransformParameters<TransformParamsT>, "Invalid transform parameters type");
-  //   static_assert(isArchitectureParameters<ArchParamsT>, "Invalid architecture parameters type");
-  //   static_assert(detail::isKnownBackendParams<BackendParamsT>, "Invalid backend parameters type");
+  template<typename TransformParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                          transformParams,
+                              const TargetParamsT&                                             targetParams,
+                              const CentralizedMemoryLayout&                                   memoryLayout,
+                              const BackendParameters<MpBackend::none, TargetParamsT::target>& backendParams)
+  {
+    static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters");
+    static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters");
 
-  //   static_assert((ArchParamsT::target == BackendParamsT::target) &&
-  //                 (ArchParamsT::distribution == BackendParamsT::distribution),
-  //                 "Architecture and backend parameters must share the same target and distribution");
+    return makePlan(transformParams, SingleProcessParameters{}, targetParams, memoryLayout, backendParams);
+  }
 
-  //   static_assert((TransformParamsT::shapeExtent == dynamicExtent) ||
-  //                 (ArchParamsT::shapeExtent == dynamicRank) ||
-  //                 (TransformParamsT::shapeExtent == ArchParamsT::shapeExtent),
-  //                 "Transform and target parameters must have the same shape rank");
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters
+   * @tparam MultiProcessParamsT Multi-process parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @param transformParams Transform parameters.
+   * @param multiProcessParams Multi-process parameters.
+   * @param targetParams Target parameters.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename MultiProcessParamsT, typename TargetParamsT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                                         transformParams,
+                              const MultiProcessParamsT&                                                      multiProcessParams,
+                              const TargetParamsT&                                                            targetParams,
+                              const BackendParameters<MultiProcessParamsT::mpBackend, TargetParamsT::target>& backendParams)
+  {
+    static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters");
+    static_assert(isMpBackendParameters<MultiProcessParamsT>, "invalid multi-process parameters");
+    static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters");
 
-  //   std::pair<std::unique_ptr<Plan>, std::vector<Feedback>> result{};
+    using MemoryLayoutT = std::conditional_t<MultiProcessParamsT::mpBackend == MpBackend::none,
+                                             CentralizedMemoryLayout,
+                                             DistributedMemoryLayout>;
 
-  //   result.first = detail::makePlan(detail::Desc{transformParams, archParams}, backendParams, &result.second);
+    return makePlan(transformParams, multiProcessParams, targetParams, MemoryLayoutT{}, backendParams);
+  }
 
-  //   return result;
-  // }
+  /**
+   * @brief Make a plan.
+   * @tparam TransformParamsT Transform parameters
+   * @tparam MultiProcessParamsT Multi-process parameters.
+   * @tparam TargetParamsT Target parameters.
+   * @tparam MemoryLayoutT Memory layout.
+   * @param transformParams Transform parameters.
+   * @param multiProcessParams Multi-process parameters.
+   * @param targetParams Target parameters.
+   * @param memoryLayout Memory layout.
+   * @param backendParams Backend parameters.
+   * @return The plan.
+   */
+  template<typename TransformParamsT, typename MultiProcessParamsT, typename TargetParamsT, typename MemoryLayoutT>
+  [[nodiscard]] auto makePlan(const TransformParamsT&                                                         transformParams,
+                              const MultiProcessParamsT&                                                      multiProcessParams,
+                              const TargetParamsT&                                                            targetParams,
+                              const MemoryLayoutT&                                                            memoryLayout,
+                              const BackendParameters<MultiProcessParamsT::mpBackend, TargetParamsT::target>& backendParams)
+  {
+    static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters");
+    static_assert(isMpBackendParameters<MultiProcessParamsT>, "invalid multi-process parameters");
+    static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters");
+    static_assert(isMemoryLayout<MemoryLayoutT>, "invalid memory layout");
+
+    static_assert(MultiProcessParamsT::mpBackend != MpBackend::none || std::is_same_v<MemoryLayoutT, CentralizedMemoryLayout>,
+                  "distributed memory layout is only supported for multi-process backends");
+
+    init();
+
+    const auto& desc = detail::Desc{transformParams, multiProcessParams, targetParams, memoryLayout, backendParams};
+
+    return detail::makePlan(desc, backendParams);
+  }
 } // namespace afft
 
 #endif /* AFFT_MAKE_PLAN_HPP */

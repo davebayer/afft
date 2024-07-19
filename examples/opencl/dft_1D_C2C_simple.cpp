@@ -44,8 +44,8 @@ int main(void)
 
   afft::init(); // initialize afft library, also initializes CUDA
 
-  std::vector<std::complex<PrecT>> src(size, {context}); // source vector
-  std::vector<std::complex<PrecT>> dst(size, {context}); // destination vector
+  std::vector<std::complex<PrecT>> src(size); // source vector
+  std::vector<std::complex<PrecT>> dst(size); // destination vector
 
   // initialize source vector
 
