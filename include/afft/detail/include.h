@@ -54,5 +54,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #endif /* AFFT_DETAIL_INCLUDE_H */
