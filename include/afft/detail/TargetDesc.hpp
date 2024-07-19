@@ -30,6 +30,7 @@
 #endif
 
 #include "common.hpp"
+#include "validate.hpp"
 #include "../target.hpp"
 
 namespace afft::detail
@@ -263,10 +264,8 @@ namespace afft::detail
       using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc>;
 
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams, std::size_t& targetCount)
+      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
       {
-        targetCount = 1;
-
         CpuDesc cpuDesc{};
         cpuDesc.threadLimit = cpuParams.threadLimit;
 
@@ -274,7 +273,7 @@ namespace afft::detail
       }
 
 #     ifdef AFFT_ENABLE_CUDA
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams, std::size_t& targetCount)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams)
       {
         CudaDesc cudaDesc{};
         cudaDesc.targetCount = cudaParams.devices.size();

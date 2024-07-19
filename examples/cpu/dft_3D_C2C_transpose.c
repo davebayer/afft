@@ -27,8 +27,8 @@ int main(void)
 
   AFFT_CALL(afft_init(NULL)); // initialize afft library
 
-  FloatComplex* src = afft_cpu_alignedAlloc(srcElemCount * sizeof(FloatComplex), alignment); // source vector
-  FloatComplex* dst = afft_cpu_alignedAlloc(dstElemCount * sizeof(FloatComplex), alignment); // destination vector
+  FloatComplex* src = afft_alignedAlloc(srcElemCount * sizeof(FloatComplex), alignment); // source vector
+  FloatComplex* dst = afft_alignedAlloc(dstElemCount * sizeof(FloatComplex), alignment); // destination vector
 
   // check if src and dst are not NULL
   // initialize source vector

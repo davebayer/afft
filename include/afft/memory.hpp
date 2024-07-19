@@ -33,7 +33,7 @@
 #include "Span.hpp"
 #include "detail/cxx.hpp"
 
-namespace afft
+AFFT_EXPORT namespace afft
 {
   /// @brief Memory layout type
   enum class MemoryLayout : std::uint8_t

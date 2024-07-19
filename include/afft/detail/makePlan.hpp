@@ -33,6 +33,7 @@
 #include "Desc.hpp"
 #include "../Plan.hpp"
 #include "../backend.hpp"
+#include "../target.hpp"
 
 #ifdef AFFT_ENABLE_CLFFT
 # include "clfft/makePlan.hpp"
@@ -64,15 +65,6 @@
 
 namespace afft::detail
 {
-  /**
-   * @brief Default backend parameters. 
-   */
-  struct DefaultBackendParameters
-  {
-    static constexpr Target       target{};       ///< Dummy target.
-    static constexpr Distribution distribution{}; ///< Dummy distribution.
-  };
-
   /**
    * @brief For each backend in the backend mask, call the function.
    * @tparam Fn Function type.
@@ -125,38 +117,51 @@ namespace afft::detail
    * @brief Get supported backend mask for the specified target and distribution.
    * @tparam target Target.
    * @tparam distrib Distribution.
+   * @param targetCount Target count.
    * @return Supported backend mask.
    */
-  template<Target target, Distribution distrib>
-  [[nodiscard]] constexpr BackendMask getSupportedBackendMask()
+  template<MpBackend mpBackend, Target target>
+  [[nodiscard]] constexpr BackendMask getSupportedBackendMask(std::size_t targetCount)
   {
-    static_assert(isValid(target), "Invalid target");
-    static_assert(isValid(distrib), "Invalid distribution");
+    static_assert(isValid(mpBackend), "invalid multi process backend");
+    static_assert(isValid(target), "invalid target");
 
-    if constexpr (target == Target::cpu)
+    if constexpr (mpBackend == MpBackend::none)
     {
-      if constexpr (distrib == Distribution::spst)
+      if constexpr (target == Target::cpu)
       {
-        return spst::cpu::supportedBackendMask;
+        return Backend::fftw3 | Backend::mkl | Backend::pocketfft;
       }
-      else if constexpr (distrib == Distribution::mpst)
+      else if constexpr (target == Target::cuda)
       {
-        return mpst::cpu::supportedBackendMask;
+        return Backend::cufft | ((targetCount == 1) ? (BackendMask::empty | Backend::vkfft) : BackendMask::empty);
+      }
+      else if constexpr (target == Target::hip)
+      {
+        return Backend::hipfft | Backend::rocfft | ((targetCount == 1) ? (BackendMask::empty | Backend::vkfft) : BackendMask::empty);
+      }
+      else if constexpr (target == Target::opencl)
+      {
+        return (targetCount == 1) ? (Backend::clfft | Backend::vkfft) : BackendMask::empty;
       }
     }
-    else if constexpr (target == Target::gpu)
+    else if constexpr (mpBackend == MpBackend::mpi)
     {
-      if constexpr (distrib == Distribution::spst)
+      if constexpr (target == Target::cpu)
       {
-        return spst::gpu::supportedBackendMask;
+        return Backend::fftw3 | Backend::heffte | Backend::mkl;
       }
-      else if constexpr (distrib == Distribution::spmt)
+      else if constexpr (target == Target::cuda)
       {
-        return spmt::gpu::supportedBackendMask;
+        return (targetCount == 1) ? (Backend::cufft | Backend::heffte) : BackendMask::empty;
       }
-      else if constexpr (distrib == Distribution::mpst)
+      else if constexpr (target == Target::hip)
       {
-        return mpst::gpu::supportedBackendMask;
+        return Backend::rocfft | ((targetCount == 1) ? (Backend::hipfft | Backend::heffte) : BackendMask::empty);
+      }
+      else if constexpr (target == Target::opencl)
+      {
+        return BackendMask::empty;
       }
     }
 
@@ -190,8 +195,10 @@ namespace afft::detail
     };
 
     std::unique_ptr<Plan> plan{};
+
+    const auto supportedBackendMask = getSupportedBackendMask<BackendParamsT::mpBackend, BackendParamsT::target>(desc.getTargetCount());
     
-    if ((backend & getSupportedBackendMask<BackendParamsT::target, BackendParamsT::distribution>()) == BackendMask::empty)
+    if ((backend & supportedBackendMask) == BackendMask::empty)
     {
       assignFeedbackMessage("Backend not supported for target and distribution");
     }

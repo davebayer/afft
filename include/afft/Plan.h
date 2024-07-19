@@ -29,11 +29,12 @@
 # include "detail/include.h"
 #endif
 
-#include "architecture.h"
 #include "backend.h"
 #include "error.h"
 #include "common.h"
+#include "memory.h"
 #include "mp.h"
+#include "target.h"
 #include "transform.h"
 
 #ifdef __cplusplus

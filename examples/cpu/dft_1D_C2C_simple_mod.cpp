@@ -1,10 +1,10 @@
-import <complex>;
-import <vector>;
+#include <complex>
+#include <vector>
 
 import afft;
 
 template<typename T>
-using AlignedVector = std::vector<T, afft::cpu::AlignedAllocator<T>>;
+using AlignedVector = std::vector<T, afft::AlignedAllocator<T>>;
 
 int main(void)
 {
@@ -21,12 +21,12 @@ int main(void)
 
   afft::dft::Parameters dftParams // parameters for dft
   {
-    dftParams.direction     = afft::Direction::forward, // it will be a forward transform
-    dftParams.precision     = afft::makePrecision<PrecT>(), // set up precision of the transform
-    dftParams.shape         = afft::makeScalarView(size), // set up the dimensions
-    dftParams.type          = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
-    dftParams.normalization = afft::Normalization::none, // do not normalize
-    dftParams.destructive   = false, // do not allow to destroy source data
+    .direction     = afft::Direction::forward, // it will be a forward transform
+    .precision     = afft::makePrecision<PrecT>(), // set up precision of the transform
+    .shape         = afft::makeScalarView(size), // set up the dimensions
+    .normalization = afft::Normalization::none, // do not normalize
+    .destructive   = false, // do not allow to destroy source data
+    .type          = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
   };
   
   afft::cpu::Parameters cpuParams // it will run on a cpu

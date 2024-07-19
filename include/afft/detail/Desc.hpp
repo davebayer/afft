@@ -55,7 +55,10 @@ namespace afft::detail
       : TransformDesc{transformParams},
         MpDesc{mpBackendParams},
         TargetDesc{targetParams},
-        MemDesc{memoryLayout, getShapeRank(), getTargetCount()}
+        MemDesc{memoryLayout,
+                static_cast<TransformDesc&>(*this),
+                static_cast<MpDesc&>(*this),
+                static_cast<TargetDesc&>(*this)}
       {
         static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
         static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
@@ -77,70 +80,6 @@ namespace afft::detail
 
       /// @brief Move assignment operator.
       Desc& operator=(Desc&&) = default;
-
-      /// @brief Fill the default memory layout strides.
-      void fillDefaultMemoryLayoutStrides()
-      {
-        const auto shapeRank = getShapeRank();
-
-        switch (getDistribution())
-        {
-        case Distribution::spst:
-        {
-          auto& memoryLayout = getMemoryLayout<Distribution::spst>();
-
-          if (memoryLayout.hasDefaultSrcStrides())
-          {
-            const auto srcShape = getSrcShape();
-            makeStrides(View<std::size_t>{srcShape.data(), shapeRank}, memoryLayout.getSrcStridesWritable());
-          }
-
-          if (memoryLayout.hasDefaultDstStrides())
-          {
-            const auto dstShape = getDstShape();
-            makeStrides(View<std::size_t>{dstShape.data(), shapeRank}, memoryLayout.getDstStridesWritable());
-          }
-
-          break;
-        }
-        case Distribution::spmt:
-        {
-          auto& memoryLayout = getMemoryLayout<Distribution::spmt>();
-
-          for (std::size_t i{}; i < getTargetCount(); ++i)
-          {
-            if (memoryLayout.hasDefaultSrcStrides(i))
-            {
-              makeStrides(memoryLayout.getSrcSizes(i), memoryLayout.getSrcStridesWritable(i));
-            }
-            
-            if (memoryLayout.hasDefaultDstStrides(i))
-            {
-              makeStrides(memoryLayout.getDstSizes(i), memoryLayout.getDstStridesWritable(i));
-            }
-          }
-
-          break;
-        }
-        case Distribution::mpst:
-        {
-          auto& memoryLayout = getMemoryLayout<Distribution::mpst>();
-
-          if (memoryLayout.hasDefaultSrcStrides())
-          {
-            makeStrides(memoryLayout.getSrcSizes(), memoryLayout.getSrcStridesWritable());
-          }
-
-          if (memoryLayout.hasDefaultDstStrides())
-          {
-            makeStrides(memoryLayout.getDstSizes(), memoryLayout.getDstStridesWritable());
-          }
-          break;
-        }
-        default:
-          cxx::unreachable();
-        }
-      }
 
       /**
        * @brief Get the number of buffers required for the source and destination.

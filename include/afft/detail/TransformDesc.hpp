@@ -30,6 +30,7 @@
 #endif
 
 #include "common.hpp"
+#include "utils.hpp"
 #include "../type.hpp"
 #include "../typeTraits.hpp"
 
@@ -194,9 +195,9 @@ namespace afft::detail
        * @brief Get the shape of the transform.
        * @return Shape of the transform.
        */
-      [[nodiscard]] constexpr View<std::size_t> getShape() const noexcept
+      [[nodiscard]] constexpr View<Size> getShape() const noexcept
       {
-        return View<std::size_t>{mShape.data, mShapeRank};
+        return View<Size>{mShape.data, mShapeRank};
       }
 
       /**
@@ -209,7 +210,11 @@ namespace afft::detail
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        return cast<I>(getShape());
+        MaxDimBuffer<I> shape{};
+
+        cast(getShape().begin(), getShape().end(), shape.data, SafeIntCaster<I>{});
+
+        return shape;
       }
 
       /**
@@ -217,10 +222,10 @@ namespace afft::detail
        * @tparam I Integral type.
        * @return Shape of the source.
        */
-      template<typename I = std::size_t>
-      [[nodiscard]] constexpr MaxDimArray<I> getSrcShape() const
+      template<typename I = Size>
+      [[nodiscard]] constexpr MaxDimBuffer<I> getSrcShape() const
       {
-        MaxDimArray<I> srcShape = getShapeAs<I>();
+        MaxDimBuffer<I> srcShape = getShapeAs<I>();
 
         switch (getTransform())
         {
@@ -250,10 +255,10 @@ namespace afft::detail
        * @tparam I Integral type.
        * @return Shape of the destination.
        */
-      template<typename I = std::size_t>
-      [[nodiscard]] constexpr MaxDimArray<I> getDstShape() const
+      template<typename I = Size>
+      [[nodiscard]] constexpr MaxDimBuffer<I> getDstShape() const
       {
-        MaxDimArray<I> dstShape = getShapeAs<I>();
+        MaxDimBuffer<I> dstShape = getShapeAs<I>();
 
         switch (getTransform())
         {
@@ -291,9 +296,9 @@ namespace afft::detail
        * @brief Get the axes of the transform.
        * @return Axes of the transform.
        */
-      [[nodiscard]] constexpr View<std::size_t> getTransformAxes() const noexcept
+      [[nodiscard]] constexpr View<Axis> getTransformAxes() const noexcept
       {
-        return View<std::size_t>{mTransformAxes.data, mTransformRank};
+        return View<Axis>{mTransformAxes.data, mTransformRank};
       }
 
       /**
@@ -579,9 +584,9 @@ namespace afft::detail
        * @param shapeView Shape view.
        * @return Shape of the transform.
        */
-      [[nodiscard]] constexpr static MaxDimArray<std::size_t> makeShape(View<std::size_t> shapeView)
+      [[nodiscard]] constexpr static MaxDimBuffer<Size> makeShape(View<Size> shapeView)
       {
-        MaxDimArray<std::size_t> shape{};
+        MaxDimBuffer<Size> shape{};
 
         if (shapeView.size() > maxDimCount)
         {
@@ -611,14 +616,14 @@ namespace afft::detail
        * @param shapeRank Rank of the shape.
        * @return Transform axes.
        */
-      [[nodiscard]] static MaxDimArray<std::size_t>
-      makeTransformAxes(View<std::size_t> axesView, std::size_t shapeRank)
+      [[nodiscard]] static MaxDimBuffer<Axis>
+      makeTransformAxes(View<Axis> axesView, std::size_t shapeRank)
       {
-        MaxDimArray<std::size_t> axes{};
+        MaxDimBuffer<Axis> axes{};
 
         if (axesView.empty())
         {
-          std::iota(axes.begin(), std::next(axes.begin(), static_cast<std::ptrdiff_t>(shapeRank)), 0);
+          std::iota(axes.data, std::next(axes.data, static_cast<std::ptrdiff_t>(shapeRank)), 0);
         }
         else if (axesView.size() <= shapeRank)
         {
@@ -638,7 +643,7 @@ namespace afft::detail
             seenAxes.set(axis);
           }
 
-          std::copy(axesView.begin(), axesView.end(), axes.begin());
+          std::copy(axesView.begin(), axesView.end(), axes.data);
         }
         else
         {
@@ -696,16 +701,16 @@ namespace afft::detail
         return dttDesc;
       }
 
-      Direction                 mDirection{};      ///< Direction of the transform.
-      PrecisionTriad            mPrecision{};      ///< Precision triad of the transform.
-      std::size_t               mShapeRank{};      ///< Rank of the shape.
-      MaxDimBuffer<std::size_t> mShape{};          ///< Shape of the transform.
-      std::size_t               mTransformRank{};  ///< Rank of the transform.
-      MaxDimBuffer<std::size_t> mTransformAxes{};  ///< Axes of the transform.
-      Normalization             mNormalization{};  ///< Normalization of the transform.
-      Placement                 mPlacement{};      ///< Placement of the transform.
-      bool                      mDestructive{};    ///< Destructive transform.
-      TransformVariant          mTransformVariant; ///< Transform variant.
+      Direction          mDirection{};      ///< Direction of the transform.
+      PrecisionTriad     mPrecision{};      ///< Precision triad of the transform.
+      std::size_t        mShapeRank{};      ///< Rank of the shape.
+      MaxDimBuffer<Size> mShape{};          ///< Shape of the transform.
+      std::size_t        mTransformRank{};  ///< Rank of the transform.
+      MaxDimBuffer<Axis> mTransformAxes{};  ///< Axes of the transform.
+      Normalization      mNormalization{};  ///< Normalization of the transform.
+      Placement          mPlacement{};      ///< Placement of the transform.
+      bool               mDestructive{};    ///< Destructive transform.
+      TransformVariant   mTransformVariant; ///< Transform variant.
   };
 } // namespace afft::detail
 

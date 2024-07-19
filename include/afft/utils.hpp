@@ -179,7 +179,7 @@ AFFT_EXPORT namespace afft
   {
     std::array<I, shapeExt> strides{};
 
-    makeStrides(shape, fastestAxisStride, strides);
+    makeStrides(shape, fastestAxisStride, Span<I, shapeExt>{strides});
 
     return strides;
   }
@@ -306,7 +306,7 @@ AFFT_EXPORT namespace afft
 
     std::array<I, shapeExt> strides{};
 
-    makeTransposedStrides(shape, orgAxesOrder, fastestAxisStride, strides);
+    makeTransposedStrides(shape, orgAxesOrder, fastestAxisStride, Span<I, shapeExt>{strides});
 
     return strides;
   }

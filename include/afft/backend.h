@@ -29,6 +29,8 @@
 # include "detail/include.h"
 #endif
 
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C"
 {

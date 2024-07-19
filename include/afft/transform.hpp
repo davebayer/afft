@@ -158,11 +158,21 @@ AFFT_EXPORT namespace afft
     dct2,       ///< Discrete Cosine Transform type II
     dct3,       ///< Discrete Cosine Transform type III
     dct4,       ///< Discrete Cosine Transform type IV
+    // Disabled as no implementation is available
+    // dct5,       ///< Discrete Cosine Transform type V
+    // dct6,       ///< Discrete Cosine Transform type VI
+    // dct7,       ///< Discrete Cosine Transform type VII
+    // dct8,       ///< Discrete Cosine Transform type VIII
 
     dst1,       ///< Discrete Sine Transform type I
     dst2,       ///< Discrete Sine Transform type II
     dst3,       ///< Discrete Sine Transform type III
     dst4,       ///< Discrete Sine Transform type IV
+    // Disabled as no implementation is available
+    // dst5,       ///< Discrete Sine Transform type V
+    // dst6,       ///< Discrete Sine Transform type VI
+    // dst7,       ///< Discrete Sine Transform type VII
+    // dst8,       ///< Discrete Sine Transform type VIII
 
     dct = dct2, ///< default DCT type
     dst = dst2, ///< default DST type

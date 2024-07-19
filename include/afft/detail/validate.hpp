@@ -32,9 +32,11 @@
 #include "cxx.hpp"
 #include "../backend.hpp"
 #include "../memory.hpp"
+#include "../mp.hpp"
 #include "../Span.hpp"
 #include "../target.hpp"
 #include "../transform.hpp"
+#include "../type.hpp"
 
 namespace afft::detail
 {
@@ -44,6 +46,23 @@ namespace afft::detail
    */
   template<typename T>
   struct Validator;
+
+  /// @brief Validator for the MpBackend enum class.
+  template<>
+  struct Validator<MpBackend>
+  {
+    constexpr bool operator()(MpBackend backend) const noexcept
+    {
+      switch (backend)
+      {
+      case MpBackend::none:
+      case MpBackend::mpi:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
 
   /// @brief Validator for the Backend enum class.
   template<>
@@ -313,6 +332,23 @@ namespace afft::detail
       case dtt::Type::dst2:
       case dtt::Type::dst3:
       case dtt::Type::dst4:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
+  /// @brief Validator for the MemoryLayout enum class.
+  template<>
+  struct Validator<MemoryLayout>
+  {
+    constexpr bool operator()(MemoryLayout layout) const noexcept
+    {
+      switch (layout)
+      {
+      case MemoryLayout::centralized:
+      case MemoryLayout::distributed:
         return true;
       default:
         return false;

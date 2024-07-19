@@ -4,7 +4,7 @@
 #include <afft/afft.hpp>
 
 template<typename T>
-using AlignedVector = std::vector<T, afft::cpu::AlignedAllocator<T>>;
+using AlignedVector = std::vector<T, afft::AlignedAllocator<T>>;
 
 using PrecT = float;
 
@@ -31,33 +31,26 @@ int main()
   dftParams.type          = afft::dft::Type::complexToComplex;
 
   afft::cpu::Parameters cpuParams{};
-  cpuParams.alignment   = alignment;
   cpuParams.threadLimit = 4;
 
-  const auto srcStrides = afft::makeStrides(srcPaddedShape);
-  const auto dstStrides = afft::makeStrides(dstPaddedShape);
+  const auto srcStrides = afft::makeStrides(afft::View<afft::Size, 3>{srcPaddedShape});
+  const auto dstStrides = afft::makeTransposedStrides(afft::View<afft::Size, 3>{dstPaddedShape}, afft::View<afft::Axis, 3>{dstAxesOrder});
 
-  afft::MemoryBlock srcMemBlock{};
-  srcMemBlock.strides = srcStrides;
-
-  afft::MemoryBlock dstMemBlock{};
-  dstMemBlock.strides = dstStrides;
-
-  afft::MemoryLayout memoryLayout{};
+  afft::CentralizedMemoryLayout memoryLayout{};
+  memoryLayout.alignment     = alignment;
   memoryLayout.complexFormat = afft::ComplexFormat::interleaved;
-  memoryLayout.srcBlocks     = afft::makeScalarView(srcMemBlock);
-  memoryLayout.dstBlocks     = afft::makeScalarView(dstMemBlock);
-  memoryLayout.dstAxesOrder  = dstAxesOrder;
+  memoryLayout.srcStrides    = srcStrides;
+  memoryLayout.dstStrides    = dstStrides;
 
   afft::cpu::BackendParameters backendParams{};
   backendParams.strategy          = afft::SelectStrategy::first;
   backendParams.mask              = (afft::Backend::fftw3 | afft::Backend::mkl | afft::Backend::pocketfft);
   backendParams.order             = {{afft::Backend::mkl, afft::Backend::fftw3}};
-  backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::exhaustive;
+  backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure;
   backendParams.fftw3.timeLimit   = std::chrono::seconds{2};
 
-  AlignedVector<std::complex<PrecT>> src(srcElemCount, afft::cpu::AlignedAllocator{alignment}); // source vector
-  AlignedVector<std::complex<PrecT>> dst(dstElemCount, afft::cpu::AlignedAllocator{alignment}); // destination vector
+  AlignedVector<std::complex<PrecT>> src(srcElemCount); // source vector
+  AlignedVector<std::complex<PrecT>> dst(dstElemCount); // destination vector
 
   // check if src and dst are not NULL
   // initialize source vector

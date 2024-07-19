@@ -119,7 +119,7 @@ AFFT_EXPORT namespace afft
     static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters");
     static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters");
 
-    return makePlan(transformParams, SingleProcessParameters{}, targetParams, backendParams);
+    return makePlan(transformParams, targetParams, CentralizedMemoryLayout{}, backendParams);
   }
 
   /**
@@ -202,7 +202,7 @@ AFFT_EXPORT namespace afft
 
     init();
 
-    const auto& desc = detail::Desc{transformParams, multiProcessParams, targetParams, memoryLayout, backendParams};
+    const auto& desc = detail::Desc{transformParams, multiProcessParams, targetParams, memoryLayout};
 
     return detail::makePlan(desc, backendParams);
   }

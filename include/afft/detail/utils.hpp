@@ -36,6 +36,85 @@
 namespace afft::detail
 {
   /**
+   * @brief Function object that casts a value to a different type.
+   * @tparam T Type of the destination value.
+   */
+  template<typename T>
+  struct StaticCaster
+  {
+    /**
+     * @brief Casts a value to a different type.
+     * @tparam U Type of the source value.
+     * @param value Value to cast.
+     * @return Casted value.
+     */
+    template<typename U>
+    [[nodiscard]] constexpr T operator()(const U& value) const
+    {
+      static_assert(std::is_convertible_v<U, T>, "Cannot cast value to destination type");
+
+      return static_cast<T>(value);
+    }
+  };
+
+  /**
+   * @brief Function object that safely casts a value to a different integral type.
+   * @tparam T Type of the destination value.
+   */
+  template<typename T>
+  struct SafeIntCaster
+  {
+    /**
+     * @brief Safely casts a value to a different integral type.
+     * @tparam U Type of the source value.
+     * @param value Value to cast.
+     * @return Casted value.
+     * @throw std::underflow_error if the casted value is less than the source value.
+     * @throw std::overflow_error if the casted value is greater than the source value.
+     */
+    template<typename U>
+    [[nodiscard]] constexpr T operator()(const U& value) const
+    {
+      static_assert(std::is_integral_v<T> && std::is_integral_v<U>,
+                    "SafeIntCaster can only be used with integer types");
+
+      const auto ret = static_cast<T>(value);
+
+      if (cxx::cmp_not_equal(ret, value))
+      {
+        if (cxx::cmp_less(ret, value))
+        {
+          throw std::underflow_error("Safe int conversion failed (underflow)");
+        }
+        else
+        {
+          throw std::overflow_error("Safe int conversion failed (overflow)");
+        }
+      }
+
+      return ret;
+    }
+  };
+
+  /**
+   * @brief Casts a view of values to a buffer of a different type.
+   * @tparam SrcIt Type of the source iterator.
+   * @tparam DstIt Type of the destination iterator.
+   * @tparam CastFnT Type of the casting function.
+   * @param first Iterator to the first element of the source view.
+   * @param last Iterator to the last element of the source view.
+   * @param dest Iterator to the first element of the destination buffer.
+   * @param fn Casting function.
+   */
+  template<typename SrcIt,
+           typename DstIt,
+           typename CastFnT = StaticCaster<typename std::iterator_traits<DstIt>::value_type>>
+  constexpr void cast(SrcIt first, SrcIt last, DstIt dest, CastFnT&& fn = {})
+  {
+    std::transform(first, last, dest, std::forward<CastFnT>(fn));
+  }
+
+  /**
    * @brief Casts a view of values to a buffer of a different type.
    * @tparam DstT Type of the destination buffer.
    * @tparam SrcT Type of the source view.
@@ -45,8 +124,11 @@ namespace afft::detail
    * @param fn Casting function.
    * @return Buffer of casted values.
    */
-  template<typename DstT, typename SrcT, std::size_t size, typename CastFnT>
-  [[nodiscard]] constexpr auto cast(View<SrcT, size> view, CastFnT&& fn)
+  template<typename DstT,
+           typename SrcT,
+           std::size_t size,
+           typename CastFnT = StaticCaster<DstT>>
+  [[nodiscard]] constexpr auto cast(View<SrcT, size> view, CastFnT&& fn = {})
     noexcept(std::is_nothrow_invocable_r_v<DstT, CastFnT, SrcT>)
     -> AFFT_RET_REQUIRES(AFFT_PARAM(Buffer<DstT, size>),
                          AFFT_PARAM(std::is_default_constructible_v<DstT> &&
@@ -55,34 +137,9 @@ namespace afft::detail
   {
     Buffer<DstT, size> buffer{};
 
-    for (std::size_t i = 0; i < size; ++i)
-    {
-      buffer.data[i] = std::invoke(std::forward<CastFnT>(fn), view[i]);
-    }
+    cast(view.begin(), view.end(), buffer.data, std::forward<CastFnT>(fn));
 
     return buffer;
-  }
-
-  /**
-   * @brief Casts a view of values to a buffer of a different type.
-   * @tparam DstT Type of the destination buffer.
-   * @tparam SrcT Type of the source view.
-   * @tparam size Size of the view and buffer.
-   * @param view View of values to cast.
-   * @return Buffer of casted values.
-   */
-  template<typename DstT, typename SrcT, std::size_t size>
-  [[nodiscard]] constexpr auto cast(View<SrcT, size> view)
-    noexcept(std::is_nothrow_constructible_v<SrcT, DstT>)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(Buffer<DstT, size>),
-                         AFFT_PARAM(std::is_constructible_v<DstT, SrcT> &&
-                                    std::is_default_constructible_v<DstT> &&
-                                    size != dynamicExtent))
-  {
-    return cast(view, [](const SrcT& value) noexcept(std::is_nothrow_constructible_v<SrcT, DstT>)
-    {
-      return static_cast<DstT>(value);
-    });
   }
 
   /**
@@ -172,23 +229,7 @@ namespace afft::detail
   template<typename T, typename U>
   [[nodiscard]] constexpr T safeIntCast(U value)
   {
-    static_assert(std::is_integral_v<T> && std::is_integral_v<U>, "Arguments must be integral types");
-
-    const auto ret = static_cast<T>(value);
-
-    if (cxx::cmp_not_equal(ret, value))
-    {
-      if (cxx::cmp_less(ret, value))
-      {
-        throw std::underflow_error("Safe int conversion failed (underflow)");
-      }
-      else
-      {
-        throw std::overflow_error("Safe int conversion failed (overflow)");
-      }
-    }
-
-    return ret;
+    return SafeIntCaster<T>{}(value);
   }
 
   /**

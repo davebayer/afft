@@ -4,7 +4,7 @@
 #include <afft/afft.hpp>
 
 template<typename T>
-using AlignedVector = std::vector<T, afft::cpu::AlignedAllocator<T>>;
+using AlignedVector = std::vector<T, afft::AlignedAllocator<T>>;
 
 int main(void)
 {
@@ -30,7 +30,7 @@ int main(void)
   afft::cpu::Parameters cpuParams{}; // it will run on a cpu
   cpuParams.threadLimit = 4;
 
-  afft::MemoryLayout memoryLayout{}; // set up memory layout
+  afft::CentralizedMemoryLayout memoryLayout{}; // set up memory layout
   memoryLayout.alignment = afft::alignmentOf(src.data(), dst.data());
 
   {

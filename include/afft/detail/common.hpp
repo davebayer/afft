@@ -42,6 +42,26 @@ namespace afft::detail
   struct Buffer
   {
     T data[size]; ///< The data.
+
+    /**
+     * @brief Operator [] returns a reference to the i-th element.
+     * @param i The index.
+     * @return A reference to the i-th element.
+     */
+    T& operator[](std::size_t i) noexcept
+    {
+      return data[i];
+    }
+
+    /**
+     * @brief Operator [] returns a const reference to the i-th element.
+     * @param i The index.
+     * @return A const reference to the i-th element.
+     */
+    const T& operator[](std::size_t i) const noexcept
+    {
+      return data[i];
+    }
   };
 
   /**
