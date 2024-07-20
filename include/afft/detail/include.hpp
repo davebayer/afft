@@ -29,9 +29,9 @@
 
 // Include standard C++ headers
 #ifndef AFFT_INCLUDE_NO_STD
-# if defined(AFFT_CXX_HAS_IMPORT_STD)
-import std;
-# else
+// # if defined(AFFT_CXX_HAS_IMPORT_STD)
+// import std;
+// # else
 #   include <algorithm>
 #   include <array>
 #   include <bitset>
@@ -70,7 +70,7 @@ import std;
 #   include <utility>
 #   include <variant>
 #   include <vector>
-# endif
+// # endif
 #endif
 
 // Include target backend headers

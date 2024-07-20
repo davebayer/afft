@@ -40,9 +40,9 @@ module;
 #endif
 
 // If import std is available, include only external backend headers.
-#ifdef AFFT_CXX_HAS_IMPORT_STD
-# define AFFT_INCLUDE_NO_STD
-#endif
+// #ifdef AFFT_CXX_HAS_IMPORT_STD
+// # define AFFT_INCLUDE_NO_STD
+// #endif
 
 // Include all external headers.
 #include <afft/detail/include.hpp>
@@ -51,9 +51,9 @@ module;
 export module afft;
 
 // Import the std module if available.
-#ifdef AFFT_CXX_HAS_IMPORT_STD
-import std;
-#endif
+// #ifdef AFFT_CXX_HAS_IMPORT_STD
+// import std;
+// #endif
 
 // Include all public headers.
 #include <afft/afft.hpp>
