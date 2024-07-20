@@ -12,8 +12,6 @@ int main(void)
 
   constexpr std::size_t size{1024}; // size of the transform
 
-  afft::init(); // initialize afft library
-
   AlignedVector<std::complex<PrecT>> src(size); // source vector
   AlignedVector<std::complex<PrecT>> dst(size); // destination vector
 
@@ -33,13 +31,9 @@ int main(void)
   afft::CentralizedMemoryLayout memoryLayout{}; // set up memory layout
   memoryLayout.alignment = afft::alignmentOf(src.data(), dst.data());
 
-  {
-    auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout); // generate the plan of the transform
+  auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout); // generate the plan of the transform
 
-    plan->execute(src.data(), dst.data()); // execute the transform
-  }
+  plan->execute(src.data(), dst.data()); // execute the transform
 
   // use results from dst vector
-
-  afft::finalize(); // finalize afft library
 }

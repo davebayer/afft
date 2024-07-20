@@ -91,7 +91,7 @@
 #endif
 
 // Check if C++23 <stdfloat> is implemented
-#if (AFFT_CXX_VERSION >= 202002L) && __has_include(<stdfloat>)
+#if (AFFT_CXX_VERSION >= 202302L) && __has_include(<stdfloat>)
 # define AFFT_CXX_HAS_STD_FLOAT
 #endif
 
