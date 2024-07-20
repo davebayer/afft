@@ -1,12 +1,9 @@
 # afft library
-## Introduction
-`afft` is a C/C++17 library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ on CPUs or GPUs. The main goals are:
+`afft` is a C/C++ library for FFT related computations. It provides unified interface to various implementations of transforms in C and C++ . The main goals are:
 - user friendly interface,
 - support for wide range of the features offered by the backend libraries,
 - low overhead and
 - being multiplatform (`Linux`, `Windows` and `MacOS`).
-
-The library can be used as a header only library (C++17 or newer), static/dynamic library (C99/C++17 or newer) or a C++ module (C++20 or newer, CMake 3.28.0 or newer).
 
 Currently supported transfors are:
 - *Discrete Fourier Transform* (DFT) for real and complex inputs (in interleaved or plannar format),
@@ -15,7 +12,9 @@ Currently supported transfors are:
 
 A transform may be executed *in-place* or *out-of-place* over multidimensional strided arrays in various precision. The created plans can be stored in a LRU plan cache.
 
-Compiles with GCC (10-14), Clang (12-19).
+The library supports execution in any floating point precision on `CPU`, `CUDA`, `HIP` and `OpenCL` targets and may be distributed over multiple targets or processes (via e. g. MPI).
+
+The transformations are implemented by the backend libraries. Currently, the library supports `clFFT`, `cuFFT`, `FFTW3`, `HeFFTe`, `hipFFT`, `Intel MKL`, `PocketFFT`, `rocFFT` and `VkFFT`. More backend libraries shall be added in the future.
 
 :warning: **Take into account that not all of the afft functionality is supported by each transform backend.**
 
@@ -25,78 +24,83 @@ This library is available under MIT license. See `LICENSE` for details.
 ## Examples
 ### Simple 1D complex-to-complex transform in Y axis of 3D padded data
 ```cpp
+#include <array>
+#include <chrono>
 #include <complex>
 #include <vector>
 
 #include <afft/afft.hpp>
 
+// PrecT is the precision type of the transform
+using PrecT = float;
+
+// alias for std::vector with aligned allocator
 template<typename T>
-using AlignedVector = std::vector<T, afft::cpu::AlignedAllocator<T>>;
+using AlignedVector = std::vector<T, afft::AlignedAllocator<T>>;
 
-int main(void)
+// shape of the transform
+constexpr std::array<afft::Size, 3> shape{500, 250, 1020};
+
+// padded source shape
+constexpr std::array<afft::Size, 3> srcPaddedShape{500, 250, 1024};
+
+// padded destination shape
+constexpr std::array<afft::Size, 3> dstPaddedShape{500, 1020, 256};
+
+// order of the axes in the destination shape
+constexpr std::array<afft::Axis, 3> dstAxesOrder{0, 2, 1};
+
+// alignment of the memory
+constexpr afft::Alignment alignment = afft::Alignment::cpuNative;
+
+int main()
 {
-  using PrecT = float;
+  // make DFT parameters
+  afft::dft::Parameters dftParams{};
+  dftParams.direction     = afft::Direction::forward;
+  dftParams.precision     = afft::makePrecision<PrecT>(); // use same precision for source, destination and execution
+  dftParams.shape         = shape;
+  dftParams.axes          = {{1}};
+  dftParams.normalization = afft::Normalization::none;
+  dftParams.placement     = afft::Placement::outOfPlace;
+  dftParams.type          = afft::dft::Type::complexToComplex;
 
-  constexpr auto shape          = std::to_array<std::size_t>({500, 250, 1020});
-  constexpr auto srcPaddedShape = std::to_array<std::size_t>({500, 250, 1024});
-  constexpr auto dstPaddedShape = std::to_array<std::size_t>({500, 1020, 256});
+  // make CPU parameters
+  afft::cpu::Parameters cpuParams{};
+  cpuParams.threadLimit = 4; // limit the number of threads to 4
 
-  afft::init(); // initialize afft library
+  // make strides for the source and destination shapes
+  const auto srcStrides = afft::makeStrides(afft::View<afft::Size, 3>{srcPaddedShape});
+  const auto dstStrides = afft::makeTransposedStrides(afft::View<afft::Size, 3>{dstPaddedShape},
+                                                      afft::View<afft::Axis, 3>{dstAxesOrder});
 
-  const afft::cpu::AlignedAllocator<PrecT> allocator{afft::Alignment::simd256};
+  // make memory layout
+  afft::CentralizedMemoryLayout memoryLayout{};
+  memoryLayout.alignment     = alignment;
+  memoryLayout.complexFormat = afft::ComplexFormat::interleaved; // std::complex uses interleaved format
+  memoryLayout.srcStrides    = srcStrides;
+  memoryLayout.dstStrides    = dstStrides;
 
-  AlignedVector<std::complex<PrecT>> src{allocator}; // source vector
-  AlignedVector<std::complex<PrecT>> dst{allocator}; // destination vector
+  // make backend parameters
+  afft::cpu::BackendParameters backendParams{};
+  backendParams.strategy          = afft::SelectStrategy::first;
+  backendParams.mask              = (afft::Backend::fftw3 | afft::Backend::mkl | afft::Backend::pocketfft);
+  backendParams.order             = {{afft::Backend::mkl, afft::Backend::fftw3}};
+  backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure; // FFTW3 specific planner flag
+  backendParams.fftw3.timeLimit   = std::chrono::seconds{2}; // limit the time for the FFTW3 planner
+
+  // make the plan with the parameters
+  std::unique_ptr<afft::Plan> plan = afft::makePlan(dftParams, cpuParams, memoryLayout, backendParams);
+
+  // create source and destination vectors
+  AlignedVector<std::complex<PrecT>> src(plan->getSrcElemCounts().front()); // source vector
+  AlignedVector<std::complex<PrecT>> dst(plan->getDstElemCounts().front()); // destination vector
 
   // initialize source vector
 
-  const afft::dft::Parameters dftParams
-  {
-    .direction     = afft::Direction::forward,
-    .precision     = afft::makePrecision<PrecT>(),
-    .shape         = shape,
-    .axes          = {{1}},
-    .normalization = afft::Normalization::unitary,
-    .placement     = afft::Placement::outOfPlace,
-    .type          = afft::dft::Type::complexToComplex,
-    .destructive   = false,
-  };
+  // execute the transform
+  plan->execute(src.data(), dst.data());
 
-  const auto srcStrides = afft::makeStrides(srcPaddedShape);
-  const auto dstStrides = afft::makeTransposedStrides(dstPaddedShape,
-                                                      {{0, 2, 1}});
-
-  const afft::cpu::Parameters cpuParams
-  {
-    .threadLimit   = 8;
-  };
-
-  const afft::MemoryLayout memoryLayout
-  {
-    .complexFormat = afft::ComplexFormat::interleaved;
-    .alignment     = allocator.getAlignment();
-    .srcStrides    = 
-  };
-
-  const afft::cpu::BackendParameters cpuBackendParams
-  {
-    .strategy      = afft::SelectStrategy::best,
-    .mask          = (afft::Backend::fftw3 | afft::Backend::mkl),
-    .order         = {{afft::Backend::mkl, afft::Backend::fftw3}},
-    .fftw3         = {.plannerFlag = afft::fftw3::PlannerFlag::exhaustive,
-                      .timeLimit   = std::chrono::seconds{30}},
-  };
-
-  // create scope just to make sure the plan is destroyed before afft::finalize() is called
-  
-  {
-    auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout, cpuBackendParams); // generate the plan of the transform
-
-    plan.execute(src.data(), dst.data()); // execute the transform
-  }
-
-  // use results from dst vector
-
-  afft::finalize(); // deinitialize afft library
+  // use the result in the destination vector
 }
 ```
