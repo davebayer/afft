@@ -71,24 +71,6 @@ AFFT_EXPORT namespace afft
   };
 
   /**
-   * @brief Planar complex data type.
-   * @tparam T The real type.
-   */
-  template<typename T>
-  struct PlanarComplex
-  {
-    T* real{}; ///< The real part.
-    T* imag{}; ///< The imaginary part.
-  };
-
-  /**
-   * @brief Deduction guide for PlanarComplex.
-   * @tparam T The real type.
-   */
-  template<typename T>
-  PlanarComplex(T* r, T* i) -> PlanarComplex<T>;
-
-  /**
    * @brief Gets the size of a floating-point type.
    * @param prec The precision.
    * @param cmpl The complexity. Default is real.
