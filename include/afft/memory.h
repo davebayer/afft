@@ -40,73 +40,64 @@ extern "C"
 typedef uint8_t afft_MemoryLayout;
 
 /// @brief Memory layout enumeration
-enum
-{
-  afft_MemoryLayout_centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
-  afft_MemoryLayout_distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
-};
+#define afft_MemoryLayout_centralized (afft_MemoryLayout)0 ///< Centralized memory layout, only when the transformation is executed by single process on single target
+#define afft_MemoryLayout_distributed (afft_MemoryLayout)1 ///< Distributed memory layout, for distributed transformations over multiple processes or targets
 
 /// @brief Alignment type
 typedef size_t afft_Alignment;
 
 /// @brief Alignment enumeration
-enum
-{
-  afft_Alignment_simd128  = 16,  ///< 128-bit SIMD alignment
-  afft_Alignment_simd256  = 32,  ///< 256-bit SIMD alignment
-  afft_Alignment_simd512  = 64,  ///< 512-bit SIMD alignment
-  afft_Alignment_simd1024 = 128, ///< 1024-bit SIMD alignment
-  afft_Alignment_simd2048 = 256, ///< 2048-bit SIMD alignment
+#define afft_Alignment_simd128  (afft_Alignment)16  ///< 128-bit SIMD alignment
+#define afft_Alignment_simd256  (afft_Alignment)32  ///< 256-bit SIMD alignment
+#define afft_Alignment_simd512  (afft_Alignment)64  ///< 512-bit SIMD alignment
+#define afft_Alignment_simd1024 (afft_Alignment)128 ///< 1024-bit SIMD alignment
+#define afft_Alignment_simd2048 (afft_Alignment)256 ///< 2048-bit SIMD alignment
 
-  afft_Alignment_sse    = afft_Alignment_simd128,  ///< SSE alignment
-  afft_Alignment_sse2   = afft_Alignment_simd128,  ///< SSE2 alignment
-  afft_Alignment_sse3   = afft_Alignment_simd128,  ///< SSE3 alignment
-  afft_Alignment_sse4   = afft_Alignment_simd128,  ///< SSE4 alignment
-  afft_Alignment_sse4_1 = afft_Alignment_simd128,  ///< SSE4.1 alignment
-  afft_Alignment_sse4_2 = afft_Alignment_simd128,  ///< SSE4.2 alignment
-  afft_Alignment_avx    = afft_Alignment_simd256,  ///< AVX alignment
-  afft_Alignment_avx2   = afft_Alignment_simd256,  ///< AVX2 alignment
-  afft_Alignment_avx512 = afft_Alignment_simd512,  ///< AVX-512 alignment
-  afft_Alignment_neon   = afft_Alignment_simd128,  ///< NEON alignment
-  afft_Alignment_sve    = afft_Alignment_simd2048, ///< SVE alignment
+#define afft_Alignment_sse    afft_Alignment_simd128  ///< SSE alignment
+#define afft_Alignment_sse2   afft_Alignment_simd128  ///< SSE2 alignment
+#define afft_Alignment_sse3   afft_Alignment_simd128  ///< SSE3 alignment
+#define afft_Alignment_sse4   afft_Alignment_simd128  ///< SSE4 alignment
+#define afft_Alignment_sse4_1 afft_Alignment_simd128  ///< SSE4.1 alignment
+#define afft_Alignment_sse4_2 afft_Alignment_simd128  ///< SSE4.2 alignment
+#define afft_Alignment_avx    afft_Alignment_simd256  ///< AVX alignment
+#define afft_Alignment_avx2   afft_Alignment_simd256  ///< AVX2 alignment
+#define afft_Alignment_avx512 afft_Alignment_simd512  ///< AVX-512 alignment
+#define afft_Alignment_neon   afft_Alignment_simd128  ///< NEON alignment
+#define afft_Alignment_sve    afft_Alignment_simd2048 ///< SVE alignment
   
   /// @brief native alignment
 #if defined(__AVX512F__)
-  afft_Alignment_cpuNative = afft_Alignment_avx512,
+# define afft_Alignment_cpuNative afft_Alignment_avx512
 #elif defined(__AVX2__)
-  afft_Alignment_cpuNative = afft_Alignment_avx2,
+# define afft_Alignment_cpuNative afft_Alignment_avx2
 #elif defined(__AVX__)
-  afft_Alignment_cpuNative = afft_Alignment_avx,
+# define afft_Alignment_cpuNative afft_Alignment_avx
 #elif defined(__SSE4_2__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4_2,
+# define afft_Alignment_cpuNative afft_Alignment_sse4_2
 #elif defined(__SSE4_1__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4_1,
+# define afft_Alignment_cpuNative afft_Alignment_sse4_1
 #elif defined(__SSE4__)
-  afft_Alignment_cpuNative = afft_Alignment_sse4,
+# define afft_Alignment_cpuNative afft_Alignment_sse4
 #elif defined(__SSE3__)
-  afft_Alignment_cpuNative = afft_Alignment_sse3,
+# define afft_Alignment_cpuNative afft_Alignment_sse3
 #elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-  afft_Alignment_cpuNative = afft_Alignment_sse2,
+# define afft_Alignment_cpuNative afft_Alignment_sse2
 #elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-  afft_Alignment_cpuNative = afft_Alignment_sse,
+# define afft_Alignment_cpuNative afft_Alignment_sse
 #elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-  afft_Alignment_cpuNative = afft_Alignment_neon,
+# define afft_Alignment_cpuNative afft_Alignment_neon
 #elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
-  afft_Alignment_cpuNative = afft_Alignment_sve,
+# define afft_Alignment_cpuNative afft_Alignment_sve
 #else
-  afft_Alignment_cpuNative = afft_Alignment_simd128,
+# define afft_Alignment_cpuNative afft_Alignment_simd128
 #endif
-};
 
 /// @brief Complex format type
 typedef uint8_t afft_ComplexFormat;
 
 /// @brief Complex format enumeration
-enum
-{
-  afft_ComplexFormat_interleaved, ///< Interleaved
-  afft_ComplexFormat_planar       ///< Planar
-};
+#define afft_ComplexFormat_interleaved (afft_ComplexFormat)0 ///< Interleaved
+#define afft_ComplexFormat_planar      (afft_ComplexFormat)1 ///< Planar
 
 /// @brief Centralized memory layout structure
 typedef struct afft_CentralizedMemoryLayout afft_CentralizedMemoryLayout;

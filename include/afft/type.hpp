@@ -188,8 +188,7 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::complex<long double>>
     : TypePropertiesBase<std::complex<long double>, Precision::_longDouble, Complexity::complex> {};
 
-#ifdef AFFT_CXX_HAS_STD_FLOAT
-# ifdef __STDCPP_BFLOAT16_T__
+#ifdef __STDCPP_BFLOAT16_T__
   /// Specialization of TypeProperties for std::bfloat16_t.
   template<>
   struct TypeProperties<std::bfloat16_t>
@@ -200,7 +199,7 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::complex<std::bfloat16_t>>
     : TypePropertiesBase<std::complex<std::bfloat16_t>, Precision::bf16, Complexity::complex> {}; 
 #endif
-# ifdef __STDCPP_FLOAT16_T__
+#ifdef __STDCPP_FLOAT16_T__
   /// Specialization of TypeProperties for std::float16_t.
   template<>
   struct TypeProperties<std::float16_t>
@@ -210,8 +209,8 @@ AFFT_EXPORT namespace afft
   template<>
   struct TypeProperties<std::complex<std::float16_t>>
     : TypePropertiesBase<std::complex<std::float16_t>, Precision::f16, Complexity::complex> {};
-# endif
-# ifdef __STDCPP_FLOAT32_T__
+#endif
+#ifdef __STDCPP_FLOAT32_T__
   /// Specialization of TypeProperties for std::float32_t.
   template<>
   struct TypeProperties<std::float32_t>
@@ -221,8 +220,8 @@ AFFT_EXPORT namespace afft
   template<>
   struct TypeProperties<std::complex<std::float32_t>>
     : TypePropertiesBase<std::complex<std::float32_t>, Precision::f32, Complexity::complex> {};
-# endif
-# ifdef __STDCPP_FLOAT64_T__
+#endif
+#ifdef __STDCPP_FLOAT64_T__
   /// Specialization of TypeProperties for std::float64_t.
   template<>
   struct TypeProperties<std::float64_t>
@@ -232,8 +231,8 @@ AFFT_EXPORT namespace afft
   template<>
   struct TypeProperties<std::complex<std::float64_t>>
     : TypePropertiesBase<std::complex<std::float64_t>, Precision::f64, Complexity::complex> {};
-# endif
-# ifdef __STDCPP_FLOAT128_T__
+#endif
+#ifdef __STDCPP_FLOAT128_T__
   /// Specialization of TypeProperties for std::float128_t.
   template<>
   struct TypeProperties<std::float128_t>
@@ -243,7 +242,6 @@ AFFT_EXPORT namespace afft
   template<>
   struct TypeProperties<std::complex<std::float128_t>>
     : TypePropertiesBase<std::complex<std::float128_t>, Precision::f128, Complexity::complex> {};
-# endif
 #endif
 } // namespace afft
 

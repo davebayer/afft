@@ -41,47 +41,35 @@ extern "C"
 typedef uint8_t afft_Transform;
 
 /// @brief Transform enumeration
-enum
-{
-  afft_Transform_dft, ///< Discrete Fourier Transform
-  afft_Transform_dht, ///< Discrete Hartley Transform
-  afft_Transform_dtt, ///< Discrete Trigonometric Transform
-};
+#define afft_Transform_dft (afft_Transform)0 ///< Discrete Fourier Transform
+#define afft_Transform_dht (afft_Transform)1 ///< Discrete Hartley Transform
+#define afft_Transform_dtt (afft_Transform)2 ///< Discrete Trigonometric Transform
 
 /// @brief Direction type
 typedef uint8_t afft_Direction;
 
 /// @brief Direction enumeration
-enum
-{
-  afft_Direction_forward, ///< Forward
-  afft_Direction_inverse, ///< Inverse
+#define afft_Direction_forward (afft_Direction)0 ///< Forward
+#define afft_Direction_inverse (afft_Direction)1 ///< Inverse
 
-  afft_Direction_backward = afft_Direction_inverse, ///< Alias for inverse
-};
+#define afft_Direction_backward afft_Direction_inverse, ///< Alias for inverse
 
 /// @brief Normalization type
 typedef uint8_t afft_Normalization;
 
 /// @brief Normalization enumeration
-enum
-{
-  afft_Normalization_none,       ///< No normalization
-  afft_Normalization_orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
-  afft_Normalization_unitary,    ///< 1/N normalization applied to inverse transform
-};
+#define afft_Normalization_none       (afft_Normalization)0 ///< No normalization
+#define afft_Normalization_orthogonal (afft_Normalization)1 ///< 1/sqrt(N) normalization applied to both forward and inverse transform
+#define afft_Normalization_unitary    (afft_Normalization)2 ///< 1/N normalization applied to inverse transform
 
 /// @brief Placement type
 typedef uint8_t afft_Placement;
 
 /// @brief Placement enumeration
-enum
-{
-  afft_Placement_inPlace,    ///< In-place
-  afft_Placement_outOfPlace, ///< Out-of-place
+#define afft_Placement_inPlace    (afft_Placement)0 ///< In-place
+#define afft_Placement_outOfPlace (afft_Placement)1 ///< Out-of-place
 
-  afft_Placement_notInPlace = afft_Placement_outOfPlace, ///< Alias for outOfPlace
-};
+#define afft_Placement_notInPlace afft_Placement_outOfPlace ///< Alias for outOfPlace
 
 /// @brief Precision triad type
 typedef struct afft_PrecisionTriad afft_PrecisionTriad;
@@ -107,16 +95,13 @@ typedef uint8_t afft_dft_Type;
 typedef struct afft_dft_Parameters afft_dft_Parameters;
 
 /// @brief DFT transform enumeration
-enum
-{
-  afft_dft_Type_complexToComplex, ///< Complex-to-complex transform
-  afft_dft_Type_realToComplex,    ///< Real-to-complex transform
-  afft_dft_Type_complexToReal,    ///< Complex-to-real transform
+#define afft_dft_Type_complexToComplex (afft_dft_Type)0 ///< Complex-to-complex transform
+#define afft_dft_Type_realToComplex    (afft_dft_Type)1 ///< Real-to-complex transform
+#define afft_dft_Type_complexToReal    (afft_dft_Type)2 ///< Complex-to-real transform
 
-  afft_dft_Type_c2c = afft_dft_Type_complexToComplex, ///< Alias for complex-to-complex transform
-  afft_dft_Type_r2c = afft_dft_Type_realToComplex,    ///< Alias for real-to-complex transform
-  afft_dft_Type_c2r = afft_dft_Type_complexToReal,    ///< Alias for complex-to-real transform
-};
+#define afft_dft_Type_c2c afft_dft_Type_complexToComplex ///< Alias for complex-to-complex transform
+#define afft_dft_Type_r2c afft_dft_Type_realToComplex    ///< Alias for real-to-complex transform
+#define afft_dft_Type_c2r afft_dft_Type_complexToReal    ///< Alias for complex-to-real transform
 
 /// @brief DFT parameters structure
 struct afft_dft_Parameters
@@ -142,10 +127,7 @@ typedef uint8_t afft_dht_Type;
 typedef struct afft_dht_Parameters afft_dht_Parameters;
 
 /// @brief DHT transform enumeration
-enum
-{
-  afft_dht_Type_separable, ///< Separable DHT, computes the DHT along each axis independently
-};
+#define afft_dht_Type_separable (afft_dht_Type)0 ///< Separable DHT, computes the DHT along each axis independently
 
 /// @brief DHT parameters structure
 struct afft_dht_Parameters
@@ -171,21 +153,18 @@ typedef uint8_t afft_dtt_Type;
 typedef struct afft_dtt_Parameters afft_dtt_Parameters;
 
 /// @brief DTT transform enumeration
-enum
-{
-  afft_dtt_Type_dct1, ///< Discrete Cosine Transform type I
-  afft_dtt_Type_dct2, ///< Discrete Cosine Transform type II
-  afft_dtt_Type_dct3, ///< Discrete Cosine Transform type III
-  afft_dtt_Type_dct4, ///< Discrete Cosine Transform type IV
+#define afft_dtt_Type_dct1 (afft_dtt_Type)0 ///< Discrete Cosine Transform type I
+#define afft_dtt_Type_dct2 (afft_dtt_Type)1 ///< Discrete Cosine Transform type II
+#define afft_dtt_Type_dct3 (afft_dtt_Type)2 ///< Discrete Cosine Transform type III
+#define afft_dtt_Type_dct4 (afft_dtt_Type)3 ///< Discrete Cosine Transform type IV
 
-  afft_dtt_Type_dst1, ///< Discrete Sine Transform type I
-  afft_dtt_Type_dst2, ///< Discrete Sine Transform type II
-  afft_dtt_Type_dst3, ///< Discrete Sine Transform type III
-  afft_dtt_Type_dst4, ///< Discrete Sine Transform type IV
+#define afft_dtt_Type_dst1 (afft_dtt_Type)4 ///< Discrete Sine Transform type I
+#define afft_dtt_Type_dst2 (afft_dtt_Type)5 ///< Discrete Sine Transform type II
+#define afft_dtt_Type_dst3 (afft_dtt_Type)6 ///< Discrete Sine Transform type III
+#define afft_dtt_Type_dst4 (afft_dtt_Type)7 ///< Discrete Sine Transform type IV
 
-  afft_dtt_Type_dct = afft_dtt_Type_dct2, ///< default DCT type
-  afft_dtt_Type_dst = afft_dtt_Type_dst2, ///< default DST type
-};
+#define afft_dtt_Type_dct afft_dtt_Type_dct2 ///< default DCT type
+#define afft_dtt_Type_dst afft_dtt_Type_dst2 ///< default DST type
 
 /// @brief DTT parameters structure
 struct afft_dtt_Parameters

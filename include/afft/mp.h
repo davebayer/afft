@@ -40,11 +40,8 @@ typedef uint8_t afft_MpBackend;
 /**
  * @brief Multi-process backend
  */
-enum
-{
-  afft_MpBackend_none, ///< No multi-process backend (single-process)
-  afft_MpBackend_mpi,  ///< MPI multi-process backend
-};
+#define afft_MpBackend_none (afft_MpBackend)0 ///< No multi-process backend (single-process)
+#define afft_MpBackend_mpi  (afft_MpBackend)1 ///< MPI multi-process backend
 
 /// @brief MPI multi-process parameters
 typedef struct afft_mpi_Parameters afft_mpi_Parameters;

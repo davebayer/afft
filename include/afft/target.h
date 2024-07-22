@@ -33,11 +33,8 @@
 typedef uint8_t afft_Target;
 
 /// @brief Target enumeration
-enum
-{
-  afft_Target_cpu, ///< CPU
-  afft_Target_gpu, ///< GPU
-};
+#define afft_Target_cpu (afft_Target)0 ///< CPU
+#define afft_Target_gpu (afft_Target)1 ///< GPU
 
 /// @brief CPU parameters
 typedef struct afft_cpu_Parameters afft_cpu_Parameters;

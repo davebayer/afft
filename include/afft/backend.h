@@ -40,18 +40,15 @@ extern "C"
 typedef uint16_t afft_Backend;
 
 /// @brief Backend enumeration
-enum
-{
-  afft_Backend_clfft     = (1 << 0), ///< clFFT
-  afft_Backend_cufft     = (1 << 1), ///< cuFFT
-  afft_Backend_fftw3     = (1 << 2), ///< FFTW3
-  afft_Backend_heffte    = (1 << 3), ///< HeFFTe
-  afft_Backend_hipfft    = (1 << 4), ///< hipFFT
-  afft_Backend_mkl       = (1 << 5), ///< Intel MKL
-  afft_Backend_pocketfft = (1 << 6), ///< PocketFFT
-  afft_Backend_rocfft    = (1 << 7), ///< rocFFT
-  afft_Backend_vkfft     = (1 << 8), ///< VkFFT
-};
+#define afft_Backend_clfft     (afft_Backend)(1 << 0) ///< clFFT
+#define afft_Backend_cufft     (afft_Backend)(1 << 1) ///< cuFFT
+#define afft_Backend_fftw3     (afft_Backend)(1 << 2) ///< FFTW3
+#define afft_Backend_heffte    (afft_Backend)(1 << 3) ///< HeFFTe
+#define afft_Backend_hipfft    (afft_Backend)(1 << 4) ///< hipFFT
+#define afft_Backend_mkl       (afft_Backend)(1 << 5) ///< Intel MKL
+#define afft_Backend_pocketfft (afft_Backend)(1 << 6) ///< PocketFFT
+#define afft_Backend_rocfft    (afft_Backend)(1 << 7) ///< rocFFT
+#define afft_Backend_vkfft     (afft_Backend)(1 << 8) ///< VkFFT
 
 /// @brief Backend count
 #define AFFT_BACKEND_COUNT 9
@@ -60,21 +57,15 @@ enum
 typedef uint16_t afft_BackendMask;
 
 /// @brief Backend mask enumeration
-enum
-{
-  afft_BackendMask_empty = 0,          ///< Empty mask
-  afft_BackendMask_all   = UINT16_MAX, ///< All backends
-};
+#define afft_BackendMask_empty (afft_BackendMask)0          ///< Empty mask
+#define afft_BackendMask_all   (afft_BackendMask)UINT16_MAX ///< All backends
 
 /// @brief Select strategy type
 typedef uint8_t afft_SelectStrategy;
 
 /// @brief Select strategy enumeration
-enum
-{
-  afft_SelectStrategy_first, ///< Select the first available backend
-  afft_SelectStrategy_best,  ///< Select the best available backend
-};
+#define afft_SelectStrategy_first (afft_SelectStrategy)0 ///< Select the first available backend
+#define afft_SelectStrategy_best  (afft_SelectStrategy)1 ///< Select the best available backend
 
 /**********************************************************************************************************************/
 // clFFT
@@ -95,12 +86,9 @@ struct afft_clfft_opencl_Parameters
 typedef uint8_t afft_cufft_WorkspacePolicy;
 
 /// @brief cuFFT workspace policy enumeration
-enum
-{
-  afft_cufft_WorkspacePolicy_performance, ///< Use the workspace for performance
-  afft_cufft_WorkspacePolicy_minimal,     ///< Use the minimal workspace
-  afft_cufft_WorkspacePolicy_user,        ///< Use the user-defined workspace size
-};
+#define afft_cufft_WorkspacePolicy_performance (afft_cufft_WorkspacePolicy)0 ///< Use the workspace for performance
+#define afft_cufft_WorkspacePolicy_minimal     (afft_cufft_WorkspacePolicy)1 ///< Use the minimal workspace
+#define afft_cufft_WorkspacePolicy_user        (afft_cufft_WorkspacePolicy)2 ///< Use the user-defined workspace size
 
 /// @brief cuFFT backend parameters for cuda target
 typedef struct afft_cufft_cuda_Parameters afft_cufft_cuda_Parameters;
@@ -129,14 +117,11 @@ struct afft_cufft_mpi_cuda_Parameters
 typedef uint8_t afft_fftw3_PlannerFlag;
 
 /// @brief FFTW3 planner flag enumeration
-enum
-{
-  afft_fftw3_PlannerFlag_estimate,        ///< Estimate plan flag
-  afft_fftw3_PlannerFlag_measure,         ///< Measure plan flag
-  afft_fftw3_PlannerFlag_patient,         ///< Patient plan flag
-  afft_fftw3_PlannerFlag_exhaustive,      ///< Exhaustive planner flag
-  afft_fftw3_PlannerFlag_estimatePatient, ///< Estimate and patient plan flag
-};
+#define afft_fftw3_PlannerFlag_estimate        (afft_fftw3_PlannerFlag)0 ///< Estimate plan flag
+#define afft_fftw3_PlannerFlag_measure         (afft_fftw3_PlannerFlag)1 ///< Measure plan flag
+#define afft_fftw3_PlannerFlag_patient         (afft_fftw3_PlannerFlag)2 ///< Patient plan flag
+#define afft_fftw3_PlannerFlag_exhaustive      (afft_fftw3_PlannerFlag)3 ///< Exhaustive planner flag
+#define afft_fftw3_PlannerFlag_estimatePatient (afft_fftw3_PlannerFlag)4 ///< Estimate and patient plan flag
 
 /// @brief FFTW3 backend parameters for cpu target
 typedef struct afft_fftw3_cpu_Parameters afft_fftw3_cpu_Parameters;
@@ -177,29 +162,20 @@ struct afft_fftw3_mpi_cpu_Parameters
 typedef uint8_t afft_heffte_cpu_Backend;
 
 /// @brief HeFFTe cpu backend enumeration
-enum
-{
-  afft_heffte_cpu_Backend_fftw3, ///< FFTW3 backend
-  afft_heffte_cpu_Backend_mkl,   ///< MKL backend
-};
+#define afft_heffte_cpu_Backend_fftw3 (afft_heffte_cpu_Backend)0 ///< FFTW3 backend
+#define afft_heffte_cpu_Backend_mkl   (afft_heffte_cpu_Backend)1 ///< MKL backend
 
 /// @brief HeFFTe cuda backend type
 typedef uint8_t afft_heffte_cuda_Backend;
 
 /// @brief HeFFTe gpu backend enumeration
-enum
-{
-  afft_heffte_gpu_Backend_cufft,  ///< cuFFT backend
-};
+#define afft_heffte_gpu_Backend_cufft (afft_heffte_gpu_Backend_cufft)0 ///< cuFFT backend
 
 /// @brief HeFFTe hip backend type
 typedef uint8_t afft_heffte_hip_Backend;
 
 /// @brief HeFFTe hip backend enumeration
-enum
-{
-  afft_heffte_hip_Backend_rocfft, ///< rocFFT backend
-};
+#define afft_heffte_hip_Backend_rocfft (afft_heffte_hip_Backend)0 ///< rocFFT backend
 
 /// @brief HeFFTe backend parameters for mpi cpu target
 typedef struct afft_heffte_mpi_cpu_Parameters afft_heffte_mpi_cpu_Parameters;

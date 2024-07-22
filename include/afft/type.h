@@ -38,44 +38,38 @@ extern "C"
 typedef uint8_t afft_Precision;
 
 /// @brief Precision enumeration
-enum
-{
-  afft_Precision_bf16,   ///< Google Brain's brain floating-point format
-  afft_Precision_f16,    ///< IEEE 754 half-precision binary floating-point format
-  afft_Precision_f32,    ///< IEEE 754 single-precision binary floating-point format
-  afft_Precision_f64,    ///< IEEE 754 double-precision binary floating-point format
-  afft_Precision_f80,    ///< x86 80-bit extended precision format
-  afft_Precision_f64f64, ///< double double precision (f128 simulated with two f64)
-  afft_Precision_f128,   ///< IEEE 754 quadruple-precision binary floating-point format
+#define afft_Precision_bf16   (afft_Precision)0 ///< Google Brain's brain floating-point format
+#define afft_Precision_f16    (afft_Precision)1 ///< IEEE 754 half-precision binary floating-point format
+#define afft_Precision_f32    (afft_Precision)2 ///< IEEE 754 single-precision binary floating-point format
+#define afft_Precision_f64    (afft_Precision)3 ///< IEEE 754 double-precision binary floating-point format
+#define afft_Precision_f80    (afft_Precision)4 ///< x86 80-bit extended precision format
+#define afft_Precision_f64f64 (afft_Precision)5 ///< double double precision (f128 simulated with two f64)
+#define afft_Precision_f128   (afft_Precision)6 ///< IEEE 754 quadruple-precision binary floating-point format
 
-  afft_Precision_float        = afft_Precision_f32,    ///< Precision of float
-  afft_Precision_double       = afft_Precision_f64,    ///< Precision of double
+#define afft_Precision_float        afft_Precision_f32    ///< Precision of float
+#define afft_Precision_double       afft_Precision_f64    ///< Precision of double
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 && LDBL_MIN_EXP == -1021
-  afft_Precision_float        = afft_Precision_f64,    ///< Precision of long double
+# define afft_Precision_float       afft_Precision_f64    ///< Precision of long double
 #elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
-  afft_Precision_longDouble   = afft_Precision_f80,    ///< Precision of long double
+# define afft_Precision_longDouble  afft_Precision_f80    ///< Precision of long double
 #elif (LDBL_MANT_DIG >=   105 && LDBL_MANT_DIG <=   107) && \
       (LDBL_MAX_EXP  >=  1023 && LDBL_MAX_EXP  <=  1025) && \
       (LDBL_MIN_EXP  >= -1022 && LDBL_MIN_EXP  <= -1020)
-  afft_Precision_longDouble   = afft_Precision_f64f64, ///< Precision of long double
+# define afft_Precision_longDouble  afft_Precision_f64f64 ///< Precision of long double
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
-  afft_Precision_longDouble   = afft_Precision_f128,   ///< Precision of long double
+# define afft_Precision_longDouble  afft_Precision_f128   ///< Precision of long double
 #else
 # error "Unrecognized long double format"
 #endif
-  afft_Precision_doubleDouble = afft_Precision_f64f64, ///< Precision of double double
-  afft_Precision_quad         = afft_Precision_f128,   ///< Precision of quad
-};
+#define afft_Precision_doubleDouble afft_Precision_f64f64 ///< Precision of double double
+#define afft_Precision_quad         afft_Precision_f128   ///< Precision of quad
 
 /// @brief Complexity type
 typedef uint8_t afft_Complexity;
 
 /// @brief Complexity enumeration
-enum
-{
-  afft_Complexity_real,    ///< Real
-  afft_Complexity_complex, ///< Complex
-};
+#define afft_Complexity_real    (afft_Complexity)0 ///< Real
+#define afft_Complexity_complex (afft_Complexity)1 ///< Complex
 
 #ifdef __cplusplus
 }
