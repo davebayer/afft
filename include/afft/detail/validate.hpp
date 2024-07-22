@@ -51,6 +51,8 @@ namespace afft::detail
   template<>
   struct Validator<MpBackend>
   {
+    static constexpr const char message[] = "invalid multi-process backend"; ///< Error message.
+
     constexpr bool operator()(MpBackend backend) const noexcept
     {
       switch (backend)
@@ -68,6 +70,8 @@ namespace afft::detail
   template<>
   struct Validator<Backend>
   {
+    static constexpr const char message[] = "invalid backend"; ///< Error message.
+
     constexpr bool operator()(Backend backend) const noexcept
     {
       switch (backend)
@@ -92,6 +96,8 @@ namespace afft::detail
   template<>
   struct Validator<BackendMask>
   {
+    static constexpr const char message[] = "invalid backend mask"; ///< Error message.
+
     constexpr bool operator()(BackendMask) const noexcept
     {
       return true;
@@ -102,6 +108,8 @@ namespace afft::detail
   template<>
   struct Validator<SelectStrategy>
   {
+    static constexpr const char message[] = "invalid select strategy"; ///< Error message.
+
     constexpr bool operator()(SelectStrategy strategy) const noexcept
     {
       switch (strategy)
@@ -119,6 +127,8 @@ namespace afft::detail
   template<>
   struct Validator<Precision>
   {
+    static constexpr const char message[] = "invalid precision"; ///< Error message.
+
     constexpr bool operator()(Precision prec) const noexcept
     {
       switch (prec)
@@ -141,6 +151,8 @@ namespace afft::detail
   template<>
   struct Validator<Alignment>
   {
+    static constexpr const char message[] = "invalid alignment"; ///< Error message.
+
     constexpr bool operator()(Alignment alignment) const noexcept
     {
       return cxx::has_single_bit(cxx::to_underlying(alignment));
@@ -151,6 +163,8 @@ namespace afft::detail
   template<>
   struct Validator<Complexity>
   {
+    static constexpr const char message[] = "invalid complexity"; ///< Error message.
+
     constexpr bool operator()(Complexity complexity) const noexcept
     {
       switch (complexity)
@@ -168,6 +182,8 @@ namespace afft::detail
   template<>
   struct Validator<ComplexFormat>
   {
+    static constexpr const char message[] = "invalid complex format"; ///< Error message.
+
     constexpr bool operator()(ComplexFormat format) const noexcept
     {
       switch (format)
@@ -185,6 +201,8 @@ namespace afft::detail
   template<>
   struct Validator<Direction>
   {
+    static constexpr const char message[] = "invalid direction"; ///< Error message.
+
     constexpr bool operator()(Direction direction) const noexcept
     {
       switch (direction)
@@ -202,6 +220,8 @@ namespace afft::detail
   template<>
   struct Validator<Placement>
   {
+    static constexpr const char message[] = "invalid placement"; ///< Error message.
+
     constexpr bool operator()(Placement placement) const noexcept
     {
       switch (placement)
@@ -219,6 +239,8 @@ namespace afft::detail
   template<>
   struct Validator<Transform>
   {
+    static constexpr const char message[] = "invalid transform"; ///< Error message.
+
     constexpr bool operator()(Transform transform) const noexcept
     {
       switch (transform)
@@ -237,6 +259,8 @@ namespace afft::detail
   template<>
   struct Validator<Target>
   {
+    static constexpr const char message[] = "invalid target"; ///< Error message.
+
     constexpr bool operator()(Target target) const noexcept
     {
       switch (target)
@@ -256,6 +280,8 @@ namespace afft::detail
   template<>
   struct Validator<Normalization>
   {
+    static constexpr const char message[] = "invalid normalization"; ///< Error message.
+
     constexpr bool operator()(Normalization normalization) const noexcept
     {
       switch (normalization)
@@ -274,6 +300,8 @@ namespace afft::detail
   template<>
   struct Validator<PrecisionTriad>
   {
+    static constexpr const char message[] = "invalid precision triad"; ///< Error message.
+
     constexpr bool operator()(const PrecisionTriad& triad) const noexcept
     {
       return Validator<Precision>{}(triad.execution) &&
@@ -286,6 +314,8 @@ namespace afft::detail
   template<>
   struct Validator<dft::Type>
   {
+    static constexpr const char message[] = "invalid DFT type"; ///< Error message.
+
     constexpr bool operator()(dft::Type dftType) const noexcept
     {
       switch (dftType)
@@ -304,6 +334,8 @@ namespace afft::detail
   template<>
   struct Validator<dht::Type>
   {
+    static constexpr const char message[] = "invalid DHT type"; ///< Error message.
+
     constexpr bool operator()(dht::Type dhtType) const noexcept
     {
       switch (dhtType)
@@ -320,6 +352,8 @@ namespace afft::detail
   template<>
   struct Validator<dtt::Type>
   {
+    static constexpr const char message[] = "invalid DTT type"; ///< Error message.
+
     constexpr bool operator()(dtt::Type dttType) const noexcept
     {
       switch (dttType)
@@ -343,6 +377,8 @@ namespace afft::detail
   template<>
   struct Validator<MemoryLayout>
   {
+    static constexpr const char message[] = "invalid memory layout"; ///< Error message.
+
     constexpr bool operator()(MemoryLayout layout) const noexcept
     {
       switch (layout)
@@ -360,6 +396,8 @@ namespace afft::detail
   template<>
   struct Validator<afft::cufft::WorkspacePolicy>
   {
+    static constexpr const char message[] = "invalid cuFFT workspace policy"; ///< Error message.
+
     constexpr bool operator()(afft::cufft::WorkspacePolicy policy) const noexcept
     {
       switch (policy)
@@ -378,6 +416,8 @@ namespace afft::detail
   template<>
   struct Validator<afft::fftw3::PlannerFlag>
   {
+    static constexpr const char message[] = "invalid FFTW3 planner flag"; ///< Error message.
+
     constexpr bool operator()(afft::fftw3::PlannerFlag flag) const noexcept
     {
       switch (flag)
@@ -398,6 +438,8 @@ namespace afft::detail
   template<>
   struct Validator<afft::heffte::cpu::Backend>
   {
+    static constexpr const char message[] = "invalid HeFFTe CPU backend"; ///< Error message.
+
     constexpr bool operator()(afft::heffte::cpu::Backend backend) const noexcept
     {
       switch (backend)
@@ -415,6 +457,8 @@ namespace afft::detail
   template<>
   struct Validator<afft::heffte::cuda::Backend>
   {
+    static constexpr const char message[] = "invalid HeFFTe CUDA backend"; ///< Error message.
+
     constexpr bool operator()(afft::heffte::cuda::Backend backend) const noexcept
     {
       switch (backend)
@@ -431,6 +475,8 @@ namespace afft::detail
   template<>
   struct Validator<afft::heffte::hip::Backend>
   {
+    static constexpr const char message[] = "invalid HeFFTe HIP backend"; ///< Error message.
+
     constexpr bool operator()(afft::heffte::hip::Backend backend) const noexcept
     {
       switch (backend)
@@ -465,21 +511,7 @@ namespace afft::detail
   {
     if (!isValid(value))
     {
-      throw std::invalid_argument{"Invalid value"};
-    }
-  }
-
-  /**
-   * @brief Validates a span of values.
-   * @tparam T Type of the values.
-   * @param span Span of values to validate.
-   */
-  template<typename T>
-  constexpr void validate(const Span<T>& span)
-  {
-    for (const auto& value : span)
-    {
-      validate(value);
+      throw Exception{Error::invalidArgument, Validator<T>::message};
     }
   }
 
