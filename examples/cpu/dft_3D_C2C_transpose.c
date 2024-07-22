@@ -5,11 +5,13 @@
 
 typedef float _Complex FloatComplex;
 
+afft_ErrorDetails errDetails = {};
+
 #define AFFT_CALL(call) do { \
     afft_Error _err = (call); \
     if (_err != afft_Error_success) \
     { \
-      fprintf(stderr, "afft error (%s:%d): %d\n", __FILE__, __LINE__, _err); \
+      fprintf(stderr, "afft error (%s:%d): %d\n", __FILE__, __LINE__, errDetails.message); \
       exit(EXIT_FAILURE); \
     } \
   } while (0)
@@ -23,17 +25,23 @@ int main(void)
   const size_t srcElemCount = srcPaddedShape[0] * srcPaddedShape[1] * srcPaddedShape[2];
   const size_t dstElemCount = dstPaddedShape[0] * dstPaddedShape[1] * dstPaddedShape[2];
 
-  const afft_Alignment alignment = afft_Alignment_avx2;
+  const afft_Alignment alignment = afft_Alignment_cpuNative;
 
-  AFFT_CALL(afft_init(NULL)); // initialize afft library
+  AFFT_CALL(afft_init(&errDetails)); // initialize afft library
 
   FloatComplex* src = afft_alignedAlloc(srcElemCount * sizeof(FloatComplex), alignment); // source vector
   FloatComplex* dst = afft_alignedAlloc(dstElemCount * sizeof(FloatComplex), alignment); // destination vector
 
+  if (src == NULL || dst == NULL)
+  {
+    fprintf(stderr, "Memory allocation failed\n");
+    exit(EXIT_FAILURE);
+  }
+
   // check if src and dst are not NULL
   // initialize source vector
 
-  const afft_dft_Parameters dftParams =
+  afft_dft_Parameters dftParams =
   {
     .direction     = afft_Direction_forward,
     .precision     = {afft_Precision_float, afft_Precision_float, afft_Precision_float},
@@ -49,20 +57,23 @@ int main(void)
   afft_Size srcStrides[3] = {0};
   afft_Size dstStrides[3] = {0};
 
-  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides));
+  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides, &errDetails));
+  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides, &errDetails));
 
-  const afft_cpu_Parameters cpuParams =
+  afft_cpu_Parameters cpuParams =
   {
-    .memoryLayout   = {.srcStrides = srcStrides,
-                       .dstStrides = dstStrides},
-    .complexFormat  = afft_ComplexFormat_interleaved,
-    .preserveSource = true,
-    .alignment      = alignment,
-    .threadLimit    = 4
+    .threadLimit = 4
   };
 
-  const afft_cpu_BackendParameters backendParams =
+  afft_CentralizedMemoryLayout memoryLayout =
+  {
+    .complexFormat = afft_ComplexFormat_interleaved,
+    .alignment     = alignment,
+    .srcStrides    = srcStrides,
+    .dstStrides    = dstStrides,
+  };
+
+  afft_cpu_BackendParameters backendParams =
   {
     .strategy  = afft_SelectStrategy_first,
     .mask      = (afft_Backend_fftw3 | afft_Backend_mkl | afft_Backend_pocketfft),
@@ -74,16 +85,20 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_create({.transform       = afft_Transform_dft,
-                              .target          = afft_Target_cpu,
-                              .transformParams = &dftParams,
-                              .targetParams    = &cpuParams,
-                              .memoryLayout    = NULL,
-                              .backendParams   = &backendParams}, &plan, NULL));
+  AFFT_CALL(afft_Plan_create((afft_Plan_Parameters){.transform       = afft_Transform_dft,
+                                                    .target          = afft_Target_cpu,
+                                                    .transformParams = &dftParams,
+                                                    .targetParams    = &cpuParams,
+                                                    .memoryLayout    = &memoryLayout,
+                                                    .backendParams   = &backendParams},
+                             &plan,
+                             &errDetails)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_createWithBackendParameters(dftParams, cpuParams, backendParams, &plan)); // generate the plan of the transform
-
-  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst, NULL)); // execute the transform
+  AFFT_CALL(afft_Plan_execute(plan,
+                              (void* const*)&src,
+                              (void* const*)&dst,
+                              NULL,
+                              &errDetails)); // execute the transform
 
   // use results from dst vector
 
@@ -92,5 +107,5 @@ int main(void)
   afft_cpu_alignedFree(src, alignment); // free source vector
   afft_cpu_alignedFree(dst, alignment); // free destination vector
 
-  AFFT_CALL(afft_finalize(NULL)); // deinitialize afft library
+  AFFT_CALL(afft_finalize(&errDetails)); // deinitialize afft library
 }

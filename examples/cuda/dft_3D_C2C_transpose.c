@@ -6,6 +6,8 @@
 
 #include <afft/afft.h>
 
+afft_ErrorDetails errDetails = {};
+
 #define CUDA_CALL(call) do { \
     cudaError_t _err = (call); \
     if (_err != cudaSuccess) \
@@ -19,7 +21,7 @@
     afft_Error _err = (call); \
     if (_err != afft_Error_success) \
     { \
-      fprintf(stderr, "afft error (%s:%d): %d\n", __FILE__, __LINE__, _err); \
+      fprintf(stderr, "afft error (%s:%d): %d\n", __FILE__, __LINE__, errDetails.message); \
       exit(EXIT_FAILURE); \
     } \
   } while (0)
@@ -35,7 +37,7 @@ int main(void)
 
   const afft_Alignment alignment = afft_Alignment_avx2;
 
-  AFFT_CALL(afft_init()); // initialize afft library
+  AFFT_CALL(afft_init(&errDetails)); // initialize afft library
 
   cuComplex* src;
   cuComplex* dst;
@@ -46,7 +48,7 @@ int main(void)
   // check if src and dst are not NULL
   // initialize source vector
 
-  const afft_dft_Parameters dftParams =
+  afft_dft_Parameters dftParams =
   {
     .direction     = afft_Direction_forward,
     .precision     = {afft_Precision_float, afft_Precision_float, afft_Precision_float},
@@ -62,19 +64,23 @@ int main(void)
   afft_Size srcStrides[3] = {0};
   afft_Size dstStrides[3] = {0};
 
-  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides));
+  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides, &errDetails));
+  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides, &errDetails));
 
-  const afft_gpu_Parameters gpuParams =
+  afft_cuda_Parameters cudaParams =
   {
-    .memoryLayout   = {.srcStrides = srcStrides,
-                       .dstStrides = dstStrides},
-    .complexFormat  = afft_ComplexFormat_interleaved,
-    .preserveSource = true,
-    .device         = 0,
+    .deviceCount = 1,
+    .devices     = (int[]){0},
   };
 
-  const afft_gpu_BackendParameters backendParams =
+  afft_CentralizedMemoryLayout memoryLayout =
+  {
+    .complexFormat = afft_ComplexFormat_interleaved,
+    .srcStrides    = srcStrides,
+    .dstStrides    = dstStrides,
+  };
+
+  afft_cuda_BackendParameters backendParams =
   {
     .strategy  = afft_SelectStrategy_first,
     .mask      = (afft_Backend_vkfft),
@@ -84,9 +90,16 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_createWithBackendParameters(dftParams, gpuParams, backendParams, &plan)); // generate the plan of the transform
+  AFFT_CALL(afft_Plan_create((afft_Plan_Parameters){.transform       = afft_Transform_dft,
+                                                    .target          = afft_Target_cuda,
+                                                    .transformParams = &dftParams,
+                                                    .targetParams    = &cudaParams,
+                                                    .memoryLayout    = &memoryLayout,
+                                                    .backendParams   = &backendParams},
+                             &plan,
+                             &errDetails)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst)); // execute the transform
+  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst, NULL, &errDetails)); // execute the transform
 
   // use results from dst vector
 
@@ -95,5 +108,5 @@ int main(void)
   CUDA_CALL(cudaFree(src)); // free source vector
   CUDA_CALL(cudaFree(dst)); // free destination vector
 
-  AFFT_CALL(afft_finalize()); // deinitialize afft library
+  AFFT_CALL(afft_finalize(&errDetails)); // deinitialize afft library
 }

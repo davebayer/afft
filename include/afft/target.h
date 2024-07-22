@@ -33,8 +33,10 @@
 typedef uint8_t afft_Target;
 
 /// @brief Target enumeration
-#define afft_Target_cpu (afft_Target)0 ///< CPU
-#define afft_Target_gpu (afft_Target)1 ///< GPU
+#define afft_Target_cpu    (afft_Target)0 ///< CPU
+#define afft_Target_cuda   (afft_Target)1 ///< CUDA
+#define afft_Target_hip    (afft_Target)2 ///< HIP
+#define afft_Target_opencl (afft_Target)3 ///< OpenCL
 
 /// @brief CPU parameters
 typedef struct afft_cpu_Parameters afft_cpu_Parameters;
