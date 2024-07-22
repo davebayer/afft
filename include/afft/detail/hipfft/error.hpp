@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::hipfft
 {
@@ -50,7 +50,7 @@ namespace afft::detail::hipfft
    */
   inline void checkError(hipfftResult result)
   {
-    auto getErrorMsg = [](hipfftResult result) constexpr -> std::string_view
+    auto getErrorMsg = [](hipfftResult result) constexpr
     {
       switch (result)
       {
@@ -93,7 +93,7 @@ namespace afft::detail::hipfft
 
     if (!isOk(result))
     {
-      throw BackendError{Backend::hipfft, getErrorMsg(result)};
+      throw Exception{Error::hipfft, getErrorMsg(result)};
     }
   }
 } // namespace afft::detail::hipfft

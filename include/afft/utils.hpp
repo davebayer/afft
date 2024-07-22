@@ -135,12 +135,12 @@ AFFT_EXPORT namespace afft
 
     if (strides.size() != shape.size())
     {
-      throw std::invalid_argument("strides and shape must have the same size");
+      throw Exception{Error::invalidArgument, "strides and shape must have the same size"};
     }
 
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<I>{}))
     {
-      throw std::invalid_argument("shape must not contain zeros");
+      throw Exception{Error::invalidArgument, "shape must not contain zeros"};
     }
 
     strides[shape.size() - 1] = fastestAxisStride;
@@ -233,26 +233,26 @@ AFFT_EXPORT namespace afft
 
     if (orgAxesOrder.size() != shape.size())
     {
-      throw std::invalid_argument("Axes order must have the same size as the shape");
+      throw Exception{Error::invalidArgument, "Axes order must have the same size as the shape"};
     }
 
     if (detail::cxx::any_of(shape.begin(), shape.end(), detail::IsZero<I>{}))
     {
-      throw std::invalid_argument("Shape must not contain zeros");
+      throw Exception{Error::invalidArgument, "Shape must not contain zeros"};
     }
 
     for (std::size_t i{}; i < orgAxesOrder.size(); ++i)
     {
       if (orgAxesOrder[i] >= orgAxesOrder.size())
       {
-        throw std::invalid_argument("Axes order must not contain out-of-range values");
+        throw Exception{Error::invalidArgument, "Axes order must not contain out-of-range values"};
       }
 
       for (std::size_t j{i + 1}; j < orgAxesOrder.size(); ++j)
       {
         if (orgAxesOrder[i] == orgAxesOrder[j])
         {
-          throw std::invalid_argument("Axes order must not contain duplicates");
+          throw Exception{Error::invalidArgument, "Axes order must not contain duplicates"};
         }
       }
     }

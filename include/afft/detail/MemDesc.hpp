@@ -62,7 +62,7 @@ namespace afft::detail
       {
         if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() != 1)
         {
-          throw std::invalid_argument{"Centralized memory layout can be used only with single-process application on sigle target"};
+          throw Exception{Error::invalidArgument, "Centralized memory layout can be used only with single-process application on sigle target"};
         }
 
         if (memLayout.srcStrides.empty())
@@ -85,7 +85,7 @@ namespace afft::detail
         }
         else
         {
-          throw std::invalid_argument{"The source strides must be empty or have the same size as the shape rank"};
+          throw Exception{Error::invalidArgument, "The source strides must be empty or have the same size as the shape rank"};
         }
 
         if (memLayout.dstStrides.empty())
@@ -108,7 +108,7 @@ namespace afft::detail
         }
         else
         {
-          throw std::invalid_argument{"The destination strides must be empty or have the same size as the shape rank"};
+          throw Exception{Error::invalidArgument, "The destination strides must be empty or have the same size as the shape rank"};
         }
       }
 

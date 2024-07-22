@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::mpi
 {
@@ -52,7 +52,7 @@ namespace afft::detail::mpi
   {
     if (!isOk(result))
     {
-      throw MpBackendError{"MPI error"};
+      throw Exception{Error::mpi, "MPI error", result};
     }
   }
 } // namespace afft::detail::mpi

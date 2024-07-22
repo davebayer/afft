@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::mkl
 {
@@ -59,7 +59,7 @@ namespace afft::detail::mkl
 
     if (!isOk(result))
     {
-      throw BackendError{Backend::mkl, getErrorMsg(result)};
+      throw Exception{Error::mkl, getErrorMsg(result)};
     }
   }
 } // namespace afft::detail::mkl

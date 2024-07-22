@@ -29,7 +29,7 @@
 # include "../../include.hpp"
 #endif
 
-#include "../../../exception.hpp"
+#include "../../../error.hpp"
 
 namespace afft::detail::cuda::rtc
 {
@@ -52,7 +52,7 @@ namespace afft::detail::cuda::rtc
   {
     if (!isOk(result))
     {
-      throw GpuBackendError(cformatNothrow("real-time compilation failed - %s", nvrtcGetErrorString(result)));
+      throw Exception{Error::nvrtc, nvrtcGetErrorString(result), result};
     }
   }
 } // namespace afft::detail::cuda::rtc

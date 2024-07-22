@@ -590,18 +590,18 @@ namespace afft::detail
 
         if (shapeView.size() > maxDimCount)
         {
-          throw std::invalid_argument("Too many shape dimensions");
+          throw Exception{Error::invalidArgument, "Too many shape dimensions"};
         }
         else if (shapeView.empty())
         {
-          throw std::invalid_argument("Empty shape");
+          throw Exception{Error::invalidArgument, "Empty shape"};
         }
 
         for (std::size_t i{}; i < shapeView.size(); ++i)
         {
           if (shapeView[i] == 0)
           {
-            throw std::invalid_argument("Invalid shape dimension size");
+            throw Exception{Error::invalidArgument, "Invalid shape dimension size"};
           }
 
           shape[i] = shapeView[i];
@@ -633,11 +633,11 @@ namespace afft::detail
           {
             if (axis >= shapeRank)
             {
-              throw std::invalid_argument("Transform axis out of bounds");
+              throw Exception{Error::invalidArgument, "Transform axis out of bounds"};
             }
             else if (seenAxes.test(axis))
             {
-              throw std::invalid_argument("Transform axes must be unique");
+              throw Exception{Error::invalidArgument, "Transform axes must be unique"};
             }
 
             seenAxes.set(axis);
@@ -647,7 +647,7 @@ namespace afft::detail
         }
         else
         {
-          throw std::invalid_argument("Too many transform axes");
+          throw Exception{Error::invalidArgument, "Too many transform axes"};
         }
 
         return axes;
@@ -688,7 +688,7 @@ namespace afft::detail
       {
         if ((dttParams.types.size() != 1) && (dttParams.types.size() != transformRank))
         {
-          throw std::invalid_argument("Invalid number of dtt types, must be 1 or equal to the number of axes");
+          throw Exception{Error::invalidArgument, "Invalid number of dtt types, must be 1 or equal to the number of axes"};
         }
 
         DttDesc dttDesc{};

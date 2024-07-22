@@ -34,6 +34,9 @@ extern "C"
 {
 #endif
 
+/// @brief Maximum size error message
+#define AFFT_MAX_ERROR_MESSAGE_SIZE 128
+
 /// @brief Error enumeration
 typedef enum
 {
@@ -61,10 +64,13 @@ typedef enum
   afft_Error_vkfft,           ///< VkFFT error
 } afft_Error;
 
-/// @brief Error detail structure
-typedef struct
+/// @brief Error details structure
+typedef struct afft_ErrorDetails afft_ErrorDetails;
+
+/// @brief Error details structure
+struct afft_ErrorDetails
 {
-  const char* what;          ///< Error message
+  char message[AFFT_MAX_ERROR_MESSAGE_SIZE]; ///< Error message
   union
   {
 # ifdef AFFT_ENABLE_MPI
@@ -82,7 +88,7 @@ typedef struct
 # endif
     int         _dummy;      ///< Dummy value to ensure the union is not empty, do not use
   } retval;
-} afft_ErrorDetails;
+};
 
 #ifdef __cplusplus
 }

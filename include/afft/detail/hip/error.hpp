@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::hip
 {
@@ -52,7 +52,7 @@ namespace afft::detail::hip
   {
     if (!isOk(error))
     {
-      throw GpuBackendError{cformatNothrow("%s - %s", hipGetErrorName(error), hipGetErrorString(error))};
+      throw Exception{Error::hip, hipGetErrorString(error), error};
     }
   }
 } // namespace afft::detail::hip

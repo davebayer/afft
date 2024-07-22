@@ -68,7 +68,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
       {
-        throw BackendError{Backend::fftw3, "failed to export wisdom to file"};
+        throw Exception{Error::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -91,7 +91,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
       {
-        throw BackendError{Backend::fftw3, "failed to export wisdom to file"};
+        throw Exception{Error::fftw3, "failed to export wisdom to file"};
       }
     }
 # endif
@@ -150,7 +150,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
       {
-        throw BackendError{Backend::fftw3, "failed to import system wisdom"};
+        throw Exception{Error::fftw3, "failed to import system wisdom"};
       }
     }
 # endif
@@ -173,7 +173,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
       {
-        throw BackendError{Backend::fftw3, "failed to import wisdom from file"};
+        throw Exception{Error::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -196,7 +196,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
       {
-        throw BackendError{Backend::fftw3, "failed to import wisdom from file"};
+        throw Exception{Error::fftw3, "failed to import wisdom from file"};
       }
     }
 # endif
@@ -219,7 +219,7 @@ AFFT_EXPORT namespace afft::fftw3
     {
       if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
       {
-        throw BackendError{Backend::fftw3, "failed to import wisdom"};
+        throw Exception{Error::fftw3, "failed to import wisdom"};
       }
     }
 # endif

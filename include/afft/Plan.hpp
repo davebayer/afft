@@ -98,7 +98,7 @@ AFFT_EXPORT namespace afft
 
         if (mpBackend != getMpBackend())
         {
-          throw std::invalid_argument("plan multi-process backend does not match requested multi-process backend");
+          throw Exception{Error::invalidArgument, "plan multi-process backend does not match requested multi-process backend"};
         }
 
         return mDesc.getMpParameters<mpBackend>();
@@ -122,7 +122,7 @@ AFFT_EXPORT namespace afft
 
         if (transform != getTransform())
         {
-          throw std::invalid_argument("plan transform does not match requested transform");
+          throw Exception{Error::invalidArgument, "plan transform does not match requested transform"};
         }
 
         return mDesc.getTransformParameters<transform>();
@@ -158,7 +158,7 @@ AFFT_EXPORT namespace afft
 
         if (target != getTarget())
         {
-          throw std::invalid_argument("plan target does not match requested target");
+          throw Exception{Error::invalidArgument, "plan target does not match requested target"};
         }
 
         return mDesc.getTargetParameters<target>();
@@ -442,33 +442,33 @@ AFFT_EXPORT namespace afft
         case Placement::inPlace:
           if (srcPrecision != prec.source && srcPrecision != prec.destination)
           {
-            throw std::invalid_argument{"invalid type precision"};
+            throw Exception{Error::invalidArgument, "invalid type precision"};
           }
 
           if (srcComplexity != refSrcCmpl && srcComplexity != refDstCmpl)
           {
-            throw std::invalid_argument{"invalid type complexity"};
+            throw Exception{Error::invalidArgument, "invalid type complexity"};
           }
           break;
         case Placement::outOfPlace:
           if (srcPrecision != prec.source)
           {
-            throw std::invalid_argument{"invalid source type precision"};
+            throw Exception{Error::invalidArgument, "invalid source type precision"};
           }
           
           if (dstPrecision != prec.destination)
           {
-            throw std::invalid_argument{"invalid destination type precision"};
+            throw Exception{Error::invalidArgument, "invalid destination type precision"};
           }
 
           if (srcComplexity != refSrcCmpl)
           {
-            throw std::invalid_argument{"invalid source type complexity"};
+            throw Exception{Error::invalidArgument, "invalid source type complexity"};
           }
 
           if (dstComplexity != refDstCmpl)
           {
-            throw std::invalid_argument{"invalid destination type complexity"};
+            throw Exception{Error::invalidArgument, "invalid destination type complexity"};
           }
           break;
         default:
@@ -481,7 +481,7 @@ AFFT_EXPORT namespace afft
       {
         if (mDesc.isDestructive())
         {
-          throw std::invalid_argument("running destructive transform on const source data");
+          throw Exception{Error::invalidArgument, "running destructive transform on const source data"};
         }
       }
 
@@ -496,12 +496,12 @@ AFFT_EXPORT namespace afft
 
         if (srcCount != targetCount)
         {
-          throw std::invalid_argument{"invalid source buffer count"};
+          throw Exception{Error::invalidArgument, "invalid source buffer count"};
         }
 
         if (dstCount != targetCount)
         {
-          throw std::invalid_argument{"invalid destination buffer count"};
+          throw Exception{Error::invalidArgument, "invalid destination buffer count"};
         }
       }
 
@@ -513,7 +513,7 @@ AFFT_EXPORT namespace afft
       {
         if (placement != mDesc.getPlacement())
         {
-          throw std::invalid_argument("placement does not match plan placement");
+          throw Exception{Error::invalidArgument, "placement does not match plan placement"};
         }
       }
 
@@ -573,12 +573,12 @@ AFFT_EXPORT namespace afft
 
         if (std::any_of(src.begin(), src.end(), isNullPtr))
         {
-          throw std::invalid_argument("a null pointer was passed as source buffer");
+          throw Exception{Error::invalidArgument, "a null pointer was passed as source buffer"};
         }
 
         if (std::any_of(dst.begin(), dst.end(), isNullPtr))
         {
-          throw std::invalid_argument("a null pointer was passed as destination buffer");
+          throw Exception{Error::invalidArgument, "a null pointer was passed as destination buffer"};
         }
 
         View<void*> srcVoid{reinterpret_cast<void* const*>(src.data()), src.size()};
@@ -614,7 +614,7 @@ AFFT_EXPORT namespace afft
         {
           if (execParams.target != getTarget())
           {
-            throw std::invalid_argument("execution parameters target does not match plan target");
+            throw Exception{Error::invalidArgument, "execution parameters target does not match plan target"};
           }
 
           executeBackendImpl(srcVoid, dstVoid, execParams);

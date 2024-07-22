@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::rocfft
 {
@@ -79,7 +79,7 @@ namespace afft::detail::rocfft
 
     if (!isOk(status))
     {
-      throw BackendError{Backend::rocfft, getErrorMsg(status)};
+      throw Exception{Error::rocfft, getErrorMsg(status)};
     }
   }
 } // namespace afft::detail::rocfft

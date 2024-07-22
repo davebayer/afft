@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::pocketfft
 {
@@ -46,7 +46,7 @@ namespace afft::detail::pocketfft
   template<typename Fn>
   void safeCall(Fn&& fn)
   {
-    static_assert(std::is_invocable_v<decltype(fn)>, "fn must be invocable");
+    static_assert(std::is_invocable_v<Fn>, "fn must be invocable");
 
     try
     {
@@ -54,11 +54,11 @@ namespace afft::detail::pocketfft
     }
     catch (const std::exception& e)
     {
-      throw BackendError{Backend::pocketfft, e.what()};
+      throw Exception{Error::pocketfft, e.what()};
     }
     catch (...)
     {
-      throw BackendError{Backend::pocketfft, "unknown error"};
+      throw Exception{Error::pocketfft, "unknown error"};
     }
   }
 } // namespace afft::detail::pocketfft

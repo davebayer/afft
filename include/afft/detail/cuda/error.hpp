@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::cuda
 {
@@ -52,7 +52,7 @@ namespace afft::detail::cuda
   {
     if (!isOk(error))
     {
-      throw GpuBackendError(cformatNothrow("%s - %s", cudaGetErrorName(error), cudaGetErrorString(error)));
+      throw Exception{Error::cudaRuntime, cudaGetErrorString(error), error};
     }
   }
 
@@ -73,16 +73,13 @@ namespace afft::detail::cuda
    */
   inline void checkError(CUresult result)
   {
-    const char* errorName{};
     const char* errorStr{};
 
-    cuGetErrorName(result, &errorName);
     cuGetErrorString(result, &errorStr);
 
     if (!isOk(result))
     {
-      throw GpuBackendError{cformatNothrow("%s - %s", (errorName != nullptr) ? errorName : "unnamed error",
-                                                          (errorStr != nullptr) ? errorName : "no description")};
+      throw Exception{Error::cudaDriver, (errorStr != nullptr) ? errorStr : "no description", result};
     }
   }
 } // namespace afft::detail::cuda

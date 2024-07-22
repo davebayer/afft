@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::opencl
 {
@@ -52,7 +52,7 @@ namespace afft::detail::opencl
   {
     if (!isOk(error))
     {
-      throw GpuBackendError{cformatNothrow("error no %d", error)};
+      throw Exception{Error::opencl, "", error};
     }
   }
 } // namespace afft::detail::opencl

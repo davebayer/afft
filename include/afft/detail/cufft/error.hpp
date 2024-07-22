@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::cufft
 {
@@ -50,7 +50,7 @@ namespace afft::detail::cufft
    */
   inline void checkError(cufftResult result)
   {
-    auto getErrorMsg = [](cufftResult result) constexpr -> std::string_view
+    auto getErrorMsg = [](cufftResult result) constexpr
     {
       switch (result)
       {
@@ -95,7 +95,7 @@ namespace afft::detail::cufft
 
     if (!isOk(result))
     {
-      throw makeException<BackendError>(Backend::cufft, getErrorMsg(result));
+      throw Exception{Error::cufft, getErrorMsg(result)};
     }
   }
 } // namespace afft::detail::cufft

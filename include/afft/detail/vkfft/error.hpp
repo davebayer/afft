@@ -29,7 +29,7 @@
 # include "../include.hpp"
 #endif
 
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::vkfft
 {
@@ -52,7 +52,7 @@ namespace afft::detail::vkfft
   {
     if (!isOk(result))
     {
-      throw BackendError{Backend::vkfft, getVkFFTErrorString(result)};
+      throw Exception{Error::vkfft, getVkFFTErrorString(result)};
     }
   }
 } // namespace afft::detail::vkfft

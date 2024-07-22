@@ -31,6 +31,8 @@
 
 #include "error.hpp"
 #include "../enviroment.hpp"
+#include "../../common.hpp"
+#include "../../utils.hpp"
 
 namespace afft::detail::cuda::rtc
 {
