@@ -50,6 +50,7 @@ typedef enum
   // Target errors
   afft_Error_cudaDriver,      ///< CUDA driver error
   afft_Error_cudaRuntime,     ///< CUDA runtime error
+  afft_Error_cudaRtc,         ///< CUDA RTC error
   afft_Error_hip,             ///< HIP error
   afft_Error_opencl,          ///< OpenCL error
   // Backend errors

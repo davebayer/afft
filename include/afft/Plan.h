@@ -65,10 +65,10 @@ struct afft_Plan_Parameters
  * @brief Create a plan for given parameters.
  * @param planParams Plan parameters.
  * @param planPtr Pointer to the plan.
- * @param errorDetails Error details.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_create(afft_Plan_Parameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errorDetails);
+afft_Error afft_Plan_create(afft_Plan_Parameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Destroy a plan.
@@ -80,73 +80,82 @@ void afft_Plan_destroy(afft_Plan* plan);
  * @brief Get the plan multi-process backend.
  * @param plan Plan object.
  * @param mpBackend Pointer to the multi-process backend variable.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getMpBackend(afft_Plan* plan, afft_MpBackend* mpBackend);
+afft_Error afft_Plan_getMpBackend(afft_Plan* plan, afft_MpBackend* mpBackend, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan multi-process backend parameters.
  * @param plan Plan object.
  * @param mpBackendParams Pointer to the multi-process backend parameters.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getMpBackendParameters(afft_Plan* plan, void* mpBackendParams);
+afft_Error afft_Plan_getMpBackendParameters(afft_Plan* plan, void* mpBackendParams, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan transform.
  * @param plan Plan object.
  * @param transform Pointer to the transform variable.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getTransform(afft_Plan* plan, afft_Transform* transform);
+afft_Error afft_Plan_getTransform(afft_Plan* plan, afft_Transform* transform, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan transform parameters.
  * @param plan Plan object.
  * @param transformParams Pointer to the transform parameters.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getTransformParameters(afft_Plan* plan, void* transformParams);
+afft_Error afft_Plan_getTransformParameters(afft_Plan* plan, void* transformParams, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan target.
  * @param plan Plan object.
  * @param target Pointer to the target variable.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getTarget(afft_Plan* plan, afft_Target* target);
+afft_Error afft_Plan_getTarget(afft_Plan* plan, afft_Target* target, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the target count.
  * @param plan Plan object.
  * @param targetCount Pointer to the target count variable.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getTargetCount(afft_Plan* plan, size_t* targetCount);
+afft_Error afft_Plan_getTargetCount(afft_Plan* plan, size_t* targetCount, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan target parameters.
  * @param plan Plan object.
  * @param targetParams Pointer to the target parameters.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getTargetParameters(afft_Plan* plan, void* targetParams);
+afft_Error afft_Plan_getTargetParameters(afft_Plan* plan, void* targetParams, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan backend.
  * @param plan Plan object.
  * @param backend Pointer to the backend variable.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend);
+afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Get the plan workspace size.
  * @param plan Plan object.
  * @param workspaceSizes Pointer to the workspace sizes of target count size.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getWorkspaceSizes(afft_Plan* plan, const size_t** workspaceSizes);
+afft_Error afft_Plan_getWorkspaceSizes(afft_Plan* plan, const size_t** workspaceSizes, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Execute a plan.
@@ -154,9 +163,14 @@ afft_Error afft_Plan_getWorkspaceSizes(afft_Plan* plan, const size_t** workspace
  * @param src Source data pointer array of target count size (x2 if planar complex).
  * @param dst Destination data pointer array of target count size (x2 if planar complex).
  * @param execParams Execution parameters.
+ * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_execute(afft_Plan* plan, void* const* src, void* const* dst, const void* execParams);
+afft_Error afft_Plan_execute(afft_Plan*         plan,
+                             void* const*       src,
+                             void* const*       dst,
+                             const void*        execParams,
+                             afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus
 }

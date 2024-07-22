@@ -36,11 +36,19 @@ extern "C"
 {
 #endif
 
-/// @brief Initialize the library
-afft_Error afft_init();
+/**
+ * @brief Initialize the library
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_init(afft_ErrorDetails* errDetails);
 
-/// @brief Finalize the library
-afft_Error afft_finalize();
+/**
+ * @brief Finalize the library
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_finalize(afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus
 }
