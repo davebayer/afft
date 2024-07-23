@@ -37,21 +37,21 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
-  enum class Backend : detail::BackendMaskUnderlyingType
+  enum class Backend : afft_Backend
   {
-    clfft     = (1 << 0), ///< clFFT
-    cufft     = (1 << 1), ///< cuFFT
-    fftw3     = (1 << 2), ///< FFTW3
-    heffte    = (1 << 3), ///< HeFFTe
-    hipfft    = (1 << 4), ///< hipFFT
-    mkl       = (1 << 5), ///< Intel MKL
-    pocketfft = (1 << 6), ///< PocketFFT
-    rocfft    = (1 << 7), ///< rocFFT
-    vkfft     = (1 << 8), ///< VkFFT
+    clfft     = afft_Backend_clfft, ///< clFFT
+    cufft     = afft_Backend_cufft, ///< cuFFT
+    fftw3     = afft_Backend_fftw3, ///< FFTW3
+    heffte    = afft_Backend_heffte, ///< HeFFTe
+    hipfft    = afft_Backend_hipfft, ///< hipFFT
+    mkl       = afft_Backend_mkl, ///< Intel MKL
+    pocketfft = afft_Backend_pocketfft, ///< PocketFFT
+    rocfft    = afft_Backend_rocfft, ///< rocFFT
+    vkfft     = afft_Backend_vkfft, ///< VkFFT
   };
 
   /// @brief Number of backends
-  inline constexpr std::size_t backendCount = 9;
+  inline constexpr std::size_t backendCount = AFFT_BACKEND_COUNT;
 
   /// @brief Backend constant
   template<Backend _backend>
@@ -61,21 +61,21 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Bitmask of backends
-  enum class BackendMask : detail::BackendMaskUnderlyingType
+  enum class BackendMask : afft_BackendMask
   {
-    empty = detail::BackendMaskUnderlyingType{0},                          ///< empty backend mask
-    all   = std::numeric_limits<detail::BackendMaskUnderlyingType>::max(), ///< all backends
+    empty = afft_BackendMask_empty, ///< empty backend mask
+    all   = afft_BackendMask_all,   ///< all backends
   };
 
   // Check that the BackendMask underlying type has sufficient size to store all Backend values
-  static_assert(detail::backendMaskHasSufficientUnderlyingTypeSize(backendCount),
+  static_assert((sizeof(afft_BackendMask) * CHAR_BIT) >= backendCount,
                 "BackendMask does not have sufficient size to store all Backend values");
 
   /// @brief Backend select strategy
-  enum class SelectStrategy : std::uint8_t
+  enum class SelectStrategy : afft_SelectStrategy
   {
-    first, ///< Select the first available backend
-    best,  ///< Select the best available backend
+    first = afft_SelectStrategy_first, ///< Select the first available backend
+    best  = afft_SelectStrategy_best,  ///< Select the best available backend
   };
 
   /**
@@ -162,7 +162,7 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace cufft
   {
-    enum class WorkspacePolicy : std::uint8_t;
+    enum class WorkspacePolicy : afft_cufft_WorkspacePolicy;
 
     namespace cuda
     {
@@ -176,11 +176,11 @@ AFFT_EXPORT namespace afft
   } // namespace cufft
 
   /// @brief cuFFT workspace policy
-  enum class cufft::WorkspacePolicy : std::uint8_t
+  enum class cufft::WorkspacePolicy : afft_cufft_WorkspacePolicy
   {
-    performance, ///< Use the workspace for performance
-    minimal,     ///< Use the minimal workspace
-    user,        ///< Use the user-defined workspace size
+    performance = afft_cufft_WorkspacePolicy_performance, ///< Use the workspace for performance
+    minimal     = afft_cufft_WorkspacePolicy_minimal,     ///< Use the minimal workspace
+    user        = afft_cufft_WorkspacePolicy_user,        ///< Use the user-defined workspace size
   };
 
   /// @brief cuFFT CUDA backend parameters
@@ -204,7 +204,7 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace fftw3
   {
-    enum class PlannerFlag : std::uint8_t;
+    enum class PlannerFlag : afft_fftw3_PlannerFlag;
 
     namespace cpu
     {
@@ -218,17 +218,17 @@ AFFT_EXPORT namespace afft
   } // namespace fftw3
 
   /// @brief FFTW3 planner flags
-  enum class fftw3::PlannerFlag : std::uint8_t
+  enum class fftw3::PlannerFlag : afft_fftw3_PlannerFlag
   {
-    estimate,        ///< Estimate plan flag
-    measure,         ///< Measure plan flag
-    patient,         ///< Patient plan flag
-    exhaustive,      ///< Exhaustive planner flag
-    estimatePatient, ///< Estimate and patient plan flag
+    estimate        = afft_fftw3_PlannerFlag_estimate,        ///< Estimate plan flag
+    measure         = afft_fftw3_PlannerFlag_measure,         ///< Measure plan flag
+    patient         = afft_fftw3_PlannerFlag_patient,         ///< Patient plan flag
+    exhaustive      = afft_fftw3_PlannerFlag_exhaustive,      ///< Exhaustive planner flag
+    estimatePatient = afft_fftw3_PlannerFlag_estimatePatient, ///< Estimate and patient plan flag
   };
 
   /// @brief No time limit for the planner
-  inline constexpr std::chrono::duration<double> noTimeLimit{-1.0};
+  inline constexpr std::chrono::duration<double> noTimeLimit{AFFT_FFTW3_NO_TIME_LIMIT};
 
   /// @brief FFTW3 cpu backend parameters
   struct fftw3::cpu::BackendParameters
@@ -262,7 +262,7 @@ AFFT_EXPORT namespace afft
   {
     namespace cpu
     {
-      enum class Backend : std::uint8_t;
+      enum class Backend : afft_heffte_cpu_Backend;
     } // namespace cpu
     namespace mpi::cpu
     {
@@ -271,7 +271,7 @@ AFFT_EXPORT namespace afft
     } // namespace mpi::cpu
     namespace cuda
     {
-      enum class Backend : std::uint8_t;
+      enum class Backend : afft_heffte_cuda_Backend;
     } // namespace cuda
     namespace mpi::cuda
     {
@@ -280,7 +280,7 @@ AFFT_EXPORT namespace afft
     } // namespace mpi::cuda
     namespace hip
     {
-      enum class Backend : std::uint8_t;
+      enum class Backend : afft_heffte_hip_Backend;
     } // namespace hip
     namespace mpi::hip
     {
@@ -290,10 +290,10 @@ AFFT_EXPORT namespace afft
   } // namespace heffte
 
   /// @brief HeFFTe cpu backend
-  enum class heffte::cpu::Backend : std::uint8_t
+  enum class heffte::cpu::Backend : afft_heffte_cpu_Backend
   {
-    fftw3, ///< FFTW3 backend
-    mkl,   ///< MKL backend
+    fftw3 = afft_heffte_cpu_Backend_fftw3, ///< FFTW3 backend
+    mkl   = afft_heffte_cpu_Backend_mkl,   ///< MKL backend
   };
 
   /// @brief HeFFTe MPI cpu backend parameters
@@ -307,9 +307,9 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief HeFFTe CUDA backend
-  enum class heffte::cuda::Backend : std::uint8_t
+  enum class heffte::cuda::Backend : afft_heffte_cuda_Backend
   {
-    cufft, ///< cuFFT backend
+    cufft = afft_heffte_gpu_Backend_cufft, ///< cuFFT backend
   };
 
   /// @brief HeFFTe MPI CUDA backend parameters
@@ -323,9 +323,9 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief HeFFTe HIP backend
-  enum class heffte::hip::Backend : std::uint8_t
+  enum class heffte::hip::Backend : afft_heffte_hip_Backend
   {
-    rocfft, ///< rocFFT backend
+    rocfft = afft_heffte_hip_Backend_rocfft, ///< rocFFT backend
   };
 
   /// @brief HeFFTe MPI HIP backend parameters
@@ -505,11 +505,11 @@ AFFT_EXPORT namespace afft
   };
 
   /**
-   * @brief Converts a Backend to a string.
-   * @param backend Backend to convert.
-   * @return String representation of the backend.
+   * @brief Get the name of the backend.
+   * @param backend Backend.
+   * @return Name of the backend.
    */
-  [[nodiscard]] constexpr std::string_view toString(Backend backend) noexcept
+  [[nodiscard]] constexpr std::string_view getBackendName(Backend backend) noexcept
   {
     switch (backend)
     {

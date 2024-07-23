@@ -22,8 +22,7 @@
   SOFTWARE.
 */
 
-#include <afft/afft.h>
-#include <afft/afft.hpp>
+#include "afft/afft.hpp"
 
 /**
  * @brief Allocate aligned memory.

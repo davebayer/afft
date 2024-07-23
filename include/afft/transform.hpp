@@ -35,35 +35,35 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Transform type
-  enum class Transform : std::uint8_t
+  enum class Transform : afft_Transform
   {
-    dft, ///< Discrete Fourier Transform
-    dht, ///< Discrete Hartley Transform
-    dtt, ///< Discrete Trigonometric Transform
+    dft = afft_Transform_dft, ///< Discrete Fourier Transform
+    dht = afft_Transform_dht, ///< Discrete Hartley Transform
+    dtt = afft_Transform_dtt, ///< Discrete Trigonometric Transform
   };
 
   /// @brief Direction of the transform
-  enum class Direction : std::uint8_t
+  enum class Direction : afft_Direction
   {
-    forward,            ///< forward transform
-    inverse,            ///< inverse transform
-    backward = inverse, ///< alias for inverse transform
+    forward  = afft_Direction_forward,  ///< forward transform
+    inverse  = afft_Direction_inverse,  ///< inverse transform
+    backward = afft_Direction_backward, ///< alias for inverse transform
   };
 
   /// @brief Normalization
-  enum class Normalization : std::uint8_t
+  enum class Normalization : afft_Normalization
   {
-    none,       ///< no normalization
-    orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
-    unitary,    ///< 1/N normalization applied to inverse transform
+    none       = afft_Normalization_none,       ///< no normalization
+    orthogonal = afft_Normalization_orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
+    unitary    = afft_Normalization_unitary,    ///< 1/N normalization applied to inverse transform
   };
 
   /// @brief Placement of the transform
-  enum class Placement : std::uint8_t
+  enum class Placement : afft_Placement
   {
-    inPlace,                 ///< in-place transform
-    outOfPlace,              ///< out-of-place transform
-    notInPlace = outOfPlace, ///< alias for outOfPlace transform
+    inPlace    = afft_Placement_inPlace,    ///< in-place transform
+    outOfPlace = afft_Placement_outOfPlace, ///< out-of-place transform
+    notInPlace = afft_Placement_notInPlace, ///< alias for outOfPlace transform
   };
 
   /**
@@ -85,20 +85,19 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dft
   {
-    enum class Type : std::uint8_t;
+    enum class Type : afft_dft_Type;
     struct Parameters;
   } // namespace dft
 
   /// @brief DFT transform type
-  enum class dft::Type : std::uint8_t
+  enum class dft::Type : afft_dft_Type
   {
-    complexToComplex,       ///< complex-to-complex transform
-    realToComplex,          ///< real-to-complex transform
-    complexToReal,          ///< complex-to-real transform
-
-    c2c = complexToComplex, ///< alias for complex-to-complex transform
-    r2c = realToComplex,    ///< alias for real-to-complex transform
-    c2r = complexToReal,    ///< alias for complex-to-real transform
+    complexToComplex = afft_dft_Type_complexToComplex, ///< complex-to-complex transform
+    realToComplex    = afft_dft_Type_realToComplex,    ///< real-to-complex transform
+    complexToReal    = afft_dft_Type_complexToReal,    ///< complex-to-real transform
+    c2c              = afft_dft_Type_c2c,              ///< alias for complex-to-complex transform
+    r2c              = afft_dft_Type_r2c,              ///< alias for real-to-complex transform
+    c2r              = afft_dft_Type_c2r,              ///< alias for complex-to-real transform
   };
 
   /// @brief DFT Parameters
@@ -119,14 +118,14 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dht
   {
-    enum class Type : std::uint8_t;
+    enum class Type : afft_dht_Type;
     struct Parameters;
   } // namespace dht
 
   /// @brief DHT transform type
-  enum class dht::Type : std::uint8_t
+  enum class dht::Type : afft_dht_Type
   {
-    separable, ///< separable DHT, computes the DHT along each axis independently
+    separable = afft_dht_Type_separable, ///< separable DHT, computes the DHT along each axis independently
   };
 
   /// @brief DHT Parameters
@@ -147,35 +146,31 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dtt
   {
-    enum class Type : std::uint8_t;
+    enum class Type : afft_dtt_Type;
     struct Parameters;
   } // namespace dtt
 
   /// @brief DTT transform type
-  enum class dtt::Type : std::uint8_t
+  enum class dtt::Type : afft_dtt_Type
   {
-    dct1,       ///< Discrete Cosine Transform type I
-    dct2,       ///< Discrete Cosine Transform type II
-    dct3,       ///< Discrete Cosine Transform type III
-    dct4,       ///< Discrete Cosine Transform type IV
-    // Disabled as no implementation is available
-    // dct5,       ///< Discrete Cosine Transform type V
-    // dct6,       ///< Discrete Cosine Transform type VI
-    // dct7,       ///< Discrete Cosine Transform type VII
-    // dct8,       ///< Discrete Cosine Transform type VIII
-
-    dst1,       ///< Discrete Sine Transform type I
-    dst2,       ///< Discrete Sine Transform type II
-    dst3,       ///< Discrete Sine Transform type III
-    dst4,       ///< Discrete Sine Transform type IV
-    // Disabled as no implementation is available
-    // dst5,       ///< Discrete Sine Transform type V
-    // dst6,       ///< Discrete Sine Transform type VI
-    // dst7,       ///< Discrete Sine Transform type VII
-    // dst8,       ///< Discrete Sine Transform type VIII
-
-    dct = dct2, ///< default DCT type
-    dst = dst2, ///< default DST type
+    dct1 = afft_dtt_Type_dct1, ///< Discrete Cosine Transform type I
+    dct2 = afft_dtt_Type_dct2, ///< Discrete Cosine Transform type II
+    dct3 = afft_dtt_Type_dct3, ///< Discrete Cosine Transform type III
+    dct4 = afft_dtt_Type_dct4, ///< Discrete Cosine Transform type IV
+    dct5 = afft_dtt_Type_dct5, ///< Discrete Cosine Transform type V
+    dct6 = afft_dtt_Type_dct6, ///< Discrete Cosine Transform type VI
+    dct7 = afft_dtt_Type_dct7, ///< Discrete Cosine Transform type VII
+    dct8 = afft_dtt_Type_dct8, ///< Discrete Cosine Transform type VIII
+    dst1 = afft_dtt_Type_dst1, ///< Discrete Sine Transform type I
+    dst2 = afft_dtt_Type_dst2, ///< Discrete Sine Transform type II
+    dst3 = afft_dtt_Type_dst3, ///< Discrete Sine Transform type III
+    dst4 = afft_dtt_Type_dst4, ///< Discrete Sine Transform type IV
+    dst5 = afft_dtt_Type_dst5, ///< Discrete Sine Transform type V
+    dst6 = afft_dtt_Type_dst6, ///< Discrete Sine Transform type VI
+    dst7 = afft_dtt_Type_dst7, ///< Discrete Sine Transform type VII
+    dst8 = afft_dtt_Type_dst8, ///< Discrete Sine Transform type VIII
+    dct  = afft_dtt_Type_dct,  ///< alias for Discrete Cosine Transform type II
+    dst  = afft_dtt_Type_dst,  ///< alias for Discrete Sine Transform type II
   };
 
   /// @brief DTT Parameters

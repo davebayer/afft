@@ -36,67 +36,42 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Memory layout type
-  enum class MemoryLayout : std::uint8_t
+  enum class MemoryLayout : afft_MemoryLayout
   {
-    centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
-    distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
+    centralized = afft_MemoryLayout_centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
+    distributed = afft_MemoryLayout_distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
   };
 
   /// @brief Alignment of a data type
-  enum class Alignment : std::size_t
+  enum class Alignment : afft_Alignment
   {
     defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
-    simd128    = 16,                               ///< 128-bit SIMD alignment
-    simd256    = 32,                               ///< 256-bit SIMD alignment
-    simd512    = 64,                               ///< 512-bit SIMD alignment
-    simd1024   = 128,                              ///< 1024-bit SIMD alignment
-    simd2048   = 256,                              ///< 2048-bit SIMD alignment
+    simd128    = afft_Alignment_simd128,           ///< 128-bit SIMD alignment
+    simd256    = afft_Alignment_simd256,           ///< 256-bit SIMD alignment
+    simd512    = afft_Alignment_simd512,           ///< 512-bit SIMD alignment
+    simd1024   = afft_Alignment_simd1024,          ///< 1024-bit SIMD alignment
+    simd2048   = afft_Alignment_simd2048,          ///< 2048-bit SIMD alignment
 
-    sse    = simd128,  ///< SSE alignment
-    sse2   = simd128,  ///< SSE2 alignment
-    sse3   = simd128,  ///< SSE3 alignment
-    sse4   = simd128,  ///< SSE4 alignment
-    sse4_1 = simd128,  ///< SSE4.1 alignment
-    sse4_2 = simd128,  ///< SSE4.2 alignment
-    avx    = simd256,  ///< AVX alignment
-    avx2   = simd256,  ///< AVX2 alignment
-    avx512 = simd512,  ///< AVX-512 alignment
-    neon   = simd128,  ///< NEON alignment
-    sve    = simd2048, ///< SVE alignment
+    sse        = afft_Alignment_sse,               ///< SSE alignment
+    sse2       = afft_Alignment_sse2,              ///< SSE2 alignment
+    sse3       = afft_Alignment_sse3,              ///< SSE3 alignment
+    sse4       = afft_Alignment_sse4,              ///< SSE4 alignment
+    sse4_1     = afft_Alignment_sse4_1,            ///< SSE4.1 alignment
+    sse4_2     = afft_Alignment_sse4_2,            ///< SSE4.2 alignment
+    avx        = afft_Alignment_avx,               ///< AVX alignment
+    avx2       = afft_Alignment_avx2,              ///< AVX2 alignment
+    avx512     = afft_Alignment_avx512,            ///< AVX-512 alignment
+    neon       = afft_Alignment_neon,              ///< NEON alignment
+    sve        = afft_Alignment_sve,               ///< SVE alignment
 
-    /// @brief native alignment
-# if defined(__AVX512F__)
-    cpuNative = avx512,
-# elif defined(__AVX2__)
-    cpuNative = avx2,
-# elif defined(__AVX__)
-    cpuNative = avx,
-# elif defined(__SSE4_2__)
-    cpuNative = sse4_2,
-# elif defined(__SSE4_1__)
-    cpuNative = sse4_1,
-# elif defined(__SSE4__)
-    cpuNative = sse4,
-# elif defined(__SSE3__)
-    cpuNative = sse3,
-# elif defined(__SSE2__) || defined(_M_AMD64) || defined(_M_X64) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
-    cpuNative = sse2,
-# elif defined(__SSE__) || (defined(_M_IX86_FP) && _M_IX86_FP == 1)
-    cpuNative = sse,
-# elif defined(__ARM_NEON) || defined(_M_ARM_NEON)
-    cpuNative = neon,
-# elif (defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE == 1) || (defined(__ARM_FEATURE_SVE2) && __ARM_FEATURE_SVE2 == 1)
-    cpuNative = sve,
-# else
-    cpuNative = defaultNew,
-# endif
+    cpuNative  = afft_Alignment_cpuNative,         ///< cpu native alignment
   };
 
   /// @brief Complex number format
-  enum class ComplexFormat : std::uint8_t
+  enum class ComplexFormat : afft_ComplexFormat
   {
-    interleaved, ///< interleaved complex format
-    planar,      ///< planar complex format
+    interleaved = afft_ComplexFormat_interleaved, ///< interleaved complex format
+    planar      = afft_ComplexFormat_planar,      ///< planar complex format
   };
   
   /// @brief Memory layout of the centralized transform

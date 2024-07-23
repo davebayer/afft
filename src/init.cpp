@@ -22,29 +22,38 @@
   SOFTWARE.
 */
 
-#include <afft/afft.h>
-#include <afft/afft.hpp>
+#include "afft/afft.hpp"
 
-/// @brief Initialize the library
-extern "C" afft_Error afft_init()
+/**
+ * @brief Initialize the library.
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+extern "C" afft_Error afft_init(afft_ErrorDetails* errDetails)
 try
 {
   afft::init();
+
   return afft_Error_success;
 }
 catch (...)
 {
-  return afft_Error_internal;
+  return handleException(errDetails);
 }
 
-/// @brief Finalize the library
-extern "C" afft_Error afft_finalize()
+/**
+ * @brief Finalize the library.
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+extern "C" afft_Error afft_finalize(afft_ErrorDetails* errDetails)
 try
 {
   afft::finalize();
+  
   return afft_Error_success;
 }
 catch (...)
 {
-  return afft_Error_internal;
+  return handleException(errDetails);
 }

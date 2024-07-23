@@ -34,27 +34,24 @@
 
 AFFT_EXPORT namespace afft
 {
-  /**
-   * @struct Version
-   * @brief Version
-   */
-  struct Version
-  {
-    int major{}; ///< major version
-    int minor{}; ///< minor version
-    int patch{}; ///< patch version
-  };
+  /// @brief Version structure
+  using Version = afft_Version;
 
-  inline std::string toString(const Version &version)
+  /**
+   * @brief Convert a version to a string.
+   * @param version Version
+   * @return std::string
+   */
+  [[nodiscard]] inline std::string toString(const Version &version)
   {
-    return detail::cformat("%d.%d.%d", version.major, version.minor, version.patch);
+    return detail::cformat(AFFT_VERSION_FORMAT, version.major, version.minor, version.patch);
   }
 
   /**
    * @brief Get the version of the AFFT library.
    * @return Version
    */
-  constexpr Version getVersion() noexcept
+  [[nodiscard]] constexpr Version getVersion() noexcept
   {
     return {AFFT_VERSION_MAJOR, AFFT_VERSION_MINOR, AFFT_VERSION_PATCH};
   }
@@ -65,7 +62,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the clFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace clfft
 
   namespace cufft
@@ -74,7 +71,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the cuFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace cufft
 
   namespace fftw3
@@ -83,7 +80,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the FFTW library.
      * @return Version
      */
-    Version getVersion(Precision precision = Precision::_double) noexcept;
+    [[nodiscard]] Version getVersion(Precision precision = Precision::_double) noexcept;
   } // namespace fftw3
 
   namespace heffte
@@ -92,7 +89,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the HeFFTe library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace heffte
 
   namespace hipfft
@@ -101,7 +98,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the hipFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace hipfft
 
   namespace mkl
@@ -110,7 +107,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the MKL library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace mkl
 
   namespace pocketfft
@@ -119,7 +116,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the PocketFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace pocketfft
 
   namespace rocfft
@@ -128,7 +125,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the rocFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace rocfft
 
   namespace vkfft
@@ -137,7 +134,7 @@ AFFT_EXPORT namespace afft
      * @brief Get the version of the VkFFT library.
      * @return Version
      */
-    Version getVersion() noexcept;
+    [[nodiscard]] Version getVersion() noexcept;
   } // namespace vkfft
 } // namespace afft
 
@@ -149,7 +146,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the clFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version clfft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version clfft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_CLFFT
     return {clfftVersionMajor, clfftVersionMinor, clfftVersionPatch};
@@ -162,7 +159,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the cuFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version cufft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version cufft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_CUFFT
     return {CUFFT_VER_MAJOR, CUFFT_VER_MINOR, CUFFT_VER_PATCH};
@@ -175,7 +172,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the FFTW library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version fftw3::getVersion([[maybe_unused]] Precision precision) noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version fftw3::getVersion([[maybe_unused]] Precision precision) noexcept
   {
     Version version{};
 
@@ -224,7 +221,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the HeFFTe library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version heffte::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version heffte::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_HEFFTE
     return {Heffte_VERSION_MAJOR, Heffte_VERSION_MINOR, Heffte_VERSION_PATCH};
@@ -237,7 +234,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the hipFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version hipfft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version hipfft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_HIPFFT
     return {hipfftVersionMajor, hipfftVersionMinor, hipfftVersionPatch};
@@ -250,7 +247,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the MKL library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version mkl::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version mkl::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_MKL
     MKLVersion version;
@@ -265,7 +262,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the PocketFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version pocketfft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version pocketfft::getVersion() noexcept
   {
     return {}; // PocketFFT does not provide a version
   }
@@ -274,7 +271,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the rocFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version rocfft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version rocfft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_ROCFFT
     return {rocfft_version_major, rocfft_version_minor, rocfft_version_patch};
@@ -287,7 +284,7 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the VkFFT library.
    * @return Version
    */
-  AFFT_HEADER_ONLY_INLINE Version vkfft::getVersion() noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version vkfft::getVersion() noexcept
   {
 # ifdef AFFT_ENABLE_VKFFT
     const int version = VkFFTGetVersion();

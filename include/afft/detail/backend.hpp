@@ -34,30 +34,12 @@
 
 namespace afft
 {
-namespace detail
-{  
-  /// @brief Underlying type of the BackendMask enum
-  using BackendMaskUnderlyingType = std::uint16_t;
-
-  // Check that the BackendMask underlying type is unsigned
-  static_assert(std::is_unsigned_v<BackendMaskUnderlyingType>);
-} // namespace detail
-
   // Forward declarations
-  AFFT_EXPORT enum class Backend : detail::BackendMaskUnderlyingType;
-  AFFT_EXPORT enum class BackendMask : detail::BackendMaskUnderlyingType;
+  AFFT_EXPORT enum class Backend : afft_Backend;
+  AFFT_EXPORT enum class BackendMask : afft_BackendMask;
 
 namespace detail
 {
-  /**
-   * @brief Checks if the BackendMask underlying type has sufficient size to store all Backend values.
-   * @return True if the BackendMask underlying type has sufficient size, false otherwise.
-   */
-  [[nodiscard]] constexpr bool backendMaskHasSufficientUnderlyingTypeSize(std::size_t backendCount)
-  {
-    return (sizeof(BackendMaskUnderlyingType) * CHAR_BIT) >= backendCount;
-  }
-
   /**
    * @brief Applies a unary operation to a BackendMask.
    * @tparam UnOp Type of the unary operation.

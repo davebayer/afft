@@ -44,7 +44,6 @@ typedef enum
   afft_Error_success,         ///< No error
   afft_Error_internal,        ///< Internal error
   afft_Error_invalidArgument, ///< Invalid argument
-  afft_Error_invalidPlan,     ///< Invalid plan
   // Multi-process errors
   afft_Error_mpi,             ///< MPI error
   // Target errors

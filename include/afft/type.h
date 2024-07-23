@@ -38,18 +38,17 @@ extern "C"
 typedef uint8_t afft_Precision;
 
 /// @brief Precision enumeration
-#define afft_Precision_bf16   (afft_Precision)0 ///< Google Brain's brain floating-point format
-#define afft_Precision_f16    (afft_Precision)1 ///< IEEE 754 half-precision binary floating-point format
-#define afft_Precision_f32    (afft_Precision)2 ///< IEEE 754 single-precision binary floating-point format
-#define afft_Precision_f64    (afft_Precision)3 ///< IEEE 754 double-precision binary floating-point format
-#define afft_Precision_f80    (afft_Precision)4 ///< x86 80-bit extended precision format
-#define afft_Precision_f64f64 (afft_Precision)5 ///< double double precision (f128 simulated with two f64)
-#define afft_Precision_f128   (afft_Precision)6 ///< IEEE 754 quadruple-precision binary floating-point format
-
+#define afft_Precision_bf16         (afft_Precision)0     ///< Google Brain's brain floating-point format
+#define afft_Precision_f16          (afft_Precision)1     ///< IEEE 754 half-precision binary floating-point format
+#define afft_Precision_f32          (afft_Precision)2     ///< IEEE 754 single-precision binary floating-point format
+#define afft_Precision_f64          (afft_Precision)3     ///< IEEE 754 double-precision binary floating-point format
+#define afft_Precision_f80          (afft_Precision)4     ///< x86 80-bit extended precision format
+#define afft_Precision_f64f64       (afft_Precision)5     ///< double double precision (f128 simulated with two f64)
+#define afft_Precision_f128         (afft_Precision)6     ///< IEEE 754 quadruple-precision binary floating-point format
 #define afft_Precision_float        afft_Precision_f32    ///< Precision of float
 #define afft_Precision_double       afft_Precision_f64    ///< Precision of double
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024 && LDBL_MIN_EXP == -1021
-# define afft_Precision_float       afft_Precision_f64    ///< Precision of long double
+# define afft_Precision_longDouble  afft_Precision_f64    ///< Precision of long double
 #elif LDBL_MANT_DIG == 64 && LDBL_MAX_EXP == 16384 && LDBL_MIN_EXP == -16381
 # define afft_Precision_longDouble  afft_Precision_f80    ///< Precision of long double
 #elif (LDBL_MANT_DIG >=   105 && LDBL_MANT_DIG <=   107) && \

@@ -22,8 +22,7 @@
   SOFTWARE.
 */
 
-#include "common.hpp"
-#include "version.hpp"
+#include "afft/afft.hpp"
 
 /**
  * @brief Get the version of the clFFT library.
@@ -31,7 +30,7 @@
  */
 extern "C" afft_Version afft_clfft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::clfft::getVersion());
+  return afft::clfft::getVersion();
 }
 
 /**
@@ -40,7 +39,7 @@ extern "C" afft_Version afft_clfft_getVersion()
  */
 extern "C" afft_Version afft_cufft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::cufft::getVersion());
+  return afft::cufft::getVersion();
 }
 
 /**
@@ -51,7 +50,7 @@ extern "C" afft_Version afft_cufft_getVersion()
 extern "C" afft_Version afft_fftw3_getVersion(afft_Precision precision)
 try
 {
-  return Convert<afft::Version>::toC(afft::fftw3::getVersion(Convert<afft::Precision>::fromC(precision)));
+  return afft::fftw3::getVersion(static_cast<afft::Precision>(precision));
 }
 catch (...)
 {
@@ -64,7 +63,7 @@ catch (...)
  */
 extern "C" afft_Version afft_heffte_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::heffte::getVersion());
+  return afft::heffte::getVersion();
 }
 
 /**
@@ -73,7 +72,7 @@ extern "C" afft_Version afft_heffte_getVersion()
  */
 extern "C" afft_Version afft_hipfft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::hipfft::getVersion());
+  return afft::hipfft::getVersion();
 }
 
 /**
@@ -82,7 +81,7 @@ extern "C" afft_Version afft_hipfft_getVersion()
  */
 extern "C" afft_Version afft_mkl_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::mkl::getVersion());
+  return afft::mkl::getVersion();
 }
 
 /**
@@ -91,7 +90,7 @@ extern "C" afft_Version afft_mkl_getVersion()
  */
 extern "C" afft_Version afft_pocketfft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::pocketfft::getVersion());
+  return afft::pocketfft::getVersion();
 }
 
 /**
@@ -100,7 +99,7 @@ extern "C" afft_Version afft_pocketfft_getVersion()
  */
 extern "C" afft_Version afft_rocfft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::rocfft::getVersion());
+  return afft::rocfft::getVersion();
 }
 
 /**
@@ -109,5 +108,5 @@ extern "C" afft_Version afft_rocfft_getVersion()
  */
 extern "C" afft_Version afft_vkfft_getVersion()
 {
-  return Convert<afft::Version>::toC(afft::vkfft::getVersion());
+  return afft::vkfft::getVersion();
 }

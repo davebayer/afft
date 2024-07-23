@@ -74,27 +74,8 @@
 // # endif
 #endif
 
-// Include target backend headers
-#ifdef AFFT_ENABLE_CUDA
-# include <cuda.h>
-# include <cuda_runtime.h>
-# include <nvrtc.h>
-#endif
-#ifdef AFFT_ENABLE_HIP
-# include <hip/hip_runtime.h>
-#endif
-#ifdef AFFT_ENABLE_OPENCL
-# if defined(__APPLE__) || defined(__MACOSX)
-#   include <OpenCL/cl.h>
-# else
-#   include <CL/cl.h>
-# endif
-#endif
-
-// Include multi-process backend headers
-#ifdef AFFT_ENABLE_MPI
-# include <mpi.h>
-#endif
+// Include afft C API
+#include "../afft.h"
 
 #ifdef AFFT_HEADER_ONLY
  // Include clFFT header

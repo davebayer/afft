@@ -46,17 +46,21 @@ static inline void clearErrorDetailsRetval(afft_ErrorDetails& errDetails) noexce
 
 /**
  * @brief Handle exception.
- * @param e Exception.
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error handleException(const afft::Exception& e, afft_ErrorDetails* errDetails) noexcept
+afft_Error handleException(afft_ErrorDetails* errDetails) noexcept
+try
+{
+  throw;
+}
+catch (const afft::Exception& e)
 {
   if (errDetails != nullptr)
   {
     setErrorDetailsMessage(*errDetails, e.what());
 
-    auto setRetval = [&](auto& member) noexcept -> void
+    auto setRetvalMember = [&](auto& member) noexcept -> void
     {
       using T = std::decay_t<decltype(member)>;
 
@@ -76,28 +80,28 @@ afft_Error handleException(const afft::Exception& e, afft_ErrorDetails* errDetai
     {
 #   ifdef AFFT_ENABLE_MPI
     case afft::Error::mpi:
-      setRetval(errDetails->retval.mpi);
+      setRetvalMember(errDetails->retval.mpi);
       break;
 #   endif
 #   ifdef AFFT_ENABLE_CUDA
     case afft::Error::cudaDriver:
-      setRetval(errDetails->retval.cudaDriver);
+      setRetvalMember(errDetails->retval.cudaDriver);
       break;
     case afft::Error::cudaRuntime:
-      setRetval(errDetails->retval.cudaRuntime);
+      setRetvalMember(errDetails->retval.cudaRuntime);
       break;
     case afft::Error::cudaRtc:
-      setRetval(errDetails->retval.cudaRtc);
+      setRetvalMember(errDetails->retval.cudaRtc);
       break;
 #   endif
 #   ifdef AFFT_ENABLE_HIP
     case afft::Error::hip:
-      setRetval(errDetails->retval.hip);
+      setRetvalMember(errDetails->retval.hip);
       break;
 #   endif
 #   ifdef AFFT_ENABLE_OPENCL
     case afft::Error::opencl:
-      setRetval(errDetails->retval.opencl);
+      setRetvalMember(errDetails->retval.opencl);
       break;
 #   endif
     default:
@@ -108,18 +112,21 @@ afft_Error handleException(const afft::Exception& e, afft_ErrorDetails* errDetai
 
   return Convert<afft::Error>::toC(e.getError());
 }
-
-/**
- * @brief Handle exception.
- * @param e Exception.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error handleException(const std::exception& e, afft_ErrorDetails* errDetails) noexcept
+catch (const std::exception& e)
 {
   if (errDetails != nullptr)
   {
     setErrorDetailsMessage(*errDetails, e.what());
+    clearErrorDetailsRetval(*errDetails);
+  }
+
+  return afft_Error_internal;
+}
+catch (...)
+{
+  if (errDetails != nullptr)
+  {
+    setErrorDetailsMessage(*errDetails, "Unknown error");
     clearErrorDetailsRetval(*errDetails);
   }
 

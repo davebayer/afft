@@ -42,8 +42,8 @@ extern "C"
 {
 #endif
 
-/// @brief Opaque plan structure
-typedef struct _afft_Plan afft_Plan;
+/// @brief Plan structure
+typedef struct afft_Plan afft_Plan;
 
 /// @brief Plan parameters structure
 typedef struct afft_Plan_Parameters afft_Plan_Parameters;

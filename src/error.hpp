@@ -55,19 +55,10 @@ struct Convert<afft::Error>
 };
 
 /**
- * @brief Handle afft::Exception.
- * @param e Exception.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error handleException(const afft::Exception& e, afft_ErrorDetails* errDetails) noexcept;
-
-/**
  * @brief Handle exception.
- * @param e Exception.
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error handleException(const std::exception& e, afft_ErrorDetails* errDetails) noexcept
+afft_Error handleException(afft_ErrorDetails* errDetails) noexcept;
 
 #endif /* ERROR_HPP */

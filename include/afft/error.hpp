@@ -32,33 +32,32 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Maximum error message size
-  inline constexpr std::size_t maxErrorMessageSize{128};
+  inline constexpr std::size_t maxErrorMessageSize{AFFT_MAX_ERROR_MESSAGE_SIZE};
 
   /// @brief Error codes
   enum class Error
   {
     // General errors
-    internal = 1,    ///< Internal error
-    invalidArgument, ///< Invalid argument
-    invalidPlan,     ///< Invalid plan
+    internal        = afft_Error_internal,        ///< Internal error
+    invalidArgument = afft_Error_invalidArgument, ///< Invalid argument
     // Multi-process errors
-    mpi,             ///< MPI error
+    mpi             = afft_Error_mpi,             ///< MPI error
     // Target errors
-    cudaDriver,      ///< CUDA driver error
-    cudaRuntime,     ///< CUDA runtime error
-    cudaRtc,         ///< CUDA RTC error
-    hip,             ///< HIP error
-    opencl,          ///< OpenCL error
+    cudaDriver      = afft_Error_cudaDriver,      ///< CUDA driver error
+    cudaRuntime     = afft_Error_cudaRuntime,     ///< CUDA runtime error
+    cudaRtc         = afft_Error_cudaRtc,         ///< CUDA RTC error
+    hip             = afft_Error_hip,             ///< HIP error
+    opencl          = afft_Error_opencl,          ///< OpenCL error
     // Backend errors
-    clfft,           ///< clFFT error
-    cufft,           ///< cuFFT error
-    fftw3,           ///< FFTW3 error
-    heffte,          ///< HeFFTe error
-    hipfft,          ///< hipFFT error
-    mkl,             ///< MKL error
-    pocketfft,       ///< PocketFFT error
-    rocfft,          ///< rocFFT error
-    vkfft,           ///< VkFFT error
+    clfft           = afft_Error_clfft,           ///< clFFT error
+    cufft           = afft_Error_cufft,           ///< cuFFT error
+    fftw3           = afft_Error_fftw3,           ///< FFTW3 error
+    heffte          = afft_Error_heffte,          ///< HeFFTe error
+    hipfft          = afft_Error_hipfft,          ///< hipFFT error
+    mkl             = afft_Error_mkl,             ///< MKL error
+    pocketfft       = afft_Error_pocketfft,       ///< PocketFFT error
+    rocfft          = afft_Error_rocfft,          ///< rocFFT error
+    vkfft           = afft_Error_vkfft,           ///< VkFFT error
   };
 
   /// @brief Error return value returned by other libraries

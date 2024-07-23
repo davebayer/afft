@@ -37,9 +37,24 @@
 #include "detail/Desc.hpp"
 #include "detail/validate.hpp"
 
+namespace afft
+{
+  // Forward declaration.
+  class Plan;
+};
+
+/// @brief C plan structure. Do not use.
+struct afft_Plan
+{
+  friend class afft::Plan;
+
+  private:
+    afft_Plan() = default;
+};
+
 AFFT_EXPORT namespace afft
 {
-  class Plan : public std::enable_shared_from_this<Plan>
+  class Plan : public afft_Plan, public std::enable_shared_from_this<Plan>
   {
     friend struct detail::DescGetter; 
 

@@ -169,7 +169,7 @@ typedef uint8_t afft_heffte_cpu_Backend;
 typedef uint8_t afft_heffte_cuda_Backend;
 
 /// @brief HeFFTe gpu backend enumeration
-#define afft_heffte_gpu_Backend_cufft (afft_heffte_gpu_Backend_cufft)0 ///< cuFFT backend
+#define afft_heffte_gpu_Backend_cufft (afft_heffte_cuda_Backend)0 ///< cuFFT backend
 
 /// @brief HeFFTe hip backend type
 typedef uint8_t afft_heffte_hip_Backend;

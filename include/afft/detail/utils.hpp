@@ -295,15 +295,6 @@ namespace afft::detail
 
     I quotient;  ///< Quotient.
     I remainder; ///< Remainder.
-
-    /**
-     * @brief Converts the result to a tuple.
-     * @return Tuple containing the quotient and remainder.
-     */
-    [[nodiscard]] constexpr operator std::tuple<I, I>() const noexcept
-    {
-      return std::make_tuple(quotient, remainder);
-    }
   };
 
   /**
@@ -333,15 +324,6 @@ namespace afft::detail
     
     MaxDimBuffer<I> nembed; ///< NEmbed buffer.
     I               stride; ///< Stride.
-
-    /**
-     * @brief Converts the object to a tuple.
-     * @return Tuple containing the NEmbed and stride
-     */
-    [[nodiscard]] constexpr operator std::tuple<const MaxDimBuffer<I>&, I>() const noexcept
-    {
-      return std::make_tuple(nembed, stride);
-    }
   };
 
   /**
