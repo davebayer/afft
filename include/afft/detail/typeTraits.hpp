@@ -63,32 +63,45 @@ namespace afft::detail
   template<>
   struct TransformParametersSelect<Transform::dft>
   {
-    using Type = afft::dft::Parameters;
+    using CType   = afft_dft_Parameters;
+    using CxxType = afft::dft::Parameters;
   };
 
   /// @brief Specialization for dht transform.
   template<>
   struct TransformParametersSelect<Transform::dht>
   {
-    using Type = afft::dht::Parameters;
+    using CType   = afft_dht_Parameters;
+    using CxxType = afft::dht::Parameters;
   };
 
   /// @brief Specialization for dtt transform.
   template<>
   struct TransformParametersSelect<Transform::dtt>
   {
-    using Type = afft::dtt::Parameters;
+    using CType   = afft_dtt_Parameters;
+    using CxxType = afft::dtt::Parameters;
   };
 
   /**
-   * @brief Check if the type is TransformParameters.
+   * @brief Check if the type is C++ TransformParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsTransformParameters
+  struct IsCxxTransformParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::dft::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::dht::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::dtt::Parameters>> {};
+
+  /**
+   * @brief Check if the type is C TransformParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCTransformParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_dft_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_dht_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_dtt_Parameters>> {};
 
   /**
    * @brief MpBackendParameters type for given backend.
@@ -101,24 +114,34 @@ namespace afft::detail
   template<>
   struct MpBackendParametersSelect<MpBackend::none>
   {
-    using Type = afft::SingleProcessParameters;
+    using CType   = void;
+    using CxxType = afft::SingleProcessParameters;
   };
 
   /// @brief Specialization for mpi backend.
   template<>
   struct MpBackendParametersSelect<MpBackend::mpi>
   {
-    using Type = afft::mpi::Parameters;
+    using CType   = afft_mpi_Parameters;
+    using CxxType = afft::mpi::Parameters;
   };
 
   /**
-   * @brief Check if the type is MpBackendParameters.
+   * @brief Check if the type is C++ MpBackendParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsMpBackendParameters
+  struct IsCxxMpBackendParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::SingleProcessParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::Parameters>> {};
+
+  /**
+   * @brief Check if the type is C MpBackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCMpBackendParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_Parameters>> {};
 
   /**
    * @brief TargetParameters type for given target.
@@ -131,40 +154,55 @@ namespace afft::detail
   template<>
   struct TargetParametersSelect<Target::cpu>
   {
-    using Type = afft::cpu::Parameters;
+    using CType   = afft_cpu_Parameters;
+    using CxxType = afft::cpu::Parameters;
   };
 
   /// @brief Specialization for CUDA target.
   template<>
   struct TargetParametersSelect<Target::cuda>
   {
-    using Type = afft::cuda::Parameters;
+    using CType   = afft_cuda_Parameters;
+    using CxxType = afft::cuda::Parameters;
   };
 
   /// @brief Specialization for HIP target.
   template<>
   struct TargetParametersSelect<Target::hip>
   {
-    using Type = afft::hip::Parameters;
+    using CType   = afft_hip_Parameters;
+    using CxxType = afft::hip::Parameters;
   };
 
   /// @brief Specialization for OpenCL target.
   template<>
   struct TargetParametersSelect<Target::opencl>
   {
-    using Type = afft::opencl::Parameters;
+    using CType   = afft_opencl_Parameters;
+    using CxxType = afft::opencl::Parameters;
   };
 
   /**
-   * @brief Check if the type is TargetParameters.
+   * @brief Check if the type is C++ TargetParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsTargetParameters
+  struct IsCxxTargetParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters>> {};
+
+  /**
+   * @brief Check if the type is C TargetParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCTargetParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_cpu_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_Parameters>> {};
 
   /**
    * @brief MemoryLayoutParameters type for given memory layout.
@@ -177,24 +215,35 @@ namespace afft::detail
   template<>
   struct MemoryLayoutParametersSelect<MemoryLayout::centralized>
   {
-    using Type = afft::CentralizedMemoryLayout;
+    using CType   = afft_CentralizedMemoryLayout;
+    using CxxType = afft::CentralizedMemoryLayout;
   };
 
   /// @brief Specialization for distributed memory layout.
   template<>
   struct MemoryLayoutParametersSelect<MemoryLayout::distributed>
   {
-    using Type = afft::DistributedMemoryLayout;
+    using CType   = afft_DistributedMemoryLayout;
+    using CxxType = afft::DistributedMemoryLayout;
   };
 
   /**
-   * @brief Check if the type is MemoryLayoutParameters.
+   * @brief Check if the type is C++ MemoryLayoutParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsMemoryLayoutParameters
+  struct IsCxxMemoryLayoutParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::CentralizedMemoryLayout> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::DistributedMemoryLayout>> {};
+
+  /**
+   * @brief Check if the type is C MemoryLayoutParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCMemoryLayoutParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_CentralizedMemoryLayout> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_DistributedMemoryLayout>> {};
 
   /**
    * @brief BackendParameters type for given multi-process backend and target.
@@ -208,57 +257,64 @@ namespace afft::detail
   template<>
   struct BackendParametersSelect<MpBackend::none, Target::cpu>
   {
-    using Type = afft::cpu::BackendParameters;
+    using CType   = afft_cpu_BackendParameters;
+    using CxxType = afft::cpu::BackendParameters;
   };
 
   /// @brief Specialization for single-process CUDA target.
   template<>
   struct BackendParametersSelect<MpBackend::none, Target::cuda>
   {
-    using Type = afft::cuda::BackendParameters;
+    using CType   = afft_cuda_BackendParameters;
+    using CxxType = afft::cuda::BackendParameters;
   };
 
   /// @brief Specialization for single-process HIP target.
   template<>
   struct BackendParametersSelect<MpBackend::none, Target::hip>
   {
-    using Type = afft::hip::BackendParameters;
+    using CType   = afft_hip_BackendParameters;
+    using CxxType = afft::hip::BackendParameters;
   };
 
   /// @brief Specialization for single-process OpenCL target.
   template<>
   struct BackendParametersSelect<MpBackend::none, Target::opencl>
   {
-    using Type = afft::opencl::BackendParameters;
+    using CType   = afft_opencl_BackendParameters;
+    using CxxType = afft::opencl::BackendParameters;
   };
 
   /// @brief Specialization for MPI cpu target.
   template<>
   struct BackendParametersSelect<MpBackend::mpi, Target::cpu>
   {
-    using Type = afft::mpi::cpu::BackendParameters;
+    using CType   = afft_mpi_cpu_BackendParameters;
+    using CxxType = afft::mpi::cpu::BackendParameters;
   };
 
   /// @brief Specialization for MPI CUDA target.
   template<>
   struct BackendParametersSelect<MpBackend::mpi, Target::cuda>
   {
-    using Type = afft::mpi::cuda::BackendParameters;
+    using CType   = afft_mpi_cuda_BackendParameters;
+    using CxxType = afft::mpi::cuda::BackendParameters;
   };
 
   /// @brief Specialization for MPI HIP target.
   template<>
   struct BackendParametersSelect<MpBackend::mpi, Target::hip>
   {
-    using Type = afft::mpi::hip::BackendParameters;
+    using CType   = afft_mpi_hip_BackendParameters;
+    using CxxType = afft::mpi::hip::BackendParameters;
   };
 
   /**
-   * @brief Check if the type is BackendParameters.
+   * @brief Check if the type is C++ BackendParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsBackendParameters
+  struct IsCxxBackendParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::BackendParameters> ||
@@ -266,6 +322,20 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cpu::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cuda::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::hip::BackendParameters>> {};
+
+  /**
+   * @brief Check if the type is C BackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCBackendParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_cpu_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_cpu_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_cuda_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_hip_BackendParameters>> {};
 
   /**
    * @brief ExecutionParameters type for given architecture.
@@ -278,40 +348,55 @@ namespace afft::detail
   template<>
   struct ExecutionParametersSelect<Target::cpu>
   {
-    using Type = afft::cpu::ExecutionParameters;
+    using CType   = afft_cpu_ExecutionParameters;
+    using CxxType = afft::cpu::ExecutionParameters;
   };
 
   /// @brief Specialization for CUDA target.
   template<>
   struct ExecutionParametersSelect<Target::cuda>
   {
-    using Type = afft::cuda::ExecutionParameters;
+    using CType   = afft_cuda_ExecutionParameters;
+    using CxxType = afft::cuda::ExecutionParameters;
   };
 
   /// @brief Specialization for HIP target.
   template<>
   struct ExecutionParametersSelect<Target::hip>
   {
-    using Type = afft::hip::ExecutionParameters;
+    using CType   = afft_hip_ExecutionParameters;
+    using CxxType = afft::hip::ExecutionParameters;
   };
 
   /// @brief Specialization for OpenCL target.
   template<>
   struct ExecutionParametersSelect<Target::opencl>
   {
-    using Type = afft::opencl::ExecutionParameters;
+    using CType   = afft_opencl_ExecutionParameters;
+    using CxxType = afft::opencl::ExecutionParameters;
   };
 
   /**
-   * @brief Check if the type is ExecutionParameters.
+   * @brief Check if the type is C++ ExecutionParameters.
    * @tparam T The type.
    */
   template<typename T>
-  struct IsExecutionParameters
+  struct IsCxxExecutionParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::ExecutionParameters>> {};
+
+  /**
+   * @brief Check if the type is C ExecutionParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCExecutionParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_cpu_ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_ExecutionParameters>> {};
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

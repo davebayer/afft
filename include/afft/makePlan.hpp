@@ -202,7 +202,7 @@ AFFT_EXPORT namespace afft
 
     init();
 
-    const auto& desc = detail::Desc{transformParams, multiProcessParams, targetParams, memoryLayout};
+    const auto desc = detail::Desc{transformParams, multiProcessParams, targetParams, memoryLayout};
 
     return detail::makePlan(desc, backendParams);
   }

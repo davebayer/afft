@@ -60,10 +60,14 @@ namespace afft::detail
                 static_cast<MpDesc&>(*this),
                 static_cast<TargetDesc&>(*this)}
       {
-        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
-        static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
-        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
-        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
+        static_assert(isTransformParameters<TransformParamsT> || c::isTransformParameters<TransformParamsT>,
+                      "TransformParamsT must be a transform parameters type");
+        static_assert(isMpBackendParameters<MpBackendParamsT> || c::isMpBackendParameters<MpBackendParamsT>,
+                      "MpBackendParamsT must be an MPI backend parameters type");
+        static_assert(isTargetParameters<TargetParamsT> || c::isTargetParameters<TargetParamsT>,
+                      "TargetParamsT must be a target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT> || c::isMemoryLayout<MemoryLayoutT>,
+                      "MemoryLayoutT must be a memory layout type");
       }
 
       /// @brief Copy constructor.

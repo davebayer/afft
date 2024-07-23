@@ -116,7 +116,7 @@ AFFT_EXPORT namespace afft
           throw Exception{Error::invalidArgument, "plan multi-process backend does not match requested multi-process backend"};
         }
 
-        return mDesc.getMpParameters<mpBackend>();
+        return mDesc.getCxxMpParameters<mpBackend>();
       }
 
       /// @brief Get the transform.
@@ -140,7 +140,7 @@ AFFT_EXPORT namespace afft
           throw Exception{Error::invalidArgument, "plan transform does not match requested transform"};
         }
 
-        return mDesc.getTransformParameters<transform>();
+        return mDesc.getCxxTransformParameters<transform>();
       }
 
       /**
@@ -176,7 +176,7 @@ AFFT_EXPORT namespace afft
           throw Exception{Error::invalidArgument, "plan target does not match requested target"};
         }
 
-        return mDesc.getTargetParameters<target>();
+        return mDesc.getCxxTargetParameters<target>();
       }
 
       /**
@@ -186,6 +186,24 @@ AFFT_EXPORT namespace afft
       [[nodiscard]] MemoryLayout getMemoryLayout() const noexcept
       {
         return mDesc.getMemoryLayout();
+      }
+
+      /**
+       * @brief Get memory layout parameters.
+       * @tparam memoryLayout Memory layout type
+       * @return Memory layout parameters
+       */
+      template<MemoryLayout memoryLayout>
+      [[nodiscard]] MemoryLayoutParameters<memoryLayout> getMemoryLayoutParameters() const
+      {
+        static_assert(detail::isValid(memoryLayout), "invalid memory layout type");
+
+        if (memoryLayout != getMemoryLayout())
+        {
+          throw Exception{Error::invalidArgument, "plan memory layout does not match requested memory layout"};
+        }
+
+        return mDesc.getCxxMemoryLayoutParameters<memoryLayout>();
       }
 
       /**
