@@ -35,7 +35,7 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Transform type
-  enum class Transform : afft_Transform
+  enum class Transform : ::afft_Transform
   {
     dft = afft_Transform_dft, ///< Discrete Fourier Transform
     dht = afft_Transform_dht, ///< Discrete Hartley Transform
@@ -43,7 +43,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Direction of the transform
-  enum class Direction : afft_Direction
+  enum class Direction : ::afft_Direction
   {
     forward  = afft_Direction_forward,  ///< forward transform
     inverse  = afft_Direction_inverse,  ///< inverse transform
@@ -51,7 +51,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Normalization
-  enum class Normalization : afft_Normalization
+  enum class Normalization : ::afft_Normalization
   {
     none       = afft_Normalization_none,       ///< no normalization
     orthogonal = afft_Normalization_orthogonal, ///< 1/sqrt(N) normalization applied to both forward and inverse transform
@@ -59,7 +59,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Placement of the transform
-  enum class Placement : afft_Placement
+  enum class Placement : ::afft_Placement
   {
     inPlace    = afft_Placement_inPlace,    ///< in-place transform
     outOfPlace = afft_Placement_outOfPlace, ///< out-of-place transform
@@ -85,12 +85,12 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dft
   {
-    enum class Type : afft_dft_Type;
+    enum class Type : ::afft_dft_Type;
     struct Parameters;
   } // namespace dft
 
   /// @brief DFT transform type
-  enum class dft::Type : afft_dft_Type
+  enum class dft::Type : ::afft_dft_Type
   {
     complexToComplex = afft_dft_Type_complexToComplex, ///< complex-to-complex transform
     realToComplex    = afft_dft_Type_realToComplex,    ///< real-to-complex transform
@@ -118,12 +118,12 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dht
   {
-    enum class Type : afft_dht_Type;
+    enum class Type : ::afft_dht_Type;
     struct Parameters;
   } // namespace dht
 
   /// @brief DHT transform type
-  enum class dht::Type : afft_dht_Type
+  enum class dht::Type : ::afft_dht_Type
   {
     separable = afft_dht_Type_separable, ///< separable DHT, computes the DHT along each axis independently
   };
@@ -146,12 +146,12 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace dtt
   {
-    enum class Type : afft_dtt_Type;
+    enum class Type : ::afft_dtt_Type;
     struct Parameters;
   } // namespace dtt
 
   /// @brief DTT transform type
-  enum class dtt::Type : afft_dtt_Type
+  enum class dtt::Type : ::afft_dtt_Type
   {
     dct1 = afft_dtt_Type_dct1, ///< Discrete Cosine Transform type I
     dct2 = afft_dtt_Type_dct2, ///< Discrete Cosine Transform type II
@@ -201,6 +201,30 @@ AFFT_EXPORT namespace afft
            (lhs.source == rhs.source) &&
            (lhs.destination == rhs.destination);
   }
+
+  namespace c
+  {
+    using Transform      = ::afft_Transform;
+    using Direction      = ::afft_Direction;
+    using Normalization  = ::afft_Normalization;
+    using Placement      = ::afft_Placement;
+    using PrecisionTriad = ::afft_PrecisionTriad;
+    namespace dft
+    {
+      using Type       = ::afft_dft_Type;
+      using Parameters = ::afft_dft_Parameters;
+    } // namespace dft
+    namespace dht
+    {
+      using Type       = ::afft_dht_Type;
+      using Parameters = ::afft_dht_Parameters;
+    } // namespace dht
+    namespace dtt
+    {
+      using Type       = ::afft_dtt_Type;
+      using Parameters = ::afft_dtt_Parameters;
+    } // namespace dtt
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_TRANSFORM_HPP */

@@ -35,6 +35,29 @@ AFFT_EXPORT namespace afft
   /// @brief Finalize the library.
   void finalize();
 
+  namespace c
+  {
+    /**
+     * @brief Initialize the library. Should be called before any other afft function.
+     * @param errorDetails Error details.
+     * @return Error code.
+     */
+    [[nodiscard]] inline Error init(ErrorDetails* errorDetails = nullptr) noexcept
+    {
+      return ::afft_init(errorDetails);
+    }
+
+    /**
+     * @brief Finalize the library.
+     * @param errorDetails Error details.
+     * @return Error code.
+     */
+    [[nodiscard]] inline Error finalize(ErrorDetails* errorDetails = nullptr) noexcept
+    {
+      return ::afft_finalize(errorDetails);
+    }
+  } // namespace c
+
 #ifdef AFFT_HEADER_ONLY
   AFFT_HEADER_ONLY_INLINE void init()
   {

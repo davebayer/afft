@@ -35,10 +35,19 @@ AFFT_EXPORT namespace afft
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
 
   /// @brief Axis type
-  using Axis = afft_Axis;
+  using Axis = ::afft_Axis;
 
   /// @brief Size type
-  using Size = afft_Size;
+  using Size = ::afft_Size;
+
+  namespace c
+  {
+    /// @brief Axis type
+    using Axis = ::afft_Axis;
+
+    /// @brief Size type
+    using Size = ::afft_Size;
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_COMMON_HPP */

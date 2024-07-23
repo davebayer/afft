@@ -150,16 +150,16 @@ typedef uint8_t afft_dtt_Type;
 typedef struct afft_dtt_Parameters afft_dtt_Parameters;
 
 /// @brief DTT transform enumeration
-#define afft_dtt_Type_dct1 (afft_dtt_Type)0   //< Discrete Cosine Transform type I
-#define afft_dtt_Type_dct2 (afft_dtt_Type)1   //< Discrete Cosine Transform type II
-#define afft_dtt_Type_dct3 (afft_dtt_Type)2   //< Discrete Cosine Transform type III
-#define afft_dtt_Type_dct4 (afft_dtt_Type)3   //< Discrete Cosine Transform type IV
-#define afft_dtt_Type_dct5 (afft_dtt_Type)4   //< Discrete Cosine Transform type V
-#define afft_dtt_Type_dct6 (afft_dtt_Type)5   //< Discrete Cosine Transform type VI
-#define afft_dtt_Type_dct7 (afft_dtt_Type)6   //< Discrete Cosine Transform type VII
-#define afft_dtt_Type_dct8 (afft_dtt_Type)7   //< Discrete Cosine Transform type VIII
-#define afft_dtt_Type_dst1 (afft_dtt_Type)8   //< Discrete Sine Transform type I
-#define afft_dtt_Type_dst2 (afft_dtt_Type)9   //< Discrete Sine Transform type II
+#define afft_dtt_Type_dct1 (afft_dtt_Type)0   ///< Discrete Cosine Transform type I
+#define afft_dtt_Type_dct2 (afft_dtt_Type)1   ///< Discrete Cosine Transform type II
+#define afft_dtt_Type_dct3 (afft_dtt_Type)2   ///< Discrete Cosine Transform type III
+#define afft_dtt_Type_dct4 (afft_dtt_Type)3   ///< Discrete Cosine Transform type IV
+#define afft_dtt_Type_dct5 (afft_dtt_Type)4   ///< Discrete Cosine Transform type V
+#define afft_dtt_Type_dct6 (afft_dtt_Type)5   ///< Discrete Cosine Transform type VI
+#define afft_dtt_Type_dct7 (afft_dtt_Type)6   ///< Discrete Cosine Transform type VII
+#define afft_dtt_Type_dct8 (afft_dtt_Type)7   ///< Discrete Cosine Transform type VIII
+#define afft_dtt_Type_dst1 (afft_dtt_Type)8   ///< Discrete Sine Transform type I
+#define afft_dtt_Type_dst2 (afft_dtt_Type)9   ///< Discrete Sine Transform type II
 #define afft_dtt_Type_dst3 (afft_dtt_Type)10  ///< Discrete Sine Transform type III
 #define afft_dtt_Type_dst4 (afft_dtt_Type)11  ///< Discrete Sine Transform type IV
 #define afft_dtt_Type_dst5 (afft_dtt_Type)12  ///< Discrete Sine Transform type V

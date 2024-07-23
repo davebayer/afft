@@ -67,56 +67,56 @@ AFFT_EXPORT namespace afft
    * @tparam transform The transform type.
    */
   template<Transform transform>
-  using TransformParameters = typename detail::TransformParametersSelect<transform>::Type;
+  using TransformParameters = typename detail::TransformParametersSelect<transform>::CxxType;
 
   /**
    * @brief Check if the type is TransformParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTransformParameters = detail::IsTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isTransformParameters = detail::IsCxxTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief MpBackendParameters type for given backend.
    * @tparam mpBackend The backend type.
    */
   template<MpBackend mpBackend>
-  using MpBackendParameters = typename detail::MpBackendParametersSelect<mpBackend>::Type;
+  using MpBackendParameters = typename detail::MpBackendParametersSelect<mpBackend>::CxxType;
 
   /**
    * @brief Check if the type is MpBackendParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isMpBackendParameters = detail::IsMpBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isMpBackendParameters = detail::IsCxxMpBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief TargetParameters type for given architecture.
    * @tparam target The target type.
    */
   template<Target target>
-  using TargetParameters = typename detail::TargetParametersSelect<target>::Type;
+  using TargetParameters = typename detail::TargetParametersSelect<target>::CxxType;
 
   /**
    * @brief Check if the type is TargetParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetParameters = detail::IsTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetParameters = detail::IsCxxTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief Memory layout type for given memory layout.
    * @tparam memoryLayout The memory layout type.
    */
   template<MemoryLayout memoryLayout>
-  using MemoryLayoutParameters = typename detail::MemoryLayoutParametersSelect<memoryLayout>::Type;
+  using MemoryLayoutParameters = typename detail::MemoryLayoutParametersSelect<memoryLayout>::CxxType;
 
   /**
    * @brief Check if the type is memory layout.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isMemoryLayout = detail::IsMemoryLayoutParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isMemoryLayout = detail::IsCxxMemoryLayoutParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief Backend Parameters type for given architecture.
@@ -124,14 +124,14 @@ AFFT_EXPORT namespace afft
    * @tparam target The target type.
    */
   template<MpBackend mpBackend, Target target>
-  using BackendParameters = typename detail::BackendParametersSelect<mpBackend, target>::Type;
+  using BackendParameters = typename detail::BackendParametersSelect<mpBackend, target>::CxxType;
 
   /**
    * @brief Is the type BackendParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isBackendParameters = detail::IsBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isBackendParameters = detail::IsCxxBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
 
   /**
    * @brief ExecutionParameters type for given architecture.
@@ -139,14 +139,103 @@ AFFT_EXPORT namespace afft
    * @tparam distrib The distribution type.
    */
   template<Target target>
-  using ExecutionParameters = typename detail::ExecutionParametersSelect<target>::Type;
+  using ExecutionParameters = typename detail::ExecutionParametersSelect<target>::CxxType;
 
   /**
    * @brief Check if the type is ExecutionParameters.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isExecutionParameters = detail::IsExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isExecutionParameters = detail::IsCxxExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+  namespace c
+  {
+    /**
+     * @brief TransformParameters type for given transform.
+     * @tparam transform The transform type.
+     */
+    template<afft::Transform transform>
+    using TransformParameters = typename detail::TransformParametersSelect<transform>::CType;
+
+    /**
+     * @brief Check if the type is TransformParameters.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isTransformParameters = detail::IsCTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+    /**
+     * @brief MpBackendParameters type for given backend.
+     * @tparam mpBackend The backend type.
+     */
+    template<afft::MpBackend mpBackend>
+    using MpBackendParameters = typename detail::MpBackendParametersSelect<mpBackend>::CType;
+
+    /**
+     * @brief Check if the type is MpBackendParameters.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isMpBackendParameters = detail::IsCMpBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+    /**
+     * @brief TargetParameters type for given architecture.
+     * @tparam target The target type.
+     */
+    template<afft::Target target>
+    using TargetParameters = typename detail::TargetParametersSelect<target>::CType;
+
+    /**
+     * @brief Check if the type is TargetParameters.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isTargetParameters = detail::IsCTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+    /**
+     * @brief Memory layout type for given memory layout.
+     * @tparam memoryLayout The memory layout type.
+     */
+    template<afft::MemoryLayout memoryLayout>
+    using MemoryLayoutParameters = typename detail::MemoryLayoutParametersSelect<memoryLayout>::CType;
+
+    /**
+     * @brief Check if the type is memory layout.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isMemoryLayout = detail::IsCMemoryLayoutParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+    /**
+     * @brief Backend Parameters type for given architecture.
+     * @tparam mpBackend The backend type.
+     * @tparam target The target type.
+     */
+    template<afft::MpBackend mpBackend, afft::Target target>
+    using BackendParameters = typename detail::BackendParametersSelect<mpBackend, target>::CType;
+
+    /**
+     * @brief Is the type BackendParameters.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isBackendParameters = detail::IsCBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+
+    /**
+     * @brief ExecutionParameters type for given architecture.
+     * @tparam target The target type.
+     * @tparam distrib The distribution type.
+     */
+    template<afft::Target target>
+    using ExecutionParameters = typename detail::ExecutionParametersSelect<target>::CType;
+
+    /**
+     * @brief Check if the type is ExecutionParameters.
+     * @tparam T The type.
+     */
+    template<typename T>
+    inline constexpr bool isExecutionParameters = detail::IsCExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */

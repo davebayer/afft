@@ -36,14 +36,14 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Memory layout type
-  enum class MemoryLayout : afft_MemoryLayout
+  enum class MemoryLayout : ::afft_MemoryLayout
   {
     centralized = afft_MemoryLayout_centralized, ///< Centralized memory layout, only when the transformation is executed by single process on single target
     distributed = afft_MemoryLayout_distributed, ///< Distributed memory layout, for distributed transformations over multiple processes or targets
   };
 
   /// @brief Alignment of a data type
-  enum class Alignment : afft_Alignment
+  enum class Alignment : ::afft_Alignment
   {
     defaultNew = __STDCPP_DEFAULT_NEW_ALIGNMENT__, ///< Default alignment for new operator
     simd128    = afft_Alignment_simd128,           ///< 128-bit SIMD alignment
@@ -68,7 +68,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Complex number format
-  enum class ComplexFormat : afft_ComplexFormat
+  enum class ComplexFormat : ::afft_ComplexFormat
   {
     interleaved = afft_ComplexFormat_interleaved, ///< interleaved complex format
     planar      = afft_ComplexFormat_planar,      ///< planar complex format
@@ -477,6 +477,37 @@ AFFT_EXPORT namespace afft
     private:
       Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
+
+  namespace c
+  {
+    using MemoryLayout            = ::afft_MemoryLayout;
+    using Alignment               = ::afft_Alignment;
+    using ComplexFormat           = ::afft_ComplexFormat;
+    using CentralizedMemoryLayout = ::afft_CentralizedMemoryLayout;
+    using MemoryBlock             = ::afft_MemoryBlock;
+    using DistributedMemoryLayout = ::afft_DistributedMemoryLayout;
+
+    /**
+     * @brief Allocate aligned memory
+     * @param sizeInBytes Size of the memory in bytes
+     * @param alignment Alignment of the memory
+     * @return Pointer to the allocated memory
+     */
+    [[nodiscard]] inline void* alignedAlloc(std::size_t sizeInBytes, Alignment alignment) noexcept
+    {
+      return ::afft_alignedAlloc(sizeInBytes, alignment);
+    }
+
+    /**
+     * @brief Free aligned memory
+     * @param ptr Pointer to the memory
+     * @param alignment Alignment of the memory
+     */
+    inline void alignedFree(void* ptr, Alignment alignment) noexcept
+    {
+      ::afft_alignedFree(ptr, alignment);
+    }
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_MEMORY_HPP */

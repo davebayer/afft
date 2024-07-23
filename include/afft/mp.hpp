@@ -36,7 +36,7 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Multi-process backend
-  enum class MpBackend : afft_MpBackend
+  enum class MpBackend : ::afft_MpBackend
   {
     none = afft_MpBackend_none, ///< No multi-process backend (single-process)
     mpi  = afft_MpBackend_mpi,  ///< MPI multi-process backend
@@ -71,6 +71,15 @@ AFFT_EXPORT namespace afft
     MPI_Comm comm{MPI_COMM_WORLD}; ///< MPI communicator
   };
 #endif
+
+  namespace c
+  {
+    using MpBackend = ::afft_MpBackend;
+    namespace mpi
+    {
+      using Parameters = ::afft_mpi_Parameters;
+    } // namespace mpi
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_MP_HPP */

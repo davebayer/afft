@@ -636,6 +636,12 @@ AFFT_EXPORT namespace afft
         }
       }
   };
+
+  namespace c
+  {
+    using Plan           = ::afft_Plan;
+    using PlanParameters = ::afft_Plan_Parameters;
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_PLAN_HPP */

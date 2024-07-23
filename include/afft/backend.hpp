@@ -37,7 +37,7 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Backend for the FFT
-  enum class Backend : afft_Backend
+  enum class Backend : ::afft_Backend
   {
     clfft     = afft_Backend_clfft, ///< clFFT
     cufft     = afft_Backend_cufft, ///< cuFFT
@@ -61,18 +61,18 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Bitmask of backends
-  enum class BackendMask : afft_BackendMask
+  enum class BackendMask : ::afft_BackendMask
   {
     empty = afft_BackendMask_empty, ///< empty backend mask
     all   = afft_BackendMask_all,   ///< all backends
   };
 
   // Check that the BackendMask underlying type has sufficient size to store all Backend values
-  static_assert((sizeof(afft_BackendMask) * CHAR_BIT) >= backendCount,
+  static_assert((sizeof(::afft_BackendMask) * CHAR_BIT) >= backendCount,
                 "BackendMask does not have sufficient size to store all Backend values");
 
   /// @brief Backend select strategy
-  enum class SelectStrategy : afft_SelectStrategy
+  enum class SelectStrategy : ::afft_SelectStrategy
   {
     first = afft_SelectStrategy_first, ///< Select the first available backend
     best  = afft_SelectStrategy_best,  ///< Select the best available backend
@@ -162,7 +162,7 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace cufft
   {
-    enum class WorkspacePolicy : afft_cufft_WorkspacePolicy;
+    enum class WorkspacePolicy : ::afft_cufft_WorkspacePolicy;
 
     namespace cuda
     {
@@ -176,7 +176,7 @@ AFFT_EXPORT namespace afft
   } // namespace cufft
 
   /// @brief cuFFT workspace policy
-  enum class cufft::WorkspacePolicy : afft_cufft_WorkspacePolicy
+  enum class cufft::WorkspacePolicy : ::afft_cufft_WorkspacePolicy
   {
     performance = afft_cufft_WorkspacePolicy_performance, ///< Use the workspace for performance
     minimal     = afft_cufft_WorkspacePolicy_minimal,     ///< Use the minimal workspace
@@ -204,7 +204,7 @@ AFFT_EXPORT namespace afft
 /**********************************************************************************************************************/
   namespace fftw3
   {
-    enum class PlannerFlag : afft_fftw3_PlannerFlag;
+    enum class PlannerFlag : ::afft_fftw3_PlannerFlag;
 
     namespace cpu
     {
@@ -218,7 +218,7 @@ AFFT_EXPORT namespace afft
   } // namespace fftw3
 
   /// @brief FFTW3 planner flags
-  enum class fftw3::PlannerFlag : afft_fftw3_PlannerFlag
+  enum class fftw3::PlannerFlag : ::afft_fftw3_PlannerFlag
   {
     estimate        = afft_fftw3_PlannerFlag_estimate,        ///< Estimate plan flag
     measure         = afft_fftw3_PlannerFlag_measure,         ///< Measure plan flag
@@ -262,7 +262,7 @@ AFFT_EXPORT namespace afft
   {
     namespace cpu
     {
-      enum class Backend : afft_heffte_cpu_Backend;
+      enum class Backend : ::afft_heffte_cpu_Backend;
     } // namespace cpu
     namespace mpi::cpu
     {
@@ -271,7 +271,7 @@ AFFT_EXPORT namespace afft
     } // namespace mpi::cpu
     namespace cuda
     {
-      enum class Backend : afft_heffte_cuda_Backend;
+      enum class Backend : ::afft_heffte_cuda_Backend;
     } // namespace cuda
     namespace mpi::cuda
     {
@@ -280,7 +280,7 @@ AFFT_EXPORT namespace afft
     } // namespace mpi::cuda
     namespace hip
     {
-      enum class Backend : afft_heffte_hip_Backend;
+      enum class Backend : ::afft_heffte_hip_Backend;
     } // namespace hip
     namespace mpi::hip
     {
@@ -290,7 +290,7 @@ AFFT_EXPORT namespace afft
   } // namespace heffte
 
   /// @brief HeFFTe cpu backend
-  enum class heffte::cpu::Backend : afft_heffte_cpu_Backend
+  enum class heffte::cpu::Backend : ::afft_heffte_cpu_Backend
   {
     fftw3 = afft_heffte_cpu_Backend_fftw3, ///< FFTW3 backend
     mkl   = afft_heffte_cpu_Backend_mkl,   ///< MKL backend
@@ -307,7 +307,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief HeFFTe CUDA backend
-  enum class heffte::cuda::Backend : afft_heffte_cuda_Backend
+  enum class heffte::cuda::Backend : ::afft_heffte_cuda_Backend
   {
     cufft = afft_heffte_gpu_Backend_cufft, ///< cuFFT backend
   };
@@ -323,7 +323,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief HeFFTe HIP backend
-  enum class heffte::hip::Backend : afft_heffte_hip_Backend
+  enum class heffte::hip::Backend : ::afft_heffte_hip_Backend
   {
     rocfft = afft_heffte_hip_Backend_rocfft, ///< rocFFT backend
   };
@@ -535,6 +535,127 @@ AFFT_EXPORT namespace afft
       return "<invalid backend>";
     }
   }
+
+  namespace c
+  {
+    using Backend        = ::afft_Backend;
+    using BackendMask    = ::afft_BackendMask;
+    using SelectStrategy = ::afft_SelectStrategy;
+
+    namespace clfft
+    {
+      namespace opencl
+      {
+        using Parameters = ::afft_clfft_opencl_Parameters;
+      } // namespace opencl
+    } // namespace clfft
+
+    namespace cufft
+    {
+      using WorkspacePolicy = ::afft_cufft_WorkspacePolicy;
+      namespace cuda
+      {
+        using Parameters = ::afft_cufft_cuda_Parameters;
+      } // namespace cuda
+      namespace mpi::cuda
+      {
+        using Parameters = ::afft_cufft_mpi_cuda_Parameters;
+      } // namespace mpi::cuda
+    } // namespace cufft
+
+    namespace fftw3
+    {
+      using PlannerFlag = ::afft_fftw3_PlannerFlag;
+      namespace cpu
+      {
+        using Parameters = ::afft_fftw3_cpu_Parameters;
+      } // namespace cpu
+      namespace mpi::cpu
+      {
+        using Parameters = ::afft_fftw3_mpi_cpu_Parameters;
+      } // namespace mpi::cpu
+    } // namespace fftw3
+
+    namespace heffte
+    {
+      namespace cpu
+      {
+        using Backend = ::afft_heffte_cpu_Backend;
+      } // namespace cpu
+      namespace mpi::cpu
+      {
+        using Backend = ::afft_heffte_mpi_cpu_Parameters;
+      } // namespace mpi::cpu
+      namespace cuda
+      {
+        using Backend = ::afft_heffte_cuda_Backend;
+      } // namespace cuda
+      namespace mpi::cuda
+      {
+        using Backend = ::afft_heffte_mpi_cuda_Parameters;
+      } // namespace mpi::cuda
+      namespace hip
+      {
+        using Backend = ::afft_heffte_hip_Backend;
+      } // namespace hip
+      namespace mpi::hip
+      {
+        using Backend = ::afft_heffte_mpi_hip_Parameters;
+      } // namespace mpi::hip
+    } // namespace heffte
+
+    namespace cpu
+    {
+      using BackendParameters = ::afft_cpu_BackendParameters;
+    } // namespace cpu
+    
+    namespace cuda
+    {
+      using BackendParameters = ::afft_cuda_BackendParameters;
+    } // namespace cuda
+
+    namespace hip
+    {
+      using BackendParameters = ::afft_hip_BackendParameters;
+    } // namespace hip
+
+    namespace opencl
+    {
+      using BackendParameters = ::afft_opencl_BackendParameters;
+    } // namespace opencl
+
+    namespace mpi
+    {
+      namespace cpu
+      {
+        using BackendParameters = ::afft_mpi_cpu_BackendParameters;
+      } // namespace cpu
+      namespace cuda
+      {
+        using BackendParameters = ::afft_mpi_cuda_BackendParameters;
+      } // namespace cuda
+      namespace hip
+      {
+        using BackendParameters = ::afft_mpi_hip_BackendParameters;
+      } // namespace hip
+      namespace opencl
+      {
+        using BackendParameters = ::afft_mpi_opencl_BackendParameters;
+      } // namespace opencl
+    } // namespace mpi
+
+    using Feedback = ::afft_Feedback;
+
+    /**
+     * @brief Get the name of the backend.
+     * @param backend Backend.
+     * @return Name of the backend.
+     */
+    [[nodiscard]] inline const char* getBackendName(Backend backend) noexcept
+    {
+      return ::afft_getBackendName(backend);
+    }
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_BACKEND_HPP */

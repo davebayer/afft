@@ -336,7 +336,7 @@ typedef struct
  * @param backend Backend
  * @return Name of the backend
  */
-const char* getBackendName(afft_Backend backend);
+const char* afft_getBackendName(afft_Backend backend);
 
 #ifdef __cplusplus
 }

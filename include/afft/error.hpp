@@ -147,6 +147,12 @@ AFFT_EXPORT namespace afft
       ErrorRetval mErrorRetval{};                  ///< Error return value
       char        mMessage[maxErrorMessageSize]{}; ///< Error message
   };
+
+  namespace c
+  {
+    using Error        = ::afft_Error;
+    using ErrorDetails = ::afft_ErrorDetails;
+  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_ERROR_HPP */
