@@ -32,7 +32,7 @@
 #include "common.hpp"
 #include "mp.hpp"
 #include "target.hpp"
-#include "detail/backend.hpp"
+#include "detail/cxx.hpp"
 
 AFFT_EXPORT namespace afft
 {
@@ -88,7 +88,9 @@ AFFT_EXPORT namespace afft
   [[nodiscard]] constexpr auto operator~(T value)
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>))
   {
-    return detail::backendMaskUnaryOp(std::bit_not<>{}, value);
+    const auto val = detail::cxx::to_underlying(value);
+
+    return static_cast<BackendMask>(std::bit_not<>{}(val));
   }
 
   /**
@@ -104,7 +106,10 @@ AFFT_EXPORT namespace afft
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
-    return detail::backendMaskBinaryOp(std::bit_and<>{}, lhs, rhs);
+    const auto left  = detail::cxx::to_underlying(lhs);
+    const auto right = detail::cxx::to_underlying(rhs);
+
+    return static_cast<BackendMask>(std::bit_and<>{}(left, right));
   }
 
   /**
@@ -120,7 +125,10 @@ AFFT_EXPORT namespace afft
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
-    return detail::backendMaskBinaryOp(std::bit_or<>{}, lhs, rhs);
+    const auto left  = detail::cxx::to_underlying(lhs);
+    const auto right = detail::cxx::to_underlying(rhs);
+
+    return static_cast<BackendMask>(std::bit_or<>{}(left, right));
   }
 
   /**
@@ -136,7 +144,10 @@ AFFT_EXPORT namespace afft
     -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
                                       (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
   {
-    return detail::backendMaskBinaryOp(std::bit_xor<>{}, lhs, rhs);
+    const auto left  = detail::cxx::to_underlying(lhs);
+    const auto right = detail::cxx::to_underlying(rhs);
+
+    return static_cast<BackendMask>(std::bit_xor<>{}(left, right));
   }
 
 /**********************************************************************************************************************/

@@ -22,8 +22,9 @@
   SOFTWARE.
 */
 
-#include <afft/afft.h>
 #include <afft/afft.hpp>
+
+#include "error.hpp"
 
 /**
  * @brief Make strides.
@@ -31,22 +32,33 @@
  * @param shape Shape of the array.
  * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
+ * @param errorDetails Error details.
  * @return Error code.
  */
-extern "C" afft_Error afft_makeStrides(const size_t  shapeRank,
-                                       const size_t* shape,
-                                       const size_t  fastestAxisStride,
-                                       size_t*       strides)
+extern "C" afft::c::Error
+afft_makeStrides(const size_t           shapeRank,
+                 const afft::c::Size*   shape,
+                 const afft::c::Size    fastestAxisStride,
+                 afft::c::Size*         strides,
+                 afft::c::ErrorDetails* errorDetails)
 try
 {
   if (shapeRank > 0 && shape == nullptr)
   {
-    return afft_Error_invalidShape;
+    setErrorDetails(errorDetails, "invalid shape");
+    return afft_Error_invalidArgument;
+  }
+
+  if (fastestAxisStride == 0)
+  {
+    setErrorDetails(errorDetails, "invalid fastest axis stride");
+    return afft_Error_invalidArgument;
   }
 
   if (shapeRank > 0 && strides == nullptr)
   {
-    return afft_Error_invalidStrides;
+    setErrorDetails(errorDetails, "invalid strides");
+    return afft_Error_invalidArgument;
   }
 
   afft::makeStrides(afft::View<std::size_t>{shape, shapeRank},
@@ -57,7 +69,7 @@ try
 }
 catch (...)
 {
-  return afft_Error_internal;
+  return handleException(errorDetails);
 }
 
 /**
@@ -67,28 +79,40 @@ catch (...)
  * @param orgAxesOrder Original axes order.
  * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
+ * @param errorDetails Error details.
  * @return Error code.
  */
-extern "C" afft_Error afft_makeTransposedStrides(const size_t  shapeRank,
-                                                 const size_t* resultShape,
-                                                 const size_t* orgAxesOrder,
-                                                 const size_t  fastestAxisStride,
-                                                 size_t*       strides)
+extern "C" afft::c::Error
+afft_makeTransposedStrides(const size_t         shapeRank,
+                           const afft::c::Size* resultShape,
+                           const afft::c::Size* orgAxesOrder,
+                           const afft::c::Size  fastestAxisStride,
+                           afft::c::Size*       strides,
+                           afft::c::ErrorDetails* errorDetails)
 try
 {
   if (shapeRank > 0 && resultShape == nullptr)
   {
-    return afft_Error_invalidShape;
+    setErrorDetails(errorDetails, "invalid shape");
+    return afft_Error_invalidArgument;
   }
 
   if (shapeRank > 0 && orgAxesOrder == nullptr)
   {
-    return afft_Error_invalidAxes;
+    setErrorDetails(errorDetails, "invalid original axes order");
+    return afft_Error_invalidArgument;
+  }
+
+  if (fastestAxisStride == 0)
+  {
+    setErrorDetails(errorDetails, "invalid fastest axis stride");
+    return afft_Error_invalidArgument;
   }
 
   if (shapeRank > 0 && strides == nullptr)
   {
-    return afft_Error_invalidStrides;
+    setErrorDetails(errorDetails, "invalid strides");
+    return afft_Error_invalidArgument;
   }
 
   afft::makeTransposedStrides(afft::View<std::size_t>{resultShape, shapeRank},
@@ -100,5 +124,5 @@ try
 }
 catch (...)
 {
-  return afft_Error_internal;
+  return handleException(errorDetails);
 }

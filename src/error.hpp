@@ -25,34 +25,7 @@
 #ifndef ERROR_HPP
 #define ERROR_HPP
 
-#include <afft/afft.h>
 #include <afft/afft.hpp>
-
-#include "convert.hpp"
-
-/// @brief Specialization of Convert for afft::Error. 
-template<>
-struct Convert<afft::Error>
-  : EnumConvertBase<afft::Error, afft_Error>
-{
-  static_assert(cmpEnumValues(afft::Error::internal,        afft_Error_internal));
-  static_assert(cmpEnumValues(afft::Error::invalidArgument, afft_Error_invalidArgument));
-  static_assert(cmpEnumValues(afft::Error::mpi,             afft_Error_mpi));
-  static_assert(cmpEnumValues(afft::Error::cudaDriver,      afft_Error_cudaDriver));
-  static_assert(cmpEnumValues(afft::Error::cudaRuntime,     afft_Error_cudaRuntime));
-  static_assert(cmpEnumValues(afft::Error::cudaRtc,         afft_Error_cudaRtc));
-  static_assert(cmpEnumValues(afft::Error::hip,             afft_Error_hip));
-  static_assert(cmpEnumValues(afft::Error::opencl,          afft_Error_opencl));
-  static_assert(cmpEnumValues(afft::Error::clfft,           afft_Error_clfft));
-  static_assert(cmpEnumValues(afft::Error::cufft,           afft_Error_cufft));
-  static_assert(cmpEnumValues(afft::Error::fftw3,           afft_Error_fftw3));
-  static_assert(cmpEnumValues(afft::Error::heffte,          afft_Error_heffte));
-  static_assert(cmpEnumValues(afft::Error::hipfft,          afft_Error_hipfft));
-  static_assert(cmpEnumValues(afft::Error::mkl,             afft_Error_mkl));
-  static_assert(cmpEnumValues(afft::Error::pocketfft,       afft_Error_pocketfft));
-  static_assert(cmpEnumValues(afft::Error::rocfft,          afft_Error_rocfft));
-  static_assert(cmpEnumValues(afft::Error::vkfft,           afft_Error_vkfft));
-};
 
 /**
  * @brief Handle exception.

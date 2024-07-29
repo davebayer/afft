@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-#include "error.hpp"
+#include <afft/afft.hpp>
 
 /**
  * @brief Set error details message.

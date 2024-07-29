@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-#include "afft/afft.hpp"
+#include <afft/afft.hpp>
 
 /**
  * @brief Get the version of the clFFT library.

@@ -29,7 +29,8 @@
  * @param backend Backend.
  * @return Name of the backend.
  */
-extern "C" const char* getBackendName(afft_Backend backend)
+extern "C" const char*
+getBackendName(afft::c::Backend backend)
 {
   return afft::getBackendName(static_cast<afft::Backend>(backend)).data();
 }
