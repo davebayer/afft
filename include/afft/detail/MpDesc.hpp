@@ -89,7 +89,8 @@ namespace afft::detail
       explicit constexpr MpDesc(const MpParamsT& mpParams)
       : mMpVariant{makeMpVariant(mpParams)}
       {
-        static_assert(isMpBackendParameters<MpParamsT>, "Invalid multi-process parameters");
+        static_assert(isMpBackendParameters<MpParamsT> || c::isMpBackendParameters<MpParamsT>,
+                      "Invalid multi-process parameters");
       }
 
       /// @brief Copy constructor is default
@@ -145,12 +146,12 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the multi-process parameters for the given multi-process backend
+       * @brief Get the C++ multi-process parameters for the given multi-process backend
        * @tparam mpBackend Multi-process backend
        * @return Multi-process parameters
        */
       template<MpBackend mpBackend>
-      [[nodiscard]] constexpr auto& getMpParameters()
+      [[nodiscard]] constexpr MpBackendParameters<mpBackend> getCxxMpParameters()
       {
         static_assert(isValid(mpBackend), "Invalid multi-process backend");
 
@@ -161,6 +162,22 @@ namespace afft::detail
         else if constexpr (mpBackend == MpBackend::mpi)
         {
           return mpi::Parameters{getMpDesc<mpBackend>().comm};
+        }
+      }
+
+      /**
+       * @brief Get the C multi-process parameters for the given multi-process backend
+       * @tparam mpBackend Multi-process backend
+       * @return Multi-process parameters
+       */
+      template<MpBackend mpBackend>
+      [[nodiscard]] constexpr c::MpBackendParameters<mpBackend> getCMpParameters()
+      {
+        static_assert(isValid(mpBackend) && mpBackend != MpBackend::none, "invalid multi-process backend");
+
+        if constexpr (mpBackend == MpBackend::mpi)
+        {
+          return c::mpi::Parameters{getMpDesc<mpBackend>().comm};
         }
       }
 
@@ -195,6 +212,18 @@ namespace afft::detail
        * @return Multi-process variant
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const mpi::Parameters& mpiParams)
+      {
+        return MpiDesc{mpiParams.comm};
+      }
+#   endif
+
+#   ifdef AFFT_ENABLE_MPI
+      /**
+       * @brief Make a multi-process variant
+       * @param mpiParams MPI parameters
+       * @return Multi-process variant
+       */
+      [[nodiscard]] static constexpr MpVariant makeMpVariant(const c::mpi::Parameters& mpiParams)
       {
         return MpiDesc{mpiParams.comm};
       }

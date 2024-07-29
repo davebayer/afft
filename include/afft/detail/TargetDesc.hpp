@@ -125,7 +125,8 @@ namespace afft::detail
       TargetDesc(const TargetParamsT& targetParams)
       : mTargetVariant{makeTargetVariant(targetParams)}
       {
-        static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters type");
+        static_assert(isTargetParameters<TargetParamsT> || c::isTargetParameters<TargetParamsT>,
+                      "invalid target parameters type");
       }
 
       /// @brief Copy constructor is default
@@ -202,12 +203,12 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the target parameters for the given target
+       * @brief Get the C++ target parameters for the given target
        * @tparam target Target
        * @return Target parameters
        */
       template<Target target>
-      [[nodiscard]] constexpr const TargetParameters<target> getTargetParameters() const
+      [[nodiscard]] constexpr TargetParameters<target> getCxxTargetParameters() const
       {
         static_assert(isValid(target), "invalid target");
 
@@ -249,6 +250,56 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the C target parameters for the given target
+       * @tparam target Target
+       * @return Target parameters
+       */
+      template<Target target>
+      [[nodiscard]] constexpr c::TargetParameters<target> getCTargetParameters() const
+      {
+        static_assert(isValid(target), "invalid target");
+
+        c::TargetParameters<target> targetParams{};
+
+        if constexpr (target == Target::cpu)
+        {
+          const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
+          targetParams.threadLimit = cpuDesc.threadLimit;
+        }
+        else if constexpr (target == Target::cuda)
+        {
+#       ifdef AFFT_ENABLE_CUDA
+          const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
+          targetParams.deviceCount = cudaDesc.targetCount;
+          targetParams.devices     = cudaDesc.devices.get();
+#       endif
+        }
+        else if constexpr (target == Target::hip)
+        {
+#       ifdef AFFT_ENABLE_HIP
+          const auto& hipDesc = std::get<HipDesc>(mTargetVariant);
+          targetParams.deviceCount = hipDesc.targetCount;
+          targetParams.devices     = hipDesc.devices.get();
+#       endif
+        }
+        else if constexpr (target == Target::opencl)
+        {
+#       ifdef AFFT_ENABLE_OPENCL
+          const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
+          targetParams.context     = openclDesc.context.get();
+          targetParams.deviceCount = openclDesc.targetCount;
+          targetParams.devices     = openclDesc.devices.get();
+#       endif
+        }
+        else
+        {
+          cxx::unreachable();
+        }
+
+        return targetParams;
+      }
+
+      /**
        * @brief Equality operator
        * @param lhs Left-hand side
        * @param rhs Right-hand side
@@ -277,7 +328,7 @@ namespace afft::detail
       {
         CudaDesc cudaDesc{};
         cudaDesc.targetCount = cudaParams.devices.size();
-        cudaDesc.devices     = std::make_unique<int[]>(targetCount);
+        cudaDesc.devices     = std::make_unique<int[]>(cudaDesc.targetCount);
 
         std::copy(cudaParams.devices.begin(), cudaParams.devices.end(), cudaDesc.devices.get());
 
@@ -290,7 +341,7 @@ namespace afft::detail
       {
         HipDesc hipDesc{};
         hipDesc.targetCount = hipParams.devices.size();
-        hipDesc.devices     = std::make_unique<int[]>(targetCount);
+        hipDesc.devices     = std::make_unique<int[]>(hipDesc.targetCount);
 
         std::copy(hipParams.devices.begin(), hipParams.devices.end(), hipDesc.devices.get());
 
@@ -305,9 +356,59 @@ namespace afft::detail
         openclDesc.targetCount = openclParams.devices.size();
         opencl::checkError(clRetainContext(openclParams.context));
         openclDesc.context.reset(openclParams.context);
-        openclDesc.devices = std::make_unique<cl_device_id[]>(targetCount);
+        openclDesc.devices = std::make_unique<cl_device_id[]>(openclDesc.targetCount);
 
         std::copy(openclParams.devices.begin(), openclParams.devices.end(), openclDesc.devices.get());
+
+        return openclDesc;
+      }
+#     endif
+
+      /// @brief Make a target variant from the given target parameters.
+      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const c::cpu::Parameters& cpuParams)
+      {
+        CpuDesc cpuDesc{};
+        cpuDesc.threadLimit = cpuParams.threadLimit;
+
+        return cpuDesc;
+      }
+
+#     ifdef AFFT_ENABLE_CUDA
+      [[nodiscard]] static TargetVariant makeTargetVariant(const c::cuda::Parameters& cudaParams)
+      {
+        CudaDesc cudaDesc{};
+        cudaDesc.targetCount = cudaParams.devices.size();
+        cudaDesc.devices     = std::make_unique<int[]>(cudaDesc.targetCount);
+
+        std::copy_n(cudaParams.devices, cudaDesc.targetCount, cudaDesc.devices.get());
+
+        return cudaDesc;
+      }
+#     endif
+
+#     ifdef AFFT_ENABLE_HIP
+      [[nodiscard]] static TargetVariant makeTargetVariant(const c::hip::Parameters& hipParams)
+      {
+        HipDesc hipDesc{};
+        hipDesc.targetCount = hipParams.deviceCount;
+        hipDesc.devices     = std::make_unique<int[]>(hipDesc.targetCount);
+
+        std::copy_n(hipParams.devices, hipParams.deviceCount, hipDesc.devices.get());
+
+        return hipDesc;
+      }
+#     endif
+
+#     ifdef AFFT_ENABLE_OPENCL
+      [[nodiscard]] static TargetVariant makeTargetVariant(const c::opencl::Parameters& openclParams)
+      {
+        OpenclDesc openclDesc{};
+        openclDesc.targetCount = openclParams.deviceCount;
+        opencl::checkError(clRetainContext(openclParams.context));
+        openclDesc.context.reset(openclParams.context);
+        openclDesc.devices = std::make_unique<cl_device_id[]>(openclDesc.targetCount);
+
+        std::copy_n(openclParams.devices, openclDesc.targetCount, openclDesc.devices.get());
 
         return openclDesc;
       }

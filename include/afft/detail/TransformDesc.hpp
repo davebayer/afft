@@ -98,7 +98,7 @@ namespace afft::detail
        * @tparam TransformParamsT Type of the transform parameters.
        * @param transformParams Transform parameters.
        */
-      template<typename TransformParamsT>
+      AFFT_TEMPL_REQUIRES(AFFT_PARAM(typename TransformParamsT), isTransformParameters<TransformParamsT>)
       TransformDesc(const TransformParamsT& transformParams)
       : mDirection{validateAndReturn(transformParams.direction)},
         mPrecision{validateAndReturn(transformParams.precision)},
@@ -108,6 +108,28 @@ namespace afft::detail
         mTransformAxes(makeTransformAxes(transformParams.axes, mShapeRank)),
         mNormalization{validateAndReturn(transformParams.normalization)},
         mPlacement{validateAndReturn(transformParams.placement)},
+        mDestructive{transformParams.destructive},
+        mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
+      {}
+
+      /**
+       * @brief Constructor.
+       * @tparam TransformParamsT Type of the transform parameters.
+       * @param transformParams Transform parameters.
+       * @param axesRank Rank of the axes.
+       */
+      AFFT_TEMPL_REQUIRES(AFFT_PARAM(typename TransformParamsT), c::isTransformParameters<TransformParamsT>)
+      TransformDesc(const TransformParamsT& transformParams)
+      : mDirection{validateAndReturn(static_cast<afft::Direction>(transformParams.direction))},
+        mPrecision{validateAndReturn(transformParams.precision.execution),
+                   validateAndReturn(transformParams.precision.source),
+                   validateAndReturn(transformParams.precision.destination)},
+        mShapeRank{transformParams.shapeRank},
+        mShape(makeShape(afft::View<afft::Size>{transformParams.shape, transformParams.shapeRank})),
+        mTransformRank{transformParams.axesRank},
+        mTransformAxes(makeTransformAxes(afft::View<afft::Axis>{transformParams.axes, mTransformRank}, mShapeRank)),
+        mNormalization{validateAndReturn(static_cast<afft::Normalization>(transformParams.normalization))},
+        mPlacement{validateAndReturn(static_cast<afft::Placement>(transformParams.placement))},
         mDestructive{transformParams.destructive},
         mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
       {}
@@ -502,12 +524,12 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the transform parameters.
+       * @brief Get the C++ transform parameters.
        * @tparam transform Transform type.
        * @return Transform parameters.
        */
       template<Transform transform>
-      [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
+      [[nodiscard]] constexpr TransformParameters<transform> getCxxTransformParameters() const
       {
         static_assert(isValid(transform), "Invalid transform type");
 
@@ -532,6 +554,46 @@ namespace afft::detail
         else if constexpr (transform == Transform::dtt)
         {
           transformParams.types = View<dtt::Type>{getTransformDesc<Transform::dtt>().types.data(), getTransformRank()};
+        }
+        
+        return transformParams;
+      }
+
+      /**
+       * @brief Get the C transform parameters.
+       * @tparam transform Transform type.
+       * @return Transform parameters.
+       */
+      template<Transform transform>
+      [[nodiscard]] constexpr c::TransformParameters<transform> getCTransformParameters() const
+      {
+        static_assert(isValid(transform), "Invalid transform type");
+
+        c::TransformParameters<transform> transformParams{};
+
+        transformParams.direction             = static_cast<c::Direction>(getDirection());
+        transformParams.precision.execution   = static_cast<c::Precision>(getPrecision().execution);
+        transformParams.precision.source      = static_cast<c::Precision>(getPrecision().source);
+        transformParams.precision.destination = static_cast<c::Precision>(getPrecision().destination);
+        transformParams.shapeRank             = getShapeRank();
+        transformParams.shape                 = getShape().data();
+        transformParams.axesRank              = getTransformRank();
+        transformParams.axes                  = getTransformAxes().data();
+        transformParams.normalization         = static_cast<c::Normalization>(getNormalization());
+        transformParams.placement             = static_cast<c::Placement>(getPlacement());
+        transformParams.destructive           = isDestructive();
+
+        if constexpr (transform == Transform::dft)
+        {
+          transformParams.type = static_cast<c::dft::Type>(getTransformDesc<Transform::dft>().type);
+        }
+        else if constexpr (transform == Transform::dht)
+        {
+          transformParams.type = static_cast<c::dht::Type>(getTransformDesc<Transform::dht>().type);
+        }
+        else if constexpr (transform == Transform::dtt)
+        {
+          transformParams.types = reinterpret_cast<const c::dtt::Type*>(getTransformDesc<Transform::dtt>().types.data());
         }
         
         return transformParams;
@@ -696,6 +758,54 @@ namespace afft::detail
         for (std::size_t i{}; i < transformRank; ++i)
         {
           dttDesc.types[i] = validateAndReturn(dttParams.types[(transformRank == 1) ? 0 : i]);
+        }
+
+        return dttDesc;
+      }
+
+      /**
+       * @brief Make the transform variant.
+       * @param dftParams DFT parameters.
+       * @param transformRank Rank of the transform.
+       * @return Transform variant.
+       */
+      [[nodiscard]] static TransformVariant
+      makeTransformVariant(const c::dft::Parameters& dftParams, std::size_t)
+      {
+        return DftDesc{validateAndReturn(static_cast<afft::dft::Type>(dftParams.type))};
+      }
+
+      /**
+       * @brief Make the transform variant.
+       * @param dhtParams DHT parameters.
+       * @param transformRank Rank of the transform.
+       * @return Transform variant.
+       */
+      [[nodiscard]] static TransformVariant
+      makeTransformVariant(const c::dht::Parameters& dhtParams, std::size_t)
+      {
+        return DhtDesc{validateAndReturn(static_cast<afft::dht::Type>(dhtParams.type))};
+      }
+
+      /**
+       * @brief Make the transform variant.
+       * @param dttParams DTT parameters.
+       * @param transformRank Rank of the transform.
+       * @return Transform variant.
+       */
+      [[nodiscard]] static TransformVariant
+      makeTransformVariant(const c::dtt::Parameters& dttParams, std::size_t transformRank)
+      {
+        if (dttParams.types == nullptr)
+        {
+          throw Exception{Error::invalidArgument, "null dtt types"};
+        }
+
+        DttDesc dttDesc{};
+
+        for (std::size_t i{}; i < transformRank; ++i)
+        {
+          dttDesc.types[i] = validateAndReturn(static_cast<afft::dtt::Type>(dttParams.types[i]));
         }
 
         return dttDesc;
