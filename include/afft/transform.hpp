@@ -61,8 +61,8 @@ AFFT_EXPORT namespace afft
   /// @brief Placement of the transform
   enum class Placement : ::afft_Placement
   {
-    inPlace    = afft_Placement_inPlace,    ///< in-place transform
     outOfPlace = afft_Placement_outOfPlace, ///< out-of-place transform
+    inPlace    = afft_Placement_inPlace,    ///< in-place transform
     notInPlace = afft_Placement_notInPlace, ///< alias for outOfPlace transform
   };
 
@@ -72,14 +72,14 @@ AFFT_EXPORT namespace afft
    */
   struct PrecisionTriad
   {
-    Precision execution{};   ///< precision of the execution
-    Precision source{};      ///< precision of the source data
-    Precision destination{}; ///< precision of the destination data
+    Precision execution{Precision::f32};   ///< execution precision
+    Precision source{Precision::f32};      ///< source precision
+    Precision destination{Precision::f32}; ///< destination precision
   };
 
   /// @brief Named constant representing all axes (is empty view)
   inline constexpr View<Axis> allAxes{};
-  
+
 /**********************************************************************************************************************/
 // Discrete Fourier Transform (DFT)
 /**********************************************************************************************************************/
@@ -103,14 +103,14 @@ AFFT_EXPORT namespace afft
   /// @brief DFT Parameters
   struct dft::Parameters
   {
-    Direction      direction{};                                  ///< direction of the transform
-    PrecisionTriad precision{};                                  ///< precision triad
-    View<Size>     shape{};                                      ///< shape of the transform
-    View<Axis>     axes{allAxes};                                ///< axes of the transform
-    Normalization  normalization{Normalization::none};           ///< normalization
-    Placement      placement{Placement::outOfPlace};             ///< placement of the transform
-    bool           destructive{placement == Placement::inPlace}; ///< destructive transform
-    Type           type{Type::complexToComplex};                 ///< type of the transform
+    Direction      direction{};                        ///< direction of the transform
+    PrecisionTriad precision{};                        ///< precision triad
+    View<Size>     shape{};                            ///< shape of the transform
+    View<Axis>     axes{};                             ///< axes of the transform
+    Normalization  normalization{Normalization::none}; ///< normalization
+    Placement      placement{Placement::outOfPlace};   ///< placement of the transform
+    bool           destructive{};                      ///< destructive transform
+    Type           type{Type::complexToComplex};       ///< type of the transform
   };
 
 /**********************************************************************************************************************/
@@ -131,14 +131,14 @@ AFFT_EXPORT namespace afft
   /// @brief DHT Parameters
   struct dht::Parameters
   {
-    Direction      direction{};                                  ///< direction of the transform
-    PrecisionTriad precision{};                                  ///< precision triad
-    View<Size>     shape{};                                      ///< shape of the transform
-    View<Axis>     axes{allAxes};                                ///< axes of the transform
-    Normalization  normalization{Normalization::none};           ///< normalization
-    Placement      placement{Placement::outOfPlace};             ///< placement of the transform
-    bool           destructive{placement == Placement::inPlace}; ///< destructive transform
-    Type           type{Type::separable};                        ///< type of the transform
+    Direction      direction{};                        ///< direction of the transform
+    PrecisionTriad precision{};                        ///< precision triad
+    View<Size>     shape{};                            ///< shape of the transform
+    View<Axis>     axes{};                             ///< axes of the transform
+    Normalization  normalization{Normalization::none}; ///< normalization
+    Placement      placement{Placement::outOfPlace};   ///< placement of the transform
+    bool           destructive{};                      ///< destructive transform
+    Type           type{Type::separable};              ///< type of the transform
   };
 
 /**********************************************************************************************************************/
@@ -176,14 +176,14 @@ AFFT_EXPORT namespace afft
   /// @brief DTT Parameters
   struct dtt::Parameters
   {
-    Direction      direction{};                                  ///< direction of the transform
-    PrecisionTriad precision{};                                  ///< precision triad
-    View<Size>     shape{};                                      ///< shape of the transform
-    View<Axis>     axes{allAxes};                                ///< axes of the transform
-    Normalization  normalization{Normalization::none};           ///< normalization
-    Placement      placement{Placement::outOfPlace};             ///< placement of the transform
-    bool           destructive{placement == Placement::inPlace}; ///< destructive transform
-    View<Type>     types{};                                      ///< types of the transform, must have size 1 or size equal to the number of axes
+    Direction      direction{};                        ///< direction of the transform
+    PrecisionTriad precision{};                        ///< precision triad
+    View<Size>     shape{};                            ///< shape of the transform
+    View<Axis>     axes{};                             ///< axes of the transform
+    Normalization  normalization{Normalization::none}; ///< normalization
+    Placement      placement{Placement::outOfPlace};   ///< placement of the transform
+    bool           destructive{};                      ///< destructive transform
+    const Type*    types{};                            ///< types of the transform, must have size equal to the number of axes
   };
 
 /**********************************************************************************************************************/
@@ -201,30 +201,6 @@ AFFT_EXPORT namespace afft
            (lhs.source == rhs.source) &&
            (lhs.destination == rhs.destination);
   }
-
-  namespace c
-  {
-    using Transform      = ::afft_Transform;
-    using Direction      = ::afft_Direction;
-    using Normalization  = ::afft_Normalization;
-    using Placement      = ::afft_Placement;
-    using PrecisionTriad = ::afft_PrecisionTriad;
-    namespace dft
-    {
-      using Type       = ::afft_dft_Type;
-      using Parameters = ::afft_dft_Parameters;
-    } // namespace dft
-    namespace dht
-    {
-      using Type       = ::afft_dht_Type;
-      using Parameters = ::afft_dht_Parameters;
-    } // namespace dht
-    namespace dtt
-    {
-      using Type       = ::afft_dtt_Type;
-      using Parameters = ::afft_dtt_Parameters;
-    } // namespace dtt
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_TRANSFORM_HPP */

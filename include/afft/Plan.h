@@ -46,10 +46,10 @@ extern "C"
 typedef struct afft_Plan afft_Plan;
 
 /// @brief Plan parameters structure
-typedef struct afft_Plan_Parameters afft_Plan_Parameters;
+typedef struct afft_PlanParameters afft_PlanParameters;
 
 /// @brief Plan parameters structure
-struct afft_Plan_Parameters
+struct afft_PlanParameters
 {
   afft_Transform transform;       ///< Transform type
   afft_MpBackend mpBackend;       ///< Multi-process backend
@@ -68,7 +68,7 @@ struct afft_Plan_Parameters
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_create(afft_Plan_Parameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errDetails);
+afft_Error afft_Plan_create(afft_PlanParameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Destroy a plan.

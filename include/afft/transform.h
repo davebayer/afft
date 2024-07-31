@@ -65,8 +65,8 @@ typedef uint8_t afft_Normalization;
 typedef uint8_t afft_Placement;
 
 /// @brief Placement enumeration
-#define afft_Placement_inPlace    (afft_Placement)0         ///< In-place
-#define afft_Placement_outOfPlace (afft_Placement)1         ///< Out-of-place
+#define afft_Placement_outOfPlace (afft_Placement)0         ///< Out-of-place
+#define afft_Placement_inPlace    (afft_Placement)1         ///< In-place
 #define afft_Placement_notInPlace afft_Placement_outOfPlace ///< Alias for outOfPlace
 
 /// @brief Precision triad type
@@ -107,10 +107,11 @@ struct afft_dft_Parameters
   afft_PrecisionTriad precision;     ///< Precision triad
   size_t              shapeRank;     ///< Rank of the shape
   const afft_Size*    shape;         ///< Shape of the transform
-  size_t              axesRank;      ///< Rank of the axes
+  size_t              transformRank; ///< Rank of the transform
   const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
+  bool                destructive;   ///< Destructive transform
   afft_dft_Type       type;          ///< Type of the transform
 };
 
@@ -133,10 +134,11 @@ struct afft_dht_Parameters
   afft_PrecisionTriad precision;     ///< Precision triad
   size_t              shapeRank;     ///< Rank of the shape
   const afft_Size*    shape;         ///< Shape of the transform
-  size_t              axesRank;      ///< Rank of the axes
+  size_t              transformRank; ///< Rank of the transform
   const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
+  bool                destructive;   ///< Destructive transform
   afft_dht_Type       type;          ///< Type of the transform
 };
 
@@ -166,8 +168,8 @@ typedef struct afft_dtt_Parameters afft_dtt_Parameters;
 #define afft_dtt_Type_dst6 (afft_dtt_Type)13  ///< Discrete Sine Transform type VI
 #define afft_dtt_Type_dst7 (afft_dtt_Type)14  ///< Discrete Sine Transform type VII
 #define afft_dtt_Type_dst8 (afft_dtt_Type)15  ///< Discrete Sine Transform type VIII
-#define afft_dtt_Type_dct  afft_dtt_Type_dct2 ///< default DCT type
-#define afft_dtt_Type_dst  afft_dtt_Type_dst2 ///< default DST type
+#define afft_dtt_Type_dct  afft_dtt_Type_dct2 ///< alias for Discrete Cosine Transform type II
+#define afft_dtt_Type_dst  afft_dtt_Type_dst2 ///< alias for Discrete Sine Transform type II
 
 /// @brief DTT parameters structure
 struct afft_dtt_Parameters
@@ -175,11 +177,12 @@ struct afft_dtt_Parameters
   afft_Direction       direction;     ///< Direction of the transform
   afft_PrecisionTriad  precision;     ///< Precision triad
   size_t               shapeRank;     ///< Rank of the shape
-  const size_t*        shape;         ///< Shape of the transform
-  size_t               axesRank;      ///< Rank of the axes
-  const size_t*        axes;          ///< Axes of the transform
+  const afft_Size*     shape;         ///< Shape of the transform
+  size_t               transformRank; ///< Rank of the transform
+  const afft_Axis*     axes;          ///< Axes of the transform
   afft_Normalization   normalization; ///< Normalization
   afft_Placement       placement;     ///< Placement of the transform
+  bool                 destructive;   ///< Destructive transform
   const afft_dtt_Type* types;         ///< Types of the transform
 };
 

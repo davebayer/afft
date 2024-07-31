@@ -71,15 +71,6 @@ AFFT_EXPORT namespace afft
     MPI_Comm comm{MPI_COMM_WORLD}; ///< MPI communicator
   };
 #endif
-
-  namespace c
-  {
-    using MpBackend = ::afft_MpBackend;
-    namespace mpi
-    {
-      using Parameters = ::afft_mpi_Parameters;
-    } // namespace mpi
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_MP_HPP */

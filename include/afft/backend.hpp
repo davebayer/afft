@@ -39,15 +39,15 @@ AFFT_EXPORT namespace afft
   /// @brief Backend for the FFT
   enum class Backend : ::afft_Backend
   {
-    clfft     = afft_Backend_clfft, ///< clFFT
-    cufft     = afft_Backend_cufft, ///< cuFFT
-    fftw3     = afft_Backend_fftw3, ///< FFTW3
-    heffte    = afft_Backend_heffte, ///< HeFFTe
-    hipfft    = afft_Backend_hipfft, ///< hipFFT
-    mkl       = afft_Backend_mkl, ///< Intel MKL
+    clfft     = afft_Backend_clfft,     ///< clFFT
+    cufft     = afft_Backend_cufft,     ///< cuFFT
+    fftw3     = afft_Backend_fftw3,     ///< FFTW3
+    heffte    = afft_Backend_heffte,    ///< HeFFTe
+    hipfft    = afft_Backend_hipfft,    ///< hipFFT
+    mkl       = afft_Backend_mkl,       ///< Intel MKL
     pocketfft = afft_Backend_pocketfft, ///< PocketFFT
-    rocfft    = afft_Backend_rocfft, ///< rocFFT
-    vkfft     = afft_Backend_vkfft, ///< VkFFT
+    rocfft    = afft_Backend_rocfft,    ///< rocFFT
+    vkfft     = afft_Backend_vkfft,     ///< VkFFT
   };
 
   /// @brief Number of backends
@@ -198,9 +198,9 @@ AFFT_EXPORT namespace afft
   struct cufft::cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>, BackendConstant<Backend::cufft>
   {
-    WorkspacePolicy   workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
-    bool              usePatientJit{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
-    View<std::size_t> userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
+    WorkspacePolicy    workspacePolicy{WorkspacePolicy::performance}; ///< Workspace policy.
+    bool               usePatientJit{true};                           ///< Use patient JIT compilation. Supported when using cuFFT 11.2 or later.
+    const std::size_t* userWorkspaceSize{};                           ///< Workspace size in bytes when using user-defined workspace policy.
   };
 
   /// @brief cuFFT MPI CUDA backend parameters
@@ -312,9 +312,9 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<afft::Backend::heffte>
   {
     cpu::Backend backend{cpu::Backend::fftw3}; ///< Backend
-    bool         useReorder{true};  ///< Use reorder flag
-    bool         useAllToAll{true}; ///< Use alltoall flag
-    bool         usePencils{true};  ///< Use pencils flag
+    bool         useReorder{true};             ///< Use reorder flag
+    bool         useAllToAll{true};            ///< Use alltoall flag
+    bool         usePencils{true};             ///< Use pencils flag
   };
 
   /// @brief HeFFTe CUDA backend
@@ -328,9 +328,9 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>, BackendConstant<afft::Backend::heffte>
   {
     cuda::Backend backend{cuda::Backend::cufft}; ///< Backend
-    bool          useReorder{true};  ///< Use reorder flag
-    bool          useAllToAll{true}; ///< Use alltoall flag
-    bool          usePencils{true};  ///< Use pencils flag
+    bool          useReorder{true};              ///< Use reorder flag
+    bool          useAllToAll{true};             ///< Use alltoall flag
+    bool          usePencils{true};              ///< Use pencils flag
   };
 
   /// @brief HeFFTe HIP backend
@@ -387,7 +387,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>            order{};                         ///< Backend initialization order
     fftw3::BackendParameters fftw3{};                         ///< FFTW3 backend initialization parameters
   };
 
@@ -397,7 +397,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>            order{};                         ///< Backend initialization order
     cufft::BackendParameters cufft{};                         ///< cuFFT backend initialization parameters
   };
 
@@ -405,9 +405,9 @@ AFFT_EXPORT namespace afft
   struct hip::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
-    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask    mask{BackendMask::all};          ///< Backend mask
+    View<Backend>  order{};                         ///< Backend initialization order
   };
 
   /// @brief OpenCL backend parameters
@@ -416,7 +416,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>            order{};                         ///< Backend initialization order
     clfft::BackendParameters clfft{};                         ///< clFFT backend initialization parameters
   };
 
@@ -470,7 +470,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>             order{};                         ///< Backend initialization order
     fftw3::BackendParameters  fftw3{};                         ///< FFTW3 backend initialization parameters
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
@@ -481,7 +481,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>             order{};                         ///< Backend initialization order
     cufft::BackendParameters  cufft{};                         ///< cuFFT backend initialization parameters
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
@@ -492,7 +492,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>             order{};                         ///< Backend initialization order
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
   };
 
@@ -502,7 +502,7 @@ AFFT_EXPORT namespace afft
   {
     SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask    mask{BackendMask::all};          ///< Backend mask
-    View<Backend>  order{};                         ///< Backend initialization order, empty view means default order for the target
+    View<Backend>  order{};                         ///< Backend initialization order
   };
 
   /**
@@ -546,127 +546,6 @@ AFFT_EXPORT namespace afft
       return "<invalid backend>";
     }
   }
-
-  namespace c
-  {
-    using Backend        = ::afft_Backend;
-    using BackendMask    = ::afft_BackendMask;
-    using SelectStrategy = ::afft_SelectStrategy;
-
-    namespace clfft
-    {
-      namespace opencl
-      {
-        using Parameters = ::afft_clfft_opencl_Parameters;
-      } // namespace opencl
-    } // namespace clfft
-
-    namespace cufft
-    {
-      using WorkspacePolicy = ::afft_cufft_WorkspacePolicy;
-      namespace cuda
-      {
-        using Parameters = ::afft_cufft_cuda_Parameters;
-      } // namespace cuda
-      namespace mpi::cuda
-      {
-        using Parameters = ::afft_cufft_mpi_cuda_Parameters;
-      } // namespace mpi::cuda
-    } // namespace cufft
-
-    namespace fftw3
-    {
-      using PlannerFlag = ::afft_fftw3_PlannerFlag;
-      namespace cpu
-      {
-        using Parameters = ::afft_fftw3_cpu_Parameters;
-      } // namespace cpu
-      namespace mpi::cpu
-      {
-        using Parameters = ::afft_fftw3_mpi_cpu_Parameters;
-      } // namespace mpi::cpu
-    } // namespace fftw3
-
-    namespace heffte
-    {
-      namespace cpu
-      {
-        using Backend = ::afft_heffte_cpu_Backend;
-      } // namespace cpu
-      namespace mpi::cpu
-      {
-        using Backend = ::afft_heffte_mpi_cpu_Parameters;
-      } // namespace mpi::cpu
-      namespace cuda
-      {
-        using Backend = ::afft_heffte_cuda_Backend;
-      } // namespace cuda
-      namespace mpi::cuda
-      {
-        using Backend = ::afft_heffte_mpi_cuda_Parameters;
-      } // namespace mpi::cuda
-      namespace hip
-      {
-        using Backend = ::afft_heffte_hip_Backend;
-      } // namespace hip
-      namespace mpi::hip
-      {
-        using Backend = ::afft_heffte_mpi_hip_Parameters;
-      } // namespace mpi::hip
-    } // namespace heffte
-
-    namespace cpu
-    {
-      using BackendParameters = ::afft_cpu_BackendParameters;
-    } // namespace cpu
-    
-    namespace cuda
-    {
-      using BackendParameters = ::afft_cuda_BackendParameters;
-    } // namespace cuda
-
-    namespace hip
-    {
-      using BackendParameters = ::afft_hip_BackendParameters;
-    } // namespace hip
-
-    namespace opencl
-    {
-      using BackendParameters = ::afft_opencl_BackendParameters;
-    } // namespace opencl
-
-    namespace mpi
-    {
-      namespace cpu
-      {
-        using BackendParameters = ::afft_mpi_cpu_BackendParameters;
-      } // namespace cpu
-      namespace cuda
-      {
-        using BackendParameters = ::afft_mpi_cuda_BackendParameters;
-      } // namespace cuda
-      namespace hip
-      {
-        using BackendParameters = ::afft_mpi_hip_BackendParameters;
-      } // namespace hip
-      namespace opencl
-      {
-        using BackendParameters = ::afft_mpi_opencl_BackendParameters;
-      } // namespace opencl
-    } // namespace mpi
-
-    using Feedback = ::afft_Feedback;
-
-    /**
-     * @brief Get the name of the backend.
-     * @param backend Backend.
-     * @return Name of the backend.
-     */
-    [[nodiscard]] inline const char* getBackendName(Backend backend) noexcept
-    {
-      return ::afft_getBackendName(backend);
-    }
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_BACKEND_HPP */

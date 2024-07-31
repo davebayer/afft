@@ -230,12 +230,6 @@ AFFT_EXPORT namespace afft
   struct TypeProperties<std::complex<std::float128_t>>
     : TypePropertiesBase<std::complex<std::float128_t>, Precision::f128, Complexity::complex> {};
 #endif
-
-  namespace c
-  {
-    using Precision  = ::afft_Precision;
-    using Complexity = ::afft_Complexity;
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_TYPE_HPP */

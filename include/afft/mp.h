@@ -37,9 +37,7 @@ extern "C"
 /// @brief Multi-process backend
 typedef uint8_t afft_MpBackend;
 
-/**
- * @brief Multi-process backend
- */
+/// @brief Multi-process backend enumeration.
 #define afft_MpBackend_none (afft_MpBackend)0 ///< No multi-process backend (single-process)
 #define afft_MpBackend_mpi  (afft_MpBackend)1 ///< MPI multi-process backend
 

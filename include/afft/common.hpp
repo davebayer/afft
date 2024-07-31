@@ -39,15 +39,6 @@ AFFT_EXPORT namespace afft
 
   /// @brief Size type
   using Size = ::afft_Size;
-
-  namespace c
-  {
-    /// @brief Axis type
-    using Axis = ::afft_Axis;
-
-    /// @brief Size type
-    using Size = ::afft_Size;
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_COMMON_HPP */

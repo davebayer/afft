@@ -79,29 +79,24 @@ AFFT_EXPORT namespace afft
   {
     Alignment     alignment{};                               ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    View<Size>    srcStrides{};                              ///< strides of the source memory
-    View<Size>    dstStrides{};                              ///< strides of the destination memory
+    const Size*   srcStrides{};                              ///< strides of the source memory
+    const Size*   dstStrides{};                              ///< strides of the destination memory
   };
 
   /// @brief Memory block of the distributed transform
-  struct MemoryBlock
-  {
-    View<Size> starts{};  ///< starts of the memory block
-    View<Size> sizes{};   ///< sizes of the memory block
-    View<Size> strides{}; ///< strides of the memory block
-  };
+  using MemoryBlock = ::afft_MemoryBlock;
 
   /// @brief Memory layout of the distributed transform
   struct DistributedMemoryLayout
   {
-    Alignment         alignment{};                               ///< alignment of the memory
-    ComplexFormat     complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    View<MemoryBlock> srcBlocks{};                               ///< source memory blocks
-    View<Axis>        srcDistribAxes{};                          ///< axes along which the source data are distributed
-    View<Axis>        srcAxesOrder{};                            ///< order of the source axes
-    View<MemoryBlock> dstBlocks{};                               ///< destination memory blocks
-    View<Axis>        dstDistribAxes{};                          ///< axes along which the destination data are distributed
-    View<Axis>        dstAxesOrder{};                            ///< order of the destination axes
+    Alignment          alignment{};                               ///< alignment of the memory
+    ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    const MemoryBlock* srcBlocks{};                               ///< source memory blocks
+    View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
+    const Axis*        srcAxesOrder{};                            ///< order of the source axes
+    const MemoryBlock* dstBlocks{};                               ///< destination memory blocks
+    View<Axis>         dstDistribAxes{};                          ///< axes along which the destination data are distributed
+    const Axis*        dstAxesOrder{};                            ///< order of the destination axes
   };
 
   /**
@@ -477,37 +472,6 @@ AFFT_EXPORT namespace afft
     private:
       Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
-
-  namespace c
-  {
-    using MemoryLayout            = ::afft_MemoryLayout;
-    using Alignment               = ::afft_Alignment;
-    using ComplexFormat           = ::afft_ComplexFormat;
-    using CentralizedMemoryLayout = ::afft_CentralizedMemoryLayout;
-    using MemoryBlock             = ::afft_MemoryBlock;
-    using DistributedMemoryLayout = ::afft_DistributedMemoryLayout;
-
-    /**
-     * @brief Allocate aligned memory
-     * @param sizeInBytes Size of the memory in bytes
-     * @param alignment Alignment of the memory
-     * @return Pointer to the allocated memory
-     */
-    [[nodiscard]] inline void* alignedAlloc(std::size_t sizeInBytes, Alignment alignment) noexcept
-    {
-      return ::afft_alignedAlloc(sizeInBytes, alignment);
-    }
-
-    /**
-     * @brief Free aligned memory
-     * @param ptr Pointer to the memory
-     * @param alignment Alignment of the memory
-     */
-    inline void alignedFree(void* ptr, Alignment alignment) noexcept
-    {
-      ::afft_alignedFree(ptr, alignment);
-    }
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_MEMORY_HPP */

@@ -126,7 +126,7 @@ AFFT_EXPORT namespace afft
   struct opencl::Parameters : TargetConstant<Target::opencl>
   {
     cl_context         context{}; ///< OpenCL context
-    View<cl_device_id> devices{}; ///< OpenCL device
+    View<cl_device_id> devices{}; ///< OpenCL devices
   };
 
   struct opencl::ExecutionParameters : TargetConstant<Target::opencl>
@@ -135,31 +135,6 @@ AFFT_EXPORT namespace afft
     View<cl_mem>     workspaces{}; ///< Workspaces
   };
 #endif
-
-  namespace c
-  {
-    using Target = ::afft_Target;
-    namespace cpu
-    {
-      using Parameters          = ::afft_cpu_Parameters;
-      using ExecutionParameters = ::afft_cpu_ExecutionParameters;
-    } // namespace cpu
-    namespace cuda
-    {
-      using Parameters          = ::afft_cuda_Parameters;
-      using ExecutionParameters = ::afft_cuda_ExecutionParameters;
-    } // namespace cuda
-    namespace hip
-    {
-      using Parameters          = ::afft_hip_Parameters;
-      using ExecutionParameters = ::afft_hip_ExecutionParameters;
-    } // namespace hip
-    namespace opencl
-    {
-      using Parameters          = ::afft_opencl_Parameters;
-      using ExecutionParameters = ::afft_opencl_ExecutionParameters;
-    } // namespace opencl
-  } // namespace c
 } // namespace afft
 
 #endif /* AFFT_TARGET_HPP */
