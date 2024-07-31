@@ -31,8 +31,8 @@
  * @return Pointer to the allocated memory block or NULL if the allocation failed.
  */
 extern "C" void*
-afft_cpu_alignedAlloc(size_t         sizeInBytes,
-                      afft_Alignment alignment)
+afft_alignedAlloc(size_t         sizeInBytes,
+                  afft_Alignment alignment)
 {
   return ::operator new[](sizeInBytes, static_cast<std::align_val_t>(alignment), std::nothrow);
 }
@@ -42,8 +42,8 @@ afft_cpu_alignedAlloc(size_t         sizeInBytes,
  * @param ptr Pointer to the memory block.
  */
 extern "C" void
-afft_cpu_alignedFree(void*          ptr,
-                     afft_Alignment alignment)
+afft_alignedFree(void*          ptr,
+                 afft_Alignment alignment)
 {
   ::operator delete[](ptr, static_cast<std::align_val_t>(alignment), std::nothrow);
 }
