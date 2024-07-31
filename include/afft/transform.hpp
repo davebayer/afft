@@ -183,7 +183,7 @@ AFFT_EXPORT namespace afft
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
     bool           destructive{};                      ///< destructive transform
-    const Type*    types{};                            ///< types of the transform, must have size equal to the number of axes
+    View<Type>     types{};                            ///< types of the transform, must have size of transform rank or 1
   };
 
 /**********************************************************************************************************************/

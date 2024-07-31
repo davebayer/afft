@@ -24,12 +24,14 @@
 
 #include <afft/afft.hpp>
 
+#include "error.hpp"
+
 /**
  * @brief Set error details message.
  * @param errDetails Error details.
  * @param message Message.
  */
-static inline void setErrorDetailsMessage(afft_ErrorDetails& errDetails, const char* message) noexcept
+void setErrorDetailsMessage(afft_ErrorDetails& errDetails, const char* message) noexcept
 {
   std::strncpy(errDetails.message, message, AFFT_MAX_ERROR_MESSAGE_SIZE);
   errDetails.message[AFFT_MAX_ERROR_MESSAGE_SIZE - 1] = '\0';
@@ -39,7 +41,7 @@ static inline void setErrorDetailsMessage(afft_ErrorDetails& errDetails, const c
  * @brief Clear error details return value.
  * @param errDetails Error details.
  */
-static inline void clearErrorDetailsRetval(afft_ErrorDetails& errDetails) noexcept
+void clearErrorDetailsRetval(afft_ErrorDetails& errDetails) noexcept
 {
   std::memset(&errDetails.retval, 0, sizeof(errDetails.retval));
 }
@@ -60,7 +62,7 @@ catch (const afft::Exception& e)
   {
     setErrorDetailsMessage(*errDetails, e.what());
 
-    auto setRetvalMember = [&](auto& member) noexcept -> void
+    [[maybe_unused]] auto setRetvalMember = [&](auto& member) noexcept -> void
     {
       using T = std::decay_t<decltype(member)>;
 
@@ -110,25 +112,17 @@ catch (const afft::Exception& e)
     }
   }
 
-  return Convert<afft::Error>::toC(e.getError());
+  return static_cast<afft_Error>(e.getError());
 }
 catch (const std::exception& e)
 {
-  if (errDetails != nullptr)
-  {
-    setErrorDetailsMessage(*errDetails, e.what());
-    clearErrorDetailsRetval(*errDetails);
-  }
+  setErrorDetails(errDetails, e.what());
 
   return afft_Error_internal;
 }
 catch (...)
 {
-  if (errDetails != nullptr)
-  {
-    setErrorDetailsMessage(*errDetails, "Unknown error");
-    clearErrorDetailsRetval(*errDetails);
-  }
+  setErrorDetails(errDetails, "Unknown error");
 
   return afft_Error_internal;
 }

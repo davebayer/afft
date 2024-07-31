@@ -60,15 +60,25 @@ namespace afft::detail
                 static_cast<MpDesc&>(*this),
                 static_cast<TargetDesc&>(*this)}
       {
-        static_assert(isTransformParameters<TransformParamsT> || c::isTransformParameters<TransformParamsT>,
-                      "TransformParamsT must be a transform parameters type");
-        static_assert(isMpBackendParameters<MpBackendParamsT> || c::isMpBackendParameters<MpBackendParamsT>,
-                      "MpBackendParamsT must be an MPI backend parameters type");
-        static_assert(isTargetParameters<TargetParamsT> || c::isTargetParameters<TargetParamsT>,
-                      "TargetParamsT must be a target parameters type");
-        static_assert(isMemoryLayout<MemoryLayoutT> || c::isMemoryLayout<MemoryLayoutT>,
-                      "MemoryLayoutT must be a memory layout type");
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
       }
+
+      /**
+       * @brief Constructor.
+       * @param planParams The plan parameters.
+       */
+      Desc(const ::afft_PlanParameters& planParams)
+      : TransformDesc{makeTransformDesc(static_cast<Transform>(planParams.transform), planParams.transformParams)},
+        MpDesc{makeMpDesc(static_cast<MpBackend>(planParams.mpBackend), planParams.mpBackendParams)},
+        TargetDesc{makeTargetDesc(static_cast<Target>(planParams.target), planParams.targetParams)},
+        MemDesc{makeMemDesc(planParams.memoryLayout,
+                            static_cast<TransformDesc&>(*this),
+                            static_cast<MpDesc&>(*this),
+                            static_cast<TargetDesc&>(*this))}
+      {}
 
       /// @brief Copy constructor.
       Desc(const Desc&) = default;

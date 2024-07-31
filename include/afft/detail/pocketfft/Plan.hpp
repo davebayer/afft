@@ -83,7 +83,7 @@ namespace afft::detail::pocketfft
        */
       [[nodiscard]] constexpr std::size_t getThreadCount() const
       {
-        return static_cast<std::size_t>(mDesc.template getArchDesc<Target::cpu, Distribution::spst>().threadLimit);
+        return static_cast<std::size_t>(mDesc.getTargetDesc<Target::cpu>().threadLimit);
       }
   };
 } // namespace afft::detail::pocketfft

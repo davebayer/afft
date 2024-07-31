@@ -42,7 +42,7 @@ extern "C"
 {
 #endif
 
-/// @brief Plan structure
+/// @brief Plan structure (opaque)
 typedef struct afft_Plan afft_Plan;
 
 /// @brief Plan parameters structure
@@ -54,11 +54,11 @@ struct afft_PlanParameters
   afft_Transform transform;       ///< Transform type
   afft_MpBackend mpBackend;       ///< Multi-process backend
   afft_Target    target;          ///< Target architecture
-  void*          transformParams; ///< Transform parameters
-  void*          mpBackendParams; ///< Multi-process backend parameters
-  void*          targetParams;    ///< Target parameters
-  void*          memoryLayout;    ///< Memory layout
-  void*          backendParams;   ///< Backend parameters
+  const void*    transformParams; ///< Transform parameters
+  const void*    mpBackendParams; ///< Multi-process backend parameters
+  const void*    targetParams;    ///< Target parameters
+  const void*    memoryLayout;    ///< Memory layout
+  const void*    backendParams;   ///< Backend parameters
 };
 
 /**

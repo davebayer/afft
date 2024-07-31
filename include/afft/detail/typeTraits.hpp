@@ -94,6 +94,13 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::dtt::Parameters>> {};
 
   /**
+   * @brief Check if the type is C++ TransformParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxTransformParameters = IsCxxTransformParameters<T>::value;
+
+  /**
    * @brief Check if the type is C TransformParameters.
    * @tparam T The type.
    */
@@ -102,6 +109,13 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_dft_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_dht_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_dtt_Parameters>> {};
+
+  /**
+   * @brief Check if the type is C TransformParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCTransformParameters = IsCTransformParameters<T>::value;
 
   /**
    * @brief MpBackendParameters type for given backend.
@@ -136,12 +150,26 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::Parameters>> {};
 
   /**
+   * @brief Check if the type is Cxx MpBackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxMpBackendParameters = IsCxxMpBackendParameters<T>::value;
+
+  /**
    * @brief Check if the type is C MpBackendParameters.
    * @tparam T The type.
    */
   template<typename T>
   struct IsCMpBackendParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_Parameters>> {};
+
+  /**
+   * @brief Check if the type is C MpBackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCMpBackendParameters = IsCMpBackendParameters<T>::value;
 
   /**
    * @brief TargetParameters type for given target.
@@ -191,7 +219,14 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::Parameters> ||
-                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters>> {};
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters>> {};  
+
+  /**
+   * @brief Check if the type is C++ TargetParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxTargetParameters = IsCxxTargetParameters<T>::value;
 
   /**
    * @brief Check if the type is C TargetParameters.
@@ -203,6 +238,13 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_Parameters>> {};
+
+  /**
+   * @brief Check if the type is C TargetParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCTargetParameters = IsCTargetParameters<T>::value;
 
   /**
    * @brief MemoryLayoutParameters type for given memory layout.
@@ -237,6 +279,13 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::DistributedMemoryLayout>> {};
 
   /**
+   * @brief Check if the type is C++ TransformParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxMemoryLayoutParameters = IsCxxMemoryLayoutParameters<T>::value;
+
+  /**
    * @brief Check if the type is C MemoryLayoutParameters.
    * @tparam T The type.
    */
@@ -244,6 +293,13 @@ namespace afft::detail
   struct IsCMemoryLayoutParameters
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_CentralizedMemoryLayout> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_DistributedMemoryLayout>> {};
+
+  /**
+   * @brief Check if the type is C MemoryLayoutParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCMemoryLayoutParameters = IsCMemoryLayoutParameters<T>::value;
 
   /**
    * @brief BackendParameters type for given multi-process backend and target.
@@ -338,6 +394,20 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_hip_BackendParameters>> {};
 
   /**
+   * @brief Check if the type is C++ BackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxBackendParameters = IsCxxBackendParameters<T>::value;
+
+  /**
+   * @brief Check if the type is C BackendParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCBackendParameters = IsCBackendParameters<T>::value;
+
+  /**
    * @brief ExecutionParameters type for given architecture.
    * @tparam target The target type.
    */
@@ -397,6 +467,20 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_ExecutionParameters>> {};
+
+  /**
+   * @brief Check if the type is C++ ExecutionParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxExecutionParameters = IsCxxExecutionParameters<T>::value;
+
+  /**
+   * @brief Check if the type is C ExecutionParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCExecutionParameters = IsCExecutionParameters<T>::value;
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

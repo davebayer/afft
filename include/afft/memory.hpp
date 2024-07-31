@@ -79,8 +79,8 @@ AFFT_EXPORT namespace afft
   {
     Alignment     alignment{};                               ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    const Size*   srcStrides{};                              ///< strides of the source memory
-    const Size*   dstStrides{};                              ///< strides of the destination memory
+    const Size*   srcStrides{};                              ///< strides of the source memory, nullptr for default strides
+    const Size*   dstStrides{};                              ///< strides of the destination memory, nullptr for default strides
   };
 
   /// @brief Memory block of the distributed transform

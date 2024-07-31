@@ -74,7 +74,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTransformParameters = detail::IsCxxTransformParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isTransformParameters = detail::isCxxTransformParameters<T>;
 
   /**
    * @brief MpBackendParameters type for given backend.
@@ -88,7 +88,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isMpBackendParameters = detail::IsCxxMpBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isMpBackendParameters = detail::isCxxMpBackendParameters<T>;
 
   /**
    * @brief TargetParameters type for given architecture.
@@ -102,7 +102,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isTargetParameters = detail::IsCxxTargetParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isTargetParameters = detail::isCxxTargetParameters<T>;
 
   /**
    * @brief Memory layout type for given memory layout.
@@ -116,7 +116,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isMemoryLayout = detail::IsCxxMemoryLayoutParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isMemoryLayout = detail::isCxxMemoryLayoutParameters<T>;
 
   /**
    * @brief Backend Parameters type for given architecture.
@@ -131,7 +131,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isBackendParameters = detail::IsCxxBackendParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isBackendParameters = detail::isCxxBackendParameters<T>;
 
   /**
    * @brief ExecutionParameters type for given architecture.
@@ -146,7 +146,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isExecutionParameters = detail::IsCxxExecutionParameters<detail::cxx::remove_cvref_t<T>>::value;
+  inline constexpr bool isExecutionParameters = detail::isCxxExecutionParameters<T>;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */

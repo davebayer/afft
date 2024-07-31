@@ -125,7 +125,7 @@ namespace afft::detail
       TargetDesc(const TargetParamsT& targetParams)
       : mTargetVariant{makeTargetVariant(targetParams)}
       {
-        static_assert(isTargetParameters<TargetParamsT> || c::isTargetParameters<TargetParamsT>,
+        static_assert(isCxxTargetParameters<TargetParamsT> || isCTargetParameters<TargetParamsT>,
                       "invalid target parameters type");
       }
 
@@ -223,14 +223,14 @@ namespace afft::detail
         {
 #       ifdef AFFT_ENABLE_CUDA
           const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
-          targetParams.devices = View{cudaDesc.devices.get(), cudaDesc.targetCount};
+          targetParams.devices = View<int>{cudaDesc.devices.get(), cudaDesc.targetCount};
 #       endif
         }
         else if constexpr (target == Target::hip)
         {
 #       ifdef AFFT_ENABLE_HIP
           const auto& hipDesc = std::get<HipDesc>(mTargetVariant);
-          targetParams.devices = View{hipDesc.devices.get(), hipDesc.targetCount};
+          targetParams.devices = View<int>{hipDesc.devices.get(), hipDesc.targetCount};
 #       endif
         }
         else if constexpr (target == Target::opencl)
@@ -238,7 +238,7 @@ namespace afft::detail
 #       ifdef AFFT_ENABLE_OPENCL
           const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
           targetParams.context = openclDesc.context.get();
-          targetParams.devices = View{openclDesc.devices.get(), openclDesc.targetCount};
+          targetParams.devices = View<cl_device_id>{openclDesc.devices.get(), openclDesc.targetCount};
 #       endif
         }
         else
@@ -255,11 +255,12 @@ namespace afft::detail
        * @return Target parameters
        */
       template<Target target>
-      [[nodiscard]] constexpr c::TargetParameters<target> getCTargetParameters() const
+      [[nodiscard]] constexpr typename TargetParametersSelect<target>::CType
+      getCTargetParameters() const
       {
         static_assert(isValid(target), "invalid target");
 
-        c::TargetParameters<target> targetParams{};
+        typename TargetParametersSelect<target>::CType targetParams{};
 
         if constexpr (target == Target::cpu)
         {
@@ -365,7 +366,7 @@ namespace afft::detail
 #     endif
 
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const c::cpu::Parameters& cpuParams)
+      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
       {
         CpuDesc cpuDesc{};
         cpuDesc.threadLimit = cpuParams.threadLimit;
@@ -374,10 +375,10 @@ namespace afft::detail
       }
 
 #     ifdef AFFT_ENABLE_CUDA
-      [[nodiscard]] static TargetVariant makeTargetVariant(const c::cuda::Parameters& cudaParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cuda_Parameters& cudaParams)
       {
         CudaDesc cudaDesc{};
-        cudaDesc.targetCount = cudaParams.devices.size();
+        cudaDesc.targetCount = cudaParams.deviceCount;
         cudaDesc.devices     = std::make_unique<int[]>(cudaDesc.targetCount);
 
         std::copy_n(cudaParams.devices, cudaDesc.targetCount, cudaDesc.devices.get());
@@ -387,20 +388,20 @@ namespace afft::detail
 #     endif
 
 #     ifdef AFFT_ENABLE_HIP
-      [[nodiscard]] static TargetVariant makeTargetVariant(const c::hip::Parameters& hipParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_hip_Parameters& hipParams)
       {
         HipDesc hipDesc{};
         hipDesc.targetCount = hipParams.deviceCount;
         hipDesc.devices     = std::make_unique<int[]>(hipDesc.targetCount);
 
-        std::copy_n(hipParams.devices, hipParams.deviceCount, hipDesc.devices.get());
+        std::copy_n(hipParams.devices, hipDesc.targetCount, hipDesc.devices.get());
 
         return hipDesc;
       }
 #     endif
 
 #     ifdef AFFT_ENABLE_OPENCL
-      [[nodiscard]] static TargetVariant makeTargetVariant(const c::opencl::Parameters& openclParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_opencl_Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
         openclDesc.targetCount = openclParams.deviceCount;

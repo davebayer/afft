@@ -57,15 +57,15 @@ namespace afft::detail
                      const MpDesc&                  mpDesc,
                      const TargetDesc&              targetDesc)
       : mShapeRank{transformDesc.getShapeRank()},
-        mHasDefaultSrcStrides{memLayout.srcStrides.empty()},
-        mHasDefaultDstStrides{memLayout.dstStrides.empty()}
+        mHasDefaultSrcStrides{memLayout.srcStrides == nullptr},
+        mHasDefaultDstStrides{memLayout.dstStrides == nullptr}
       {
         if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() != 1)
         {
           throw Exception{Error::invalidArgument, "Centralized memory layout can be used only with single-process application on sigle target"};
         }
 
-        if (memLayout.srcStrides.empty())
+        if (mHasDefaultSrcStrides)
         {
           auto srcShape = transformDesc.getSrcShape();
 
@@ -77,18 +77,14 @@ namespace afft::detail
             }
           }
 
-          makeStrides(View<Size>{srcShape.data, mShapeRank}, Span<Size>{mSrcStrides.data, mShapeRank});
-        }
-        else if (memLayout.srcStrides.size() == mShapeRank)
-        {
-          std::copy(memLayout.srcStrides.begin(), memLayout.srcStrides.end(), mSrcStrides.data);
+          makeStrides(mShapeRank, srcShape.data, mSrcStrides.data);
         }
         else
         {
-          throw Exception{Error::invalidArgument, "The source strides must be empty or have the same size as the shape rank"};
+          std::copy_n(memLayout.srcStrides, mShapeRank, mSrcStrides.data);
         }
 
-        if (memLayout.dstStrides.empty())
+        if (mHasDefaultDstStrides)
         {
           auto dstShape = transformDesc.getDstShape();
 
@@ -100,15 +96,68 @@ namespace afft::detail
             }
           }
 
-          makeStrides(View<Size>{dstShape.data, mShapeRank}, Span<Size>{mDstStrides.data, mShapeRank});
-        }
-        else if (memLayout.dstStrides.size() == mShapeRank)
-        {
-          std::copy(memLayout.dstStrides.begin(), memLayout.dstStrides.end(), mDstStrides.data);
+          makeStrides(mShapeRank, dstShape.data, mDstStrides.data);
         }
         else
         {
-          throw Exception{Error::invalidArgument, "The destination strides must be empty or have the same size as the shape rank"};
+          std::copy_n(memLayout.dstStrides, mShapeRank, mDstStrides.data);
+        }
+      }
+
+      /**
+       * @brief Construct a centralized memory descriptor.
+       * @param memLayout Memory layout.
+       * @param shapeRank Shape rank.
+       */
+      CentralMemDesc(const afft_CentralizedMemoryLayout& memLayout,
+                     const TransformDesc&                transformDesc,
+                     const MpDesc&                       mpDesc,
+                     const TargetDesc&                   targetDesc)
+      : mShapeRank{transformDesc.getShapeRank()},
+        mHasDefaultSrcStrides{memLayout.srcStrides == nullptr},
+        mHasDefaultDstStrides{memLayout.dstStrides == nullptr}
+      {
+        if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() != 1)
+        {
+          throw Exception{Error::invalidArgument, "Centralized memory layout can be used only with single-process application on sigle target"};
+        }
+
+        if (mHasDefaultSrcStrides)
+        {
+          auto srcShape = transformDesc.getSrcShape();
+
+          if (transformDesc.getTransform() == Transform::dft && transformDesc.getPlacement() == Placement::inPlace)
+          {
+            if (transformDesc.getTransformDesc<Transform::dft>().type == dft::Type::realToComplex)
+            {
+              srcShape[mShapeRank - 1] = (srcShape[mShapeRank - 1] / 2 + 1) * 2;
+            }
+          }
+
+          makeStrides(mShapeRank, srcShape.data, mSrcStrides.data);
+        }
+        else
+        {
+          std::copy_n(memLayout.srcStrides, mShapeRank, mSrcStrides.data);
+        }
+
+        if (mHasDefaultDstStrides)
+        {
+          auto dstShape = transformDesc.getDstShape();
+
+          if (transformDesc.getTransform() == Transform::dft && transformDesc.getPlacement() == Placement::inPlace)
+          {
+            if (transformDesc.getTransformDesc<Transform::dft>().type == dft::Type::complexToReal)
+            {
+              dstShape[mShapeRank - 1] = (dstShape[mShapeRank - 1] / 2 + 1) * 2;
+            }
+          }
+
+          makeStrides(mShapeRank, dstShape.data, mDstStrides.data);
+        }
+        else
+        {
+          std::copy_n(memLayout.dstStrides, mShapeRank, mDstStrides.data);
         }
       }
 
@@ -164,6 +213,38 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the number of elements in the source.
+       * @return Number of elements in the source.
+       */
+      [[nodiscard]] constexpr std::size_t getSrcElemCount() const noexcept
+      {
+        std::size_t elemCount{1};
+
+        for (std::size_t i{}; i < mShapeRank; ++i)
+        {
+          elemCount *= mSrcStrides[i];
+        }
+
+        return elemCount;
+      }
+
+      /**
+       * @brief Get the number of elements in the destination.
+       * @return Number of elements in the destination.
+       */
+      [[nodiscard]] constexpr std::size_t getDstElemCount() const noexcept
+      {
+        std::size_t elemCount{1};
+
+        for (std::size_t i{}; i < mShapeRank; ++i)
+        {
+          elemCount *= mDstStrides[i];
+        }
+
+        return elemCount;
+      }
+
+      /**
        * @brief Equality operator
        * @param lhs Left-hand side.
        * @param rhs Right-hand side.
@@ -204,10 +285,26 @@ namespace afft::detail
         mTargetCount{targetDesc.getTargetCount()},
         mMemBlockDescs{std::make_unique<MemBlockDesc[]>(mTargetCount * 2)},
         mMemoryBlocks{std::make_unique<MemoryBlock[]>(mTargetCount * 2)},
-        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder.empty()},
-        mHasDefaultDstAxesOrder{memLayout.dstAxesOrder.empty()},
-        mHasDefaultSrcMemoryBlocks{memLayout.srcBlocks.empty()},
-        mHasDefaultDstMemoryBlocks{memLayout.dstBlocks.empty()}
+        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder == nullptr},
+        mHasDefaultDstAxesOrder{memLayout.dstAxesOrder == nullptr},
+        mHasDefaultSrcMemoryBlocks{memLayout.srcBlocks == nullptr},
+        mHasDefaultDstMemoryBlocks{memLayout.dstBlocks == nullptr}
+      {
+        
+      }
+
+      DistribMemDesc(const afft_DistributedMemoryLayout& memLayout,
+                     const TransformDesc&                transformDesc,
+                     const MpDesc&                       mpDesc,
+                     const TargetDesc&                   targetDesc)
+      : mShapeRank{transformDesc.getShapeRank()},
+        mTargetCount{targetDesc.getTargetCount()},
+        mMemBlockDescs{std::make_unique<MemBlockDesc[]>(mTargetCount * 2)},
+        mMemoryBlocks{std::make_unique<MemoryBlock[]>(mTargetCount * 2)},
+        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder == nullptr},
+        mHasDefaultDstAxesOrder{memLayout.dstAxesOrder == nullptr},
+        mHasDefaultSrcMemoryBlocks{memLayout.srcBlocks == nullptr},
+        mHasDefaultDstMemoryBlocks{memLayout.dstBlocks == nullptr}
       {
         
       }
@@ -228,7 +325,7 @@ namespace afft::detail
         mHasDefaultSrcStrides{other.mHasDefaultSrcStrides},
         mHasDefaultDstStrides{other.mHasDefaultDstStrides}
       {
-        std::copy(other.mMemBlockDescs.get(), other.mMemBlockDescs.get() + mTargetCount * 2, mMemBlockDescs.get());
+        std::copy_n(other.mMemBlockDescs.get(), mTargetCount * 2, mMemBlockDescs.get());
         
         // TODO: set memory blocks
       }
@@ -250,7 +347,7 @@ namespace afft::detail
             mMemBlockDescs = std::make_unique<MemBlockDesc[]>(mTargetCount * 2);
             mMemoryBlocks  = std::make_unique<MemoryBlock[]>(mTargetCount * 2);
           }
-          std::copy(other.mMemBlockDescs.get(), other.mMemBlockDescs.get() + mTargetCount * 2, mMemBlockDescs.get());
+          std::copy_n(other.mMemBlockDescs.get(), mTargetCount * 2, mMemBlockDescs.get());
           mSrcDistribAxes            = other.mSrcDistribAxes;
           mDstDistribAxes            = other.mDstDistribAxes;
           mSrcAxesOrder              = other.mSrcAxesOrder;
@@ -369,20 +466,20 @@ namespace afft::detail
       // }
 
     private:
-      std::size_t                     mShapeRank{};                 ///< Shape rank.
-      std::size_t                     mTargetCount{};               ///< Target count.
-      std::unique_ptr<MemBlockDesc[]> mMemBlockDescs{};             ///< Source and destination memory block descriptors.
-      std::unique_ptr<MemoryBlock[]>  mMemoryBlocks{};              ///< Views over memory blocks.
-      MaxDimBuffer<Axis>              mSrcDistribAxes{};            ///< Source distributed axes.
-      MaxDimBuffer<Axis>              mDstDistribAxes{};            ///< Destination distributed axes.
-      MaxDimBuffer<Axis>              mSrcAxesOrder{};              ///< Source axes order.
-      MaxDimBuffer<Axis>              mDstAxesOrder{};              ///< Destination axes order.
-      bool                            mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
-      bool                            mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
-      bool                            mHasDefaultSrcMemoryBlocks{}; ///< Has default source memory blocks.
-      bool                            mHasDefaultDstMemoryBlocks{}; ///< Has default destination memory blocks.
-      bool                            mHasDefaultSrcStrides{};      ///< Has default source strides.
-      bool                            mHasDefaultDstStrides{};      ///< Has default destination strides.
+      std::size_t                       mShapeRank{};                 ///< Shape rank.
+      std::size_t                       mTargetCount{};               ///< Target count.
+      std::unique_ptr<MemBlockDesc[]>   mMemBlockDescs{};             ///< Source and destination memory block descriptors.
+      std::unique_ptr<MemoryBlock[]>    mMemoryBlocks{};              ///< View over memory blocks.
+      MaxDimBuffer<Axis>                mSrcDistribAxes{};            ///< Source distributed axes.
+      MaxDimBuffer<Axis>                mDstDistribAxes{};            ///< Destination distributed axes.
+      MaxDimBuffer<Axis>                mSrcAxesOrder{};              ///< Source axes order.
+      MaxDimBuffer<Axis>                mDstAxesOrder{};              ///< Destination axes order.
+      bool                              mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
+      bool                              mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
+      bool                              mHasDefaultSrcMemoryBlocks{}; ///< Has default source memory blocks.
+      bool                              mHasDefaultDstMemoryBlocks{}; ///< Has default destination memory blocks.
+      bool                              mHasDefaultSrcStrides{};      ///< Has default source strides.
+      bool                              mHasDefaultDstStrides{};      ///< Has default destination strides.
   };
 
   class MemDesc
@@ -395,11 +492,12 @@ namespace afft::detail
               const TransformDesc& transformDesc,
               const MpDesc&        mpDesc,
               const TargetDesc&    targetDesc)
-      : mAlignment{memLayout.alignment},
-        mComplexFormat{memLayout.complexFormat},
+      : mAlignment{static_cast<afft::Alignment>(memLayout.alignment)},
+        mComplexFormat{static_cast<afft::ComplexFormat>(memLayout.complexFormat)},
         mMemVariant{makeMemVariant(memLayout, transformDesc, mpDesc, targetDesc)}
       {
-        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout parameters type");
+        static_assert(isCxxMemoryLayoutParameters<MemoryLayoutT> || isCMemoryLayoutParameters<MemoryLayoutT>,
+                      "MemoryLayoutT must be a memory layout parameters type");
       }
 
       MemDesc(const MemDesc&) = default;
@@ -459,11 +557,11 @@ namespace afft::detail
       }
 
       /**
-       * @brief Reconstruct the memory layout.
+       * @brief Reconstruct the C++ memory layout.
        * @return Memory layout.
        */
       template<MemoryLayout memoryLayout>
-      [[nodiscard]] constexpr MemoryLayoutParameters<memoryLayout> getMemoryLayoutParameters() const noexcept
+      [[nodiscard]] constexpr MemoryLayoutParameters<memoryLayout> getCxxMemoryLayoutParameters() const noexcept
       {
         static_assert(isValid(memoryLayout), "invalid memory layout");
 
@@ -508,6 +606,22 @@ namespace afft::detail
                                                          const TransformDesc&           transformDesc,
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
+      {
+        return DistribMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+      }
+
+      [[nodiscard]] static CentralMemDesc makeMemVariant(const afft_CentralizedMemoryLayout& memLayout,
+                                                         const TransformDesc&                transformDesc,
+                                                         const MpDesc&                       mpDesc,
+                                                         const TargetDesc&                   targetDesc)
+      {
+        return CentralMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+      }
+
+      [[nodiscard]] static DistribMemDesc makeMemVariant(const afft_DistributedMemoryLayout& memLayout,
+                                                         const TransformDesc&                transformDesc,
+                                                         const MpDesc&                       mpDesc,
+                                                         const TargetDesc&                   targetDesc)
       {
         return DistribMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
       }
