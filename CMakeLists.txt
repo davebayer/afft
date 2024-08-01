@@ -31,6 +31,7 @@ project(afft VERSION 0.1.0 LANGUAGES C CXX)
 option(AFFT_BUILD_EXAMPLES  "Build examples"                                          OFF)
 option(AFFT_BUILD_TESTS     "Build tests"                                             OFF)
 option(AFFT_BUILD_MODULE    "Enable build of C++20 module"                            OFF)
+option(AFFT_BUILD_MATLAB    "Build MATLAB bindings"                                   OFF)
 
 # Packages lookup options
 option(AFFT_USE_NVHPC_CUDA  "Use CUDA version that comes with NVHPC"                  OFF)
@@ -51,12 +52,7 @@ include(cmake/AfftUtils.cmake)
 # Add library subdirectory
 add_subdirectory(library)
 
-# Add examples if requested
-if(AFFT_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
-# Add tests if requested
-if(AFFT_BUILD_TESTS)
-  add_subdirectory(tests)
+# Add matlab subdirectory
+if(AFFT_BUILD_MATLAB)
+  add_subdirectory(matlab)
 endif()
