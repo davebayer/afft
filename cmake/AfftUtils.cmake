@@ -24,20 +24,12 @@
 #
 ########################################################################################################################
 
-add_library(afft afft.cpp
-                 backend.cpp
-                 error.cpp
-                 init.cpp
-                 memory.cpp
-                 Plan.cpp
-                 utils.cpp
-                 version.cpp)
-target_compile_features(afft PRIVATE cxx_std_17)
-target_include_directories(afft PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(afft SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/span/include)
-
-add_library(afft-header-only INTERFACE)
-target_compile_features(afft-header-only INTERFACE cxx_std_17)
-target_include_directories(afft-header-only INTERFACE ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(afft-header-only SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
-target_compile_definitions(afft-header-only INTERFACE AFFT_HEADER_ONLY)
+# Report a check result
+# - arg: the result of the check
+function(reportFound arg)
+  if(arg)
+    message(CHECK_PASS "found")
+  else()
+    message(CHECK_FAIL "not found")
+  endif()
+endfunction()

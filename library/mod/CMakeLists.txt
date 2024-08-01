@@ -24,7 +24,7 @@
 #
 ########################################################################################################################
 
-if(NOT (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28) AND AFFT_MODULE)
+if(NOT (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28) AND AFFT_BUILD_MODULE)
   message(FATAL_ERROR "C++20 module support requires CMake 3.28 or later")
 endif()
 
@@ -32,10 +32,8 @@ add_library(afft-module)
 
 set_target_properties(afft-module PROPERTIES CXX_SCAN_FOR_MODULES TRUE)
 
-target_sources(afft-module
-  PUBLIC FILE_SET CXX_MODULES
-    FILES afft.cpp)
+target_sources(afft-module PUBLIC FILE_SET CXX_MODULES FILES afft.cpp)
 
 target_compile_features(afft-module PUBLIC cxx_std_20)
-target_include_directories(afft-module PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(afft-module PRIVATE ${PROJECT_SOURCE_DIR}/library/include)
 target_include_directories(afft-module SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/span/include)
