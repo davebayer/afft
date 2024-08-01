@@ -38,29 +38,8 @@
 #include "type.hpp"
 #include "version.hpp"
 #include "detail/cxx.hpp"
+#include "detail/formatters.hpp"
 #include "detail/validate.hpp"
-
-namespace afft::detail
-{
-  template<typename CharT = char>
-  struct ParseFormatterSkipper
-  {
-    /**
-     * @brief Parse a format string.
-     * @param ctx Format context
-     * @return std::basic_format_parse_context<CharT>::iterator
-     */
-    [[nodiscard]] constexpr auto parse(std::basic_format_parse_context<CharT>& ctx) const noexcept
-      -> std::basic_format_parse_context<CharT>::iterator
-    {
-      typename std::basic_format_parse_context<CharT>::iterator it{};
-
-      for (it = ctx.begin(); it != ctx.end() && *it != '}'; ++it) {}
-
-      return it;
-    }
-  };
-} // namespace afft::detail
 
 /**********************************************************************************************************************/
 // Backend
