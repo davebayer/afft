@@ -24,3 +24,23 @@
 #
 ########################################################################################################################
 
+cmake_minimum_required(VERSION 3.22)
+
+find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER)
+
+if(WIN32)
+  set(MATLAB_BIN_PLATFORM_DIR "win64")
+elseif(UNIX)
+  set(MATLAB_BIN_PLATFORM_DIR "glnxa64")
+elseif(APPLE)
+  set(MATLAB_BIN_PLATFORM_DIR "maci64")
+else()
+  message(FATAL_ERROR "Unsupported matlab platform: ${CMAKE_SYSTEM_NAME}")
+endif()
+
+matlab_add_mex(
+  NAME    fft
+  SRC     src/fft.cpp
+  LINK_TO afft::afft
+  R2018a
+)
