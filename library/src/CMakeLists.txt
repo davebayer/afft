@@ -24,14 +24,8 @@
 #
 ########################################################################################################################
 
-add_library(afft afft.cpp
-                 backend.cpp
-                 error.cpp
-                 init.cpp
-                 memory.cpp
-                 Plan.cpp
-                 utils.cpp
-                 version.cpp)
+add_library(afft afft.cpp)
+
 target_compile_features(afft PRIVATE cxx_std_17)
 target_include_directories(afft PUBLIC ${PROJECT_SOURCE_DIR}/library/include)
 target_include_directories(afft SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/span/include)

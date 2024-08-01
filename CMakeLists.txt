@@ -47,11 +47,11 @@ set(AFFT_TARGET_LIST   ""          CACHE STRING "Semicolon separated list of tar
 set(AFFT_MP_BACKEND    ""          CACHE STRING "Multi process framework to use (MPI), default is none (no MP support)")
 
 # Includes
-include(CTest)
 include(cmake/afftUtils.cmake)
 
 # Enable testing if requested
 if(AFFT_BUILD_TESTS)
+  include(CTest)
   enable_testing()
 endif()
 
