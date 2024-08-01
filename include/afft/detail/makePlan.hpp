@@ -77,9 +77,9 @@ namespace afft::detail
   {
     for (std::size_t i{}; i < backendCount; ++i)
     {
-      const Backend backend = static_cast<Backend>(std::underlying_type_t<Backend>(1) << i);
+      const Backend backend = static_cast<Backend>(i);
 
-      if ((backendMask & backend) != BackendMask::empty)
+      if ((backendMask & makeBackendMask(backend)) != BackendMask::empty)
       {
         fn(backend);
       }
@@ -99,12 +99,12 @@ namespace afft::detail
   {
     for (const Backend backend : backendOrder)
     {
-      if ((backendMask & backend) != BackendMask::empty)
+      if ((backendMask & makeBackendMask(backend)) != BackendMask::empty)
       {
         fn(backend);
       }
 
-      backendMask = backendMask & (~backend);
+      backendMask = backendMask & (~makeBackendMask(backend));
     }
 
     if (backendMask != BackendMask::empty)
@@ -130,34 +130,34 @@ namespace afft::detail
     {
       if constexpr (target == Target::cpu)
       {
-        return Backend::fftw3 | Backend::mkl | Backend::pocketfft;
+        return BackendMask::fftw3 | BackendMask::mkl | BackendMask::pocketfft;
       }
       else if constexpr (target == Target::cuda)
       {
-        return Backend::cufft | ((targetCount == 1) ? (BackendMask::empty | Backend::vkfft) : BackendMask::empty);
+        return BackendMask::cufft | ((targetCount == 1) ? (BackendMask::empty | BackendMask::vkfft) : BackendMask::empty);
       }
       else if constexpr (target == Target::hip)
       {
-        return Backend::hipfft | Backend::rocfft | ((targetCount == 1) ? (BackendMask::empty | Backend::vkfft) : BackendMask::empty);
+        return BackendMask::hipfft | BackendMask::rocfft | ((targetCount == 1) ? (BackendMask::empty | BackendMask::vkfft) : BackendMask::empty);
       }
       else if constexpr (target == Target::opencl)
       {
-        return (targetCount == 1) ? (Backend::clfft | Backend::vkfft) : BackendMask::empty;
+        return (targetCount == 1) ? (BackendMask::clfft | BackendMask::vkfft) : BackendMask::empty;
       }
     }
     else if constexpr (mpBackend == MpBackend::mpi)
     {
       if constexpr (target == Target::cpu)
       {
-        return Backend::fftw3 | Backend::heffte | Backend::mkl;
+        return BackendMask::fftw3 | BackendMask::heffte | BackendMask::mkl;
       }
       else if constexpr (target == Target::cuda)
       {
-        return (targetCount == 1) ? (Backend::cufft | Backend::heffte) : BackendMask::empty;
+        return (targetCount == 1) ? (BackendMask::cufft | BackendMask::heffte) : BackendMask::empty;
       }
       else if constexpr (target == Target::hip)
       {
-        return Backend::rocfft | ((targetCount == 1) ? (Backend::hipfft | Backend::heffte) : BackendMask::empty);
+        return BackendMask::rocfft | ((targetCount == 1) ? (BackendMask::hipfft | BackendMask::heffte) : BackendMask::empty);
       }
       else if constexpr (target == Target::opencl)
       {
@@ -198,7 +198,7 @@ namespace afft::detail
 
     const auto supportedBackendMask = getSupportedBackendMask<BackendParamsT::mpBackend, BackendParamsT::target>(desc.getTargetCount());
     
-    if ((backend & supportedBackendMask) == BackendMask::empty)
+    if ((makeBackendMask(backend) & supportedBackendMask) == BackendMask::empty)
     {
       assignFeedbackMessage("Backend not supported for target and distribution");
     }

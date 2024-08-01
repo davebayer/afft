@@ -63,8 +63,17 @@ AFFT_EXPORT namespace afft
   /// @brief Bitmask of backends
   enum class BackendMask : ::afft_BackendMask
   {
-    empty = afft_BackendMask_empty, ///< empty backend mask
-    all   = afft_BackendMask_all,   ///< all backends
+    empty     = afft_BackendMask_empty,     ///< empty backend mask
+    clfft     = afft_BackendMask_clfft,     ///< clFFT mask
+    cufft     = afft_BackendMask_cufft,     ///< cuFFT mask
+    fftw3     = afft_BackendMask_fftw3,     ///< FFTW3 mask
+    heffte    = afft_BackendMask_heffte,    ///< HeFFTe mask
+    hipfft    = afft_BackendMask_hipfft,    ///< hipFFT mask
+    mkl       = afft_BackendMask_mkl,       ///< Intel MKL mask
+    pocketfft = afft_BackendMask_pocketfft, ///< PocketFFT mask
+    rocfft    = afft_BackendMask_rocfft,    ///< rocFFT mask
+    vkfft     = afft_BackendMask_vkfft,     ///< VkFFT mask
+    all       = afft_BackendMask_all,       ///< all backends
   };
 
   // Check that the BackendMask underlying type has sufficient size to store all Backend values
@@ -80,13 +89,10 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
-   * @tparam T Type of the value (Backend or BackendMask).
    * @param value Value to apply the operation to.
    * @return Result of the operation.
    */
-  template<typename T>
-  [[nodiscard]] constexpr auto operator~(T value)
-    -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>))
+  [[nodiscard]] constexpr BackendMask operator~(BackendMask value) noexcept
   {
     const auto val = detail::cxx::to_underlying(value);
 
@@ -95,16 +101,11 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `and` operation to a BackendMask or Backend.
-   * @tparam T Type of the left-hand side (Backend or BackendMask).
-   * @tparam U Type of the right-hand side (Backend or BackendMask).
    * @param lhs Left-hand side of the operation.
    * @param rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
-  template<typename T, typename U>
-  [[nodiscard]] constexpr auto operator&(T lhs, U rhs)
-    -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
-                                      (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
+  [[nodiscard]] constexpr BackendMask operator&(BackendMask lhs, BackendMask rhs) noexcept
   {
     const auto left  = detail::cxx::to_underlying(lhs);
     const auto right = detail::cxx::to_underlying(rhs);
@@ -114,16 +115,11 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `or` operation to a BackendMask or Backend.
-   * @tparam T Type of the left-hand side (Backend or BackendMask).
-   * @tparam U Type of the right-hand side (Backend or BackendMask).
    * @param lhs Left-hand side of the operation.
    * @param rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
-  template<typename T, typename U>
-  [[nodiscard]] constexpr auto operator|(T lhs, U rhs)
-    -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
-                                      (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
+  [[nodiscard]] constexpr BackendMask operator|(BackendMask lhs, BackendMask rhs) noexcept
   {
     const auto left  = detail::cxx::to_underlying(lhs);
     const auto right = detail::cxx::to_underlying(rhs);
@@ -133,21 +129,26 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `xor` operation to a BackendMask or Backend.
-   * @tparam T Type of the left-hand side (Backend or BackendMask).
-   * @tparam U Type of the right-hand side (Backend or BackendMask).
    * @param lhs Left-hand side of the operation.
    * @param rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
-  template<typename T, typename U>
-  [[nodiscard]] constexpr auto operator^(T lhs, U rhs)
-    -> AFFT_RET_REQUIRES(BackendMask, (std::is_same_v<T, Backend> || std::is_same_v<T, BackendMask>) &&
-                                      (std::is_same_v<U, Backend> || std::is_same_v<U, BackendMask>))
+  [[nodiscard]] constexpr BackendMask operator^(BackendMask lhs, BackendMask rhs) noexcept
   {
     const auto left  = detail::cxx::to_underlying(lhs);
     const auto right = detail::cxx::to_underlying(rhs);
 
     return static_cast<BackendMask>(std::bit_xor<>{}(left, right));
+  }
+
+  /**
+   * @brief Makes a BackendMask from a Backend.
+   * @param backend Backend.
+   * @return BackendMask.
+   */
+  [[nodiscard]] constexpr BackendMask makeBackendMask(Backend backend) noexcept
+  {
+    return static_cast<BackendMask>(1 << detail::cxx::to_underlying(backend));
   }
 
 /**********************************************************************************************************************/

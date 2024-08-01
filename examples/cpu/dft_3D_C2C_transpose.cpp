@@ -72,7 +72,7 @@ int main()
   // make backend parameters
   afft::cpu::BackendParameters backendParams{};
   backendParams.strategy          = afft::SelectStrategy::first;
-  backendParams.mask              = (afft::Backend::fftw3 | afft::Backend::mkl | afft::Backend::pocketfft);
+  backendParams.mask              = (afft::BackendMask::fftw3 | afft::BackendMask::mkl | afft::BackendMask::pocketfft);
   backendParams.order             = backendOrder;
   backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure; // FFTW3 specific planner flag
   backendParams.fftw3.timeLimit   = std::chrono::seconds{2}; // limit the time for the FFTW3 planner

@@ -11,7 +11,7 @@ afft_ErrorDetails errDetails = {};
     afft_Error _err = (call); \
     if (_err != afft_Error_success) \
     { \
-      fprintf(stderr, "afft error (%s:%d): %d\n", __FILE__, __LINE__, errDetails.message); \
+      fprintf(stderr, "afft error (%s:%d): %s\n", __FILE__, __LINE__, errDetails.message); \
       exit(EXIT_FAILURE); \
     } \
   } while (0)
@@ -47,7 +47,7 @@ int main(void)
     .precision     = {afft_Precision_float, afft_Precision_float, afft_Precision_float},
     .shapeRank     = 3,
     .shape         = shape,
-    .axesRank      = 1,
+    .transformRank = 1,
     .axes          = (afft_Axis[]){1},
     .normalization = afft_Normalization_unitary,
     .placement     = afft_Placement_outOfPlace,
@@ -57,8 +57,8 @@ int main(void)
   afft_Size srcStrides[3] = {0};
   afft_Size dstStrides[3] = {0};
 
-  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, 1, srcStrides, &errDetails));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, 1, dstStrides, &errDetails));
+  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, srcStrides, 1, &errDetails));
+  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, dstStrides, 1, &errDetails));
 
   afft_cpu_Parameters cpuParams =
   {
@@ -73,24 +73,24 @@ int main(void)
     .dstStrides    = dstStrides,
   };
 
-  afft_cpu_BackendParameters backendParams =
-  {
-    .strategy  = afft_SelectStrategy_first,
-    .mask      = (afft_Backend_fftw3 | afft_Backend_mkl | afft_Backend_pocketfft),
-    .orderSize = 2,
-    .order     = (afft_Backend[]){afft_Backend_mkl, afft_Backend_fftw3},
-    .fftw3     = {.plannerFlag = afft_fftw3_PlannerFlag_exhaustive,
-                  .timeLimit   = 2.0},
-  };
+  // afft_cpu_BackendParameters backendParams =
+  // {
+  //   .strategy  = afft_SelectStrategy_first,
+  //   .mask      = (afft_BackendMask_fftw3 | afft_BackendMask_mkl | afft_BackendMask_pocketfft),
+  //   .orderSize = 2,
+  //   .order     = (afft_Backend[]){afft_Backend_mkl, afft_Backend_fftw3},
+  //   .fftw3     = {.plannerFlag = afft_fftw3_PlannerFlag_exhaustive,
+  //                 .timeLimit   = 2.0},
+  // };
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_create((afft_Plan_Parameters){.transform       = afft_Transform_dft,
-                                                    .target          = afft_Target_cpu,
-                                                    .transformParams = &dftParams,
-                                                    .targetParams    = &cpuParams,
-                                                    .memoryLayout    = &memoryLayout,
-                                                    .backendParams   = &backendParams},
+  AFFT_CALL(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
+                                                   .target          = afft_Target_cpu,
+                                                   .transformParams = &dftParams,
+                                                   .targetParams    = &cpuParams,
+                                                   .memoryLayout    = &memoryLayout,
+                                                   .backendParams   = NULL},
                              &plan,
                              &errDetails)); // generate the plan of the transform
 
@@ -104,8 +104,8 @@ int main(void)
 
   afft_Plan_destroy(plan); // destroy the plan of the transform
 
-  afft_cpu_alignedFree(src, alignment); // free source vector
-  afft_cpu_alignedFree(dst, alignment); // free destination vector
+  afft_alignedFree(src, alignment); // free source vector
+  afft_alignedFree(dst, alignment); // free destination vector
 
   AFFT_CALL(afft_finalize(&errDetails)); // deinitialize afft library
 }

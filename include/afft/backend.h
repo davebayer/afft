@@ -37,18 +37,18 @@ extern "C"
 #endif
 
 // Backend type
-typedef uint16_t afft_Backend;
+typedef uint8_t afft_Backend;
 
 /// @brief Backend enumeration
-#define afft_Backend_clfft     (afft_Backend)(1 << 0) ///< clFFT
-#define afft_Backend_cufft     (afft_Backend)(1 << 1) ///< cuFFT
-#define afft_Backend_fftw3     (afft_Backend)(1 << 2) ///< FFTW3
-#define afft_Backend_heffte    (afft_Backend)(1 << 3) ///< HeFFTe
-#define afft_Backend_hipfft    (afft_Backend)(1 << 4) ///< hipFFT
-#define afft_Backend_mkl       (afft_Backend)(1 << 5) ///< Intel MKL
-#define afft_Backend_pocketfft (afft_Backend)(1 << 6) ///< PocketFFT
-#define afft_Backend_rocfft    (afft_Backend)(1 << 7) ///< rocFFT
-#define afft_Backend_vkfft     (afft_Backend)(1 << 8) ///< VkFFT
+#define afft_Backend_clfft     (afft_Backend)0 ///< clFFT
+#define afft_Backend_cufft     (afft_Backend)1 ///< cuFFT
+#define afft_Backend_fftw3     (afft_Backend)2 ///< FFTW3
+#define afft_Backend_heffte    (afft_Backend)3 ///< HeFFTe
+#define afft_Backend_hipfft    (afft_Backend)4 ///< hipFFT
+#define afft_Backend_mkl       (afft_Backend)5 ///< Intel MKL
+#define afft_Backend_pocketfft (afft_Backend)6 ///< PocketFFT
+#define afft_Backend_rocfft    (afft_Backend)7 ///< rocFFT
+#define afft_Backend_vkfft     (afft_Backend)8 ///< VkFFT
 
 /// @brief Backend count
 #define AFFT_BACKEND_COUNT 9
@@ -57,8 +57,27 @@ typedef uint16_t afft_Backend;
 typedef uint16_t afft_BackendMask;
 
 /// @brief Backend mask enumeration
-#define afft_BackendMask_empty (afft_BackendMask)0          ///< Empty mask
-#define afft_BackendMask_all   (afft_BackendMask)UINT16_MAX ///< All backends
+#define afft_BackendMask_empty     (afft_BackendMask)0                             ///< Empty mask
+#define afft_BackendMask_clfft     (afft_BackendMask)(1 << afft_Backend_clfft)     ///< clFFT mask
+#define afft_BackendMask_cufft     (afft_BackendMask)(1 << afft_Backend_cufft)     ///< cuFFT mask
+#define afft_BackendMask_fftw3     (afft_BackendMask)(1 << afft_Backend_fftw3)     ///< FFTW3 mask
+#define afft_BackendMask_heffte    (afft_BackendMask)(1 << afft_Backend_heffte)    ///< HeFFTe mask
+#define afft_BackendMask_hipfft    (afft_BackendMask)(1 << afft_Backend_hipfft)    ///< hipFFT mask
+#define afft_BackendMask_mkl       (afft_BackendMask)(1 << afft_Backend_mkl)       ///< Intel MKL mask
+#define afft_BackendMask_pocketfft (afft_BackendMask)(1 << afft_Backend_pocketfft) ///< PocketFFT mask
+#define afft_BackendMask_rocfft    (afft_BackendMask)(1 << afft_Backend_rocfft)    ///< rocFFT mask
+#define afft_BackendMask_vkfft     (afft_BackendMask)(1 << afft_Backend_vkfft)     ///< VkFFT mask
+#define afft_BackendMask_all       (afft_BackendMask)UINT16_MAX                    ///< All backends
+
+/**
+ * @brief Make backend mask from backend
+ * @param backend Backend
+ * @return Backend mask
+ */
+static inline afft_BackendMask afft_makeBackendMask(afft_Backend backend)
+{
+  return (afft_BackendMask)(1 << backend);
+}
 
 /// @brief Select strategy type
 typedef uint8_t afft_SelectStrategy;
