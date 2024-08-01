@@ -55,48 +55,6 @@ set(AFFT_BACKEND_LIST  "POCKETFFT" CACHE STRING "Semicolon separated list of bac
 set(AFFT_TARGET_LIST   ""          CACHE STRING "Semicolon separated list of targets to build for, default is empty")
 set(AFFT_MP_BACKEND    ""          CACHE STRING "Multi process framework to use (MPI), default is none (no MP support)")
 
-if(NOT (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28) AND AFFT_MODULE)
-  message(FATAL_ERROR "C++20 module support requires CMake 3.28 or later")
-endif()
-
-set(CMAKE_CXX_SCAN_FOR_MODULES ON)
-
-########################################################################################################################
-# Create targets
-########################################################################################################################
-add_library(afft ${CMAKE_CURRENT_SOURCE_DIR}/src/afft.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/backend.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/init.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/Plan.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cpp
-                 ${CMAKE_CURRENT_SOURCE_DIR}/src/version.cpp)
-add_library(afft::afft ALIAS afft)
-add_library(afft-header-only INTERFACE)
-add_library(afft::afft-header-only ALIAS afft-header-only)
-
-if(AFFT_MODULE)
-  add_library(afft-module)
-  add_library(afft::afft-module ALIAS afft-module)
-
-  target_sources(afft-module PUBLIC FILE_SET CXX_MODULES FILES ${CMAKE_CURRENT_SOURCE_DIR}/mod/afft.cpp)
-endif()
-
-target_compile_features(afft PUBLIC cxx_std_17)
-target_include_directories(afft PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(afft SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
-
-target_compile_features(afft-header-only INTERFACE cxx_std_17)
-target_include_directories(afft-header-only INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(afft-header-only SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
-target_compile_definitions(afft-header-only INTERFACE AFFT_HEADER_ONLY)
-
-if (TARGET afft-module)
-  target_compile_features(afft-module PUBLIC cxx_std_20)
-  target_include_directories(afft-module PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_include_directories(afft-module SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/span/include)
-endif()
-
 ########################################################################################################################
 # Set up targets
 ########################################################################################################################
@@ -144,12 +102,6 @@ foreach(TARGET ${AFFT_TARGET_LIST})
   endif()
 endforeach()
 
-target_link_libraries(afft PUBLIC ${TARGET_LIBRARIES})
-target_link_libraries(afft-header-only INTERFACE ${TARGET_LIBRARIES})
-if(TARGET afft-module)
-  target_link_libraries(afft-module PUBLIC ${TARGET_LIBRARIES})
-endif()
-
 ########################################################################################################################
 # Set up MP target if needed
 ########################################################################################################################
@@ -169,12 +121,6 @@ if(NOT ("${AFFT_MP_BACKEND}" STREQUAL ""))
     endif()
   else()
     message(FATAL_ERROR "Invalid multi-process backend: ${AFFT_MP_BACKEND}")
-  endif()
-
-  target_link_libraries(afft PUBLIC ${MP_LIBRARIES})
-  target_link_libraries(afft-header-only INTERFACE ${MP_LIBRARIES})
-  if(TARGET afft-module)
-    target_link_libraries(afft-module PUBLIC ${MP_LIBRARIES})
   endif()
 else()
   set(HAS_MP_SUPPORT FALSE)
@@ -360,17 +306,6 @@ foreach(BACKEND ${AFFT_BACKEND_LIST})
   endif()
 endforeach()
 
-target_link_libraries(afft PRIVATE ${BACKEND_LIBRARIES})
-target_include_directories(afft SYSTEM PRIVATE ${BACKEND_INCLUDES})
-
-target_link_libraries(afft-header-only INTERFACE ${BACKEND_LIBRARIES})
-target_include_directories(afft-header-only SYSTEM INTERFACE ${BACKEND_INCLUDES})
-
-if(TARGET afft-module)
-  target_link_libraries(afft-module PRIVATE ${BACKEND_LIBRARIES})
-  target_include_directories(afft-module SYSTEM PRIVATE ${BACKEND_INCLUDES})
-endif()
-
 ########################################################################################################################
 # Make the library configuration files
 ########################################################################################################################
@@ -389,45 +324,45 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wimplicit-fallthrough")
 endif()
 
+########################################################################################################################
+# Create targets
+########################################################################################################################
+add_subdirectory(src)
+add_library(afft::afft ALIAS afft)
+add_library(afft::afft-header-only ALIAS afft-header-only)
+
+target_link_libraries(afft
+  PUBLIC  ${MP_LIBRARIES} ${TARGET_LIBRARIES}
+  PRIVATE ${BACKEND_LIBRARIES})
+target_include_directories(afft SYSTEM
+  PRIVATE ${BACKEND_INCLUDES})
+
+target_link_libraries(afft-header-only
+  INTERFACE ${MP_LIBRARIES} ${TARGET_LIBRARIES} ${BACKEND_LIBRARIES})
+target_include_directories(afft-header-only SYSTEM
+  INTERFACE ${BACKEND_INCLUDES})
+
+if(AFFT_MODULE)
+  add_subdirectory(mod)
+  add_library(afft::afft-module ALIAS afft-module)
+
+  target_link_libraries(afft-module
+    PUBLIC  ${MP_LIBRARIES} ${TARGET_LIBRARIES}
+    PRIVATE ${BACKEND_LIBRARIES})
+  target_include_directories(afft-module SYSTEM
+    PRIVATE ${BACKEND_INCLUDES})
+endif()
+
 # Should be implemented as a function over all files in the source directory
 if(AFFT_BUILD_EXAMPLES)
-  add_executable(cpu_dft_1D_C2C_simple examples/cpu/dft_1D_C2C_simple.cpp)
-  set_target_properties(cpu_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
-  target_link_libraries(cpu_dft_1D_C2C_simple PRIVATE afft::afft)
-
-  add_executable(cpu_c_dft_3D_C2C_transpose examples/cpu/dft_3D_C2C_transpose.c)
-  set_target_properties(cpu_c_dft_3D_C2C_transpose PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
-  target_link_libraries(cpu_c_dft_3D_C2C_transpose PRIVATE afft::afft)
-
-  if(AFFT_MODULE)
-    add_executable(cpu_dft_1D_C2C_simple_mod examples/cpu/dft_1D_C2C_simple_mod.cpp)
-    set_target_properties(cpu_dft_1D_C2C_simple_mod PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
-    target_compile_features(cpu_dft_1D_C2C_simple_mod PRIVATE cxx_std_20)
-    target_link_libraries(cpu_dft_1D_C2C_simple_mod PRIVATE afft::afft-module)
-  endif()
-
-  if(NOT (AFFT_GPU_BACKEND STREQUAL ""))
-    if(AFFT_GPU_BACKEND STREQUAL "CUDA")
-      set(GPU_EXAMPLES_FRAMEWORK_DIR "cuda")
-    elseif(AFFT_GPU_BACKEND STREQUAL "HIP")
-      set(GPU_EXAMPLES_FRAMEWORK_DIR "hip")
-    elseif(AFFT_GPU_BACKEND STREQUAL "OPENCL")
-      set(GPU_EXAMPLES_FRAMEWORK_DIR "opencl")
-    else()
-      message(FATAL_ERROR "Invalid GPU framework: ${AFFT_GPU_BACKEND}")
-    endif()
-
-    add_executable(gpu_dft_1D_C2C_simple "examples/gpu/${GPU_EXAMPLES_FRAMEWORK_DIR}/dft_1D_C2C_simple.cpp")
-    set_target_properties(gpu_dft_1D_C2C_simple PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
-    target_link_libraries(gpu_dft_1D_C2C_simple PRIVATE afft::afft)
-
-    add_executable(gpu_dft_3D_C2C_transpose "examples/gpu/${GPU_EXAMPLES_FRAMEWORK_DIR}/dft_3D_C2C_transpose.c")
-    set_target_properties(gpu_dft_3D_C2C_transpose PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/examples")
-    target_link_libraries(gpu_dft_3D_C2C_transpose PRIVATE afft::afft)
-  endif()
+  add_subdirectory(examples)
 endif()
 
 # Should be implemented as a function over all files in the source directory
 if(AFFT_BUILD_TESTS)
   
 endif()
+
+########################################################################################################################
+# Install
+########################################################################################################################
