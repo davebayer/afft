@@ -39,8 +39,15 @@ else()
 endif()
 
 matlab_add_mex(
-  NAME    fft
+  NAME    afft_fft
   SRC     src/fft.cpp
+  LINK_TO afft::afft
+  R2018a
+)
+
+matlab_add_mex(
+  NAME    afft_fftn
+  SRC     src/fftn.cpp
   LINK_TO afft::afft
   R2018a
 )

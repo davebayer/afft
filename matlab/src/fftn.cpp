@@ -70,13 +70,10 @@ mexFunction(int            nlhs,
                  shape.rbegin() + (shape.size() - ndims),
                  [](const std::size_t dim) { return static_cast<afft::Size>(dim); });
 
-  afft::Axis axis = static_cast<afft::Axis>(ndims - 1);
-
   afft::dft::Parameters dftParams{};
   dftParams.direction     = afft::Direction::forward;
   dftParams.precision     = afft::makePrecision<double>();
   dftParams.shape         = afft::View<afft::Size>{shape.data(), ndims};
-  dftParams.axes          = afft::makeScalarView(axis);
   dftParams.normalization = afft::Normalization::none;
   dftParams.placement     = afft::Placement::outOfPlace;
   dftParams.destructive   = true;
