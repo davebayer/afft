@@ -138,35 +138,6 @@ AFFT_EXPORT namespace afft
   } // namespace vkfft
 } // namespace afft
 
-#ifdef AFFT_CXX_HAS_FORMAT
-/// @brief Format a version.
-AFFT_EXPORT template<>
-struct std::formatter<afft::Version>
-{
-  /**
-   * @brief Parse a format string.
-   * @param ctx Format context
-   * @return std::format_parse_context::iterator
-   */
-  [[nodiscard]] constexpr auto parse(std::format_parse_context& ctx) const noexcept
-    -> std::format_parse_context::iterator
-  {
-    std::format_parse_context::iterator it{};
-
-    for (it = ctx.begin(); it != ctx.end() && *it != '}'; ++it) {}
-
-    return it;
-  }
-
-  template<typename FormatContext>
-  [[nodiscard]] auto format(const afft::Version& version, FormatContext& ctx) const
-    -> decltype(ctx.out())
-  {
-    return std::format_to(ctx.out(), "{}.{}.{}", version.major, version.minor, version.patch);
-  }
-};
-#endif
-
 #ifdef AFFT_HEADER_ONLY
 
 AFFT_EXPORT namespace afft

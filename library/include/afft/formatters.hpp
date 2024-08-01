@@ -22,44 +22,40 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_AFFT_HPP
-#define AFFT_AFFT_HPP
+#ifndef AFFT_FORMATTERS_HPP
+#define AFFT_FORMATTERS_HPP
 
-// Include the version header.
-#include "afft-version.h"
-
-// Include the config header.
-#include "detail/config.hpp"
-
-// Check for C++17 or later.
-#if AFFT_CXX_VERSION < 201703L
-# error "afft C++ library requires C++17 or later. Please use the C api for older C++ versions."
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
 #endif
 
-// Include only once in the top-level header.
-#include "detail/include.hpp"
-#define AFFT_TOP_LEVEL_INCLUDE
-
-// Include all public headers.
-#include "backend.hpp"
-#include "common.hpp"
-#include "error.hpp"
-#include "fftw3.hpp"
-#ifdef AFFT_CXX_HAS_FORMAT
-# include "formatters.hpp"
-#endif
-#include "init.hpp"
-#include "makePlan.hpp"
-#include "memory.hpp"
-#include "mp.hpp"
-#include "Plan.hpp"
-// #include "PlanCache.hpp"
-#include "Span.hpp"
-#include "target.hpp"
-#include "transform.hpp"
-#include "type.hpp"
-#include "typeTraits.hpp"
-#include "utils.hpp"
 #include "version.hpp"
 
-#endif /* AFFT_AFFT_HPP */
+/// @brief Formatter for afft::Version
+AFFT_EXPORT template<>
+struct std::formatter<afft::Version>
+{
+  /**
+   * @brief Parse a format string.
+   * @param ctx Format context
+   * @return std::format_parse_context::iterator
+   */
+  [[nodiscard]] constexpr auto parse(std::format_parse_context& ctx) const noexcept
+    -> std::format_parse_context::iterator
+  {
+    std::format_parse_context::iterator it{};
+
+    for (it = ctx.begin(); it != ctx.end() && *it != '}'; ++it) {}
+
+    return it;
+  }
+
+  template<typename FormatContext>
+  [[nodiscard]] auto format(const afft::Version& version, FormatContext& ctx) const
+    -> decltype(ctx.out())
+  {
+    return std::format_to(ctx.out(), "{}.{}.{}", version.major, version.minor, version.patch);
+  }
+};
+
+#endif /* AFFT_FORMATTERS_HPP */
