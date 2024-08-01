@@ -90,12 +90,12 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_create((afft_Plan_Parameters){.transform       = afft_Transform_dft,
-                                                    .target          = afft_Target_cuda,
-                                                    .transformParams = &dftParams,
-                                                    .targetParams    = &cudaParams,
-                                                    .memoryLayout    = &memoryLayout,
-                                                    .backendParams   = &backendParams},
+  AFFT_CALL(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
+                                                   .target          = afft_Target_cuda,
+                                                   .transformParams = &dftParams,
+                                                   .targetParams    = &cudaParams,
+                                                   .memoryLayout    = &memoryLayout,
+                                                   .backendParams   = &backendParams},
                              &plan,
                              &errDetails)); // generate the plan of the transform
 

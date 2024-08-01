@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_POCKETFFT_SPST_HPP
-#define AFFT_DETAIL_POCKETFFT_SPST_HPP
+#ifndef AFFT_DETAIL_POCKETFFT_SP_HPP
+#define AFFT_DETAIL_POCKETFFT_SP_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
@@ -31,26 +31,26 @@
 
 #include "../../Plan.hpp"
 
-namespace afft::detail::pocketfft::spst::cpu
+namespace afft::detail::pocketfft::sp::cpu
 {
   /**
-   * @brief Create a pocketfft spst cpu plan implementation.
+   * @brief Create a pocketfft single process cpu plan implementation.
    * @param desc Plan description.
    * @return Plan implementation.
    */
   [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
-} // namespace afft::detail::pocketfft::spst::cpu
+} // namespace afft::detail::pocketfft::sp::cpu
 
 #ifdef AFFT_HEADER_ONLY
 
 #include "Plan.hpp"
 
-namespace afft::detail::pocketfft::spst::cpu
+namespace afft::detail::pocketfft::sp::cpu
 {
   /**
    * @class Plan
    * @tparam prec The precision of the data.
-   * @brief Implementation of the plan for the spst cpu architecture using PocketFFT
+   * @brief Implementation of the plan for the single process cpu architecture using PocketFFT
    */
   template<typename PrecT>
   class Plan final : public pocketfft::Plan
@@ -74,29 +74,38 @@ namespace afft::detail::pocketfft::spst::cpu
        */
       Plan(const Desc& desc)
       : Parent{desc},
-        mShape{mDesc.getShape().begin(), mDesc.getShape().end()},
-        mSrcStrides(mShape.size()),
-        mDstStrides(mShape.size()),
-        mAxes{mDesc.getTransformAxes().begin(), mDesc.getTransformAxes().end()}
+        mShape(mDesc.getShapeRank()),
+        mSrcStrides(mDesc.getShapeRank()),
+        mDstStrides(mDesc.getShapeRank()),
+        mAxes(mDesc.getTransformRank())
       {
-        mDesc.fillDefaultMemoryLayoutStrides();
+        const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
-        const auto& memLayout = mDesc.template getMemoryLayout<Distribution::spst>();
+        mSrcElemCount = memDesc.getSrcElemCount();
+        mDstElemCount = memDesc.getDstElemCount();
 
-        std::transform(memLayout.getSrcStrides().begin(),
-                       memLayout.getSrcStrides().end(),
+        std::transform(memDesc.getSrcStrides().begin(),
+                       memDesc.getSrcStrides().end(),
                        mSrcStrides.begin(),
-                       [this](const auto stride)
+                       [sizeOfSrcElem = mDesc.sizeOfSrcElem()](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * mDesc.sizeOfSrcElem());
+          return safeIntCast<std::ptrdiff_t>(stride * sizeOfSrcElem);
         });
 
-        std::transform(memLayout.getDstStrides().begin(),
-                       memLayout.getDstStrides().end(),
+        std::transform(memDesc.getDstStrides().begin(),
+                       memDesc.getDstStrides().end(),
                        mDstStrides.begin(),
-                       [this](const auto stride)
+                       [sizeOfDstElem = mDesc.sizeOfDstElem()](const auto stride)
         {
-          return safeIntCast<std::ptrdiff_t>(stride * mDesc.sizeOfDstElem());
+          return safeIntCast<std::ptrdiff_t>(stride * sizeOfDstElem);
+        });
+
+        std::transform(mDesc.getTransformAxes().begin(),
+                       mDesc.getTransformAxes().end(),
+                       mAxes.begin(),
+                       [](const auto axis)
+        {
+          return safeIntCast<std::size_t>(axis);
         });
       }
 
@@ -107,11 +116,38 @@ namespace afft::detail::pocketfft::spst::cpu
       using Parent::operator=;
 
       /**
+       * @brief Get element count of the source buffers.
+       * @return Element count of the source buffers.
+       */
+      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      {
+        return makeScalarView(mSrcElemCount);
+      }
+
+      /**
+       * @brief Get element count of the destination buffers.
+       * @return Element count of the destination buffers.
+       */
+      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      {
+        return makeScalarView(mDstElemCount);
+      }
+
+      /**
+       * @brief Get the workspace sizes
+       * @return The workspace sizes
+       */
+      [[nodiscard]] View<std::size_t> getWorkspaceSizes() const noexcept override
+      {
+        return makeScalarView(mWorkspaceSize);
+      }
+
+      /**
        * @brief Execute the plan
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::spst::cpu::ExecutionParameters&) override
+      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters&) override
       {
         switch (mDesc.getTransform())
         {
@@ -314,14 +350,17 @@ namespace afft::detail::pocketfft::spst::cpu
         }
       }
 
-      ::pocketfft::shape_t  mShape{};      ///< The shape of the data
-      ::pocketfft::stride_t mSrcStrides{}; ///< The stride of the source data
-      ::pocketfft::stride_t mDstStrides{}; ///< The stride of the destination data
-      ::pocketfft::shape_t  mAxes{};       ///< The axes to be transformed, valid for DFT, varies for DTT
+      ::pocketfft::shape_t  mShape{};         ///< The shape of the data
+      ::pocketfft::stride_t mSrcStrides{};    ///< The stride of the source data
+      ::pocketfft::stride_t mDstStrides{};    ///< The stride of the destination data
+      ::pocketfft::shape_t  mAxes{};          ///< The axes to be transformed, valid for DFT, varies for DTT
+      std::size_t           mWorkspaceSize{}; ///< The size of the workspace
+      std::size_t           mSrcElemCount{};  ///< The number of elements in the source buffer
+      std::size_t           mDstElemCount{};  ///< The number of elements in the destination buffer
   };
 
   /**
-   * @brief Create a pocketfft spst cpu plan implementation.
+   * @brief Create a pocketfft single process cpu plan implementation.
    * @param desc Plan description.
    * @return Plan implementation.
    */
@@ -373,7 +412,7 @@ namespace afft::detail::pocketfft::spst::cpu
 
     if (!desc.hasUniformPrecision())
     {
-      throw BackendError{Backend::pocketfft, "only same precision for execution, source and destination is supported"};
+      throw Exception{Error::pocketfft, "only same precision for execution, source and destination is supported"};
     }
 
     switch (const auto precision = desc.getPrecision().execution)
@@ -389,12 +428,12 @@ namespace afft::detail::pocketfft::spst::cpu
         }
         else
         {
-          throw BackendError{Backend::pocketfft, "unsupported precision"};
+          throw Exception{Error::pocketfft, "unsupported precision"};
         }
     }
   }
-} // namespace afft::detail::pocketfft::spst::cpu
+} // namespace afft::detail::pocketfft::sp::cpu
 
 #endif /* AFFT_HEADER_ONLY */
 
-#endif /* AFFT_DETAIL_POCKETFFT_SPST_HPP */
+#endif /* AFFT_DETAIL_POCKETFFT_SP_HPP */

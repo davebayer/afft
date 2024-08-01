@@ -136,6 +136,138 @@ namespace afft::detail
       // {
       //   return !(lhs == rhs);
       // }
+    private:
+      [[nodiscard]] static TransformDesc makeTransformDesc(const Transform transform, const void* cTransformParams)
+      {
+        if (cTransformParams == nullptr)
+        {
+          throw Exception{Error::invalidArgument, "invalid transform parameters"};
+        }
+
+        switch (transform)
+        {
+        case Transform::dft:
+          return TransformDesc{*static_cast<const afft_dft_Parameters*>(cTransformParams)};
+        case Transform::dht:
+          return TransformDesc{*static_cast<const afft_dht_Parameters*>(cTransformParams)};
+        case Transform::dtt:
+          return TransformDesc{*static_cast<const afft_dtt_Parameters*>(cTransformParams)};
+        default:
+          throw Exception{Error::invalidArgument, "invalid transform type"};
+        }
+      }
+
+      [[nodiscard]] static MpDesc makeMpDesc(const MpBackend mpBackend, [[maybe_unused]] const void* cMpBackendParams)
+      {
+        switch (mpBackend)
+        {
+        case MpBackend::none:
+          return MpDesc{SingleProcessParameters{}};
+        case MpBackend::mpi:
+#       ifdef AFFT_ENABLE_MPI
+          if (cMpBackendParams == nullptr)
+          {
+            return MpDesc{mpi::Parameters{}}
+          }
+          else
+          {
+            return MpDesc{*static_cast<const afft_mpi_Parameters*>(cMpBackendParams)};
+          }
+#       else
+          throw Exception{Error::invalidArgument, "MPI backend is not enabled"};
+#       endif
+        default:
+          throw Exception{Error::invalidArgument, "invalid MPI backend type"};
+        }
+      }
+
+      [[nodiscard]] static TargetDesc makeTargetDesc(const Target target, const void* cTargetParams)
+      {
+        if (cTargetParams == nullptr)
+        {
+          throw Exception{Error::invalidArgument, "invalid target parameters"};
+        }
+
+        switch (target)
+        {
+        case Target::cpu:
+          if (cTargetParams == nullptr)
+          {
+            return TargetDesc{cpu::Parameters{}};
+          }
+          else
+          {
+            return TargetDesc{*static_cast<const afft_cpu_Parameters*>(cTargetParams)};
+          }
+        case Target::cuda:
+#       ifdef AFFT_ENABLE_CUDA
+          if (cTargetParams == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid CUDA target parameters"};
+          }
+          return TargetDesc{*static_cast<const afft_cuda_Parameters*>(cTargetParams)};
+#       else
+          throw Exception{Error::invalidArgument, "CUDA target is not enabled"};
+#       endif
+        case Target::hip:
+#       ifdef AFFT_ENABLE_HIP
+          if (cTargetParams == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid HIP target parameters"};
+          }
+          return TargetDesc{*static_cast<const afft_hip_Parameters*>(cTargetParams)};
+#       else
+          throw Exception{Error::invalidArgument, "HIP target is not enabled"};
+#       endif
+        case Target::opencl:
+#       ifdef AFFT_ENABLE_OPENCL
+          if (cTargetParams == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid OpenCL target parameters"};
+          }
+          return TargetDesc{*static_cast<const afft_opencl_Parameters*>(cTargetParams)};
+#       else
+          throw Exception{Error::invalidArgument, "OpenCL target is not enabled"};
+#       endif
+        default:
+          throw Exception{Error::invalidArgument, "invalid target type"};
+        }
+      }
+
+      [[nodiscard]] static MemDesc makeMemDesc(const void*          cMemLayout,
+                                               const TransformDesc& transformDesc,
+                                               const MpDesc&        mpDesc,
+                                               const TargetDesc&    targetDesc)
+      {
+        if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() > 1)
+        {
+          if (cMemLayout == nullptr)
+          {
+            return MemDesc{CentralizedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
+          }
+          else
+          {
+            return MemDesc{*static_cast<const afft_CentralizedMemoryLayout*>(cMemLayout),
+                           transformDesc,
+                           mpDesc,
+                           targetDesc};
+          }
+        }
+        else
+        {
+          if (cMemLayout == nullptr)
+          {
+            return MemDesc{DistributedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
+          }
+          else
+          {
+            return MemDesc{*static_cast<const afft_DistributedMemoryLayout*>(cMemLayout),
+                           transformDesc,
+                           mpDesc,
+                           targetDesc};
+          }
+        }
+      }
   };
 
   /// @brief Helper struct to get the Desc object from an object.

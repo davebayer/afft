@@ -279,7 +279,7 @@ namespace afft::detail
 
       DistribMemDesc(const DistributedMemoryLayout& memLayout,
                      const TransformDesc&           transformDesc,
-                     const MpDesc&                  mpDesc,
+                     const MpDesc&                  ,
                      const TargetDesc&              targetDesc)
       : mShapeRank{transformDesc.getShapeRank()},
         mTargetCount{targetDesc.getTargetCount()},
@@ -295,7 +295,7 @@ namespace afft::detail
 
       DistribMemDesc(const afft_DistributedMemoryLayout& memLayout,
                      const TransformDesc&                transformDesc,
-                     const MpDesc&                       mpDesc,
+                     const MpDesc&                       ,
                      const TargetDesc&                   targetDesc)
       : mShapeRank{transformDesc.getShapeRank()},
         mTargetCount{targetDesc.getTargetCount()},

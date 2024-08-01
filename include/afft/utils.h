@@ -67,15 +67,15 @@ static inline afft_Alignment afft_alignmentOf(size_t count, ...)
  * @brief Make strides.
  * @param shapeRank Rank of the shape.
  * @param shape Shape of the array.
- * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
- * @param errDetails Error details.
+ * @param fastestAxisStride Stride of the fastest axis.
+ * @param errorDetails Error details.
  * @return Error code.
  */
 afft_Error afft_makeStrides(const size_t       shapeRank,
                             const afft_Size*   shape,
-                            const afft_Size    fastestAxisStride,
                             afft_Size*         strides,
+                            const afft_Size    fastestAxisStride,
                             afft_ErrorDetails* errDetails);
 
 /**
@@ -83,16 +83,16 @@ afft_Error afft_makeStrides(const size_t       shapeRank,
  * @param shapeRank Rank of the shape.
  * @param resultShape Shape of the result array.
  * @param orgAxesOrder Original axes order.
- * @param fastestAxisStride Stride of the fastest axis.
  * @param strides Strides of the array.
- * @param errDetails Error details.
+ * @param fastestAxisStride Stride of the fastest axis.
+ * @param errorDetails Error details.
  * @return Error code.
  */
 afft_Error afft_makeTransposedStrides(const size_t       shapeRank,
                                       const afft_Size*   resultShape,
-                                      const afft_Size*   orgAxesOrder,
-                                      const afft_Size    fastestAxisStride,
+                                      const afft_Axis*   orgAxesOrder,
                                       afft_Size*         strides,
+                                      const afft_Size    fastestAxisStride,
                                       afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus

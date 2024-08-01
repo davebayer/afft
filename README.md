@@ -18,6 +18,32 @@ The transformations are implemented by the backend libraries. Currently, the lib
 
 :warning: **Take into account that not all of the afft functionality is supported by each transform backend.**
 
+## Build
+The library can be used as a header only library (C++17 onwards), static/dynamic library (C99/C++17 onwards) or a C++ module (C++20 onwards and CMake 3.28 onwards).
+### Prerequisities
+*Prerequisities with '\*' are optional.*
+- CMake 3.20 or newer
+- C/C++ compiler supporting C++17
+- multi-process backend libraries
+  - `MPI`* 
+- target frameworks
+  - `CPU` target is always enabled
+  - `CUDA`* target requires CUDA Toolkit
+  - `HIP`* target requires ROCm, for NVIDIA GPUs install CUDA Toolkit as well
+  - `OpenCL`* target requires OpenCL package
+- backend libraries (optional)
+  - `clFFT`*
+  - `cuFFT`* comes with CUDA Toolkit, if you want to use multi-process version, NVHPC Toolkit is required
+  - `FFTW3`* 
+  - `HeFFTe`*
+  - `hipFFT`* is part of HIP, requires `rocFFT` (AMD GPUs) and `cuFFT` (NVIDIA GPUs)
+  - `Intel MKL`* is part of Intel MKL library
+  - `PocketFFT` is included in this project
+  - `rocFFT`* comes with ROCm package
+  - `VkFFT` is included in this project, supports CUDA, HIP and OpenCL targets
+
+
+
 ## License
 This library is available under MIT license. See `LICENSE` for details.
 
@@ -84,7 +110,7 @@ int main()
   // make backend parameters
   afft::cpu::BackendParameters backendParams{};
   backendParams.strategy          = afft::SelectStrategy::first;
-  backendParams.mask              = (afft::Backend::fftw3 | afft::Backend::mkl | afft::Backend::pocketfft);
+  backendParams.mask              = (afft::BackendMask::fftw3 | afft::BackendMask::mkl | afft::BackendMask::pocketfft);
   backendParams.order             = {{afft::Backend::mkl, afft::Backend::fftw3}};
   backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure; // FFTW3 specific planner flag
   backendParams.fftw3.timeLimit   = std::chrono::seconds{2}; // limit the time for the FFTW3 planner

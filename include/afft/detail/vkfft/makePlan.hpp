@@ -45,7 +45,7 @@ namespace afft::detail::vkfft
   [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan([[maybe_unused]] const Desc& desc, const BackendParamsT&)
   {
-    if constexpr (BackendParamsT::target == Target::gpu)
+    if constexpr (BackendParamsT::target == Target::cuda)
     {
 #   ifndef AFFT_DISABLE_GPU
       if constexpr (BackendParamsT::distribution == Distribution::spst)

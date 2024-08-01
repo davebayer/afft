@@ -30,7 +30,7 @@
 #endif
 
 #include "../../Plan.hpp"
-#include "spst.hpp"
+#include "sp.hpp"
 
 namespace afft::detail::pocketfft
 {
@@ -45,25 +45,30 @@ namespace afft::detail::pocketfft
   [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan(const Desc& desc, const BackendParamsT&)
   {
+    if (desc.getTargetCount() != 1)
+    {
+      throw Exception{Error::pocketfft, "only single target is supported"};
+    }
+
     if (desc.getComplexFormat() != ComplexFormat::interleaved)
     {
-      throw BackendError{Backend::pocketfft, "only interleaved complex format is supported"};
+      throw Exception{Error::pocketfft, "only interleaved complex format is supported"};
     }
     
-    if constexpr (BackendParamsT::target == Target::cpu)
+    if constexpr (BackendParamsT::mpBackend == MpBackend::none)
     {
-      if constexpr (BackendParamsT::distribution == Distribution::spst)
+      if constexpr (BackendParamsT::target == Target::cpu)
       {
-        return spst::cpu::makePlan(desc);
+        return sp::cpu::makePlan(desc);
       }
       else
       {
-        throw BackendError{Backend::pocketfft, "only spst distribution is supported"};
+        throw Exception{Error::pocketfft, "only cpu target is supported"};
       }
     }
     else
     {
-      throw BackendError{Backend::pocketfft, "only cpu target is supported"};
+      throw Exception{Error::pocketfft, "distribution over multiple processes is not supported"};
     }
   }
 } // namespace afft::detail::pocketfft
