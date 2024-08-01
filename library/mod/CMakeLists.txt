@@ -24,9 +24,7 @@
 #
 ########################################################################################################################
 
-if(NOT (CMAKE_VERSION VERSION_GREATER_EQUAL 3.28) AND AFFT_BUILD_MODULE)
-  message(FATAL_ERROR "C++20 module support requires CMake 3.28 or later")
-endif()
+cmake_minimum_required(VERSION 3.28)
 
 add_library(afft-module)
 
