@@ -85,6 +85,10 @@
 # define AFFT_CXX_HAS_SPAN
 #endif
 
+#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_format) && (__cpp_lib_format >= 201907L)
+# define AFFT_CXX_HAS_FORMAT
+#endif
+
 // Check if C++23 `import std` is supported
 #if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
 # define AFFT_CXX_HAS_IMPORT_STD

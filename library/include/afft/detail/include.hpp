@@ -44,6 +44,9 @@
 #   include <cstdint>
 #   include <cstdio>
 #   include <cstring>
+#   ifdef AFFT_CXX_HAS_FORMAT
+#     include <format>
+#   endif
 #   include <functional>
 #   include <iterator>
 #   include <limits>

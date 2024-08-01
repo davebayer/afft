@@ -53,7 +53,6 @@ include(cmake/afftUtils.cmake)
 # Enable testing if requested
 if(AFFT_BUILD_TESTS)
   enable_testing()
-  
 endif()
 
 # Add library subdirectory
