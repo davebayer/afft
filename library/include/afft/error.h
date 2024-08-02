@@ -79,6 +79,7 @@ struct afft_ErrorDetails
 # ifdef AFFT_ENABLE_CUDA
     CUresult    cudaDriver;  ///< CUDA driver return value, valid only if afft_Error_cudaDriver emitted
     cudaError_t cudaRuntime; ///< CUDA runtime return value, valid only if afft_Error_cudaRuntime emitted
+    nvrtcResult cudaRtc;     ///< CUDA RTC return value, valid only if afft_Error_cudaRtc emitted
 # endif
 # ifdef AFFT_ENABLE_HIP
     hipError_t  hip;         ///< HIP return value, valid only if afft_Error_hip emitted

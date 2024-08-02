@@ -52,7 +52,7 @@ namespace afft::detail::cuda::rtc
   {
     if (!isOk(result))
     {
-      throw Exception{Error::nvrtc, nvrtcGetErrorString(result), result};
+      throw Exception{Error::cudaRtc, nvrtcGetErrorString(result), result};
     }
   }
 } // namespace afft::detail::cuda::rtc

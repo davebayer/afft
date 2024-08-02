@@ -30,7 +30,7 @@
 #endif
 
 #include "../../Plan.hpp"
-#include "spst.hpp"
+#include "sp.hpp"
 
 namespace afft::detail::vkfft
 {
@@ -45,26 +45,18 @@ namespace afft::detail::vkfft
   [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan([[maybe_unused]] const Desc& desc, const BackendParamsT&)
   {
-    if constexpr (BackendParamsT::target == Target::cuda)
+    if (desc.getMpBackend() != MpBackend::none)
     {
-#   ifndef AFFT_DISABLE_GPU
-      if constexpr (BackendParamsT::distribution == Distribution::spst)
-      {
-        return spst::gpu::makePlan(desc);
-      }
-      else
-      {
-        throw BackendError{Backend::vkfft, "only spst distribution is supported"};
-      }
-#   else
-      throw BackendError{Backend::vkfft, "gpu support is disabled"};
-#   endif
+      throw Exception{Error::vkfft, "no multi process distribution is supported"};
     }
-    else
+
+    if (desc.getTargetCount() != 1)
     {
-      throw BackendError{Backend::vkfft, "only gpu target is supported"};
+      throw Exception{Error::vkfft, "only one target is supported"};
     }
+
+    return sp::makePlan(desc);
   }
 } // namespace afft::detail::vkfft
 
-#endif // AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP
+#endif /* AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP */

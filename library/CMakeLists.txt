@@ -24,6 +24,18 @@
 #
 ########################################################################################################################
 
+if(AFFT_VKFFT_BACKEND STREQUAL "CUDA")
+  set(AFFT_VKFFT_BACKEND_NUM 1)
+elseif(AFFT_VKFFT_BACKEND STREQUAL "HIP")
+  set(AFFT_VKFFT_BACKEND_NUM 2)
+elseif(AFFT_VKFFT_BACKEND STREQUAL "OPENCL")
+  set(AFFT_VKFFT_BACKEND_NUM 3)
+elseif("${AFFT_VKFFT_BACKEND}" STREQUAL "")
+  unset(AFFT_VKFFT_BACKEND_NUM)
+else()
+  message(FATAL_ERROR "Invalid VKFFT backend: ${AFFT_VKFFT_BACKEND}")
+endif()  
+
 ########################################################################################################################
 # Set up targets
 ########################################################################################################################

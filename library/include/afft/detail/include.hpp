@@ -153,18 +153,14 @@
       // push the current value of VKFFT_USE_DOUBLEDOUBLE_FP128
 #     pragma push_macro("VKFFT_USE_DOUBLEDOUBLE_FP128")
 #     undef VKFFT_USE_DOUBLEDOUBLE_FP128
-      // define VKFFT_BACKEND based on the current GPU backend
-#     if defined(AFFT_ENABLE_CUDA)
-#       define VKFFT_BACKEND 1
+
+      // define VKFFT_BACKEND based on the selected backend
+#     define VKFFT_BACKEND AFFT_VKFFT_BACKEND
+      // define CUDA_TOOLKIT_ROOT_DIR if using CUDA backend
+#     if AFFT_VKFFT_BACKEND == 1
 #       ifndef CUDA_TOOLKIT_ROOT_DIR
 #         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_ROOT_DIR
 #       endif
-#     elif defined(AFFT_ENABLE_HIP)
-#       define VKFFT_BACKEND 2
-#     elif defined(AFFT_ENABLE_OPENCL)
-#       define VKFFT_BACKEND 3
-#     else
-#       error "vkFFT backend is only supported with CUDA, HIP or OpenCL"
 #     endif
       // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
 #     define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT

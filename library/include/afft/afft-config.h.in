@@ -118,6 +118,16 @@
 #if defined(AFFT_ENABLE_CUDA) || defined(AFFT_ENABLE_HIP) || defined(AFFT_ENABLE_OPENCL)
 # cmakedefine AFFT_ENABLE_VKFFT
 # ifdef AFFT_ENABLE_VKFFT
+#   cmakedefine AFFT_VKFFT_BACKEND @AFFT_VKFFT_BACKEND_NUM@
+#   ifndef AFFT_VKFFT_BACKEND
+#     ifdef AFFT_ENABLE_CUDA
+#       define AFFT_VKFFT_BACKEND 1
+#     elif defined(AFFT_ENABLE_HIP)
+#       define AFFT_VKFFT_BACKEND 2
+#     elif defined(AFFT_ENABLE_OPENCL)
+#       define AFFT_VKFFT_BACKEND 3
+#     endif
+#   endif
 #   cmakedefine AFFT_VKFFT_HAS_DOUBLE_DOUBLE
 # endif
 #endif

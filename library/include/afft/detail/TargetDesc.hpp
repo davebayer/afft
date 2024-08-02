@@ -54,6 +54,16 @@ namespace afft::detail
 # ifdef AFFT_ENABLE_CUDA
     std::unique_ptr<int[]> devices{};     ///< CUDA devices
 # endif
+    CudaDesc() = default;
+
+    CudaDesc(const CudaDesc& other)
+    : targetCount{other.targetCount}
+    {
+#   ifdef AFFT_ENABLE_CUDA
+      devices = std::make_unique<int[]>(targetCount);
+      std::copy(other.devices.get(), other.devices.get() + targetCount, devices.get());
+#   endif
+    }
 
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const CudaDesc& lhs,
                                                    [[maybe_unused]] const CudaDesc& rhs)
@@ -75,6 +85,15 @@ namespace afft::detail
     std::unique_ptr<int[]> devices{}; ///< HIP devices
 # endif
 
+    HipDesc(const HipDesc& other)
+    : targetCount{other.targetCount}
+    {
+#   ifdef AFFT_ENABLE_HIP
+      devices = std::make_unique<int[]>(targetCount);
+      std::copy(other.devices.get(), other.devices.get() + targetCount, devices.get());
+#   endif
+    }
+
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const HipDesc& lhs,
                                                    [[maybe_unused]] const HipDesc& rhs)
     {
@@ -95,6 +114,17 @@ namespace afft::detail
     std::unique_ptr<std::remove_pointer_t<cl_context>, opencl::ContextDeleter> context{}; ///< OpenCL context
     std::unique_ptr<cl_device_id[]>                                            devices{}; ///< OpenCL devices
 # endif
+
+    OpenclDesc(const OpenclDesc& other)
+    : targetCount{other.targetCount}
+    {
+#   ifdef AFFT_ENABLE_OPENCL
+      opencl::checkError(clRetainContext(other.context.get()));
+      context.reset(other.context.get());
+      devices = std::make_unique<int[]>(targetCount);
+      std::copy(other.devices.get(), other.devices.get() + targetCount, devices.get());
+#   endif
+    }
 
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const OpenclDesc& lhs,
                                                    [[maybe_unused]] const OpenclDesc& rhs)
@@ -316,7 +346,7 @@ namespace afft::detail
       using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc>;
 
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
       {
         CpuDesc cpuDesc{};
         cpuDesc.threadLimit = cpuParams.threadLimit;
@@ -366,7 +396,7 @@ namespace afft::detail
 #     endif
 
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] constexpr static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
       {
         CpuDesc cpuDesc{};
         cpuDesc.threadLimit = cpuParams.threadLimit;
