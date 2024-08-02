@@ -22,52 +22,49 @@
   SOFTWARE.
 */
 
-#ifndef HELPERS_CUDA_HPP
-#define HELPERS_CUDA_HPP
+#ifndef HELPERS_MPI_H
+#define HELPERS_MPI_H
 
-#include <cstdio>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "cuda.h"
+#include <mpi.h>
 
-namespace helpers::cuda
+#ifdef __cplusplus
+extern "C"
 {
-  /**
-   * @brief Get the number of CUDA devices
-   * @return Number of CUDA devices
-   */
-  inline int getDeviceCount()
-  {
-    return helpers_cuda_getDeviceCount();
-  }
+#endif
 
-  /// @brief Deleter for CUDA streams
-  struct StreamDeleter
-  {
-    void operator()(cudaStream_t stream) const
-    {
-      cudaStreamDestroy(stream);
-    }
-  };
+/**
+ * @brief Macro for checking MPI errors. The call cannot contain _error variable.
+ * @param call MPI function call
+ */
+#define MPI_CALL(call) \
+  do { \
+    const int _error = (call); \
+    if (_error != MPI_SUCCESS) \
+    { \
+      fprintf(stderr, "MPI error (%s:%d) - error code #%d\n", __FILE__, __LINE__, _error); \
+      exit(EXIT_FAILURE); \
+    } \
+  } while (0)
 
-  /// @brief Unique pointer for CUDA streams
-  using Stream = std::unique_ptr<std::remove_pointer_t<cudaStream_t>, StreamDeleter>;
+/**
+ * @brief Get the rank of the MPI process in the communicator.
+ * @param comm MPI communicator
+ * @return Rank of the MPI process
+ */
+static inline int helpers_mpi_getRank(MPI_Comm comm)
+{
+  int rank{};
 
-  /**
-   * @brief Make a CUDA stream
-   * @return CUDA stream
-   */
-  inline Stream makeStream(unsigned flags = cudaStreamDefault)
-  {
-    cudaStream_t stream{};
+  MPI_CALL(MPI_Comm_rank(comm, &rank));
 
-    CUDART_CALL(cudaStreamCreateWithFlags(&stream, flags));
+  return rank;
+}
 
-    return Stream{std::move(stream)};
-  }
-} // namespace helpers::cuda
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* HELPERS_CUDA_HPP */
+#endif /* HELPERS_MPI_H */

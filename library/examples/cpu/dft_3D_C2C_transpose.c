@@ -3,18 +3,11 @@
 
 #include <afft/afft.h>
 
+#include <helpers/afft.h>
+
 typedef float _Complex FloatComplex;
 
 afft_ErrorDetails errDetails = {};
-
-#define AFFT_CALL(call) do { \
-    afft_Error _err = (call); \
-    if (_err != afft_Error_success) \
-    { \
-      fprintf(stderr, "afft error (%s:%d): %s\n", __FILE__, __LINE__, errDetails.message); \
-      exit(EXIT_FAILURE); \
-    } \
-  } while (0)
 
 int main(void)
 {

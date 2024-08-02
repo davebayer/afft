@@ -218,6 +218,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr std::size_t getSrcElemCount() const noexcept
       {
+        // fixme
         std::size_t elemCount{1};
 
         for (std::size_t i{}; i < mShapeRank; ++i)
@@ -234,6 +235,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr std::size_t getDstElemCount() const noexcept
       {
+        // fixme
         std::size_t elemCount{1};
 
         for (std::size_t i{}; i < mShapeRank; ++i)

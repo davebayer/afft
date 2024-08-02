@@ -22,52 +22,48 @@
   SOFTWARE.
 */
 
-#ifndef HELPERS_CUDA_HPP
-#define HELPERS_CUDA_HPP
+#ifndef HELPERS_CUDA_H
+#define HELPERS_CUDA_H
 
-#include <cstdio>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "cuda.h"
+#include <cuda_runtime.h>
 
-namespace helpers::cuda
+#ifdef __cplusplus
+extern "C"
 {
-  /**
-   * @brief Get the number of CUDA devices
-   * @return Number of CUDA devices
-   */
-  inline int getDeviceCount()
-  {
-    return helpers_cuda_getDeviceCount();
-  }
+#endif
 
-  /// @brief Deleter for CUDA streams
-  struct StreamDeleter
-  {
-    void operator()(cudaStream_t stream) const
-    {
-      cudaStreamDestroy(stream);
-    }
-  };
+/**
+ * @brief Macro for checking CUDA runtime errors. The call cannot contain _error variable.
+ * @param call CUDA runtime function call
+ */
+#define CUDART_CALL(call) \
+  do { \
+    const cudaError_t _error = (call); \
+    if (_error != cudaSuccess) \
+    { \
+      fprintf(stderr, "CUDA error (%s:%d) - %s\n", __FILE__, __LINE__, cudaGetErrorString(_error)); \
+      exit(EXIT_FAILURE); \
+    } \
+  } while (0)
 
-  /// @brief Unique pointer for CUDA streams
-  using Stream = std::unique_ptr<std::remove_pointer_t<cudaStream_t>, StreamDeleter>;
+/**
+ * @brief Get the number of CUDA devices
+ * @return Number of CUDA devices
+ */
+static inline int helpers_cuda_getDeviceCount()
+{
+  int deviceCount;
 
-  /**
-   * @brief Make a CUDA stream
-   * @return CUDA stream
-   */
-  inline Stream makeStream(unsigned flags = cudaStreamDefault)
-  {
-    cudaStream_t stream{};
+  CUDART_CALL(cudaGetDeviceCount(&deviceCount));
 
-    CUDART_CALL(cudaStreamCreateWithFlags(&stream, flags));
+  return deviceCount;
+}
 
-    return Stream{std::move(stream)};
-  }
-} // namespace helpers::cuda
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* HELPERS_CUDA_HPP */
+#endif /* HELPERS_CUDA_H */

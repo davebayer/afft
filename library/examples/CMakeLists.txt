@@ -25,6 +25,9 @@
 ########################################################################################################################
 
 function(add_examples mpBackend target)
+  string(TOLOWER "${mpBackend}" mpBackend)
+  string(TOLOWER "${target}" target)
+
   set(EXAMPLES_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/${mpBackend}/${target}")
   file(GLOB EXAMPLES "${EXAMPLES_SRC_DIR}/*.cpp" "${EXAMPLES_SRC_DIR}/*.c")
   foreach(EXAMPLE ${EXAMPLES})
@@ -62,7 +65,9 @@ function(add_examples mpBackend target)
   endforeach()
 endfunction()
 
-set(TARGET_LIST "cpu;${AFFT_TARGET_LIST}")
+set(TARGET_LIST "CPU;${AFFT_TARGET_LIST}")
+
+message(STATUS "Building examples for targets: ${TARGET_LIST}")
 
 foreach(target ${TARGET_LIST})
   add_examples("" ${target})

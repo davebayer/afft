@@ -22,52 +22,38 @@
   SOFTWARE.
 */
 
-#ifndef HELPERS_CUDA_HPP
-#define HELPERS_CUDA_HPP
+#ifndef HELPERS_AFFT_H
+#define HELPERS_AFFT_H
 
-#include <cstdio>
-#include <memory>
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "cuda.h"
+#include <afft/afft.h>
 
-namespace helpers::cuda
+#ifdef __cplusplus
+extern "C"
 {
-  /**
-   * @brief Get the number of CUDA devices
-   * @return Number of CUDA devices
-   */
-  inline int getDeviceCount()
-  {
-    return helpers_cuda_getDeviceCount();
-  }
+#endif
 
-  /// @brief Deleter for CUDA streams
-  struct StreamDeleter
-  {
-    void operator()(cudaStream_t stream) const
-    {
-      cudaStreamDestroy(stream);
-    }
-  };
+/// @brief Error details, must be defined in the main file
+extern afft_ErrorDetails errDetails;
 
-  /// @brief Unique pointer for CUDA streams
-  using Stream = std::unique_ptr<std::remove_pointer_t<cudaStream_t>, StreamDeleter>;
+/**
+ * @brief Macro for checking afft errors. The call cannot contain _err variable.
+ * @param call afft function call
+ */
+#define AFFT_CALL(call) \
+  do { \
+    afft_Error _err = (call); \
+    if (_err != afft_Error_success) \
+    { \
+      fprintf(stderr, "afft error (%s:%d): %s\n", __FILE__, __LINE__, errDetails.message); \
+      exit(EXIT_FAILURE); \
+    } \
+  } while (0)
 
-  /**
-   * @brief Make a CUDA stream
-   * @return CUDA stream
-   */
-  inline Stream makeStream(unsigned flags = cudaStreamDefault)
-  {
-    cudaStream_t stream{};
+#ifdef __cplusplus
+}
+#endif
 
-    CUDART_CALL(cudaStreamCreateWithFlags(&stream, flags));
-
-    return Stream{std::move(stream)};
-  }
-} // namespace helpers::cuda
-
-#endif /* HELPERS_CUDA_HPP */
+#endif /* HELPERS_AFFT_H */

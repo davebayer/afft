@@ -405,8 +405,8 @@ namespace afft::detail::vkfft::sp
           launchParams.buffer      = const_cast<void**>(dst.data());
           break;
         case Direction::inverse:
-          launchParams.buffer      = const_cast<void**>(src.data());
-          launchParams.inputBuffer = const_cast<void**>(dst.data());
+          launchParams.buffer       = const_cast<void**>(src.data());
+          launchParams.outputBuffer = const_cast<void**>(dst.data());
           break;
         default:
           cxx::unreachable();
@@ -439,8 +439,8 @@ namespace afft::detail::vkfft::sp
           launchParams.buffer      = const_cast<void**>(dst.data());
           break;
         case Direction::backward:
-          launchParams.buffer      = const_cast<void**>(src.data());
-          launchParams.inputBuffer = const_cast<void**>(dst.data());
+          launchParams.buffer       = const_cast<void**>(src.data());
+          launchParams.outputBuffer = const_cast<void**>(dst.data());
           break;
         default:
           cxx::unreachable();
@@ -473,8 +473,8 @@ namespace afft::detail::vkfft::sp
           launchParams.buffer      = reinterpret_cast<cl_mem*>(dst.data());
           break;
         case Direction::backward:
-          launchParams.buffer      = reinterpret_cast<cl_mem*>(src.data());
-          launchParams.inputBuffer = reinterpret_cast<cl_mem*>(dst.data());
+          launchParams.buffer       = reinterpret_cast<cl_mem*>(src.data());
+          launchParams.outputBuffer = reinterpret_cast<cl_mem*>(dst.data());
           break;
         default:
           cxx::unreachable();

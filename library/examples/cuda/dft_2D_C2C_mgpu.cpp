@@ -5,6 +5,8 @@
 
 #include <afft/afft.hpp>
 
+#include <helpers/cuda.hpp>
+
 int main(void)
 {
   using PrecT = float;
@@ -43,12 +45,11 @@ int main(void)
   afft::cuda::ExecutionParameters cudaExecParams{}; // execution parameters for CUDA
   cudaExecParams.stream = cudaStream_t{0}; // use stream 0
 
-  plan->execute({{src0.data(), src1.data()}}, {{dst0.data(), dst1.data()}}, cudaExecParams); // execute the transform into zero stream
+  plan->execute(afft::View<std::complex<PrecT>*>{std::array{src0.data(), src1.data()}},
+                afft::View<std::complex<PrecT>*>{std::array{dst0.data(), dst1.data()}},
+                cudaExecParams); // execute the transform into zero stream
 
-  if (cudaDeviceSynchronize() != cudaSuccess)
-  {
-    throw std::runtime_error("CUDA error: failed to synchronize");
-  }
+  CUDART_CALL(cudaDeviceSynchronize()); // synchronize the device
 
   // use results from dst vectors
 

@@ -3,6 +3,8 @@
 
 #include <afft/afft.hpp>
 
+#include <helpers/cuda.hpp>
+
 int main(void)
 {
   using PrecT = float;
@@ -33,10 +35,7 @@ int main(void)
 
   plan->execute(src.data(), dst.data(), cudaExecParams); // execute the transform into zero stream
 
-  if (cudaDeviceSynchronize() != cudaSuccess)
-  {
-    throw std::runtime_error("CUDA error: failed to synchronize");
-  }
+  CUDART_CALL(cudaDeviceSynchronize()); // synchronize the device
 
   // use results from dst vector
 
