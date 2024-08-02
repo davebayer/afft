@@ -34,6 +34,7 @@ mexFunction(int            nlhs,
             mxArray*       plhs[],
             int            nrhs,
             const mxArray* prhs[])
+try
 {
   if (nlhs != 1)
   {
@@ -87,4 +88,8 @@ mexFunction(int            nlhs,
   plan->executeUnsafe(mxGetData(src), mxGetData(dst));
 
   plhs[0] = dst;
+}
+catch (...)
+{
+  mexErrMsgIdAndTxt("afft:fft:exception", "An exception occurred.");
 }
