@@ -151,7 +151,7 @@ namespace afft::detail
        * @return Multi-process parameters
        */
       template<MpBackend mpBackend>
-      [[nodiscard]] constexpr MpBackendParameters<mpBackend> getCxxMpParameters()
+      [[nodiscard]] constexpr MpBackendParameters<mpBackend> getCxxMpParameters() const
       {
         static_assert(isValid(mpBackend), "Invalid multi-process backend");
 
@@ -161,7 +161,7 @@ namespace afft::detail
         }
         else if constexpr (mpBackend == MpBackend::mpi)
         {
-          return mpi::Parameters{getMpDesc<mpBackend>().comm};
+          return afft::mpi::Parameters{getMpDesc<mpBackend>().comm};
         }
       }
 
@@ -171,7 +171,7 @@ namespace afft::detail
        * @return Multi-process parameters
        */
       template<MpBackend mpBackend>
-      [[nodiscard]] constexpr typename MpBackendParameters<mpBackend>::CType getCMpParameters()
+      [[nodiscard]] constexpr typename MpBackendParametersSelect<mpBackend>::CType getCMpParameters() const
       {
         static_assert(isValid(mpBackend) && mpBackend != MpBackend::none, "invalid multi-process backend");
 
@@ -211,7 +211,7 @@ namespace afft::detail
        * @param mpiParams MPI parameters
        * @return Multi-process variant
        */
-      [[nodiscard]] static constexpr MpVariant makeMpVariant(const mpi::Parameters& mpiParams)
+      [[nodiscard]] static constexpr MpVariant makeMpVariant(const afft::mpi::Parameters& mpiParams)
       {
         return MpiDesc{mpiParams.comm};
       }

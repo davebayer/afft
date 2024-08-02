@@ -433,7 +433,7 @@ try
     break;
   case afft::MpBackend::mpi:
 # ifdef AFFT_ENABLE_MPI
-    *static_cast<afft_mpi::Parameters*>(mpBackendParams) = desc.getCMpBackendParameters<afft::MpBackend::mpi>();
+    *static_cast<afft_mpi_Parameters*>(mpBackendParams) = desc.getCMpParameters<afft::MpBackend::mpi>();
     break;
 # else
     setErrorDetails(errDetails, "MPI backend is not enabled");

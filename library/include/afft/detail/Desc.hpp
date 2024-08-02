@@ -167,7 +167,7 @@ namespace afft::detail
 #       ifdef AFFT_ENABLE_MPI
           if (cMpBackendParams == nullptr)
           {
-            return MpDesc{mpi::Parameters{}}
+            return MpDesc{afft::mpi::Parameters{}};
           }
           else
           {
