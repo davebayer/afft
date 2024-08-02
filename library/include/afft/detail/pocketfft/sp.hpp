@@ -79,6 +79,22 @@ namespace afft::detail::pocketfft::sp::cpu
         mDstStrides(mDesc.getShapeRank()),
         mAxes(mDesc.getTransformRank())
       {
+        std::transform(mDesc.getShape().begin(),
+                       mDesc.getShape().end(),
+                       mShape.begin(),
+                       [](const auto dim)
+        {
+          return safeIntCast<std::size_t>(dim);
+        });
+
+        std::transform(mDesc.getTransformAxes().begin(),
+                       mDesc.getTransformAxes().end(),
+                       mAxes.begin(),
+                       [](const auto axis)
+        {
+          return safeIntCast<std::size_t>(axis);
+        });
+
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
         mSrcElemCount = memDesc.getSrcElemCount();
@@ -98,14 +114,6 @@ namespace afft::detail::pocketfft::sp::cpu
                        [sizeOfDstElem = mDesc.sizeOfDstElem()](const auto stride)
         {
           return safeIntCast<std::ptrdiff_t>(stride * sizeOfDstElem);
-        });
-
-        std::transform(mDesc.getTransformAxes().begin(),
-                       mDesc.getTransformAxes().end(),
-                       mAxes.begin(),
-                       [](const auto axis)
-        {
-          return safeIntCast<std::size_t>(axis);
         });
       }
 
