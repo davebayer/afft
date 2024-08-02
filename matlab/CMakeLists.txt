@@ -38,6 +38,12 @@ else()
   message(FATAL_ERROR "Unsupported matlab platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU"))
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wall -Wextra -Wconversion")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")
+endif()
+
 matlab_add_mex(
   NAME    afft_fft
   SRC     src/fft.cpp
