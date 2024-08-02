@@ -64,7 +64,7 @@ namespace afft::detail::vkfft
        * @brief Get the vkfft direction from the plan description.
        * @return The vkfft direction.
        */
-      [[nodiscard]] auto getDirection() const noexcept
+      [[nodiscard]] int getDirection() const noexcept
       {
         switch (mDesc.getDirection())
         {

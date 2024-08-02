@@ -315,6 +315,15 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the rank of the how many dimensions.
+       * @return Rank of the how many dimensions.
+       */
+      [[nodiscard]] constexpr std::size_t getTransformHowManyRank() const noexcept
+      {
+        return getShapeRank() - getTransformRank();
+      }
+
+      /**
        * @brief Get the axes of the transform.
        * @return Axes of the transform.
        */

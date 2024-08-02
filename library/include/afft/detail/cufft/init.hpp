@@ -58,7 +58,7 @@ namespace afft::detail::cufft
     // Check the version of the cuFFT library
     if (version != CUFFT_VERSION)
     {
-      throw BackendError{Backend::cufft, "library version mismatch"};
+      throw Exception{Error::cufft, "library version mismatch"};
     }
 
     std::size_t workspaceSize{};

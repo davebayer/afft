@@ -29,8 +29,6 @@
 # include "../include.hpp"
 #endif
 
-#include "../../gpu.hpp"
-
 namespace afft::detail::cufft
 {
   /// @brief cuFFT size type
@@ -46,7 +44,7 @@ namespace afft::detail::cufft
       /// @brief Default constructor.
       Handle()
       {
-        Error::check(cufftCreate(&mHandle));
+        checkError(cufftCreate(&mHandle));
       }
 
       /// @brief Deleted copy constructor.
@@ -80,108 +78,108 @@ namespace afft::detail::cufft
   };
 
   /// @brief cuFFT callback source code
-  inline constexpr std::string_view callbackSrcCode
-  {R"(
-#define PRECISION_F32      3 // must match afft::Precision::f32
-#define PRECISION_F64      4 // must match afft::Precision::f64
+//   inline constexpr std::string_view callbackSrcCode
+//   {R"(
+// #define PRECISION_F32      3 // must match afft::Precision::f32
+// #define PRECISION_F64      4 // must match afft::Precision::f64
 
-#define COMPLEXITY_REAL    1 // must match afft::Complexity::real
-#define COMPLEXITY_COMPLEX 2 // must match afft::Complexity::complex
+// #define COMPLEXITY_REAL    1 // must match afft::Complexity::real
+// #define COMPLEXITY_COMPLEX 2 // must match afft::Complexity::complex
 
-#ifndef PRECISION
-# error "PRECISION must be defined"
-#elif !(PRECISION == PRECISION_F32 || PRECISION == PRECISION_F64)
-# error "PRECISION must be either PRECISION_F32 or PRECISION_F64"
-#endif
+// #ifndef PRECISION
+// # error "PRECISION must be defined"
+// #elif !(PRECISION == PRECISION_F32 || PRECISION == PRECISION_F64)
+// # error "PRECISION must be either PRECISION_F32 or PRECISION_F64"
+// #endif
 
-#ifndef COMPLEXITY
-# error "COMPLEXITY must be defined"
-#elif !(COMPLEXITY == COMPLEXITY_REAL || COMPLEXITY == COMPLEXITY_COMPLEX)
-# error "COMPLEXITY must be either COMPLEXITY_REAL or COMPLEXITY_COMPLEX" 
-#endif
+// #ifndef COMPLEXITY
+// # error "COMPLEXITY must be defined"
+// #elif !(COMPLEXITY == COMPLEXITY_REAL || COMPLEXITY == COMPLEXITY_COMPLEX)
+// # error "COMPLEXITY must be either COMPLEXITY_REAL or COMPLEXITY_COMPLEX" 
+// #endif
 
-#ifndef SCALE
-# error "SCALE must be defined"
-#endif
+// #ifndef SCALE
+// # error "SCALE must be defined"
+// #endif
 
-/**********************************************************************************************************************/
-/* Copied from cufft.h and cufftXt.h to prevent include                                                               */
-/**********************************************************************************************************************/
-// cufftReal is a single-precision, floating-point real data type.
-// cufftDoubleReal is a double-precision, real data type.
-typedef float cufftReal;
-typedef double cufftDoubleReal;
+// /**********************************************************************************************************************/
+// /* Copied from cufft.h and cufftXt.h to prevent include                                                               */
+// /**********************************************************************************************************************/
+// // cufftReal is a single-precision, floating-point real data type.
+// // cufftDoubleReal is a double-precision, real data type.
+// typedef float cufftReal;
+// typedef double cufftDoubleReal;
 
-// cufftComplex is a single-precision, floating-point complex data type that
-// consists of interleaved real and imaginary components.
-// cufftDoubleComplex is the double-precision equivalent.
-typedef cuComplex cufftComplex;
-typedef cuDoubleComplex cufftDoubleComplex;
+// // cufftComplex is a single-precision, floating-point complex data type that
+// // consists of interleaved real and imaginary components.
+// // cufftDoubleComplex is the double-precision equivalent.
+// typedef cuComplex cufftComplex;
+// typedef cuDoubleComplex cufftDoubleComplex;
 
-typedef cufftComplex (*cufftCallbackLoadC)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
-typedef cufftDoubleComplex (*cufftCallbackLoadZ)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
-typedef cufftReal (*cufftCallbackLoadR)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
-typedef cufftDoubleReal(*cufftCallbackLoadD)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+// typedef cufftComplex (*cufftCallbackLoadC)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+// typedef cufftDoubleComplex (*cufftCallbackLoadZ)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+// typedef cufftReal (*cufftCallbackLoadR)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
+// typedef cufftDoubleReal(*cufftCallbackLoadD)(void *dataIn, size_t offset, void *callerInfo, void *sharedPointer);
 
-typedef void (*cufftCallbackStoreC)(void *dataOut, size_t offset, cufftComplex element, void *callerInfo, void *sharedPointer);
-typedef void (*cufftCallbackStoreZ)(void *dataOut, size_t offset, cufftDoubleComplex element, void *callerInfo, void *sharedPointer);
-typedef void (*cufftCallbackStoreR)(void *dataOut, size_t offset, cufftReal element, void *callerInfo, void *sharedPointer);
-typedef void (*cufftCallbackStoreD)(void *dataOut, size_t offset, cufftDoubleReal element, void *callerInfo, void *sharedPointer);
+// typedef void (*cufftCallbackStoreC)(void *dataOut, size_t offset, cufftComplex element, void *callerInfo, void *sharedPointer);
+// typedef void (*cufftCallbackStoreZ)(void *dataOut, size_t offset, cufftDoubleComplex element, void *callerInfo, void *sharedPointer);
+// typedef void (*cufftCallbackStoreR)(void *dataOut, size_t offset, cufftReal element, void *callerInfo, void *sharedPointer);
+// typedef void (*cufftCallbackStoreD)(void *dataOut, size_t offset, cufftDoubleReal element, void *callerInfo, void *sharedPointer);
 
-/**********************************************************************************************************************/
+// /**********************************************************************************************************************/
 
-#if PRECISION == PRECISION_F32
-constexpr cufftReal scale{SCALE};
-#else
-constexpr cufftDoubleReal scale{SCALE};
-#endif
+// #if PRECISION == PRECISION_F32
+// constexpr cufftReal scale{SCALE};
+// #else
+// constexpr cufftDoubleReal scale{SCALE};
+// #endif
 
-extern "C" __device__
-#if PRECISION == PRECISION_F32
-# if COMPLEXITY == COMPLEXITY_REAL
-    void cufftJITCallbackStoreReal(void* dataOut, size_t offset, cufftReal elem, void*, void*)
-# else
-    void cufftJITCallbackStoreComplex(void* dataOut, size_t offset, cufftComplex elem, void*, void*)
-# endif
-#elif PRECISION == PRECISION_F64
-# if COMPLEXITY == COMPLEXITY_REAL
-    void cufftJITCallbackStoreDoubleReal(void* dataOut, size_t offset, cufftDoubleReal elem, void*, void*)
-# else
-    void cufftJITCallbackStoreDoubleComplex(void* dataOut, size_t offset, cufftDoubleComplex elem, void*, void*)
-# endif
-#endif
-{
-#if COMPLEXITY == COMPLEXITY_REAL
-  elem *= scale;
-#else
-  elem.x *= scale;
-  elem.y *= scale;
-#endif
+// extern "C" __device__
+// #if PRECISION == PRECISION_F32
+// # if COMPLEXITY == COMPLEXITY_REAL
+//     void cufftJITCallbackStoreReal(void* dataOut, size_t offset, cufftReal elem, void*, void*)
+// # else
+//     void cufftJITCallbackStoreComplex(void* dataOut, size_t offset, cufftComplex elem, void*, void*)
+// # endif
+// #elif PRECISION == PRECISION_F64
+// # if COMPLEXITY == COMPLEXITY_REAL
+//     void cufftJITCallbackStoreDoubleReal(void* dataOut, size_t offset, cufftDoubleReal elem, void*, void*)
+// # else
+//     void cufftJITCallbackStoreDoubleComplex(void* dataOut, size_t offset, cufftDoubleComplex elem, void*, void*)
+// # endif
+// #endif
+// {
+// #if COMPLEXITY == COMPLEXITY_REAL
+//   elem *= scale;
+// #else
+//   elem.x *= scale;
+//   elem.y *= scale;
+// #endif
 
-  reinterpret_cast<decltype(elem)*>(dataOut)[offset] = elem;
-}
+//   reinterpret_cast<decltype(elem)*>(dataOut)[offset] = elem;
+// }
 
-// Define the callback function pointer if not using JIT callbacks
-extern "C" __constant__
-#ifndef USE_JIT_CALLBACKS
-# if PRECISION == PRECISION_F32
-#   if COMPLEXITY == COMPLEXITY_REAL
-      cufftCallbackStoreR cufftCallbackStoreFnPtr = cufftJITCallbackStoreReal;
-#   else
-      cufftCallbackStoreC cufftCallbackStoreFnPtr = cufftJITCallbackStoreComplex;
-#   endif
-# elif PRECISION == PRECISION_F64
-#   if COMPLEXITY == COMPLEXITY_REAL
-      cufftCallbackStoreD cufftCallbackStoreFnPtr = cufftJITCallbackStoreDoubleReal;
-#   else
-      cufftCallbackStoreZ cufftCallbackStoreFnPtr = cufftJITCallbackStoreDoubleComplex;
-#   endif
-# endif
-#endif /* USE_JIT_CALLBACKS */
-  )"};
+// // Define the callback function pointer if not using JIT callbacks
+// extern "C" __constant__
+// #ifndef USE_JIT_CALLBACKS
+// # if PRECISION == PRECISION_F32
+// #   if COMPLEXITY == COMPLEXITY_REAL
+//       cufftCallbackStoreR cufftCallbackStoreFnPtr = cufftJITCallbackStoreReal;
+// #   else
+//       cufftCallbackStoreC cufftCallbackStoreFnPtr = cufftJITCallbackStoreComplex;
+// #   endif
+// # elif PRECISION == PRECISION_F64
+// #   if COMPLEXITY == COMPLEXITY_REAL
+//       cufftCallbackStoreD cufftCallbackStoreFnPtr = cufftJITCallbackStoreDoubleReal;
+// #   else
+//       cufftCallbackStoreZ cufftCallbackStoreFnPtr = cufftJITCallbackStoreDoubleComplex;
+// #   endif
+// # endif
+// #endif /* USE_JIT_CALLBACKS */
+//   )"};
   
   /// @brief cuFFT callback function pointer name
-  inline constexpr cuda::rtc::CSymbolName storeCallbackPtrName{"cufftCallbackStoreFnPtr"};
+  // inline constexpr cuda::rtc::CSymbolName storeCallbackPtrName{"cufftCallbackStoreFnPtr"};
 
   /**
    * @brief Make the cuFFT direction.
@@ -233,7 +231,7 @@ extern "C" __constant__
     case Precision::f64:
       return pickType(CUDA_R_64F,  CUDA_C_64F);
     default:
-      throw BackendError{Backend::cufft, "unsupported precision"};
+      throw Exception{Error::cufft, "unsupported precision"};
     }
   }
 
@@ -264,18 +262,18 @@ extern "C" __constant__
    * @param comp The complexity of the data type.
    * @return The cuFFT callback type.
    */
-  [[nodiscard]] inline constexpr cufftXtCallbackType makeStoreCallbackType(const Precision prec, const Complexity comp)
-  {
-    switch (prec)
-    {
-    case Precision::f32:
-      return (comp == Complexity::real) ? CUFFT_CB_ST_REAL : CUFFT_CB_ST_COMPLEX;
-    case Precision::f64:
-      return (comp == Complexity::real) ? CUFFT_CB_ST_REAL_DOUBLE : CUFFT_CB_ST_COMPLEX_DOUBLE;
-    default:
-      throw BackendError{Backend::cufft, "unsupported precision for callback"};
-    }
-  }
+  // [[nodiscard]] inline constexpr cufftXtCallbackType makeStoreCallbackType(const Precision prec, const Complexity comp)
+  // {
+  //   switch (prec)
+  //   {
+  //   case Precision::f32:
+  //     return (comp == Complexity::real) ? CUFFT_CB_ST_REAL : CUFFT_CB_ST_COMPLEX;
+  //   case Precision::f64:
+  //     return (comp == Complexity::real) ? CUFFT_CB_ST_REAL_DOUBLE : CUFFT_CB_ST_COMPLEX_DOUBLE;
+  //   default:
+  //     throw BackendError{Backend::cufft, "unsupported precision for callback"};
+  //   }
+  // }
 } // namespace afft::detail::cufft
 
 #endif /* AFFT_DETAIL_CUFFT_COMMON_HPP */

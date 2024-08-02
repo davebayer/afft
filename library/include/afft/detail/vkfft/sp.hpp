@@ -34,9 +34,9 @@
 namespace afft::detail::vkfft::sp
 {
   /**
-   * @brief Create a vkfft sp plan implementation.
+   * @brief Create a vkfft sp plan.
    * @param desc Plan description.
-   * @return Plan implementation.
+   * @return Plan.
    */
   [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
 } // namespace afft::detail::vkfft::sp

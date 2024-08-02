@@ -28,7 +28,10 @@ int main(void)
   afft::cuda::Parameters cudaParams{}; // it will run on a gpu
   cudaParams.devices = {{0}}; // use device 0
 
-  auto plan = afft::makePlan(dftParams, cudaParams); // generate the plan of the transform, uses current device
+  afft::cuda::BackendParameters cudaBackendParams{}; // backend parameters for CUDA
+  cudaBackendParams.mask = afft::BackendMask::cufft; // use cuFFT backend
+
+  auto plan = afft::makePlan(dftParams, cudaParams, cudaBackendParams); // generate the plan of the transform, uses current device
 
   afft::cuda::ExecutionParameters cudaExecParams{}; // execution parameters for CUDA
   cudaExecParams.stream = cudaStream_t{0}; // use stream 0

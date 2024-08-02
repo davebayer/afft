@@ -22,87 +22,79 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_CUFFT_MAKE_PLAN_IMPL_HPP
-#define AFFT_DETAIL_CUFFT_MAKE_PLAN_IMPL_HPP
+#ifndef AFFT_DETAIL_CUFFT_MAKE_PLAN_HPP
+#define AFFT_DETAIL_CUFFT_MAKE_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "mpst.hpp"
-#include "spmt.hpp"
-#include "spst.hpp"
+// #include "mpst.hpp"
+// #include "spmt.hpp"
+#include "sp.hpp"
 
 namespace afft::detail::cufft
 {
   /**
-   * @brief Create a plan implementation for cuFFT.
+   * @brief Create a plan for cuFFT.
    * @param desc The descriptor of the plan.
    * @param backendParams The backend parameters.
-   * @return The plan implementation or an error message.
+   * @return The plan or an error message.
    */
-  template<Target target, Distribution distrib>
-  [[nodiscard]] std::unique_ptr<detail::PlanImpl>
-  makePlanImpl(const Desc& desc, const BackendParameters<target, distrib>& backendParams)
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
+  makePlan(const Desc& desc, const BackendParamsT& backendParams)
   {
     if (desc.getTransformHowManyRank() > 1)
     {
-      throw BackendError{Backend::cufft, "omitting more than one dimension is not supported"};
+      throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
     }
 
     if (desc.getComplexFormat() != ComplexFormat::interleaved)
     {
-      throw BackendError{Backend::cufft, "only interleaved complex format is supported"};
+      throw Exception{Error::cufft, "only interleaved complex format is supported"};
     }
 
     if (desc.getTransform() == Transform::dft)
     {
       const auto& dftDesc = desc.getTransformDesc<Transform::dft>();
 
-      if (dftDesc.type == dft::Type::complexToReal && desc.getPreserveSource())
+      if (dftDesc.type == dft::Type::complexToReal && !desc.isDestructive())
       {
-        throw BackendError{Backend::cufft, "preserving the source for complex-to-real transforms is not supported"};
+        throw Exception{Error::cufft, "preserving the source for complex-to-real transforms is not supported"};
       }
     }
     else
     {
-      throw BackendError{Backend::cufft, "only DFT transforms are supported"};
+      throw Exception{Error::cufft, "only DFT transforms are supported"};
     }
 
     if (const auto& prec = desc.getPrecision(); prec.execution != prec.source || prec.execution != prec.destination)
     {
-      throw BackendError{Backend::cufft, "execution, source and destination must precision match"};
+      throw Exception{Error::cufft, "execution, source and destination must precision match"};
     }
 
-    if (desc.getNormalize() != Normalize::none)
+    if (desc.getNormalization() != Normalization::none)
     {
-      throw BackendError{Backend::cufft, "normalization is not supported"};
+      throw Exception{Error::cufft, "normalization is not supported"};
     }
 
-    if constexpr (target == Target::gpu)
+    if constexpr (BackendParamsT::target == Target::cuda)
     {
-      if constexpr (distrib == Distribution::spst)
+      if constexpr (BackendParamsT::mpBackend == MpBackend::none)
       {
-        return spst::gpu::PlanImpl::make(desc, backendParams.cufft);
-      }
-      else if constexpr (distrib == Distribution::spmt)
-      {
-        return spmt::gpu::PlanImpl::make(desc, backendParams.cufft);
-      }
-      else if constexpr (distrib == Distribution::mpst)
-      {
-        return mpst::gpu::PlanImpl::make(desc, backendParams.cufft);
+        return sp::makePlan(desc, backendParams.cufft);
       }
       else
       {
-        throw BackendError{Backend::cufft, "only SPST, SPMT, and MPST distributions are supported"};
+        throw Exception{Error::cufft, "only none backend is supported"};
       }
     }
     else
     {
-      throw BackendError{Backend::cufft, "only gpu target is supported"};
+      throw Exception{Error::cufft, "only CUDA target is supported"};
     }
   }
 } // namespace afft::detail::cufft
 
-#endif /* AFFT_DETAIL_CUFFT_MAKE_PLAN_IMPL_HPP */
+#endif /* AFFT_DETAIL_CUFFT_MAKE_PLAN_HPP */
