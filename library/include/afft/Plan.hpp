@@ -41,7 +41,7 @@ AFFT_EXPORT namespace afft
 {
   class Plan : public std::enable_shared_from_this<Plan>
   {
-    friend struct detail::DescGetter; 
+    friend struct detail::DescGetter;
 
     private:
       /// @brief Default execution parameters helper.

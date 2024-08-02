@@ -29,52 +29,48 @@
 
 // Include standard C++ headers
 #ifndef AFFT_INCLUDE_NO_STD
-// # if defined(AFFT_CXX_HAS_IMPORT_STD)
-// import std;
-// # else
-#   include <algorithm>
-#   include <array>
-#   include <bitset>
-#   include <cfloat>
-#   include <chrono>
-#   include <cinttypes>
-#   include <climits>
-#   include <complex>
-#   include <cstddef>
-#   include <cstdint>
-#   include <cstdio>
-#   include <cstring>
-#   ifdef AFFT_CXX_HAS_FORMAT
-#     include <format>
-#   endif
-#   include <functional>
-#   include <iterator>
-#   include <limits>
-#   include <list>
-#   include <memory>
-#   include <new>
-#   include <numeric>
-#   include <optional>
-#   ifdef AFFT_CXX_HAS_SPAN
-#     include <span>
-#   else
-#     define TCB_SPAN_NAMESPACE_NAME afft::thirdparty::span
-#     include <tcb/span.hpp>
-#   endif
-#   include <stdexcept>
-#   ifdef AFFT_CXX_HAS_STD_FLOAT
-#     include <stdfloat>
-#   endif
-#   include <string>
-#   include <string_view>
-#   include <tuple>
-#   include <type_traits>
-#   include <typeinfo>
-#   include <unordered_map>
-#   include <utility>
-#   include <variant>
-#   include <vector>
-// # endif
+# include <algorithm>
+# include <array>
+# include <bitset>
+# include <cfloat>
+# include <chrono>
+# include <cinttypes>
+# include <climits>
+# include <complex>
+# include <cstddef>
+# include <cstdint>
+# include <cstdio>
+# include <cstring>
+# ifdef AFFT_CXX_HAS_FORMAT
+#   include <format>
+# endif
+# include <functional>
+# include <iterator>
+# include <limits>
+# include <list>
+# include <memory>
+# include <new>
+# include <numeric>
+# include <optional>
+# ifdef AFFT_CXX_HAS_SPAN
+#   include <span>
+# else
+#   define TCB_SPAN_NAMESPACE_NAME afft::thirdparty::span
+#   include <tcb/span.hpp>
+# endif
+# include <stdexcept>
+# ifdef AFFT_CXX_HAS_STD_FLOAT
+#   include <stdfloat>
+# endif
+# include <string>
+# include <string_view>
+# include <tuple>
+# include <type_traits>
+# include <typeinfo>
+# include <unordered_map>
+# include <utility>
+# include <variant>
+# include <vector>
 #endif
 
 // Include afft C API
