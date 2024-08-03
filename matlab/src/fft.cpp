@@ -56,14 +56,23 @@ try
     mexErrMsgIdAndTxt("afft:fft:ndims", "Too many dimensions.");
   }
 
-  mxArray* doubleSrc{};
-
-  mexCallMATLAB(1, &doubleSrc, 1, &anySrc, "double");
-
   mxArray* src{};
-  mexCallMATLAB(1, &src, 1, &doubleSrc, "complex");
+
+  if (mexCallMATLAB(1, &src, 1, &anySrc, "double"))
+  {
+    mexErrMsgIdAndTxt("afft:fft:conversion", "Failed to convert input to double.");
+  }
+  if (!mxMakeArrayComplex(src))
+  {
+    mexErrMsgIdAndTxt("afft:fft:complex", "Failed to make input complex.");
+  }
 
   mxArray* dst = mxCreateUninitNumericArray(ndims, const_cast<std::size_t*>(dims), mxDOUBLE_CLASS, mxCOMPLEX);
+
+  if (dst == nullptr)
+  {
+    mexErrMsgIdAndTxt("afft:fft:allocation", "Failed to allocate output array.");
+  }
 
   std::array<afft::Size, afft::maxDimCount> shape{};
   std::transform(dims,

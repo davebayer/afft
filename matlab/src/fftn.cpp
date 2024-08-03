@@ -38,12 +38,12 @@ try
 {
   if (nlhs != 1)
   {
-    mexErrMsgIdAndTxt("afft:fft:nlhs", "One output required.");
+    mexErrMsgIdAndTxt("afft:fftn:nlhs", "One output required.");
   }
 
   if (nrhs != 1 && nrhs != 2)
   {
-    mexErrMsgIdAndTxt("afft:fft:nrhs", "One or two inputs required.");
+    mexErrMsgIdAndTxt("afft:fftn:nrhs", "One or two inputs required.");
   }
   
   mxArray* anySrc = const_cast<mxArray*>(prhs[0]);
@@ -53,17 +53,26 @@ try
 
   if (ndims > afft::maxDimCount)
   {
-    mexErrMsgIdAndTxt("afft:fft:ndims", "Too many dimensions.");
+    mexErrMsgIdAndTxt("afft:fftn:ndims", "Too many dimensions.");
   }
 
-  mxArray* doubleSrc{};
-
-  mexCallMATLAB(1, &doubleSrc, 1, &anySrc, "double");
-
   mxArray* src{};
-  mexCallMATLAB(1, &src, 1, &doubleSrc, "complex");
+
+  if (mexCallMATLAB(1, &src, 1, &anySrc, "double"))
+  {
+    mexErrMsgIdAndTxt("afft:fftn:double", "Failed to convert the input array to double.");
+  }
+  if (!mxMakeArrayComplex(src))
+  {
+    mexErrMsgIdAndTxt("afft:fftn:complex", "Failed to make the input array complex.");
+  }
 
   mxArray* dst = mxCreateUninitNumericArray(ndims, const_cast<std::size_t*>(dims), mxDOUBLE_CLASS, mxCOMPLEX);
+
+  if (dst == nullptr)
+  {
+    mexErrMsgIdAndTxt("afft:fftn:allocation", "Failed to allocate the output array.");
+  }
 
   std::array<afft::Size, afft::maxDimCount> shape{};
   std::transform(dims,
