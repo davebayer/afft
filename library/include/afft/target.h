@@ -62,6 +62,7 @@ typedef struct afft_opencl_Parameters afft_opencl_Parameters;
 /// @brief OpenCL execution parameters
 typedef struct afft_opencl_ExecutionParameters afft_opencl_ExecutionParameters;
 
+#ifdef AFFT_ENABLE_CPU
 /// @brief CPU parameters
 struct afft_cpu_Parameters
 {
@@ -73,6 +74,7 @@ struct afft_cpu_ExecutionParameters
 {
   void* workspace; ///< Workspace
 };
+#endif
 
 #ifdef AFFT_ENABLE_CUDA
 /// @brief CUDA parameters

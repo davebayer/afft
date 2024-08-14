@@ -33,6 +33,8 @@
 /**********************************************************************************************************************/
 // Target defines
 /**********************************************************************************************************************/
+#cmakedefine AFFT_ENABLE_CPU
+
 #cmakedefine AFFT_ENABLE_CUDA
 #ifdef AFFT_ENABLE_CUDA
 # cmakedefine AFFT_CUDA_ROOT_DIR "@AFFT_CUDA_ROOT_DIR@"
@@ -64,32 +66,34 @@
 #endif
 
 // FFTW3
-#cmakedefine AFFT_ENABLE_FFTW3
-#ifdef AFFT_ENABLE_FFTW3
-# cmakedefine AFFT_FFTW3_HAS_FLOAT
-# ifdef AFFT_FFTW3_HAS_FLOAT
-#   cmakedefine AFFT_FFTW3_HAS_FLOAT_THREADS
-#   ifdef AFFT_ENABLE_MPI
-#     cmakedefine AFFT_FFTW3_HAS_MPI_FLOAT
+#ifdef AFFT_ENABLE_CPU
+# cmakedefine AFFT_ENABLE_FFTW3
+# ifdef AFFT_ENABLE_FFTW3
+#   cmakedefine AFFT_FFTW3_HAS_FLOAT
+#   ifdef AFFT_FFTW3_HAS_FLOAT
+#     cmakedefine AFFT_FFTW3_HAS_FLOAT_THREADS
+#     ifdef AFFT_ENABLE_MPI
+#       cmakedefine AFFT_FFTW3_HAS_MPI_FLOAT
+#     endif
 #   endif
-# endif
-# cmakedefine AFFT_FFTW3_HAS_DOUBLE
-# ifdef AFFT_FFTW3_HAS_DOUBLE
-#   cmakedefine AFFT_FFTW3_HAS_DOUBLE_THREADS
-#   ifdef AFFT_ENABLE_MPI
-#     cmakedefine AFFT_FFTW3_HAS_MPI_DOUBLE
+#   cmakedefine AFFT_FFTW3_HAS_DOUBLE
+#   ifdef AFFT_FFTW3_HAS_DOUBLE
+#     cmakedefine AFFT_FFTW3_HAS_DOUBLE_THREADS
+#     ifdef AFFT_ENABLE_MPI
+#       cmakedefine AFFT_FFTW3_HAS_MPI_DOUBLE
+#     endif
 #   endif
-# endif
-# cmakedefine AFFT_FFTW3_HAS_LONG
-# ifdef AFFT_FFTW3_HAS_LONG
-#   cmakedefine AFFT_FFTW3_HAS_LONG_THREADS
-#   ifdef AFFT_ENABLE_MPI
-#     cmakedefine AFFT_FFTW3_HAS_MPI_LONG
+#   cmakedefine AFFT_FFTW3_HAS_LONG
+#   ifdef AFFT_FFTW3_HAS_LONG
+#     cmakedefine AFFT_FFTW3_HAS_LONG_THREADS
+#     ifdef AFFT_ENABLE_MPI
+#       cmakedefine AFFT_FFTW3_HAS_MPI_LONG
+#     endif
 #   endif
-# endif
-# cmakedefine AFFT_FFTW3_HAS_QUAD
-# ifdef AFFT_FFTW3_HAS_QUAD
-#   cmakedefine AFFT_FFTW3_HAS_QUAD_THREADS
+#   cmakedefine AFFT_FFTW3_HAS_QUAD
+#   ifdef AFFT_FFTW3_HAS_QUAD
+#     cmakedefine AFFT_FFTW3_HAS_QUAD_THREADS
+#   endif
 # endif
 #endif
 
@@ -104,10 +108,14 @@
 #endif
 
 // MKL
-#cmakedefine AFFT_ENABLE_MKL
+#ifdef AFFT_ENABLE_CPU
+# cmakedefine AFFT_ENABLE_MKL
+#endif
 
 // PocketFFT
-#cmakedefine AFFT_ENABLE_POCKETFFT
+#ifdef AFFT_ENABLE_CPU
+# cmakedefine AFFT_ENABLE_POCKETFFT
+#endif
 
 // rocFFT
 #ifdef AFFT_ENABLE_HIP

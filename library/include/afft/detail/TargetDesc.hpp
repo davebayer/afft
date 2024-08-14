@@ -39,11 +39,18 @@ namespace afft::detail
   struct CpuDesc
   {
     static constexpr std::size_t targetCount{1}; ///< Number of targets
+# ifdef AFFT_ENABLE_CPU
     unsigned threadLimit{};                      ///< Thread limit
+# endif
 
-    [[nodiscard]] constexpr friend bool operator==(const CpuDesc& lhs, const CpuDesc& rhs)
+    [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const CpuDesc& lhs,
+                                                   [[maybe_unused]] const CpuDesc& rhs)
     {
+#   ifdef AFFT_ENABLE_CPU
       return lhs.threadLimit == rhs.threadLimit;
+#   else
+      return true;
+#   endif
     }
   };
 
@@ -246,8 +253,10 @@ namespace afft::detail
 
         if constexpr (target == Target::cpu)
         {
+#       ifdef AFFT_ENABLE_CPU
           const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
           targetParams.threadLimit = cpuDesc.threadLimit;
+#       endif
         }
         else if constexpr (target == Target::cuda)
         {
@@ -294,8 +303,10 @@ namespace afft::detail
 
         if constexpr (target == Target::cpu)
         {
+#       ifdef AFFT_ENABLE_CPU
           const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
           targetParams.threadLimit = cpuDesc.threadLimit;
+#       endif
         }
         else if constexpr (target == Target::cuda)
         {
@@ -345,6 +356,7 @@ namespace afft::detail
       /// @brief The variant type that holds the target description.
       using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc>;
 
+#   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
       {
@@ -353,8 +365,9 @@ namespace afft::detail
 
         return cpuDesc;
       }
+#   endif
 
-#     ifdef AFFT_ENABLE_CUDA
+#   ifdef AFFT_ENABLE_CUDA
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams)
       {
         CudaDesc cudaDesc{};
@@ -365,9 +378,9 @@ namespace afft::detail
 
         return cudaDesc;
       }
-#     endif
+#   endif
 
-#     ifdef AFFT_ENABLE_HIP
+#   ifdef AFFT_ENABLE_HIP
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::hip::Parameters& hipParams)
       {
         HipDesc hipDesc{};
@@ -378,9 +391,9 @@ namespace afft::detail
 
         return hipDesc;
       }
-#     endif
+#   endif
 
-#     ifdef AFFT_ENABLE_OPENCL
+#   ifdef AFFT_ENABLE_OPENCL
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::opencl::Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
@@ -393,8 +406,9 @@ namespace afft::detail
 
         return openclDesc;
       }
-#     endif
+#   endif
 
+#   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
       {
@@ -403,8 +417,9 @@ namespace afft::detail
 
         return cpuDesc;
       }
+#   endif
 
-#     ifdef AFFT_ENABLE_CUDA
+#   ifdef AFFT_ENABLE_CUDA
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cuda_Parameters& cudaParams)
       {
         CudaDesc cudaDesc{};
@@ -415,9 +430,9 @@ namespace afft::detail
 
         return cudaDesc;
       }
-#     endif
+#   endif
 
-#     ifdef AFFT_ENABLE_HIP
+#   ifdef AFFT_ENABLE_HIP
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_hip_Parameters& hipParams)
       {
         HipDesc hipDesc{};
@@ -428,9 +443,9 @@ namespace afft::detail
 
         return hipDesc;
       }
-#     endif
+#   endif
 
-#     ifdef AFFT_ENABLE_OPENCL
+#   ifdef AFFT_ENABLE_OPENCL
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_opencl_Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
@@ -443,7 +458,7 @@ namespace afft::detail
 
         return openclDesc;
       }
-#     endif
+#   endif
 
       TargetVariant mTargetVariant; ///< Target variant
   };

@@ -191,6 +191,7 @@ namespace afft::detail
         switch (target)
         {
         case Target::cpu:
+#       ifdef AFFT_ENABLE_CPU
           if (cTargetParams == nullptr)
           {
             return TargetDesc{cpu::Parameters{}};
@@ -199,6 +200,9 @@ namespace afft::detail
           {
             return TargetDesc{*static_cast<const afft_cpu_Parameters*>(cTargetParams)};
           }
+#       else
+          throw Exception{Error::invalidArgument, "CPU target is not enabled"};
+#       endif
         case Target::cuda:
 #       ifdef AFFT_ENABLE_CUDA
           if (cTargetParams == nullptr)

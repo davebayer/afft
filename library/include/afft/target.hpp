@@ -86,6 +86,7 @@ AFFT_EXPORT namespace afft
     struct ExecutionParameters;
   } // namespace opencl
 
+#ifdef AFFT_ENABLE_CPU
   struct cpu::Parameters : TargetConstant<Target::cpu>
   {
     unsigned threadLimit{}; ///< Thread limit for transform, 0 for no limit
@@ -95,6 +96,7 @@ AFFT_EXPORT namespace afft
   {
     void* workspace{}; ///< Workspace
   };
+#endif
 
 #ifdef AFFT_ENABLE_CUDA
   struct cuda::Parameters : TargetConstant<Target::cuda>

@@ -606,9 +606,11 @@ AFFT_EXPORT namespace afft
         {
           switch (getTarget())
           {
+#         ifdef AFFT_ENABLE_CPU
           case Target::cpu:
             executeBackendImpl(srcVoid, dstVoid, afft::cpu::ExecutionParameters{});
             break;
+#         endif
 #         ifdef AFFT_ENABLE_CUDA
           case Target::cuda:
             executeBackendImpl(srcVoid, dstVoid, afft::cuda::ExecutionParameters{});

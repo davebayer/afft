@@ -633,9 +633,11 @@ try
 
   switch (desc.getTarget())
   {
+# ifdef AFFT_ENABLE_CPU
   case afft::Target::cpu:
     *static_cast<afft_cpu_Parameters*>(targetParams) = desc.getCTargetParameters<afft::Target::cpu>();
     break;
+# endif /* AFFT_ENABLE_CPU */
 # ifdef AFFT_ENABLE_CUDA
   case afft::Target::cuda:
     *static_cast<afft_cuda_Parameters*>(targetParams) = desc.getCTargetParameters<afft::Target::cuda>();
@@ -782,10 +784,15 @@ try
     switch (cxxPlan->getTarget())
     {
     case afft::Target::cpu:
+#   ifdef AFFT_ENABLE_CPU
     {
       cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::cpu::ExecutionParameters*>(execParams));
       break;
     }
+#   else
+      setErrorDetails(errDetails, "CPU target is not enabled");
+      return afft_Error_internal;
+#   endif /* AFFT_ENABLE_CPU */
     case afft::Target::cuda:
 #   ifdef AFFT_ENABLE_CUDA
     {
