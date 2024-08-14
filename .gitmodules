@@ -1,16 +1,13 @@
-[submodule "3rdparty/pocketfft"]
-	path = 3rdparty/pocketfft
+# library submodules
+[submodule "library/3rdparty/pocketfft"]
+	path = library/3rdparty/pocketfft
 	url = https://github.com/mreineck/pocketfft.git
-[submodule "3rdparty/VkFFT"]
-	path = 3rdparty/VkFFT
+[submodule "library/3rdparty/VkFFT"]
+	path = library/3rdparty/VkFFT
 	url = https://github.com/DTolm/VkFFT.git
-[submodule "3rdparty/span"]
-	path = 3rdparty/span
+[submodule "library/3rdparty/span"]
+	path = library/3rdparty/span
 	url = https://github.com/tcbrindle/span.git
-	
-[submodule "3rdparty/heffte"]
-	path = 3rdparty/heffte
-	url = https://github.com/af-ayala/heffte.git
 
 # matlab submodules
 [submodule "matlab/3rdparty/mex-cpp-wrapper"]
