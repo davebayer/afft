@@ -28,32 +28,25 @@ cmake_minimum_required(VERSION 3.22)
 
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER)
 
-if(WIN32)
-  set(MATLAB_BIN_PLATFORM_DIR "win64")
-elseif(UNIX)
-  set(MATLAB_BIN_PLATFORM_DIR "glnxa64")
-elseif(APPLE)
-  set(MATLAB_BIN_PLATFORM_DIR "maci64")
-else()
-  message(FATAL_ERROR "Unsupported matlab platform: ${CMAKE_SYSTEM_NAME}")
+# If CUDA is enabled, enable GPU support in mex-cpp-wrapper
+list(FIND ${AFFT_TARGET_LIST} "CUDA" CUDA_TARGET_INDEX)
+if(CUDA_TARGET_INDEX GREATER -1)
+  set(MEXW_ENABLE_GPU ON)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++ -Wall -Wextra -Wconversion")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")
-endif()
+# Add mex-cpp-wrapper
+add_subdirectory(3rdparty/mex-cpp-wrapper)
 
 matlab_add_mex(
   NAME    afft_fft
   SRC     src/fft.cpp
-  LINK_TO afft::afft-header-only
+  LINK_TO afft::afft-header-only mexw::mexw
   R2018a
 )
 
 matlab_add_mex(
   NAME    afft_fftn
   SRC     src/fftn.cpp
-  LINK_TO afft::afft-header-only
+  LINK_TO afft::afft-header-only mexw::mexw
   R2018a
 )

@@ -11,3 +11,8 @@
 [submodule "3rdparty/heffte"]
 	path = 3rdparty/heffte
 	url = https://github.com/af-ayala/heffte.git
+
+# matlab submodules
+[submodule "matlab/3rdparty/mex-cpp-wrapper"]
+	path = matlab/3rdparty/mex-cpp-wrapper
+	url = https://github.com/DejvBayer/mex-cpp-wrapper.git

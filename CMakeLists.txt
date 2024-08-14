@@ -43,7 +43,7 @@ option(AFFT_USE_CUDA_OPENCL "Use OpenCL version that comes with CUDA"           
 # Library configuration
 set(AFFT_MAX_DIM_COUNT 4           CACHE STRING "Maximum number of dimensions supported by the library, default is 4")
 set(AFFT_BACKEND_LIST  "POCKETFFT" CACHE STRING "Semicolon separated list of backends to use, default is POCKETFFT and VKFFT")
-set(AFFT_TARGET_LIST   ""          CACHE STRING "Semicolon separated list of targets to build for, default is empty")
+set(AFFT_TARGET_LIST   "CPU"       CACHE STRING "Semicolon separated list of targets to build for, default is CPU")
 set(AFFT_MP_BACKEND    ""          CACHE STRING "Multi process framework to use (MPI), default is none (no MP support)")
 set(AFFT_VKFFT_BACKEND ""          CACHE STRING "Which VkFFT backend to use (CUDA, HIP or OpenCL), default is empty (set to first available)")
 
