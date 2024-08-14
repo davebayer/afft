@@ -65,11 +65,7 @@ function(add_examples mpBackend target)
   endforeach()
 endfunction()
 
-set(TARGET_LIST "CPU;${AFFT_TARGET_LIST}")
-
-message(STATUS "Building examples for targets: ${TARGET_LIST}")
-
-foreach(target ${TARGET_LIST})
+foreach(target ${AFFT_TARGETS})
   add_examples("" ${target})
 endforeach()
 

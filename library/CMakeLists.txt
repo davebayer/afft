@@ -41,7 +41,7 @@ endif()
 ########################################################################################################################
 set(TARGET_LIBRARIES "")
 
-foreach(TARGET ${AFFT_TARGET_LIST})
+foreach(TARGET ${AFFT_TARGETS})
   if(${TARGET} STREQUAL "CPU")
     set(AFFT_ENABLE_CPU TRUE)
   elseif(${TARGET} STREQUAL "CUDA")
@@ -115,7 +115,7 @@ endif()
 set(BACKEND_LIBRARIES "")
 set(BACKEND_INCLUDES  "")
 
-foreach(BACKEND ${AFFT_BACKEND_LIST})
+foreach(BACKEND ${AFFT_BACKENDS})
   if(BACKEND STREQUAL "CLFFT")
     set(AFFT_ENABLE_CLFFT TRUE)
     if(AFFT_ENABLE_OPENCL)

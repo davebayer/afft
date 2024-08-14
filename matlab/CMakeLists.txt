@@ -29,7 +29,7 @@ cmake_minimum_required(VERSION 3.22)
 find_package(Matlab REQUIRED COMPONENTS MAIN_PROGRAM MEX_COMPILER)
 
 # If CUDA is enabled, enable GPU support in mex-cpp-wrapper
-list(FIND ${AFFT_TARGET_LIST} "CUDA" CUDA_TARGET_INDEX)
+list(FIND AFFT_TARGETS "CUDA" CUDA_TARGET_INDEX)
 if(CUDA_TARGET_INDEX GREATER -1)
   set(MEXW_ENABLE_GPU ON)
 endif()
