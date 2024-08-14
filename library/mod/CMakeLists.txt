@@ -33,5 +33,4 @@ set_target_properties(afft-module PROPERTIES CXX_SCAN_FOR_MODULES TRUE)
 target_sources(afft-module PUBLIC FILE_SET CXX_MODULES FILES afft.cpp)
 
 target_compile_features(afft-module PUBLIC cxx_std_20)
-target_include_directories(afft-module PRIVATE ${PROJECT_SOURCE_DIR}/library/include)
-target_include_directories(afft-module SYSTEM PRIVATE ${PROJECT_SOURCE_DIR}/3rdparty/span/include)
+target_include_directories(afft-module PRIVATE ../include)

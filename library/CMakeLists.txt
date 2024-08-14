@@ -252,7 +252,7 @@ foreach(BACKEND ${AFFT_BACKEND_LIST})
     # TODO: MPI support
   elseif(BACKEND STREQUAL "POCKETFFT")
     set(AFFT_ENABLE_POCKETFFT TRUE)
-    list(APPEND BACKEND_INCLUDES ${PROJECT_SOURCE_DIR}/3rdparty/pocketfft)
+    list(APPEND BACKEND_INCLUDES 3rdparty/pocketfft)
   elseif(BACKEND STREQUAL "HIPFFT")
     if(AFFT_ENABLE_HIP)
       find_package(hipfft REQUIRED)
@@ -271,7 +271,7 @@ foreach(BACKEND ${AFFT_BACKEND_LIST})
   elseif(BACKEND STREQUAL "VKFFT")
     if(AFFT_ENABLE_CUDA OR AFFT_ENABLE_HIP OR AFFT_ENABLE_OPENCL)
       set(AFFT_ENABLE_VKFFT TRUE)
-      list(APPEND BACKEND_INCLUDES ${PROJECT_SOURCE_DIR}/3rdparty/VkFFT/vkFFT)
+      list(APPEND BACKEND_INCLUDES 3rdparty/VkFFT/vkFFT)
 
       message(CHECK_START "Finding quadmath library")
       find_library(QUADMATH_LIB NAMES "quadmath")
@@ -318,11 +318,13 @@ target_link_libraries(afft
   PUBLIC  ${MP_LIBRARIES} ${TARGET_LIBRARIES}
   PRIVATE ${BACKEND_LIBRARIES})
 target_include_directories(afft SYSTEM
+  PUBLIC  3rdparty/span/include
   PRIVATE ${BACKEND_INCLUDES})
 
 target_link_libraries(afft-header-only
   INTERFACE ${MP_LIBRARIES} ${TARGET_LIBRARIES} ${BACKEND_LIBRARIES})
 target_include_directories(afft-header-only SYSTEM
+  INTERFACE 3rdparty/span/include
   INTERFACE ${BACKEND_INCLUDES})
 
 if(AFFT_BUILD_MODULE)
@@ -333,6 +335,7 @@ if(AFFT_BUILD_MODULE)
     PUBLIC  ${MP_LIBRARIES} ${TARGET_LIBRARIES}
     PRIVATE ${BACKEND_LIBRARIES})
   target_include_directories(afft-module SYSTEM
+    PUBLIC  3rdparty/span/include
     PRIVATE ${BACKEND_INCLUDES})
 endif()
 
