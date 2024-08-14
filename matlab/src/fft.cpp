@@ -29,7 +29,7 @@
 void mex::Function::operator()(mex::Span<mex::Array> lhs, mex::View<mex::ArrayCref> rhs)
 try
 {
-  if (lhs.size() != 1)
+  if (lhs.size() > 1)
   {
     throw mex::Exception{"afft:fft:nlhs", "One output required."};
   }
@@ -49,7 +49,14 @@ try
 
   mex::Array src{};
 
-  mex::call(mex::makeScalarSpan(src), {{rhs[0]}}, "double");
+  if (rhs[0].isDouble())
+  {
+    src = rhs[0];
+  }
+  else
+  {
+    mex::call(mex::makeScalarSpan(src), {{rhs[0]}}, "double");
+  }
 
   if (!mxMakeArrayComplex(src.get()))
   {

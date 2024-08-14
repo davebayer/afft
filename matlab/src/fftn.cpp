@@ -22,63 +22,56 @@
   SOFTWARE.
 */
 
-#include <mex.h>
+#include <mex/mex.hpp>
+#include <mex/Function.hpp>
 #include <afft/afft.hpp>
 
-#if TARGET_API_VERSION != 800
-# error "This version of the afft library requires the MATLAB R2018a API."
-#endif
-
-extern "C" void
-mexFunction(int            nlhs,
-            mxArray*       plhs[],
-            int            nrhs,
-            const mxArray* prhs[])
+void mex::Function::operator()(mex::Span<mex::Array> lhs, mex::View<mex::ArrayCref> rhs)
 try
 {
-  if (nlhs != 1)
+  if (lhs.size() > 1)
   {
-    mexErrMsgIdAndTxt("afft:fftn:nlhs", "One output required.");
+    throw mex::Exception{"afft:fftn:nlhs", "One output required."};
   }
 
-  if (nrhs != 1 && nrhs != 2)
+  if (rhs.size() != 1 && rhs.size() != 2)
   {
-    mexErrMsgIdAndTxt("afft:fftn:nrhs", "One or two inputs required.");
+    throw mex::Exception{"afft:fftn:nrhs", "One or two inputs required."};
   }
-  
-  mxArray* anySrc = const_cast<mxArray*>(prhs[0]);
 
-  const std::size_t  ndims = mxGetNumberOfDimensions(anySrc);
-  const std::size_t* dims  = mxGetDimensions(anySrc);
+  const auto ndims = rhs[0].getRank();
+  const auto dims  = rhs[0].getDims();
 
   if (ndims > afft::maxDimCount)
   {
-    mexErrMsgIdAndTxt("afft:fftn:ndims", "Too many dimensions.");
+    throw mex::Exception{"afft:fftn:ndims", "Too many dimensions."};
   }
 
-  mxArray* src{};
+  mex::Array src{};
 
-  if (mexCallMATLAB(1, &src, 1, &anySrc, "double"))
+  if (rhs[0].isDouble())
   {
-    mexErrMsgIdAndTxt("afft:fftn:double", "Failed to convert the input array to double.");
+    src = rhs[0];
   }
-  if (!mxMakeArrayComplex(src))
+  else
   {
-    mexErrMsgIdAndTxt("afft:fftn:complex", "Failed to make the input array complex.");
+    mex::call(mex::makeScalarSpan(src), {{rhs[0]}}, "double");
   }
 
-  mxArray* dst = mxCreateUninitNumericArray(ndims, const_cast<std::size_t*>(dims), mxDOUBLE_CLASS, mxCOMPLEX);
-
-  if (dst == nullptr)
+  if (!mxMakeArrayComplex(src.get()))
   {
-    mexErrMsgIdAndTxt("afft:fftn:allocation", "Failed to allocate the output array.");
+    throw mex::Exception{"afft:fftn:complex", "Failed to make input complex."};
   }
+
+  auto dst = mex::makeUninitNumericArray<std::complex<double>>(dims);
 
   std::array<afft::Size, afft::maxDimCount> shape{};
-  std::transform(dims,
-                 dims + ndims,
+  std::transform(dims.begin(),
+                 dims.begin() + ndims,
                  shape.rbegin() + (shape.size() - ndims),
                  [](const std::size_t dim) { return static_cast<afft::Size>(dim); });
+
+  afft::Axis axis = static_cast<afft::Axis>(ndims - 1);
 
   afft::dft::Parameters dftParams{};
   dftParams.direction     = afft::Direction::forward;
@@ -94,11 +87,11 @@ try
 
   auto plan = afft::makePlan(dftParams, cpuParams);
 
-  plan->executeUnsafe(mxGetData(src), mxGetData(dst));
+  plan->executeUnsafe(src.getData(), dst.getData());
 
-  plhs[0] = dst;
+  lhs[0] = std::move(dst);
 }
-catch (...)
+catch (const afft::Exception& e)
 {
-  mexErrMsgIdAndTxt("afft:fft:exception", "An exception occurred.");
+  throw mex::Exception{"afft::fftn::afftException", e.what()};
 }

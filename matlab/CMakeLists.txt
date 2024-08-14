@@ -37,16 +37,24 @@ endif()
 # Add mex-cpp-wrapper
 add_subdirectory(3rdparty/mex-cpp-wrapper)
 
+if(MEXW_ENABLE_GPU)
+  set(LINK_TARGETS afft::afft-header-only mexw::mexw-gpu)
+else()
+  set(LINK_TARGETS afft::afft-header-only mexw::mexw)
+endif()
+
 matlab_add_mex(
-  NAME    afft_fft
-  SRC     src/fft.cpp
-  LINK_TO afft::afft-header-only mexw::mexw
+  NAME          afft_matlab_fft
+  SRC           src/fft.cpp
+  OUTPUT_NAME   afft_fft
+  LINK_TO       ${LINK_TARGETS}
   R2018a
 )
 
 matlab_add_mex(
-  NAME    afft_fftn
-  SRC     src/fftn.cpp
-  LINK_TO afft::afft-header-only mexw::mexw
+  NAME        afft_matlab_fftn
+  SRC         src/fftn.cpp
+  OUTPUT_NAME afft_fftn
+  LINK_TO     ${LINK_TARGETS}
   R2018a
 )
