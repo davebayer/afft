@@ -67,8 +67,8 @@ try
 
   std::array<afft::Size, afft::maxDimCount> shape{};
   std::transform(dims.begin(),
-                 dims.begin() + ndims,
-                 shape.rbegin() + (shape.size() - ndims),
+                 dims.begin() + static_cast<std::ptrdiff_t>(ndims),
+                 shape.rbegin() + static_cast<std::ptrdiff_t>(shape.size() - ndims),
                  [](const std::size_t dim) { return static_cast<afft::Size>(dim); });
 
   afft::Axis axis = static_cast<afft::Axis>(ndims - 1);

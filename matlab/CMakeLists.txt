@@ -52,6 +52,14 @@ matlab_add_mex(
 )
 
 matlab_add_mex(
+  NAME        afft_matlab_fft2
+  SRC         src/fft2.cpp
+  OUTPUT_NAME afft_fft2
+  LINK_TO     ${LINK_TARGETS}
+  R2018a
+)
+
+matlab_add_mex(
   NAME        afft_matlab_fftn
   SRC         src/fftn.cpp
   OUTPUT_NAME afft_fftn

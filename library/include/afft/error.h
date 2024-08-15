@@ -87,7 +87,7 @@ struct afft_ErrorDetails
 # ifdef AFFT_ENABLE_OPENCL
     cl_int      opencl;      ///< OpenCL return value, valid only if afft_Error_opencl emitted
 # endif
-    int         _dummy;      ///< Dummy value to ensure the union is not empty, do not use
+    char        _dummy;      ///< Dummy value to ensure the union is not empty, do not use
   } retval;
 };
 

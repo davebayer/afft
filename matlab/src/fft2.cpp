@@ -31,20 +31,24 @@ try
 {
   if (lhs.size() > 1)
   {
-    throw mex::Exception{"afft:fftn:nlhs", "One output required."};
+    throw mex::Exception{"afft:fft:nlhs", "One output required."};
   }
 
   if (rhs.size() != 1 && rhs.size() != 2)
   {
-    throw mex::Exception{"afft:fftn:nrhs", "One or two inputs required."};
+    throw mex::Exception{"afft:fft:nrhs", "One or two inputs required."};
   }
 
   const auto ndims = rhs[0].getRank();
   const auto dims  = rhs[0].getDims();
 
-  if (ndims > afft::maxDimCount)
+  if (ndims < 2)
   {
-    throw mex::Exception{"afft:fftn:ndims", "Too many dimensions."};
+    throw mex::Exception{"afft:fft:ndims", "At least two dimensions required."};
+  }
+  else if (ndims > afft::maxDimCount)
+  {
+    throw mex::Exception{"afft:fft:ndims", "Too many dimensions."};
   }
 
   mex::Array src{};
@@ -60,7 +64,7 @@ try
 
   if (!mxMakeArrayComplex(src.get()))
   {
-    throw mex::Exception{"afft:fftn:complex", "Failed to make input complex."};
+    throw mex::Exception{"afft:fft:complex", "Failed to make input complex."};
   }
 
   auto dst = mex::makeUninitNumericArray<std::complex<double>>(dims);
@@ -75,6 +79,7 @@ try
   dftParams.direction     = afft::Direction::forward;
   dftParams.precision     = afft::makePrecision<double>();
   dftParams.shape         = afft::View<afft::Size>{shape.data(), ndims};
+  dftParams.axes          = {{static_cast<afft::Axis>(ndims - 2), static_cast<afft::Axis>(ndims - 1)}};
   dftParams.normalization = afft::Normalization::none;
   dftParams.placement     = afft::Placement::outOfPlace;
   dftParams.destructive   = true;
@@ -91,5 +96,5 @@ try
 }
 catch (const afft::Exception& e)
 {
-  throw mex::Exception{"afft::fftn::afftException", e.what()};
+  throw mex::Exception{"afft::fft::afftException", e.what()};
 }
