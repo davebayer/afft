@@ -198,7 +198,7 @@ namespace afft::detail
        * @brief Check if the source strides are default.
        * @return True if the source strides are default, false otherwise.
        */
-      [[nodiscard]] constexpr bool hasSrcStrides() const noexcept
+      [[nodiscard]] constexpr bool hasDefaultSrcStrides() const noexcept
       {
         return mHasDefaultSrcStrides;
       }
@@ -207,7 +207,7 @@ namespace afft::detail
        * @brief Check if the destination strides are default.
        * @return True if the destination strides are default, false otherwise.
        */
-      [[nodiscard]] constexpr bool hasDstStrides() const noexcept
+      [[nodiscard]] constexpr bool hasDefaultDstStrides() const noexcept
       {
         return mHasDefaultDstStrides;
       }

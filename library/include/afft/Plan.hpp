@@ -207,13 +207,15 @@ AFFT_EXPORT namespace afft
       }
 
       /**
-       * @brief Get element count of the source buffers.
+       * @brief Get element count of the source buffers. If workspace is enlargedBuffer, the element count may be larger
+       *        than the transform size.
        * @return Element count of the source buffers.
        */
       [[nodiscard]] virtual View<std::size_t> getSrcElemCounts() const noexcept = 0;
 
       /**
-       * @brief Get element count of the destination buffers.
+       * @brief Get element count of the destination buffers. If workspace is enlargedBuffer, the element count may be
+       *        larger than the transform size.
        * @return Element count of the destination buffers.
        */
       [[nodiscard]] virtual View<std::size_t> getDstElemCounts() const noexcept = 0;
