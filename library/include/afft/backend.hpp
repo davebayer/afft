@@ -87,6 +87,16 @@ AFFT_EXPORT namespace afft
     best  = afft_SelectStrategy_best,  ///< Select the best available backend
   };
 
+  /// @brief Workspace type
+  enum class Workspace : ::afft_Workspace
+  {
+    any            = afft_Workspace_any,            ///< any workspace
+    none           = afft_Workspace_none,           ///< no workspace
+    internal       = afft_Workspace_internal,       ///< internal workspace
+    external       = afft_Workspace_external,       ///< external workspace
+    enlargedBuffer = afft_Workspace_enlargedBuffer, ///< enlarged buffer
+  };
+
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
    * @param value Value to apply the operation to.
@@ -387,6 +397,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                workspace{Workspace::any};       ///< Workspace type
     BackendMask              mask{BackendMask::all};          ///< Backend mask
     View<Backend>            order{};                         ///< Backend initialization order
     fftw3::BackendParameters fftw3{};                         ///< FFTW3 backend initialization parameters
@@ -397,6 +408,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                workspace{Workspace::any};       ///< Workspace type
     BackendMask              mask{BackendMask::all};          ///< Backend mask
     View<Backend>            order{};                         ///< Backend initialization order
     cufft::BackendParameters cufft{};                         ///< cuFFT backend initialization parameters
@@ -407,6 +419,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
     SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace      workspace{Workspace::any};       ///< Workspace type
     BackendMask    mask{BackendMask::all};          ///< Backend mask
     View<Backend>  order{};                         ///< Backend initialization order
   };
@@ -416,6 +429,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>
   {
     SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                workspace{Workspace::any};       ///< Workspace type
     BackendMask              mask{BackendMask::all};          ///< Backend mask
     View<Backend>            order{};                         ///< Backend initialization order
     clfft::BackendParameters clfft{};                         ///< clFFT backend initialization parameters
@@ -470,6 +484,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                 workspace{Workspace::any};       ///< Workspace type
     BackendMask               mask{BackendMask::all};          ///< Backend mask
     View<Backend>             order{};                         ///< Backend initialization order
     fftw3::BackendParameters  fftw3{};                         ///< FFTW3 backend initialization parameters
@@ -481,6 +496,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                 workspace{Workspace::any};       ///< Workspace type
     BackendMask               mask{BackendMask::all};          ///< Backend mask
     View<Backend>             order{};                         ///< Backend initialization order
     cufft::BackendParameters  cufft{};                         ///< cuFFT backend initialization parameters
@@ -492,6 +508,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
   {
     SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace                 workspace{Workspace::any};       ///< Workspace type
     BackendMask               mask{BackendMask::all};          ///< Backend mask
     View<Backend>             order{};                         ///< Backend initialization order
     heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
@@ -502,6 +519,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::opencl>
   {
     SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace      workspace{Workspace::any};       ///< Workspace type
     BackendMask    mask{BackendMask::all};          ///< Backend mask
     View<Backend>  order{};                         ///< Backend initialization order
   };

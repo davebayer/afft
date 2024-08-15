@@ -149,13 +149,22 @@ afft_Error afft_Plan_getTargetParameters(afft_Plan* plan, void* targetParams, af
 afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend, afft_ErrorDetails* errDetails);
 
 /**
- * @brief Get the plan workspace size.
+ * @brief Get the plan workspace.
+ * @param plan Plan object.
+ * @param workspace Pointer to the workspace.
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_Plan_getWorkspace(afft_Plan* plan, afft_Workspace* workspace, afft_ErrorDetails* errDetails);
+
+/**
+ * @brief Get the plan workspace size. Only valid if external workspace is used.
  * @param plan Plan object.
  * @param workspaceSizes Pointer to the workspace sizes of target count size.
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getWorkspaceSizes(afft_Plan* plan, const size_t** workspaceSizes, afft_ErrorDetails* errDetails);
+afft_Error afft_Plan_getExternalWorkspaceSizes(afft_Plan* plan, const size_t** workspaceSizes, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Execute a plan.

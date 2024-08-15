@@ -89,12 +89,12 @@ AFFT_EXPORT namespace afft
 #ifdef AFFT_ENABLE_CPU
   struct cpu::Parameters : TargetConstant<Target::cpu>
   {
-    unsigned threadLimit{}; ///< Thread limit for transform, 0 for no limit
+    unsigned threadLimit{};       ///< Thread limit for transform, 0 for no limit
   };
   
   struct cpu::ExecutionParameters : TargetConstant<Target::cpu>
   {
-    void* workspace{}; ///< Workspace
+    void* externalWorkspace{}; ///< External workspace, if Workspace::external is used
   };
 #endif
 
@@ -106,8 +106,8 @@ AFFT_EXPORT namespace afft
 
   struct cuda::ExecutionParameters : TargetConstant<Target::cuda>
   {
-    cudaStream_t stream{0};    ///< CUDA stream
-    View<void*>  workspaces{}; ///< Workspaces
+    cudaStream_t stream{0};            ///< CUDA stream
+    View<void*>  externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 
@@ -119,8 +119,8 @@ AFFT_EXPORT namespace afft
 
   struct hip::ExecutionParameters : TargetConstant<Target::hip>
   {
-    hipStream_t stream{0};    ///< HIP stream
-    View<void*> workspaces{}; ///< Workspaces
+    hipStream_t stream{0};            ///< HIP stream
+    View<void*> externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 
@@ -133,8 +133,8 @@ AFFT_EXPORT namespace afft
 
   struct opencl::ExecutionParameters : TargetConstant<Target::opencl>
   {
-    cl_command_queue queue{};      ///< OpenCL command queue
-    View<cl_mem>     workspaces{}; ///< Workspaces
+    cl_command_queue queue{};              ///< OpenCL command queue
+    View<cl_mem>     externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 } // namespace afft

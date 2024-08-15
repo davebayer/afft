@@ -73,7 +73,7 @@ namespace afft::detail::pocketfft::sp::cpu
        * @param Desc The plan description
        */
       Plan(const Desc& desc)
-      : Parent{desc},
+      : Parent{desc, Workspace::none},
         mShape(mDesc.getShapeRank()),
         mSrcStrides(mDesc.getShapeRank()),
         mDstStrides(mDesc.getShapeRank()),
@@ -142,15 +142,6 @@ namespace afft::detail::pocketfft::sp::cpu
       }
 
       /**
-       * @brief Get the workspace sizes
-       * @return The workspace sizes
-       */
-      [[nodiscard]] View<std::size_t> getWorkspaceSizes() const noexcept override
-      {
-        return makeScalarView(mWorkspaceSize);
-      }
-
-      /**
        * @brief Execute the plan
        * @param src The source buffer
        * @param dst The destination buffer
@@ -172,7 +163,7 @@ namespace afft::detail::pocketfft::sp::cpu
           cxx::unreachable();
         }
       }
-    protected:
+
     private:
       /**
        * @brief Execute the DFT

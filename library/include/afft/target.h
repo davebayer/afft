@@ -72,7 +72,7 @@ struct afft_cpu_Parameters
 /// @brief CPU execution parameters
 struct afft_cpu_ExecutionParameters
 {
-  void* workspace; ///< Workspace
+  void* externalWorkspace; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 
@@ -87,8 +87,8 @@ struct afft_cuda_Parameters
 /// @brief CUDA execution parameters
 struct afft_cuda_ExecutionParameters
 {
-  cudaStream_t stream;     ///< CUDA stream
-  void* const* workspaces; ///< Workspaces, one per device
+  cudaStream_t stream;             ///< CUDA stream
+  void* const* externalWorskapces; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 
@@ -103,8 +103,8 @@ struct afft_hip_Parameters
 /// @brief HIP execution parameters
 struct afft_hip_ExecutionParameters
 {
-  hipStream_t  stream;     ///< HIP stream
-  void* const* workspaces; ///< Workspaces, one per device
+  hipStream_t  stream;             ///< HIP stream
+  void* const* externalWorskapces; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 
@@ -120,8 +120,8 @@ struct afft_opencl_Parameters
 /// @brief OpenCL execution parameters
 struct afft_opencl_ExecutionParameters
 {
-  cl_command_queue queue;      ///< OpenCL command queue
-  const cl_mem*    workspaces; ///< Workspaces, one per device
+  cl_command_queue queue;              ///< OpenCL command queue
+  const cl_mem*    externalWorkspaces; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 

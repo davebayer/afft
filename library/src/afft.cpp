@@ -700,16 +700,50 @@ catch (...)
 }
 
 /**
- * @brief Get the plan workspace size.
+ * @brief Get the plan workspace.
+ * @param plan Plan object.
+ * @param workspace Pointer to the workspace.
+ * @param errDetails Error details.
+ * @return Error code.
+ */
+extern "C" afft_Error
+afft_Plan_getWorkspace(afft_Plan*         plan,
+                       afft_Workspace*    workspace,
+                       afft_ErrorDetails* errDetails)
+try
+{
+  if (plan == nullptr)
+  {
+    setErrorDetails(errDetails, "invalid plan");
+    return afft_Error_invalidArgument;
+  }
+
+  if (workspace == nullptr)
+  {
+    setErrorDetails(errDetails, "invalid workspace pointer");
+    return afft_Error_invalidArgument;
+  }
+
+  *workspace = static_cast<afft_Workspace>(reinterpret_cast<afft::Plan*>(plan)->getWorkspace());
+
+  return afft_Error_success;
+}
+catch (...)
+{
+  return handleException(errDetails);
+}
+
+/**
+ * @brief Get the plan workspace size. Only valid if workspace is external.
  * @param plan Plan object.
  * @param workspaceSizes Pointer to the workspace sizes of target count size.
  * @param errDetails Error details.
  * @return Error code.
  */
 extern "C" afft_Error
-afft_Plan_getWorkspaceSizes(afft_Plan*         plan,
-                            const size_t**     workspaceSizes,
-                            afft_ErrorDetails* errDetails)
+afft_Plan_getExternalWorkspaceSizes(afft_Plan*         plan,
+                                    const size_t**     workspaceSizes,
+                                    afft_ErrorDetails* errDetails)
 try
 {
   if (plan == nullptr)
@@ -724,7 +758,7 @@ try
     return afft_Error_invalidArgument;
   }
 
-  *workspaceSizes = reinterpret_cast<afft::Plan*>(plan)->getWorkspaceSizes().data();
+  *workspaceSizes = reinterpret_cast<afft::Plan*>(plan)->getExternalWorkspaceSizes().data();
 
   return afft_Error_success;
 }

@@ -198,6 +198,15 @@ AFFT_EXPORT namespace afft
       [[nodiscard]] virtual Backend getBackend() const noexcept = 0;
 
       /**
+       * @brief Get workspace.
+       * @return Workspace
+       */
+      [[nodiscard]] Workspace getWorkspace() const noexcept
+      {
+        return mWorkspace;
+      }
+
+      /**
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
@@ -210,10 +219,13 @@ AFFT_EXPORT namespace afft
       [[nodiscard]] virtual View<std::size_t> getDstElemCounts() const noexcept = 0;
 
       /**
-       * @brief Get workspace size.
-       * @return Workspace size.
+       * @brief Get external workspace sizes. Only valid if the workspace is external.
+       * @return External workspace sizes.
        */
-      [[nodiscard]] virtual View<std::size_t> getWorkspaceSizes() const noexcept = 0;
+      [[nodiscard]] virtual View<std::size_t> getExternalWorkspaceSizes() const noexcept
+      {
+        return {};
+      }
 
       /**
        * @brief Execute the plan.
@@ -375,8 +387,9 @@ AFFT_EXPORT namespace afft
       Plan() = delete;
 
       /// @brief Constructor.
-      Plan(const detail::Desc& desc)
-      : mDesc{desc}
+      Plan(const detail::Desc& desc, Workspace workspace)
+      : mDesc{desc},
+        mWorkspace{workspace}
       {}
 
       /// @brief Get the plan description.
@@ -438,7 +451,8 @@ AFFT_EXPORT namespace afft
       }
 
     
-      detail::Desc mDesc;
+      detail::Desc mDesc;      ///< Plan description.
+      Workspace    mWorkspace; ///< Workspace.
     private:
       /**
        * @brief Check execution type properties.

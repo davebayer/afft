@@ -123,6 +123,27 @@ namespace afft::detail
     }
   };
 
+  /// @brief Validator for the Workspace enum class.
+  template<>
+  struct Validator<Workspace>
+  {
+    static constexpr const char message[] = "invalid workspace"; ///< Error message.
+
+    constexpr bool operator()(Workspace workspace) const noexcept
+    {
+      switch (workspace)
+      {
+      case Workspace::any:
+      case Workspace::none:
+      case Workspace::enlargedBuffer:
+      case Workspace::external:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
   /// @brief Validator for the Precision enum class.
   template<>
   struct Validator<Precision>
