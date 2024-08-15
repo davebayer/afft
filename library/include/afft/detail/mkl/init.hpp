@@ -25,19 +25,36 @@
 #ifndef AFFT_DETAIL_MKL_INIT_HPP
 #define AFFT_DETAIL_MKL_INIT_HPP
 
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "../include.hpp"
+#endif
+
 namespace afft::detail::mkl
 {
   /// @brief Initialize the MKL library.
-  inline void init()
+  void init();
+
+  /// @brief Finalize the MKL library.
+  void finalize();
+} // namespace afft::detail::mkl
+
+#ifdef AFFT_HEADER_ONLY
+
+namespace afft::detail::mkl
+{
+  /// @brief Initialize the MKL library.
+  AFFT_HEADER_ONLY_INLINE void init()
   {
-    // Do nothing
+    mkl_free(nullptr);
   }
 
   /// @brief Finalize the MKL library.
-  inline void finalize()
+  AFFT_HEADER_ONLY_INLINE void finalize()
   {
-    // Do nothing
+    mkl_finalize();
   }
 } // namespace afft::detail::mkl
+
+#endif /* AFFT_HEADER_ONLY */
 
 #endif /* AFFT_DETAIL_MKL_INIT_HPP */
