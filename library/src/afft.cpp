@@ -950,13 +950,13 @@ extern "C" afft_Version afft_cufft_getVersion()
 
 /**
  * @brief Get the version of the FFTW3 library.
- * @param precision Precision
+ * @param library Library
  * @return Version
  */
-extern "C" afft_Version afft_fftw3_getVersion(afft_Precision precision)
+extern "C" afft_Version afft_fftw3_getVersion(afft_fftw3_Library library)
 try
 {
-  return afft::fftw3::getVersion(static_cast<afft::Precision>(precision));
+  return afft::fftw3::getVersion(static_cast<afft::fftw3::Library>(library));
 }
 catch (...)
 {

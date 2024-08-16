@@ -72,10 +72,10 @@ afft_Version afft_cufft_getVersion();
 
 /**
  * @brief Get the version of the FFTW3 library.
- * @param precision Precision
+ * @param library Library
  * @return Version
  */
-afft_Version afft_fftw3_getVersion(afft_Precision precision);
+afft_Version afft_fftw3_getVersion(afft_fftw3_Library library);
 
 /**
  * @brief Get the version of the HeFFTe library.

@@ -63,15 +63,15 @@ namespace afft::detail::fftw3
 # endif
 # ifdef AFFT_FFTW3_HAS_LONG
 #   ifdef AFFT_FFTW3_HAS_LONG_THREADS
-    check(Lib<afft::fftw3::Library::_longDouble>::initThreads());
+    check(Lib<afft::fftw3::Library::longDouble>::initThreads());
 #   endif
 #   ifdef AFFT_FFTW3_HAS_MPI_LONG
-    Lib<afft::fftw3::Library::_longDouble>::mpiInit();
+    Lib<afft::fftw3::Library::longDouble>::mpiInit();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_QUAD
 #   ifdef AFFT_FFTW3_HAS_QUAD_THREADS
-    check(Lib<afft::fftw3::Library::_quad>::initThreads());
+    check(Lib<afft::fftw3::Library::quad>::initThreads());
 #   endif
 # endif
   }

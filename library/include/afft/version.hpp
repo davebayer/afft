@@ -78,9 +78,10 @@ AFFT_EXPORT namespace afft
   {
     /**
      * @brief Get the version of the FFTW library.
+     * @param library Library, default is double precision
      * @return Version
      */
-    [[nodiscard]] Version getVersion(Precision precision = Precision::_double) noexcept;
+    [[nodiscard]] Version getVersion(Library library = Library::_double) noexcept;
   } // namespace fftw3
 
   namespace heffte
@@ -172,32 +173,32 @@ AFFT_EXPORT namespace afft
    * @brief Get the version of the FFTW library.
    * @return Version
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version fftw3::getVersion([[maybe_unused]] Precision precision) noexcept
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE Version fftw3::getVersion([[maybe_unused]] Library library) noexcept
   {
     Version version{};
 
 # ifdef AFFT_ENABLE_FFTW3
     const char* versionString{};
 
-    switch (precision)
+    switch (library)
     {
 #   ifdef AFFT_FFTW3_HAS_FLOAT
-    case Precision::_float:
+    case Library::_float:
       versionString = fftwf_version;
       break;
 #   endif
 #   ifdef AFFT_FFTW3_HAS_DOUBLE
-    case Precision::_double:
+    case Library::_double:
       versionString = fftw_version;
       break;
 #   endif
-#   ifdef AFFT_FFTW3_HAS_LONG_DOUBLE
-    case Precision::_longDouble:
+#   ifdef AFFT_FFTW3_HAS_LONG
+    case Library::longDouble:
       versionString = fftwl_version;
       break;
 #   endif
 #   ifdef AFFT_FFTW3_HAS_QUAD
-    case Precision::_quad:
+    case Library::quad:
       versionString = fftwq_version;
       break;
 #   endif
@@ -205,9 +206,9 @@ AFFT_EXPORT namespace afft
       break;
     }
 
-    if (version != nullptr)
+    if (versionString != nullptr)
     {
-      if (std::sscanf(version, "fftw-%d.%d.%d", &version.major, &version.minor, &version.patch) != 3)
+      if (std::sscanf(versionString, "fftw-%d.%d.%d", &version.major, &version.minor, &version.patch) != 3)
       {
         version = {};
       }

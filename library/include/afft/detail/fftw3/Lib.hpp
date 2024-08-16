@@ -45,7 +45,7 @@ namespace afft::detail::fftw3
   struct Lib<afft::fftw3::Library::_float>
   {
 # ifdef AFFT_FFTW3_HAS_FLOAT
-    using Plan                                     = fftwf_plan;
+    using Plan                                     = std::remove_pointer_t<fftwf_plan>;
     using R2RKind                                  = fftwf_r2r_kind;
     using Real                                     = float;
     using Complex                                  = fftwf_complex;
@@ -53,7 +53,6 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwf_init_threads;
     static constexpr auto planWithNThreads         = fftwf_plan_with_nthreads;
-    static constexpr auto importWisdomFromString   = fftwf_import_wisdom_from_string;
 
     static constexpr auto planGuruC2C              = fftwf_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwf_plan_guru64_dft_r2c;
@@ -112,7 +111,7 @@ namespace afft::detail::fftw3
   struct Lib<afft::fftw3::Library::_double>
   {
 # ifdef AFFT_FFTW3_HAS_DOUBLE
-    using Plan                                     = fftw_plan;
+    using Plan                                     = std::remove_pointer_t<fftw_plan>;
     using R2RKind                                  = fftw_r2r_kind;
     using Real                                     = double;
     using Complex                                  = fftw_complex;
@@ -120,7 +119,6 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftw_init_threads;
     static constexpr auto planWithNThreads         = fftw_plan_with_nthreads;
-    static constexpr auto importWisdomFromString   = fftw_import_wisdom_from_string;
 
     static constexpr auto planGuruC2C              = fftw_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftw_plan_guru64_dft_r2c;
@@ -179,7 +177,7 @@ namespace afft::detail::fftw3
   struct Lib<afft::fftw3::Library::longDouble>
   {
 # ifdef AFFT_FFTW3_HAS_LONG
-    using Plan                                     = fftwl_plan;
+    using Plan                                     = std::remove_pointer_t<fftwl_plan>;
     using R2RKind                                  = fftwl_r2r_kind;
     using Real                                     = long double;
     using Complex                                  = fftwl_complex;
@@ -187,7 +185,6 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwl_init_threads;
     static constexpr auto planWithNThreads         = fftwl_plan_with_nthreads;
-    static constexpr auto importWisdomFromString   = fftwl_import_wisdom_from_string;
 
     static constexpr auto planGuruC2C              = fftwl_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwl_plan_guru64_dft_r2c;
@@ -246,7 +243,7 @@ namespace afft::detail::fftw3
   struct Lib<afft::fftw3::Library::quad>
   {
 # ifdef AFFT_FFTW3_HAS_QUAD
-    using Plan                                     = fftwq_plan;
+    using Plan                                     = std::remove_pointer_t<fftwq_plan>;
     using R2RKind                                  = fftwq_r2r_kind;
     using Real                                     = __float128;
     using Complex                                  = fftwq_complex;
@@ -254,7 +251,6 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwq_init_threads;
     static constexpr auto planWithNThreads         = fftwq_plan_with_nthreads;
-    static constexpr auto importWisdomFromString   = fftwq_import_wisdom_from_string;
 
     static constexpr auto planGuruC2C              = fftwq_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwq_plan_guru64_dft_r2c;
