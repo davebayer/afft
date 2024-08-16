@@ -86,6 +86,7 @@ namespace afft::detail::fftw3::sp::cpu
       : Parent{desc, Workspace::internal}
       {
         Lib<library>::planWithNThreads(getThreadLimit());
+        Lib<library>::setTimeLimit((backendParams.timeLimit.count() < 0.0) ? FFTW_NO_TIMELIMIT : backendParams.timeLimit.count());
 
         const auto rank                = static_cast<int>(mDesc.getTransformRank());
         const auto howManyRank         = static_cast<int>(mDesc.getTransformHowManyRank());

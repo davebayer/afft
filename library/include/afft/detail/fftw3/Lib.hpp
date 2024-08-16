@@ -53,6 +53,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwf_init_threads;
     static constexpr auto planWithNThreads         = fftwf_plan_with_nthreads;
+    static constexpr auto setTimeLimit             = fftwf_set_timelimit;
 
     static constexpr auto planGuruC2C              = fftwf_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwf_plan_guru64_dft_r2c;
@@ -119,6 +120,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftw_init_threads;
     static constexpr auto planWithNThreads         = fftw_plan_with_nthreads;
+    static constexpr auto setTimeLimit             = fftw_set_timelimit;
 
     static constexpr auto planGuruC2C              = fftw_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftw_plan_guru64_dft_r2c;
@@ -185,6 +187,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwl_init_threads;
     static constexpr auto planWithNThreads         = fftwl_plan_with_nthreads;
+    static constexpr auto setTimeLimit             = fftwl_set_timelimit;
 
     static constexpr auto planGuruC2C              = fftwl_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwl_plan_guru64_dft_r2c;
@@ -251,6 +254,7 @@ namespace afft::detail::fftw3
 
     static constexpr auto initThreads              = fftwq_init_threads;
     static constexpr auto planWithNThreads         = fftwq_plan_with_nthreads;
+    static constexpr auto setTimeLimit             = fftwq_set_timelimit;
 
     static constexpr auto planGuruC2C              = fftwq_plan_guru64_dft;
     static constexpr auto planGuruR2C              = fftwq_plan_guru64_dft_r2c;
