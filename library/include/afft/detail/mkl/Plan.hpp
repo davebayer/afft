@@ -34,8 +34,6 @@
 
 namespace afft::detail::mkl
 {
-  static_assert(std::is_pointer_v<DFTI_DESCRIPTOR_HANDLE>, "Implementation relies on DFTI_DESCRIPTOR_HANDLE being a pointer");
-
   /// @brief The mkl plan implementation base class.
   class Plan : public afft::Plan
   {

@@ -47,6 +47,8 @@ namespace afft::detail::mkl::sp::cpu
 
 namespace afft::detail::mkl::sp::cpu
 {
+  static_assert(std::is_pointer_v<DFTI_DESCRIPTOR_HANDLE>, "Implementation relies on DFTI_DESCRIPTOR_HANDLE being a pointer");
+  
   /**
    * @class Plan
    * @brief The mkl single process cpu plan implementation.
@@ -265,6 +267,13 @@ namespace afft::detail::mkl::sp::cpu
    */
   [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace)
   {
+    static constexpr std::size_t dftiMaxDimCount{7};
+
+    if (desc.getTransformRank() > dftiMaxDimCount)
+    {
+      throw Exception{Error::mkl, "only up to 7 transformed dimensions are supported"};
+    }
+
     switch (workspace)
     {
     case Workspace::any:
