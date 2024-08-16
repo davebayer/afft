@@ -119,7 +119,7 @@
  // Include MKL header
 # ifdef AFFT_ENABLE_MKL
 #   include <mkl.h>
-#   ifdef AFFT_ENABLE_MPI
+#   ifdef AFFT_MKL_HAS_CDFT
 #     include <mkl_cdft.h>
 #   endif
 # endif

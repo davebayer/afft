@@ -108,8 +108,6 @@ AFFT_EXPORT namespace afft::fftw3
 
     init();
 
-    int retval{};
-
     switch (library)
     {
 # if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)

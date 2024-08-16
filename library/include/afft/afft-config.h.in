@@ -110,6 +110,11 @@
 // MKL
 #ifdef AFFT_ENABLE_CPU
 # cmakedefine AFFT_ENABLE_MKL
+# ifdef AFFT_ENABLE_MKL
+#   ifdef AFFT_ENABLE_MPI
+#     cmakedefine AFFT_MKL_HAS_CDFT
+#   endif
+# endif
 #endif
 
 // PocketFFT
