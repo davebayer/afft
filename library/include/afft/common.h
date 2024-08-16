@@ -40,6 +40,18 @@ typedef uint8_t afft_Axis;
 /// @brief Size type
 typedef uint64_t afft_Size;
 
+/// @brief FFTW3 library type enumeration
+enum afft_fftw3_Library
+{
+  afft_fftw3_Library_float,      ///< FFTW3 single precision (fftwf)
+  afft_fftw3_Library_double,     ///< FFTW3 double precision (fftw)
+  afft_fftw3_Library_longDouble, ///< FFTW3 long double precision (fftwl)
+  afft_fftw3_Library_quad,       ///< FFTW3 quadruple precision (fftwq)
+};
+
+/// @brief FFTW3 library type
+typedef enum afft_fftw3_Library afft_fftw3_Library;
+
 #ifdef __cplusplus
 }
 #endif

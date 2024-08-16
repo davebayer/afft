@@ -47,6 +47,27 @@ namespace afft::detail
   template<typename T>
   struct Validator;
 
+  /// @brief Validator for the fftw3::Library enum class.
+  template<>
+  struct Validator<afft::fftw3::Library>
+  {
+    static constexpr const char message[] = "invalid FFTW3 library type"; ///< Error message.
+
+    constexpr bool operator()(afft::fftw3::Library library) const noexcept
+    {
+      switch (library)
+      {
+      case afft::fftw3::Library::_float:
+      case afft::fftw3::Library::_double:
+      case afft::fftw3::Library::longDouble:
+      case afft::fftw3::Library::quad:
+        return true;
+      default:
+        return false;
+      }
+    }
+  };
+
   /// @brief Validator for the MpBackend enum class.
   template<>
   struct Validator<MpBackend>

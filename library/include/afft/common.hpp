@@ -39,6 +39,21 @@ AFFT_EXPORT namespace afft
 
   /// @brief Size type
   using Size = ::afft_Size;
+
+  namespace fftw3
+  {
+    /// @brief FFTW3 library type
+    enum class Library : std::underlying_type_t<::afft_fftw3_Library>;
+  };
+
+  /// @brief FFTW3 library type
+  enum class fftw3::Library : std::underlying_type_t<::afft_fftw3_Library>
+  {
+    _float     = afft_fftw3_Library_float,      ///< FFTW3 single precision (fftwf)
+    _double    = afft_fftw3_Library_double,     ///< FFTW3 double precision (fftw)
+    longDouble = afft_fftw3_Library_longDouble, ///< FFTW3 long double precision (fftwl)
+    quad       = afft_fftw3_Library_quad,       ///< FFTW3 quadruple precision (fftwq)
+  };
 } // namespace afft
 
 #endif /* AFFT_COMMON_HPP */

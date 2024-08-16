@@ -35,6 +35,21 @@
 
 AFFT_EXPORT namespace afft
 {
+  /// @brief Free deleter for std::unique_ptr
+  struct FreeDeleter
+  {
+    /**
+     * @brief Free the pointer
+     * @tparam T Type
+     * @param ptr Pointer
+     */
+    template<typename T>
+    void operator()(T* ptr) const noexcept
+    {
+      std::free(ptr);
+    }
+  };
+
   /**
    * @brief Make a scalar view
    * @tparam T Type

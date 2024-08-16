@@ -33,6 +33,8 @@
 #include "init.hpp"
 #include "type.hpp"
 #include "typeTraits.hpp"
+#include "utils.hpp"
+#include "detail/validate.hpp"
 #ifdef AFFT_ENABLE_FFTW3
 # include "detail/fftw3/Lib.hpp"
 #endif
@@ -40,266 +42,491 @@
 AFFT_EXPORT namespace afft::fftw3
 {
   /**
-   * @brief Does the FFTW3 library support the given precision?
-   * @tparam prec Precision of the FFTW3 library.
-   */
-# ifdef AFFT_ENABLE_FFTW3
-  template<Precision prec>
-  inline constexpr bool isSupportedPrecision = detail::fftw3::IsSupportedPrecision<prec>::value;
-# else
-  template<Precision prec>
-  inline constexpr bool isSupportedPrecision = false;
-# endif
-
-  /**
    * @brief Export FFTW3 wisdom to a file.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to export the wisdom from.
    * @param filename Name of the file to export the wisdom to.
    */
-  template<typename PrecT>
-  void exportWisdomToFilename([[maybe_unused]] std::string_view filename)
+  void exportWisdomToFilename(Library library, [[maybe_unused]] const char* filename)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFilename(filename.data()))
-      {
-        throw Exception{Error::fftw3, "failed to export wisdom to file"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      retval = detail::fftw3::Lib<Library::_float>::exportWisdomToFilename(filename);
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      retval = detail::fftw3::Lib<Library::_double>::exportWisdomToFilename(filename);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      retval = detail::fftw3::Lib<Library::longDouble>::exportWisdomToFilename(filename);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      retval = detail::fftw3::Lib<Library::quad>::exportWisdomToFilename(filename);
+      break;
+# endif
+    default:
+      retval = 1;
+      break;
+    }
+
+    if (retval == 0)
+    {
+      throw Exception{Error::fftw3, "failed to export wisdom to filename"};
+    }
   }
 
   /**
    * @brief Export FFTW3 wisdom to a file.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to export the wisdom from.
+   * @param filename Name of the file to export the wisdom to.
+   */
+  void exportWisdomToFilename(Library library, std::string_view filename)
+  {
+    exportWisdomToFilename(library, filename.data());
+  }
+
+  /**
+   * @brief Export FFTW3 wisdom to a file.
+   * @param library Library to export the wisdom from.
    * @param file File to export the wisdom to.
    */
-  template<typename PrecT>
-  void exportWisdomToFile([[maybe_unused]] FILE* file)
+  void exportWisdomToFile(Library library, [[maybe_unused]] FILE* file)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToFile(file))
-      {
-        throw Exception{Error::fftw3, "failed to export wisdom to file"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      detail::fftw3::Lib<Library::_float>::exportWisdomToFile(file);
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      detail::fftw3::Lib<Library::_double>::exportWisdomToFile(file);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      detail::fftw3::Lib<Library::longDouble>::exportWisdomToFile(file);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      detail::fftw3::Lib<Library::quad>::exportWisdomToFile(file);
+      break;
+# endif
+    default:
+      break;
+    }
   }
 
   /**
    * @brief Export FFTW3 wisdom to a string.
-   * @tparam PrecT Precision of the FFTW3 library.
-   * @return String containing the wisdom.
+   * @param library Library to export the wisdom from.
+   * @return String containing the wisdom. If the Library is not supported, an empty unique pointer is returned.
    */
-  template<typename PrecT>
-  [[nodiscard]] std::string exportWisdom()
+  [[nodiscard]] std::unique_ptr<char[], FreeDeleter> exportWisdomToString(Library library)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-    std::string wisdom{};
+    std::unique_ptr<char[], FreeDeleter> wisdom{};
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    switch (library)
     {
-      struct FreeDeleter
-      {
-        void operator()(char* ptr) const
-        {
-          free(ptr);
-        }
-      };
-
-      std::unique_ptr<char, FreeDeleter> orgWisdom{detail::fftw3::Lib<typePrecision<PrecT>>::exportWisdomToString()};
-
-      if (orgWisdom)
-      {
-        wisdom = orgWisdom.get();
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      wisdom.reset(detail::fftw3::Lib<Library::_float>::exportWisdomToString());
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      wisdom.reset(detail::fftw3::Lib<Library::_double>::exportWisdomToString());
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      wisdom.reset(detail::fftw3::Lib<Library::longDouble>::exportWisdomToString());
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      wisdom.reset(detail::fftw3::Lib<Library::quad>::exportWisdomToString());
+      break;
+# endif
+    default:
+      return {};
+    }
+
+    if (wisdom == nullptr)
+    {
+      throw Exception{Error::fftw3, "failed to export wisdom to string"};
+    }
 
     return wisdom;
   }
 
   /**
-   * @brief Import FFTW3 wisdom from the system. Only on Unix and GNU systems.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @brief Export FFTW3 wisdom to a std::string.
+   * @param library Library to export the wisdom from.
+   * @return std::string containing the wisdom. If the Library is not supported, an empty string.
    */
-  template<typename PrecT>
-  void importSystemWisdom()
+  [[nodiscard]] std::string exportWisdomToStdString(Library library)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    auto wisdom = exportWisdomToString(library);
+
+    std::string str{};
+
+    if (wisdom != nullptr)
+    {
+      str = wisdom.get();
+    }
+
+    return str;
+  }
+
+  /**
+   * @brief Import FFTW3 wisdom from the system. Only on Unix and GNU systems.
+   * @param library Library to import the wisdom to.
+   */
+  void importSystemWisdom(Library library)
+  {
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importSystemWisdom())
-      {
-        throw Exception{Error::fftw3, "failed to import system wisdom"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      retval = detail::fftw3::Lib<Library::_float>::importSystemWisdom();
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      retval = detail::fftw3::Lib<Library::_double>::importSystemWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      retval = detail::fftw3::Lib<Library::longDouble>::importSystemWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      retval = detail::fftw3::Lib<Library::quad>::importSystemWisdom();
+      break;
+# endif
+    default:
+      retval = 1;
+      break;
+    }
+
+    if (retval == 0)
+    {
+      throw Exception{Error::fftw3, "failed to import system wisdom"};
+    }
   }
 
   /**
    * @brief Import FFTW3 wisdom from a file.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to import the wisdom to.
    * @param filename Name of the file to import the wisdom from.
    */
-  template<typename PrecT>
-  void importWisdomFromFilename([[maybe_unused]] std::string_view filename)
+  void importWisdomFromFilename(Library library, [[maybe_unused]] const char* filename)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::MpiLib<typePrecision<PrecT>>::importWisdomFromFilename(filename.data()))
-      {
-        throw Exception{Error::fftw3, "failed to import wisdom from file"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      retval = detail::fftw3::Lib<Library::_float>::importWisdomFromFilename(filename);
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      retval = detail::fftw3::Lib<Library::_double>::importWisdomFromFilename(filename);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      retval = detail::fftw3::Lib<Library::longDouble>::importWisdomFromFilename(filename);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      retval = detail::fftw3::Lib<Library::quad>::importWisdomFromFilename(filename);
+      break;
+# endif
+    default:
+      retval = 1;
+      break;
+    }
+
+    if (retval == 0)
+    {
+      throw Exception{Error::fftw3, "failed to import wisdom from filename"};
+    }
   }
 
   /**
    * @brief Import FFTW3 wisdom from a file.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param filename Name of the file to import the wisdom from.
+   * @param library Library to import the wisdom to.
+   */
+  void importWisdomFromFilename(Library library, std::string_view filename)
+  {
+    importWisdomFromFilename(library, filename.data());
+  }
+
+  /**
+   * @brief Import FFTW3 wisdom from a file.
+   * @param library Library to import the wisdom to.
    * @param file File to import the wisdom from.
    */
-  template<typename PrecT>
-  void importWisdomFromFile([[maybe_unused]] FILE* file)
+  void importWisdomFromFile(Library library, [[maybe_unused]] FILE* file)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromFile(file))
-      {
-        throw Exception{Error::fftw3, "failed to import wisdom from file"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      retval = detail::fftw3::Lib<Library::_float>::importWisdomFromFile(file);
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      retval = detail::fftw3::Lib<Library::_double>::importWisdomFromFile(file);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      retval = detail::fftw3::Lib<Library::longDouble>::importWisdomFromFile(file);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      retval = detail::fftw3::Lib<Library::quad>::importWisdomFromFile(file);
+      break;
+# endif
+    default:
+      retval = 1;
+      break;
+    }
+
+    if (retval == 0)
+    {
+      throw Exception{Error::fftw3, "failed to import wisdom from file"};
+    }
   }
 
   /**
    * @brief Import FFTW3 wisdom from a string.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to import the wisdom to.
    * @param wisdom String containing the wisdom.
    */
-  template<typename PrecT>
-  void importWisdom([[maybe_unused]] std::string_view wisdom)
+  void importWisdomFromString(Library library, [[maybe_unused]] const char* wisdom)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    int retval{};
+
+    switch (library)
     {
-      if (!detail::fftw3::Lib<typePrecision<PrecT>>::importWisdomFromString(wisdom.data()))
-      {
-        throw Exception{Error::fftw3, "failed to import wisdom"};
-      }
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      retval = detail::fftw3::Lib<Library::_float>::importWisdomFromString(wisdom);
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      retval = detail::fftw3::Lib<Library::_double>::importWisdomFromString(wisdom);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      retval = detail::fftw3::Lib<Library::longDouble>::importWisdomFromString(wisdom);
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      retval = detail::fftw3::Lib<Library::quad>::importWisdomFromString(wisdom);
+      break;
+# endif
+    default:
+      retval = 1;
+      break;
+    }
+
+    if (retval == 0)
+    {
+      throw Exception{Error::fftw3, "failed to import wisdom from string"};
+    }
+  }
+
+  /**
+   * @brief Import FFTW3 wisdom from a string.
+   * @param library Library to import the wisdom to.
+   * @param wisdom String containing the wisdom.
+   */
+  void importWisdomFromString(Library library, std::string_view wisdom)
+  {
+    importWisdomFromString(library, wisdom.data());
   }
 
   /**
    * @brief Forget all FFTW3 wisdom.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to forget the wisdom.
    */
-  template<typename PrecT>
-  void forgetWisdom()
+  void forgetWisdom(Library library)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasPrecision<typePrecision<PrecT>>)
+    switch (library)
     {
-      detail::fftw3::Lib<typePrecision<PrecT>>::forgetWisdom();
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_FLOAT)
+    case Library::_float:
+      detail::fftw3::Lib<Library::_float>::forgetWisdom();
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_DOUBLE)
+    case Library::_double:
+      detail::fftw3::Lib<Library::_double>::forgetWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_LONG)
+    case Library::longDouble:
+      detail::fftw3::Lib<Library::longDouble>::forgetWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_QUAD)
+    case Library::quad:
+      detail::fftw3::Lib<Library::quad>::forgetWisdom();
+      break;
+# endif
+    default:
+      break;
+    }
   }
 
-namespace mpi
-{
-  /**
-   * @brief Does the FFTW3 MPI library support the given precision?
-   * @tparam prec Precision of the FFTW3 MPI library.
-   */
-#if defined(AFFT_ENABLE_MPI) && defined(AFFT_ENABLE_FFTW3)
-  template<Precision prec>
-  inline constexpr bool isSupportedPrecision = detail::fftw3::IsMpiSupportedPrecision<prec>::value;
-#else
-  template<Precision prec>
-  inline constexpr bool isSupportedPrecision = false;
-#endif
-
 #ifdef AFFT_ENABLE_MPI
+  namespace mpi
+  {
+    /**
+     * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
+     * @param library Library to be the wisdom broadcasted for.
+     * @param comm MPI communicator.
+     */
+    void broadcastWisdom(Library library, MPI_Comm comm);
+
+    /**
+     * @brief Gather FFTW3 wisdom from all MPI processes to the root process.
+     * @param library Library to be the wisdom gathered for.
+     * @param comm MPI communicator.
+     */
+    void gatherWisdom(Library library, MPI_Comm comm);
+  } // namespace mpi
+
   /**
    * @brief Broadcast FFTW3 wisdom to all MPI processes from the root process.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to be the wisdom broadcasted for.
    * @param comm MPI communicator.
    */
-  template<typename PrecT>
-  void broadcastWisdom([[maybe_unused]] MPI_Comm comm)
+  void mpi::broadcastWisdom(Library library, [[maybe_unused]] MPI_Comm comm)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
 
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
+    switch (library)
     {
-      detail::fftw3::MpiLib<typePrecision<PrecT>>::broadcastWisdom(comm);
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
+    case Library::_float:
+      detail::fftw3::Lib<Library::_float>::mpiBroadcastWisdom();
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
+    case Library::_double:
+      detail::fftw3::Lib<Library::_double>::mpiBroadcastWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_LONG)
+    case Library::longDouble:
+      detail::fftw3::Lib<Library::longDouble>::mpiBroadcastWisdom();
+      break;
+# endif
+    default:
+      break;
+    }
   }
 
   /**
    * @brief Gather FFTW3 wisdom from all MPI processes to the root process.
-   * @tparam PrecT Precision of the FFTW3 library.
+   * @param library Library to be the wisdom gathered for.
    * @param comm MPI communicator.
    */
-  template<typename PrecT>
-  void gatherWisdom([[maybe_unused]] MPI_Comm comm)
+  void mpi::gatherWisdom(Library library, [[maybe_unused]] MPI_Comm comm)
   {
-    static_assert(isSupportedPrecision<typePrecision<PrecT>>, "Unsupported FFTW3 precision");
+    detail::validate(library);
 
     init();
-    
-# ifdef AFFT_ENABLE_FFTW3
-    if constexpr (detail::fftw3::hasMpiPrecision<typePrecision<PrecT>>)
+
+    switch (library)
     {
-      detail::fftw3::MpiLib<typePrecision<PrecT>>::gatherWisdom(comm);
-    }
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_FLOAT)
+    case Library::_float:
+      detail::fftw3::Lib<Library::_float>::mpiGatherWisdom();
+      break;
 # endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_DOUBLE)
+    case Library::_double:
+      detail::fftw3::Lib<Library::_double>::mpiGatherWisdom();
+      break;
+# endif
+# if defined(AFFT_ENABLE_FFTW3) && defined(AFFT_FFTW3_HAS_MPI_LONG)
+    case Library::longDouble:
+      detail::fftw3::Lib<Library::longDouble>::mpiGatherWisdom();
+      break;
+# endif
+    default:
+      break;
+    }
   }
 #endif
-} // namespace mpi
 } // namespace afft
 
 #endif /* AFFT_FFTW3_HPP */

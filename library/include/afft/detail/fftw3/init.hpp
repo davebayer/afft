@@ -30,7 +30,7 @@
 #endif
 
 #include "Lib.hpp"
-#include "../../exception.hpp"
+#include "../../error.hpp"
 
 namespace afft::detail::fftw3
 {
@@ -41,37 +41,37 @@ namespace afft::detail::fftw3
     {
       if (result == 0)
       {
-        throw BackendError{Backend::fftw3, "initialization failed."};
+        throw Exception{Error::fftw3, "initialization failed"};
       }
     };
 
 # ifdef AFFT_FFTW3_HAS_FLOAT
 #   ifdef AFFT_FFTW3_HAS_FLOAT_THREADS
-    check(Lib<Precision::_float>::initThreads());
+    check(Lib<afft::fftw3::Library::_float>::initThreads());
 #   endif
 #   ifdef AFFT_FFTW3_HAS_MPI_FLOAT
-    MpiLib<Precision::_float>::init();
+    Lib<afft::fftw3::Library::_float>::mpiInit();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_DOUBLE
 #   ifdef AFFT_FFTW3_HAS_DOUBLE_THREADS
-    check(Lib<Precision::_double>::initThreads());
+    check(Lib<afft::fftw3::Library::_double>::initThreads());
 #   endif
 #   ifdef AFFT_FFTW3_HAS_MPI_DOUBLE
-    MpiLib<Precision::_double>::init();
+    Lib<afft::fftw3::Library::_double>::mpiInit();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_LONG
 #   ifdef AFFT_FFTW3_HAS_LONG_THREADS
-    check(Lib<Precision::_longDouble>::initThreads());
+    check(Lib<afft::fftw3::Library::_longDouble>::initThreads());
 #   endif
 #   ifdef AFFT_FFTW3_HAS_MPI_LONG
-    MpiLib<Precision::_longDouble>::init();
+    Lib<afft::fftw3::Library::_longDouble>::mpiInit();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_QUAD
 #   ifdef AFFT_FFTW3_HAS_QUAD_THREADS
-    check(Lib<Precision::_quad>::initThreads());
+    check(Lib<afft::fftw3::Library::_quad>::initThreads());
 #   endif
 # endif
   }
@@ -81,39 +81,39 @@ namespace afft::detail::fftw3
   {
 # ifdef AFFT_FFTW3_HAS_FLOAT
 #   ifdef AFFT_FFTW3_HAS_MPI_FLOAT
-    MpiLib<Precision::_float>::cleanUp();
+    Lib<afft::fftw3::Library::_float>::mpiCleanUp();
 #   endif
 #   ifdef AFFT_FFTW3_HAS_FLOAT_THREADS
-    Lib<Precision::_float>::cleanUpThreads();
+    Lib<afft::fftw3::Library::_float>::cleanUpThreads();
 #   else
-    Lib<Precision::_float>::cleanUp();
+    Lib<afft::fftw3::Library::_float>::cleanUp();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_DOUBLE
 #   ifdef AFFT_FFTW3_HAS_MPI_DOUBLE
-    MpiLib<Precision::_double>::cleanUp();
+    Lib<afft::fftw3::Library::_double>::mpiCleanUp();
 #   endif
 #   ifdef AFFT_FFTW3_HAS_DOUBLE_THREADS
-    Lib<Precision::_double>::cleanUpThreads();
+    Lib<afft::fftw3::Library::_double>::cleanUpThreads();
 #   else
-    Lib<Precision::_double>::cleanUp();
+    Lib<afft::fftw3::Library::_double>::cleanUp();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_LONG
 #   ifdef AFFT_FFTW3_HAS_MPI_LONG
-    MpiLib<Precision::_longDouble>::cleanUp();
+    Lib<afft::fftw3::Library::longDouble>::mpiCleanUp();
 #   endif
 #   ifdef AFFT_FFTW3_HAS_LONG_THREADS
-    Lib<Precision::_longDouble>::cleanUpThreads();
+    Lib<afft::fftw3::Library::longDouble>::cleanUpThreads();
 #   else
-    Lib<Precision::_longDouble>::cleanUp();
+    Lib<afft::fftw3::Library::longDouble>::cleanUp();
 #   endif
 # endif
 # ifdef AFFT_FFTW3_HAS_QUAD
 #   ifdef AFFT_FFTW3_HAS_QUAD_THREADS
-    Lib<Precision::_quad>::cleanUpThreads();
+    Lib<afft::fftw3::Library::quad>::cleanUpThreads();
 #   else
-    Lib<Precision::_quad>::cleanUp();
+    Lib<afft::fftw3::Library::quad>::cleanUp();
 #   endif
 # endif
   }
