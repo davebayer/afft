@@ -135,6 +135,31 @@ namespace afft::detail::mkl::sp::cpu
           throw Exception{Error::mkl, "howManyRank is not supported yet"};
         }
 
+        switch (mDesc.getTransformDesc<Transform::dft>().type)
+        {
+        case dft::Type::complexToComplex:
+          if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+          {
+            checkError(DftiSetValue(mDftiHandle.get(), DFTI_COMPLEX_STORAGE, DFTI_COMPLEX_COMPLEX));
+          }
+          else
+          {
+            checkError(DftiSetValue(mDftiHandle.get(), DFTI_COMPLEX_STORAGE, DFTI_REAL_REAL));
+          }
+          break;
+        case dft::Type::realToComplex:
+        case dft::Type::complexToReal:
+          if (mDesc.getComplexFormat() == ComplexFormat::planar)
+          {
+            throw Exception{Error::mkl, "Planar format is not supported for real-to-complex or complex-to-real transforms"};
+          }
+
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_CONJUGATE_EVEN_STORAGE, DFTI_COMPLEX_COMPLEX));
+          break;
+        default:
+          cxx::unreachable();
+        }
+
         if (getWorkspace() == Workspace::none)
         {
           checkError(DftiSetValue(mDftiHandle.get(),
@@ -186,11 +211,9 @@ namespace afft::detail::mkl::sp::cpu
         const auto computeFn = (mDesc.getDirection() == Direction::forward)
                                  ? DftiComputeForward : DftiComputeBackward;
 
-        const auto placement = mDesc.getPlacement();
-
         if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
         {
-          if (placement == Placement::inPlace)
+          if (mDesc.getPlacement() == Placement::inPlace)
           {
             checkError(computeFn(mDftiHandle.get(), src[0]));
           }
@@ -201,7 +224,7 @@ namespace afft::detail::mkl::sp::cpu
         }
         else
         {
-          if (placement == Placement::inPlace)
+          if (mDesc.getPlacement() == Placement::inPlace)
           {
             checkError(computeFn(mDftiHandle.get(), src[0], src[1]));
           }
@@ -213,6 +236,22 @@ namespace afft::detail::mkl::sp::cpu
       }
     
     private:
+      /// @brief Alias for the dfti descriptor.
+      using DftiDesc = std::remove_pointer_t<DFTI_DESCRIPTOR_HANDLE>;
+
+      /// @brief Delete the dfi descriptor.
+      struct DftiDescDeleter
+      {
+        /**
+         * @brief Delete the descriptor.
+         * @param desc The descriptor.
+         */
+        void operator()(DftiDesc* desc) const
+        {
+          DftiFreeDescriptor(&desc);
+        }
+      };
+
       std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};    ///< MKL DFTI descriptor handle
       std::size_t                                mWorkspaceSize{}; ///< The size of the workspace
       std::size_t                                mSrcElemCount{};  ///< The number of elements in the source buffer

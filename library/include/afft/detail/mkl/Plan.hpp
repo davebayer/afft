@@ -62,22 +62,6 @@ namespace afft::detail::mkl
         return Backend::mkl;
       }
     protected:
-      /// @brief Alias for the dfti descriptor.
-      using DftiDesc = std::remove_pointer_t<DFTI_DESCRIPTOR_HANDLE>;
-
-      /// @brief Delete the dfi descriptor.
-      struct DftiDescDeleter
-      {
-        /**
-         * @brief Delete the descriptor.
-         * @param desc The descriptor.
-         */
-        void operator()(DftiDesc* desc) const
-        {
-          DftiFreeDescriptor(&desc);
-        }
-      };
-
       /**
        * @brief Get the precision.
        * @return The precision.
