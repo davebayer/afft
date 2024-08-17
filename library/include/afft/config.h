@@ -40,9 +40,21 @@
 # define AFFT_MAX_DIM_COUNT     4
 #endif
 
+// Check if AFFT_CUDA_ROOT_DIR is defined when CUDA is enabled
 #ifdef AFFT_ENABLE_CUDA
 # ifndef AFFT_CUDA_ROOT_DIR
 #   error "AFFT_CUDA_ROOT_DIR must be defined"
+# endif
+#endif
+
+// FFTW3 quad precision is only supported with GCC version 4.6 or higher
+#ifdef AFFT_ENABLE_FFTW3
+# if !((__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) \
+       && !(defined(__ICC) || defined(__INTEL_COMPILER) || defined(__CUDACC__) || defined(__PGI)) \
+       && (defined(__i386__) || defined(__x86_64__) || defined(__ia64__)))
+#   ifdef AFFT_FFTW3_HAS_QUAD
+#     undef AFFT_FFTW3_HAS_QUAD
+#   endif
 # endif
 #endif
 
