@@ -206,7 +206,7 @@ namespace afft::detail::mkl::sp
 
         checkError(DftiCommitDescriptor(mDftiHandle.get()));
 
-        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
+        mDesc.getRefElemCounts(makeScalarSpan(mSrcElemCount), makeScalarSpan(mDstElemCount));
       }
 
       /// @brief Default destructor.

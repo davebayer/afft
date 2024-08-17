@@ -51,6 +51,18 @@ AFFT_EXPORT namespace afft
   };
 
   /**
+   * @brief Make a scalar span
+   * @tparam T Type
+   * @param scalar Scalar
+   * @return Scalar span
+   */
+  template<typename T>
+  Span<T> makeScalarSpan(T& scalar) noexcept
+  {
+    return Span<T>{&scalar, 1};
+  }
+
+  /**
    * @brief Make a scalar view
    * @tparam T Type
    * @param scalar Scalar
