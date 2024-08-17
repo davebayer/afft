@@ -538,6 +538,8 @@ namespace afft::detail
         {
           return std::get<DistribMemDesc>(mMemVariant);
         }
+
+        cxx::unreachable();
       }
 
       /**

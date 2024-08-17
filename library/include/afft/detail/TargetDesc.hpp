@@ -237,6 +237,8 @@ namespace afft::detail
         {
           return std::get<OpenclDesc>(mTargetVariant);
         }
+
+        cxx::unreachable();
       }
 
       /**
