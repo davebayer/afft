@@ -206,7 +206,7 @@ namespace afft::detail::mkl::sp
 
         checkError(DftiCommitDescriptor(mDftiHandle.get()));
 
-        mDesc.getRefElemCounts(makeScalarSpan(mSrcElemCount), makeScalarSpan(mDstElemCount));
+        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
       }
 
       /// @brief Default destructor.
@@ -221,7 +221,7 @@ namespace afft::detail::mkl::sp
        */
       [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
       {
-        return makeScalarView(mSrcElemCount);
+        return {mSrcElemCount.data(), mDesc.getSrcDstBufferCount().first};
       }
 
       /**
@@ -230,7 +230,7 @@ namespace afft::detail::mkl::sp
        */
       [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
       {
-        return makeScalarView(mDstElemCount);
+        return {mDstElemCount.data(), mDesc.getSrcDstBufferCount().second};
       }
 
       /**
@@ -285,8 +285,8 @@ namespace afft::detail::mkl::sp
       };
 
       std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};   ///< MKL DFTI descriptor handle
-      std::size_t                                mSrcElemCount{}; ///< The number of elements in the source buffer
-      std::size_t                                mDstElemCount{}; ///< The number of elements in the destination buffer
+      std::array<std::size_t, 2>                 mSrcElemCount{}; ///< The number of elements in the source buffer
+      std::array<std::size_t, 2>                 mDstElemCount{}; ///< The number of elements in the destination buffer
   };
 
   /**

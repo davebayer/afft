@@ -254,14 +254,7 @@ namespace afft::detail::fftw3::sp::cpu
        */
       [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
       {
-        if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
-        {
-          return makeScalarView(mSrcElemCount[0]);
-        }
-        else
-        {
-          return mSrcElemCount;
-        }
+        return {mSrcElemCount.data(), mDesc.getSrcDstBufferCount().first};
       }
 
       /**
@@ -270,14 +263,7 @@ namespace afft::detail::fftw3::sp::cpu
        */
       [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
       {
-        if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
-        {
-          return makeScalarView(mDstElemCount[0]);
-        }
-        else
-        {
-          return mDstElemCount;
-        }
+        return {mDstElemCount.data(), mDesc.getSrcDstBufferCount().second};
       }
 
       /**
