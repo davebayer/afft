@@ -31,29 +31,60 @@
 
 #include "../../Plan.hpp"
 
-namespace afft::detail::mkl::sp::cpu
+namespace afft::detail::mkl::sp
 {
-  /**
-   * @brief Create a mkl single process cpu plan implementation.
-   * @param desc Plan description.
-   * @return Plan implementation.
-   */
-  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
-} // namespace afft::detail::mkl::sp::cpu
+  namespace cpu
+  {
+    /**
+     * @brief Create a mkl single process cpu plan implementation.
+     * @param desc Plan description.
+     * @return Plan implementation.
+     */
+    [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
+  } // namespace cpu
+
+  namespace openmp
+  {
+    /**
+     * @brief Create a mkl single process openmp plan implementation.
+     * @param desc Plan description.
+     * @return Plan implementation.
+     */
+    [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
+  } // namespace openmp
+} // namespace afft::detail::mkl::sp
 
 #ifdef AFFT_HEADER_ONLY
 
 #include "Plan.hpp"
 
-namespace afft::detail::mkl::sp::cpu
+namespace afft::detail::mkl::sp
 {
   static_assert(std::is_pointer_v<DFTI_DESCRIPTOR_HANDLE>, "Implementation relies on DFTI_DESCRIPTOR_HANDLE being a pointer");
+
+  namespace cpu
+  {
+    /**
+     * @class Plan
+     * @brief The mkl single process cpu plan implementation.
+     */
+    class Plan;
+  } // namespace cpu
+
+  namespace openmp
+  {
+    /**
+     * @class Plan
+     * @brief The mkl single process openmp plan implementation.
+     */
+    class Plan;
+  } // namespace openmp
   
   /**
    * @class Plan
    * @brief The mkl single process cpu plan implementation.
    */
-  class Plan final : public mkl::Plan
+  class cpu::Plan final : public mkl::Plan
   {
     private:
       /// @brief Alias for the parent class
@@ -71,9 +102,6 @@ namespace afft::detail::mkl::sp::cpu
       : Parent{desc, workspace}
       {
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
-
-        mSrcElemCount = memDesc.getSrcElemCount();
-        mDstElemCount = memDesc.getDstElemCount();
 
         {
           DFTI_DESCRIPTOR_HANDLE dftiHandle{};
@@ -177,6 +205,8 @@ namespace afft::detail::mkl::sp::cpu
         }
 
         checkError(DftiCommitDescriptor(mDftiHandle.get()));
+
+        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
       }
 
       /// @brief Default destructor.
@@ -254,10 +284,9 @@ namespace afft::detail::mkl::sp::cpu
         }
       };
 
-      std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};    ///< MKL DFTI descriptor handle
-      std::size_t                                mWorkspaceSize{}; ///< The size of the workspace
-      std::size_t                                mSrcElemCount{};  ///< The number of elements in the source buffer
-      std::size_t                                mDstElemCount{};  ///< The number of elements in the destination buffer
+      std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};   ///< MKL DFTI descriptor handle
+      std::size_t                                mSrcElemCount{}; ///< The number of elements in the source buffer
+      std::size_t                                mDstElemCount{}; ///< The number of elements in the destination buffer
   };
 
   /**
@@ -265,8 +294,9 @@ namespace afft::detail::mkl::sp::cpu
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> cpu::makePlan(const Desc& desc, Workspace workspace)
   {
+    // MKL DFTI for cpu supports up to 7 dimensions
     static constexpr std::size_t dftiMaxDimCount{7};
 
     if (desc.getTransformRank() > dftiMaxDimCount)
@@ -293,7 +323,7 @@ namespace afft::detail::mkl::sp::cpu
 
     return std::make_unique<Plan>(desc, workspace);
   }
-} // namespace afft::detail::mkl::sp::cpu
+} // namespace afft::detail::mkl::sp
 
 #endif /* AFFT_HEADER_ONLY */
 

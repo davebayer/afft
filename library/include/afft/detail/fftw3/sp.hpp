@@ -85,6 +85,45 @@ namespace afft::detail::fftw3::sp::cpu
            const afft::fftw3::cpu::BackendParameters& backendParams)
       : Parent{desc, Workspace::internal}
       {
+        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
+
+        // TODO: allocate src and dst buffers
+        std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> src{};
+        std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> dst{};
+
+        if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+        {
+          const auto [srcComplexity, dstComplexity] = mDesc.getSrcDstComplexity();
+
+          const std::size_t srcElemCount = mSrcElemCount[0] * ((srcComplexity == Complexity::real) ? 1 : 2);
+          const std::size_t dstElemCount = mDstElemCount[0] * ((dstComplexity == Complexity::real) ? 1 : 2);
+
+          if (mDesc.getPlacement() == Placement::outOfPlace)
+          {
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), srcElemCount);
+            dst[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), dstElemCount);
+          }
+          else
+          {
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(srcElemCount, dstElemCount));
+          }
+        }
+        else
+        {
+          if (mDesc.getPlacement() == Placement::outOfPlace)
+          {
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mSrcElemCount[0]);
+            src[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mSrcElemCount[1]);
+            dst[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mDstElemCount[0]);
+            dst[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mDstElemCount[1]);
+          }
+          else
+          {
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(mSrcElemCount[0], mDstElemCount[0]));
+            src[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(mSrcElemCount[1], mDstElemCount[1]));
+          }
+        }
+
         Lib<library>::planWithNThreads(getThreadLimit());
         Lib<library>::setTimeLimit((backendParams.timeLimit.count() < 0.0) ? FFTW_NO_TIMELIMIT : backendParams.timeLimit.count());
 
@@ -93,11 +132,7 @@ namespace afft::detail::fftw3::sp::cpu
         const auto [dims, howManyDims] = makeIoDims(mDesc);
         const auto flags               = makeFlags(mDesc, backendParams);
 
-        typename Lib<library>::Plan* plan{};
-
-        // TODO: allocate src and dst buffers
-        std::array<void*, 2> src{};
-        std::array<void*, 2> dst{};
+        typename Lib<library>::Plan* plan{};       
 
         switch (mDesc.getTransform())
         {
@@ -112,8 +147,8 @@ namespace afft::detail::fftw3::sp::cpu
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
-                                               reinterpret_cast<C*>(src[0]),
-                                               reinterpret_cast<C*>(dst[0]),
+                                               reinterpret_cast<C*>(src[0].get()),
+                                               reinterpret_cast<C*>((mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
                                                getSign(),
                                                flags);
             }
@@ -123,10 +158,10 @@ namespace afft::detail::fftw3::sp::cpu
                                                     dims.data,
                                                     howManyRank,
                                                     howManyDims.data,
-                                                    reinterpret_cast<R*>(src[0]),
-                                                    reinterpret_cast<R*>(src[1]),
-                                                    reinterpret_cast<R*>(dst[0]),
-                                                    reinterpret_cast<R*>(dst[1]),
+                                                    src[0].get(),
+                                                    src[1].get(),
+                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
                                                     flags);
             }
             break;
@@ -137,8 +172,8 @@ namespace afft::detail::fftw3::sp::cpu
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
-                                               reinterpret_cast<R*>(src[0]),
-                                               reinterpret_cast<C*>(dst[0]),
+                                               src[0].get(),
+                                               reinterpret_cast<C*>((mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
                                                flags);
             }
             else
@@ -147,9 +182,9 @@ namespace afft::detail::fftw3::sp::cpu
                                                     dims.data,
                                                     howManyRank,
                                                     howManyDims.data,
-                                                    reinterpret_cast<R*>(src[0]),
-                                                    reinterpret_cast<R*>(dst[0]),
-                                                    reinterpret_cast<R*>(dst[1]),
+                                                    src[0].get(),
+                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
                                                     flags);
             }
             break;
@@ -160,8 +195,8 @@ namespace afft::detail::fftw3::sp::cpu
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
-                                               reinterpret_cast<C*>(src[0]),
-                                               reinterpret_cast<R*>(dst[0]),
+                                               reinterpret_cast<C*>(src[0].get()),
+                                               (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
                                                flags);
             }
             else
@@ -170,9 +205,9 @@ namespace afft::detail::fftw3::sp::cpu
                                                     dims.data,
                                                     howManyRank,
                                                     howManyDims.data,
-                                                    reinterpret_cast<R*>(src[0]),
-                                                    reinterpret_cast<R*>(src[1]),
-                                                    reinterpret_cast<R*>(dst[0]),
+                                                    src[0].get(),
+                                                    src[1].get(),
+                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
                                                     flags);
             }
             break;
@@ -188,8 +223,8 @@ namespace afft::detail::fftw3::sp::cpu
                                            dims.data,
                                            howManyRank,
                                            howManyDims.data,
-                                           reinterpret_cast<R*>(src[0]),
-                                           reinterpret_cast<R*>(dst[0]),
+                                           src[0].get(),
+                                           (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
                                            getR2RKinds<library>().data,
                                            flags);
 

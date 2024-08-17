@@ -83,7 +83,10 @@ try
   afft::cpu::Parameters cpuParams{};
   cpuParams.threadLimit = 4;
 
-  auto plan = afft::makePlan(dftParams, cpuParams);
+  afft::cpu::BackendParameters cpuBackendParams{};
+  cpuBackendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure;
+
+  auto plan = afft::makePlan(dftParams, cpuParams, cpuBackendParams);
 
   plan->executeUnsafe(src.getData(), dst.getData());
 

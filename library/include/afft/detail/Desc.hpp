@@ -126,6 +126,69 @@ namespace afft::detail
         return bufferCounts;
       }
 
+      /**
+       * @brief Get the number of elements required for the source and destination.
+       * @param srcElemCounts The source element counts.
+       * @param dstElemCounts The destination element counts.
+       */
+      void getRefElemCounts(Span<std::size_t> srcElemCounts, Span<std::size_t> dstElemCounts) const
+      {
+        const auto [srcBufferCount, dstBufferCount] = getSrcDstBufferCount();
+
+        if (srcElemCounts.size() < srcBufferCount)
+        {
+          throw Exception{Error::internal, "srcElemCounts is too small"};
+        }
+
+        if (dstElemCounts.size() < dstBufferCount)
+        {
+          throw Exception{Error::internal, "dstElemCounts is too small"};
+        }
+
+        std::fill(srcElemCounts.begin(), srcElemCounts.end(), 0);
+        std::fill(dstElemCounts.begin(), dstElemCounts.end(), 0);
+
+        const auto [srcComplexity, dstComplexity] = getSrcDstComplexity();
+        const auto srcShape                       = getSrcShape();
+        const auto dstShape                       = getDstShape();
+
+        switch (getMemoryLayout())
+        {
+        case MemoryLayout::centralized:
+        {
+          const auto& memDesc = getMemDesc<MemoryLayout::centralized>();
+
+          std::size_t currentSrcElemCount{1};
+          std::size_t currentDstElemCount{1};
+
+          for (std::size_t i{}; i < getShapeRank(); ++i)
+          {
+            currentSrcElemCount *= safeIntCast<std::size_t>(srcShape[i]);
+            currentDstElemCount *= safeIntCast<std::size_t>(dstShape[i]);
+
+            srcElemCounts[0] = std::max(srcElemCounts[0], currentSrcElemCount * static_cast<std::size_t>(memDesc.getSrcStrides()[i]));
+            dstElemCounts[0] = std::max(dstElemCounts[0], currentDstElemCount * static_cast<std::size_t>(memDesc.getDstStrides()[i]));
+          }
+
+          if (srcComplexity == Complexity::complex)
+          {
+            srcElemCounts[1] = srcElemCounts[0];
+          }
+
+          if (dstComplexity == Complexity::complex)
+          {
+            dstElemCounts[1] = dstElemCounts[0];
+          }
+
+          break;
+        }
+        case MemoryLayout::distributed:
+          throw Exception{Error::internal, "unimplemented getRefElemCounts for distributed memory layout"};
+        default:
+          cxx::unreachable();
+        }
+      }
+
       // [[nodiscard]] friend bool operator==(const Desc& lhs, const Desc& rhs) noexcept
       // {
       //   return static_cast<const TransformDesc&>(lhs) == static_cast<const TransformDesc&>(rhs) &&

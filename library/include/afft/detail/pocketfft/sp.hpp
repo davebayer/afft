@@ -97,9 +97,6 @@ namespace afft::detail::pocketfft::sp::cpu
 
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
-        mSrcElemCount = memDesc.getSrcElemCount();
-        mDstElemCount = memDesc.getDstElemCount();
-
         std::transform(memDesc.getSrcStrides().begin(),
                        memDesc.getSrcStrides().end(),
                        mSrcStrides.begin(),
@@ -115,6 +112,8 @@ namespace afft::detail::pocketfft::sp::cpu
         {
           return safeIntCast<std::ptrdiff_t>(stride * sizeOfDstElem);
         });
+
+        mDesc.getRefElemCounts(makeScalarSpan(mSrcElemCount), makeScalarSpan(mDstElemCount));
       }
 
       /// @brief Default destructor
@@ -353,7 +352,6 @@ namespace afft::detail::pocketfft::sp::cpu
       ::pocketfft::stride_t mSrcStrides{};    ///< The stride of the source data
       ::pocketfft::stride_t mDstStrides{};    ///< The stride of the destination data
       ::pocketfft::shape_t  mAxes{};          ///< The axes to be transformed, valid for DFT, varies for DTT
-      std::size_t           mWorkspaceSize{}; ///< The size of the workspace
       std::size_t           mSrcElemCount{};  ///< The number of elements in the source buffer
       std::size_t           mDstElemCount{};  ///< The number of elements in the destination buffer
   };

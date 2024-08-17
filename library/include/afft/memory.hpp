@@ -77,7 +77,7 @@ AFFT_EXPORT namespace afft
   /// @brief Memory layout of the centralized transform
   struct CentralizedMemoryLayout
   {
-    Alignment     alignment{};                               ///< alignment of the memory
+    Alignment     alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
     const Size*   srcStrides{};                              ///< strides of the source memory, nullptr for default strides
     const Size*   dstStrides{};                              ///< strides of the destination memory, nullptr for default strides
@@ -89,7 +89,7 @@ AFFT_EXPORT namespace afft
   /// @brief Memory layout of the distributed transform
   struct DistributedMemoryLayout
   {
-    Alignment          alignment{};                               ///< alignment of the memory
+    Alignment          alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
     const MemoryBlock* srcBlocks{};                               ///< source memory blocks
     View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
