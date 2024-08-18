@@ -146,6 +146,25 @@ namespace afft::detail
     }
   };
 
+  /// @brief OpenMP description
+  struct OpenmpDesc
+  {
+    static constexpr std::size_t targetCount{1}; ///< Number of targets
+# ifdef AFFT_ENABLE_OPENMP
+    int device{};                                ///< OpenMP device
+# endif
+
+    [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const OpenmpDesc& lhs,
+                                                   [[maybe_unused]] const OpenmpDesc& rhs)
+    {
+#   ifdef AFFT_ENABLE_OPENMP
+      return lhs.device == rhs.device;
+#   else
+      return true;
+#   endif
+    }
+  };
+
   /// @brief Target description
   class TargetDesc
   {
@@ -197,6 +216,8 @@ namespace afft::detail
             return Target::hip;
           case 3:
             return Target::opencl;
+          case 4:
+            return Target::openmp;
           default:
             throw std::runtime_error("invalid target variant index");
         }
@@ -236,6 +257,10 @@ namespace afft::detail
         else if constexpr (target == Target::opencl)
         {
           return std::get<OpenclDesc>(mTargetVariant);
+        }
+        else if constexpr (target == Target::openmp)
+        {
+          return std::get<OpenmpDesc>(mTargetVariant);
         }
 
         cxx::unreachable();
@@ -280,6 +305,13 @@ namespace afft::detail
           const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
           targetParams.context = openclDesc.context.get();
           targetParams.devices = View<cl_device_id>{openclDesc.devices.get(), openclDesc.targetCount};
+#       endif
+        }
+        else if constexpr (target == Target::openmp)
+        {
+#       ifdef AFFT_ENABLE_OPENMP
+          const auto& openmpDesc = std::get<OpenmpDesc>(mTargetVariant);
+          targetParams.device = openmpDesc.device;
 #       endif
         }
         else
@@ -335,6 +367,13 @@ namespace afft::detail
           targetParams.devices     = openclDesc.devices.get();
 #       endif
         }
+        else if constexpr (target == Target::openmp)
+        {
+#       ifdef AFFT_ENABLE_OPENMP
+          const auto& openmpDesc = std::get<OpenmpDesc>(mTargetVariant);
+          targetParams.device = openmpDesc.device;
+#       endif
+        }
         else
         {
           cxx::unreachable();
@@ -356,7 +395,7 @@ namespace afft::detail
 
     private:
       /// @brief The variant type that holds the target description.
-      using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc>;
+      using TargetVariant = std::variant<CpuDesc, CudaDesc, HipDesc, OpenclDesc, OpenmpDesc>;
 
 #   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
@@ -410,6 +449,16 @@ namespace afft::detail
       }
 #   endif
 
+#   ifdef AFFT_ENABLE_OPENMP
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::openmp::Parameters& openmpParams)
+      {
+        OpenmpDesc openmpDesc{};
+        openmpDesc.device = openmpParams.device;
+
+        return openmpDesc;
+      }
+#   endif
+
 #   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
@@ -459,6 +508,16 @@ namespace afft::detail
         std::copy_n(openclParams.devices, openclDesc.targetCount, openclDesc.devices.get());
 
         return openclDesc;
+      }
+#   endif
+
+#   ifdef AFFT_ENABLE_OPENMP
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_openmp_Parameters& openmpParams)
+      {
+        OpenmpDesc openmpDesc{};
+        openmpDesc.device = openmpParams.device;
+
+        return openmpDesc;
       }
 #   endif
 

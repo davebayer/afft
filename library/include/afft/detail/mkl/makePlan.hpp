@@ -52,14 +52,7 @@ namespace afft::detail::mkl
     
     if constexpr (BackendParamsT::mpBackend == MpBackend::none)
     {
-      if constexpr (BackendParamsT::target == Target::cpu)
-      {
-        return sp::cpu::makePlan(desc, backendParams.workspace);
-      }
-      else
-      {
-        throw Exception{Error::mkl, "only cpu target is supported"};
-      }
+      return sp::makePlan(desc, backendParams.workspace);
     }
     else if constexpr (BackendParamsT::mpBackend == MpBackend::mpi)
     {

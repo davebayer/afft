@@ -311,6 +311,7 @@ namespace afft::detail
       case Target::cuda:
       case Target::hip:
       case Target::opencl:
+      case Target::openmp:
         return true;
       default:
         return false;

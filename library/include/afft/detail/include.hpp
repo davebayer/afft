@@ -118,6 +118,9 @@
  // Include MKL header
 # ifdef AFFT_ENABLE_MKL
 #   include <mkl.h>
+#   ifdef AFFT_MKL_HAS_OMP_OFFLOAD
+#     include <mkl_omp_offload.h>
+#   endif
 #   ifdef AFFT_MKL_HAS_CDFT
 #     include <mkl_cdft.h>
 #   endif

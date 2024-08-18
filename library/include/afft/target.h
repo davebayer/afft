@@ -37,6 +37,7 @@ typedef uint8_t afft_Target;
 #define afft_Target_cuda   (afft_Target)1 ///< CUDA
 #define afft_Target_hip    (afft_Target)2 ///< HIP
 #define afft_Target_opencl (afft_Target)3 ///< OpenCL
+#define afft_Target_openmp (afft_Target)4 ///< OpenMP
 
 /// @brief CPU parameters
 typedef struct afft_cpu_Parameters afft_cpu_Parameters;
@@ -61,6 +62,12 @@ typedef struct afft_opencl_Parameters afft_opencl_Parameters;
 
 /// @brief OpenCL execution parameters
 typedef struct afft_opencl_ExecutionParameters afft_opencl_ExecutionParameters;
+
+/// @brief OpenMP parameters
+typedef struct afft_openmp_Parameters afft_openmp_Parameters;
+
+/// @brief OpenMP execution parameters
+typedef struct afft_openmp_ExecutionParameters afft_openmp_ExecutionParameters;
 
 #ifdef AFFT_ENABLE_CPU
 /// @brief CPU parameters
@@ -122,6 +129,20 @@ struct afft_opencl_ExecutionParameters
 {
   cl_command_queue queue;              ///< OpenCL command queue
   const cl_mem*    externalWorkspaces; ///< External workspace, if afft_Workspace_external is used
+};
+#endif
+
+#ifdef AFFT_ENABLE_OPENMP
+/// @brief OpenMP parameters
+struct afft_openmp_Parameters
+{
+  int device; ///< OpenMP device
+};
+
+/// @brief OpenMP execution parameters
+struct afft_openmp_ExecutionParameters
+{
+  bool nowait; ///< Nowait
 };
 #endif
 

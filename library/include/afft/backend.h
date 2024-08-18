@@ -245,17 +245,20 @@ struct afft_heffte_mpi_hip_Parameters
 /**********************************************************************************************************************/
 // Backend parameters for single process targets
 /**********************************************************************************************************************/
-/// @brief Backend parameters for cpu target
+/// @brief Backend parameters for single process cpu target
 typedef struct afft_cpu_BackendParameters afft_cpu_BackendParameters;
 
-/// @brief Backend parameters for cuda target
+/// @brief Backend parameters for single process cuda target
 typedef struct afft_cuda_BackendParameters afft_cuda_BackendParameters;
 
-/// @brief Backend parameters for hip target
+/// @brief Backend parameters for single process hip target
 typedef struct afft_hip_BackendParameters afft_hip_BackendParameters;
 
-/// @brief Backend parameters for opencl target
+/// @brief Backend parameters for single process opencl target
 typedef struct afft_opencl_BackendParameters afft_opencl_BackendParameters;
+
+/// @brief Backend parameters for single process openmp target
+typedef struct afft_openmp_BackendParameters afft_openmp_BackendParameters;
 
 /// @brief Backend parameters for cpu target
 struct afft_cpu_BackendParameters
@@ -289,7 +292,7 @@ struct afft_hip_BackendParameters
   const afft_Backend*        order;     ///< Order of the backends
 };
 
-/// @brief Backend parameters for cuda target
+/// @brief Backend parameters for opencl target
 struct afft_opencl_BackendParameters
 {
   afft_SelectStrategy          strategy;  ///< Select strategy
@@ -298,6 +301,16 @@ struct afft_opencl_BackendParameters
   size_t                       orderSize; ///< Number of backends in the order
   const afft_Backend*          order;     ///< Order of the backends
   afft_clfft_opencl_Parameters clfft;     ///< clFFT parameters
+};
+
+/// @brief Backend parameters for openmp target
+struct afft_openmp_BackendParameters
+{
+  afft_SelectStrategy strategy;  ///< Select strategy
+  afft_Workspace      workspace; ///< Workspace
+  afft_BackendMask    mask;      ///< Backend mask
+  size_t              orderSize; ///< Number of backends in the order
+  const afft_Backend* order;     ///< Order of the backends
 };
 
 /**********************************************************************************************************************/

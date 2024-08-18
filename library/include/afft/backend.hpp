@@ -391,6 +391,10 @@ AFFT_EXPORT namespace afft
     } // namespace clfft
     struct BackendParameters;
   } // namespace opencl
+  namespace openmp
+  {
+    struct BackendParameters;
+  } // namespace openmp
 
   /// @brief CPU backend parameters
   struct cpu::BackendParameters
@@ -433,6 +437,16 @@ AFFT_EXPORT namespace afft
     BackendMask              mask{BackendMask::all};          ///< Backend mask
     View<Backend>            order{};                         ///< Backend initialization order
     clfft::BackendParameters clfft{};                         ///< clFFT backend initialization parameters
+  };
+
+  /// @brief OpenMP backend parameters
+  struct openmp::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::openmp>
+  {
+    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    Workspace      workspace{Workspace::any};       ///< Workspace type
+    BackendMask    mask{BackendMask::all};          ///< Backend mask
+    View<Backend>  order{};                         ///< Backend initialization order
   };
 
   namespace mpi

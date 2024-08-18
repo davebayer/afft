@@ -303,6 +303,12 @@ static std::unique_ptr<afft::Plan> planCreateHelper1(const afft::detail::Desc& d
 # else
     throw afft::Exception{afft::Error::invalidArgument, "OpenCL target is not enabled"};
 # endif /* AFFT_ENABLE_OPENCL */
+  case afft::Target::openmp:
+# ifdef AFFT_ENABLE_OPENMP
+    return planCreateHelper2<mpBackend, afft::Target::openmp>(desc, cBackendParams);
+# else
+    throw afft::Exception{afft::Error::invalidArgument, "OpenMP target is not enabled"};
+# endif /* AFFT_ENABLE_OPENMP */
   default:
     throw afft::Exception{afft::Error::invalidArgument, "invalid target"};
   }
@@ -653,6 +659,11 @@ try
     *static_cast<afft_opencl_Parameters*>(targetParams) = desc.getCTargetParameters<afft::Target::opencl>();
     break;
 # endif /* AFFT_ENABLE_OPENCL */
+# ifdef AFFT_ENABLE_OPENMP
+  case afft::Target::openmp:
+    *static_cast<afft_openmp_Parameters*>(targetParams) = desc.getCTargetParameters<afft::Target::openmp>();
+    break;
+# endif /* AFFT_ENABLE_OPENMP */
   default:
     setErrorDetails(errDetails, "invalid target");
     return afft_Error_internal;
@@ -819,44 +830,44 @@ try
     {
     case afft::Target::cpu:
 #   ifdef AFFT_ENABLE_CPU
-    {
       cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::cpu::ExecutionParameters*>(execParams));
       break;
-    }
 #   else
       setErrorDetails(errDetails, "CPU target is not enabled");
       return afft_Error_internal;
 #   endif /* AFFT_ENABLE_CPU */
     case afft::Target::cuda:
 #   ifdef AFFT_ENABLE_CUDA
-    {
       cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::cuda::ExecutionParameters*>(execParams));
       break;
-    }
 #   else
       setErrorDetails(errDetails, "CUDA target is not enabled");
       return afft_Error_internal;
 #   endif /* AFFT_ENABLE_CUDA */
     case afft::Target::hip:
 #   ifdef AFFT_ENABLE_HIP
-    {
       cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::hip::ExecutionParameters*>(execParams));
       break;
-    }
 #   else
       setErrorDetails(errDetails, "HIP target is not enabled");
       return afft_Error_internal;
 #   endif /* AFFT_ENABLE_HIP */
     case afft::Target::opencl:
 #   ifdef AFFT_ENABLE_OPENCL
-    {
       cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::opencl::ExecutionParameters*>(execParams));
       break;
-    }
 #   else
       setErrorDetails(errDetails, "OpenCL target is not enabled");
       return afft_Error_internal;
 #   endif /* AFFT_ENABLE_OPENCL */
+    case afft::Target::openmp:
+#   ifdef AFFT_ENABLE_OPENMP
+      cxxPlan->executeUnsafe(srcView, dstView, *reinterpret_cast<const afft::openmp::ExecutionParameters*>(execParams));
+      break;
+#   else
+      setErrorDetails(errDetails, "OpenMP target is not enabled");
+      return afft_Error_internal;
+#   endif /* AFFT_ENABLE_OPENMP */
     default:
       setErrorDetails(errDetails, "invalid target");
       return afft_Error_internal;

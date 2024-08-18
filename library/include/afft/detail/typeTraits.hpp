@@ -210,6 +210,14 @@ namespace afft::detail
     using CxxType = afft::opencl::Parameters;
   };
 
+  /// @brief Specialization for OpenMP target.
+  template<>
+  struct TargetParametersSelect<Target::openmp>
+  {
+    using CType   = afft_openmp_Parameters;
+    using CxxType = afft::openmp::Parameters;
+  };
+
   /**
    * @brief Check if the type is C++ TargetParameters.
    * @tparam T The type.
@@ -219,7 +227,8 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::Parameters> ||
-                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters>> {};  
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::openmp::Parameters>> {};  
 
   /**
    * @brief Check if the type is C++ TargetParameters.
@@ -237,7 +246,8 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_cpu_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_Parameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_Parameters> ||
-                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_Parameters>> {};
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_Parameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_openmp_Parameters>> {};
 
   /**
    * @brief Check if the type is C TargetParameters.
@@ -341,6 +351,14 @@ namespace afft::detail
     using CxxType = afft::opencl::BackendParameters;
   };
 
+  /// @brief Specialization for single-process OpenMP target.
+  template<>
+  struct BackendParametersSelect<MpBackend::none, Target::openmp>
+  {
+    using CType   = afft_openmp_BackendParameters;
+    using CxxType = afft::openmp::BackendParameters;
+  };
+
   /// @brief Specialization for MPI cpu target.
   template<>
   struct BackendParametersSelect<MpBackend::mpi, Target::cpu>
@@ -375,6 +393,7 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::openmp::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cpu::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::cuda::BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::mpi::hip::BackendParameters>> {};
@@ -389,6 +408,7 @@ namespace afft::detail
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_BackendParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_openmp_BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_cpu_BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_cuda_BackendParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_mpi_hip_BackendParameters>> {};
@@ -446,6 +466,14 @@ namespace afft::detail
     using CxxType = afft::opencl::ExecutionParameters;
   };
 
+  /// @brief Specialization for OpenMP target.
+  template<>
+  struct ExecutionParametersSelect<Target::openmp>
+  {
+    using CType   = afft_openmp_ExecutionParameters;
+    using CxxType = afft::openmp::ExecutionParameters;
+  };
+
   /**
    * @brief Check if the type is C++ ExecutionParameters.
    * @tparam T The type.
@@ -455,7 +483,8 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::cpu::ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::cuda::ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft::hip::ExecutionParameters> ||
-                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::ExecutionParameters>> {};
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::opencl::ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::openmp::ExecutionParameters>> {};
 
   /**
    * @brief Check if the type is C ExecutionParameters.
@@ -466,7 +495,8 @@ namespace afft::detail
     : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_cpu_ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_cuda_ExecutionParameters> ||
                          std::is_same_v<cxx::remove_cvref_t<T>, afft_hip_ExecutionParameters> ||
-                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_ExecutionParameters>> {};
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_opencl_ExecutionParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_openmp_ExecutionParameters>> {};
 
   /**
    * @brief Check if the type is C++ ExecutionParameters.

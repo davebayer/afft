@@ -44,6 +44,8 @@
 
 #cmakedefine AFFT_ENABLE_OPENCL
 
+#cmakedefine AFFT_ENABLE_OPENMP
+
 /**********************************************************************************************************************/
 // Multi-process backend defines
 /**********************************************************************************************************************/
@@ -108,9 +110,12 @@
 #endif
 
 // MKL
-#ifdef AFFT_ENABLE_CPU
+#if defined(AFFT_ENABLE_CPU) || defined(AFFT_ENABLE_OPENMP)
 # cmakedefine AFFT_ENABLE_MKL
 # ifdef AFFT_ENABLE_MKL
+#   ifdef AFFT_ENABLE_OPENMP
+#     cmakedefine AFFT_MKL_HAS_OMP_OFFLOAD
+#   endif
 #   ifdef AFFT_ENABLE_MPI
 #     cmakedefine AFFT_MKL_HAS_CDFT
 #   endif

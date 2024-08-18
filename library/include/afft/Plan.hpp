@@ -452,6 +452,18 @@ AFFT_EXPORT namespace afft
         throw std::logic_error{"backend does not implement opencl execution"};
       }
 
+      /**
+       * @brief Execute the plan backend implementation.
+       * @param src Source buffers.
+       * @param dst Destination buffers.
+       * @param execParams Execution parameters.
+       */
+      virtual void executeBackendImpl([[maybe_unused]] View<void*>                              src,
+                                      [[maybe_unused]] View<void*>                              dst,
+                                      [[maybe_unused]] const afft::openmp::ExecutionParameters& execParams)
+      {
+        throw std::logic_error{"backend does not implement openmp execution"};
+      }
     
       detail::Desc mDesc;      ///< Plan description.
       Workspace    mWorkspace; ///< Workspace.

@@ -50,6 +50,7 @@ AFFT_EXPORT namespace afft
     cuda   = afft_Target_cuda,   ///< CUDA target
     hip    = afft_Target_hip,    ///< HIP target
     opencl = afft_Target_opencl, ///< OpenCL target
+    openmp = afft_Target_openmp, ///< OpenMP target
   };
   
   /**
@@ -85,6 +86,12 @@ AFFT_EXPORT namespace afft
     struct Parameters;
     struct ExecutionParameters;
   } // namespace opencl
+
+  namespace openmp
+  {
+    struct Parameters;
+    struct ExecutionParameters;
+  } // namespace openmp
 
 #ifdef AFFT_ENABLE_CPU
   struct cpu::Parameters : TargetConstant<Target::cpu>
@@ -135,6 +142,20 @@ AFFT_EXPORT namespace afft
   {
     cl_command_queue queue{};              ///< OpenCL command queue
     View<cl_mem>     externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
+  };
+#endif
+
+#ifdef AFFT_ENABLE_OPENMP
+  /// @brief OpenMP parameters
+  struct openmp::Parameters : TargetConstant<Target::openmp>
+  {
+    int device{}; ///< OpenMP device
+  };
+
+  /// @brief OpenMP execution parameters
+  struct openmp::ExecutionParameters : TargetConstant<Target::openmp>
+  {
+    bool nowait{}; ///< Nowait
   };
 #endif
 } // namespace afft
