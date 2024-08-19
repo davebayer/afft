@@ -4,5 +4,5 @@ function dst = fftn(src, size)
     size = []
   end
 
-  dst = afft(uint32(2002), src, size);
+  dst = afft_matlab(uint32(2002), src, size);
 end

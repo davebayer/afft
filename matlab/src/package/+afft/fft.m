@@ -5,5 +5,5 @@ function dst = fft(src, size, axis)
     axis = [1]
   end
 
-  dst = afft(uint32(2000), src, size, axis);
+  dst = afft_matlab(uint32(2000), src, size, axis);
 end

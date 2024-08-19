@@ -5,5 +5,5 @@ function dst = fft2(src, m, n)
     n   = []
   end
 
-  dst = afft(uint32(2001), src, m, n);
+  dst = afft_matlab(uint32(2001), src, m, n);
 end
