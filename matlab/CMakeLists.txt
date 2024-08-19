@@ -43,26 +43,17 @@ else()
   set(LINK_TARGETS afft::afft-header-only mexw::mexw)
 endif()
 
+set(MEX_SOURCES src/mex/afft.cpp)
+
 matlab_add_mex(
-  NAME          afft_matlab_fft
-  SRC           src/fft.cpp
-  OUTPUT_NAME   afft_fft
+  NAME          afft_matlab_mex
+  SRC           ${MEX_SOURCES}
+  OUTPUT_NAME   afft
   LINK_TO       ${LINK_TARGETS}
   R2018a
 )
-
-matlab_add_mex(
-  NAME        afft_matlab_fft2
-  SRC         src/fft2.cpp
-  OUTPUT_NAME afft_fft2
-  LINK_TO     ${LINK_TARGETS}
-  R2018a
+add_custom_command(TARGET afft_matlab_mex PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/src/package ${CMAKE_CURRENT_BINARY_DIR}/package
 )
-
-matlab_add_mex(
-  NAME        afft_matlab_fftn
-  SRC         src/fftn.cpp
-  OUTPUT_NAME afft_fftn
-  LINK_TO     ${LINK_TARGETS}
-  R2018a
-)
+set_property(TARGET afft_matlab_mex
+  PROPERTY LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package/+afft/private)
