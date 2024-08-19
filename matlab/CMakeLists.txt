@@ -43,17 +43,17 @@ else()
   set(LINK_TARGETS afft::afft-header-only mexw::mexw)
 endif()
 
-set(MEX_SOURCES src/mex/afft.cpp)
+set(MEX_SOURCES src/mex/afft-matlab.cpp)
 
 matlab_add_mex(
-  NAME          afft_matlab_mex
+  NAME          afft-matlab
   SRC           ${MEX_SOURCES}
-  OUTPUT_NAME   afft
+  OUTPUT_NAME   afft_matlab
   LINK_TO       ${LINK_TARGETS}
   R2018a
 )
-add_custom_command(TARGET afft_matlab_mex PRE_BUILD
+add_custom_command(TARGET afft-matlab PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/src/package ${CMAKE_CURRENT_BINARY_DIR}/package
 )
-set_property(TARGET afft_matlab_mex
+set_property(TARGET afft-matlab
   PROPERTY LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package/+afft/private)
