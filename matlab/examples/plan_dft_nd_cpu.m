@@ -1,19 +1,19 @@
-dims = [128, 64, 32];
+dims = [128, 64, 32];                               % these are the dimensions of the data
 
-transformParams.type          = 'dft';
-transformParams.direction     = 'forward';
-transformParams.precision     = 'double';
-transformParams.shape         = dims;
-transformParams.normalization = 'none';
-transformParams.type          = 'complexToComplex'; % or 'c2c'
+transformParams.type          = 'dft';              % let's do a DFT
+transformParams.direction     = 'forward';          % in the forward direction
+transformParams.precision     = 'double';           % of double precision
+transformParams.shape         = dims;               % of size dims
+transformParams.axes          = 1:ndims(dims);      % along all axes (could be removed, all axes are implict)
+transformParams.normalization = 'none';             % without normalization
+transformParams.type          = 'complexToComplex'; % on complex data (could be specified as 'c2c' as well)
 
-targetParams.type             = 'cpu';
-targetParams.threadLimit      = 4;
+targetParams.type             = 'cpu';              % the transform will be executed on the CPU
+targetParams.threadLimit      = 4;                  % using maximum 4 threads
 
+dftPlan = afft.Plan(transformParams, targetParams); % create the plan
 
-dftPlan = afft.Plan(transformParams, targetParams);
+X = rand(dims, 'like', 1i);                         % create input data
+Y = dftPlan.execute(X);                             % execute the plan
 
-X = rand(dims, 'like', 1i);
-Y = dftPlan.execute(X);
-
-disp(Y);
+disp(Y);                                            % display the result
