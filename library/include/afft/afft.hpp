@@ -32,7 +32,7 @@
 #include "detail/config.hpp"
 
 // Check for C++17 or later.
-#if AFFT_CXX_VERSION < 201703L
+#if !(AFFT_CXX_VERSION > 201402L)
 # error "afft C++ library requires C++17 or later. Please use the C api for older C++ versions."
 #endif
 
