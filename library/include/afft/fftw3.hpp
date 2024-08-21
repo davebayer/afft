@@ -53,7 +53,10 @@ AFFT_EXPORT namespace afft::fftw3
    * @param library Library to export the wisdom from.
    * @param filename Name of the file to export the wisdom to.
    */
-  void exportWisdomToFilename(Library library, std::string_view filename);
+  inline void exportWisdomToFilename(Library library, std::string_view filename)
+  {
+    exportWisdomToFilename(library, filename.data());
+  }
 
   /**
    * @brief Export FFTW3 wisdom to a file.
@@ -94,7 +97,10 @@ AFFT_EXPORT namespace afft::fftw3
    * @param filename Name of the file to import the wisdom from.
    * @param library Library to import the wisdom to.
    */
-  void importWisdomFromFilename(Library library, std::string_view filename);
+  inline void importWisdomFromFilename(Library library, std::string_view filename)
+  {
+    importWisdomFromFilename(library, filename.data());
+  }
 
   /**
    * @brief Import FFTW3 wisdom from a file.
@@ -115,7 +121,10 @@ AFFT_EXPORT namespace afft::fftw3
    * @param library Library to import the wisdom to.
    * @param wisdom String containing the wisdom.
    */
-  void importWisdomFromString(Library library, std::string_view wisdom);
+  inline void importWisdomFromString(Library library, std::string_view wisdom)
+  {
+    importWisdomFromString(library, wisdom.data());
+  }
 
   /**
    * @brief Forget all FFTW3 wisdom.
@@ -191,16 +200,6 @@ AFFT_EXPORT namespace afft::fftw3
     {
       throw Exception{Error::fftw3, "failed to export wisdom to filename"};
     }
-  }
-
-  /**
-   * @brief Export FFTW3 wisdom to a file.
-   * @param library Library to export the wisdom from.
-   * @param filename Name of the file to export the wisdom to.
-   */
-  AFFT_HEADER_ONLY_INLINE void exportWisdomToFilename(Library library, std::string_view filename)
-  {
-    exportWisdomToFilename(library, filename.data());
   }
 
   /**
@@ -400,16 +399,6 @@ AFFT_EXPORT namespace afft::fftw3
 
   /**
    * @brief Import FFTW3 wisdom from a file.
-   * @param filename Name of the file to import the wisdom from.
-   * @param library Library to import the wisdom to.
-   */
-  AFFT_HEADER_ONLY_INLINE void importWisdomFromFilename(Library library, std::string_view filename)
-  {
-    importWisdomFromFilename(library, filename.data());
-  }
-
-  /**
-   * @brief Import FFTW3 wisdom from a file.
    * @param library Library to import the wisdom to.
    * @param file File to import the wisdom from.
    */
@@ -498,16 +487,6 @@ AFFT_EXPORT namespace afft::fftw3
     {
       throw Exception{Error::fftw3, "failed to import wisdom from string"};
     }
-  }
-
-  /**
-   * @brief Import FFTW3 wisdom from a string.
-   * @param library Library to import the wisdom to.
-   * @param wisdom String containing the wisdom.
-   */
-  AFFT_HEADER_ONLY_INLINE void importWisdomFromString(Library library, std::string_view wisdom)
-  {
-    importWisdomFromString(library, wisdom.data());
   }
 
   /**
