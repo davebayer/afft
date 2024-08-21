@@ -43,7 +43,7 @@ else()
   set(LINK_TARGETS afft::afft-header-only matlabw::matlabw)
 endif()
 
-set(MEX_SOURCES src/mex/entrypoint.cpp src/mex/plan.cpp)
+set(MEX_SOURCES src/entrypoint.cpp src/plan.cpp)
 
 matlab_add_mex(
   NAME          afft-matlab
@@ -53,7 +53,7 @@ matlab_add_mex(
   R2018a
 )
 add_custom_command(TARGET afft-matlab PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/src/package ${CMAKE_CURRENT_BINARY_DIR}/package
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/package ${CMAKE_CURRENT_BINARY_DIR}/package
 )
 set_property(TARGET afft-matlab
   PROPERTY LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package/+afft/private)
