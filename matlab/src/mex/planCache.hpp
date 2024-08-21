@@ -22,12 +22,12 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_MATLAB_HPP
-#define AFFT_MATLAB_HPP
+#ifndef PLAN_CACHE_HPP
+#define PLAN_CACHE_HPP
 
 #include <afft/afft.hpp>
 
 /// @brief Plan cache. Used to store all created plans.
-extern afft::PlanCache planCache{};
+inline afft::PlanCache planCache{};
 
-#endif /* AFFT_MATLAB_HPP */
+#endif /* PLAN_CACHE_HPP */

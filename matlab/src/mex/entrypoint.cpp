@@ -23,39 +23,45 @@
 */
 
 #include <afft/afft.hpp>
-#include <mex/mex.hpp>
-#include <mex/Function.hpp>
+#include <matlabw/mex/mex.hpp>
+#include <matlabw/mex/Function.hpp>
+
+#include "packageManagement.hpp"
+#include "plan.hpp"
+#include "planCache.hpp"
+#include "transform.hpp"
+
+using namespace matlabw;
 
 /// @brief Enumeration of all available calls.
 enum class Call : std::uint32_t
 {
   // Package management calls
-  clearCache  = 0,
+  clearCache = 0,
 
   // Plan calls
-  planCreate  = 1000,
+  planCreate = 1000,
   planExecute,
+  planGetTransformParameters,
+  planGetTargetParameters,
 
   // Forward transform calls
-  fft         = 2000,
+  fft = 2000,
   fft2,
   fftn,
 
   // Inverse transform calls
-  ifft        = 3000,
+  ifft = 3000,
   ifft2,
   ifftn,
 };
-
-/// @brief Plan cache. Used to store all created plans.
-afft::PlanCache planCache{};
 
 /**
  * @brief afft-matlab module entry point. This function is called by MATLAB.
  * @param lhs The left-hand side arguments.
  * @param rhs The right-hand side arguments. The first argument is the call type.
  */
-void mex::Function::operator()(mex::Span<mex::Array> lhs, mex::View<mex::ArrayCref> rhs)
+void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
   // Keep the function in the memory even when called `clear all`. Prevents MATLAB crashes due to invalid pointers.
   if (!isLocked())
@@ -69,30 +75,55 @@ void mex::Function::operator()(mex::Span<mex::Array> lhs, mex::View<mex::ArrayCr
   // Check the call type argument.
   if (!rhs[0].isScalar() || !rhs[0].isUint32())
   {
-    throw mex::Exception{"afft:internal:invalidCallArgument", "invalid call argument type"};
+    throw mx::Exception{"afft:internal:invalidCallArgument", "invalid call argument type"};
   }
 
+  mx::View<mx::ArrayCref> rhsSubspan{rhs.subspan(1)};
+
   // Dispatch the call.
-  switch (static_cast<Call>(mex::NumericArrayCref<std::uint32_t>{rhs[0]}[0]))
+  switch (static_cast<Call>(mx::NumericArrayCref<std::uint32_t>{rhs[0]}[0]))
   {
+  // Package management calls
+  case Call::clearCache:
+    clearCache(lhs, rhsSubspan);
+    break;
+
+  // Plan calls
   case Call::planCreate:
-    planCreate(lhs, rhs.subspan(1));
+    planCreate(lhs, rhsSubspan);
     break;
   case Call::planExecute:
+    planExecute(lhs, rhsSubspan);
     break;
+  case Call::planGetTransformParameters:
+    planGetTransformParameters(lhs, rhsSubspan);
+    break;
+  case Call::planGetTargetParameters:
+    planGetTargetParameters(lhs, rhsSubspan);
+    break;
+
+  // Forward transform calls
   case Call::fft:
+    fft(lhs, rhsSubspan);
     break;
   case Call::fft2:
+    fft2(lhs, rhsSubspan);
     break;
   case Call::fftn:
+    fftn(lhs, rhsSubspan);
     break;
+
+  // Inverse transform calls
   case Call::ifft:
+    ifft(lhs, rhsSubspan);
     break;
   case Call::ifft2:
+    ifft2(lhs, rhsSubspan);
     break;
   case Call::ifftn:
+    ifftn(lhs, rhsSubspan);
     break;
   default:
-    throw mex::Exception{"afft:internal:invalidCall", "invalid call"};
+    throw mx::Exception{"afft:internal:invalidCall", "invalid call"};
   }
 }

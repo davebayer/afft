@@ -96,7 +96,7 @@ AFFT_EXPORT namespace afft
 #ifdef AFFT_ENABLE_CPU
   struct cpu::Parameters : TargetConstant<Target::cpu>
   {
-    unsigned threadLimit{};       ///< Thread limit for transform, 0 for no limit
+    unsigned threadLimit{}; ///< Thread limit for transform, 0 for no limit
   };
   
   struct cpu::ExecutionParameters : TargetConstant<Target::cpu>

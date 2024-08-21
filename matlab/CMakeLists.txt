@@ -38,12 +38,12 @@ endif()
 add_subdirectory(3rdparty/mex-cpp-wrapper)
 
 if(MEXW_ENABLE_GPU)
-  set(LINK_TARGETS afft::afft-header-only mexw::mexw-gpu)
+  set(LINK_TARGETS afft::afft-header-only matlabw::matlabw-gpu)
 else()
-  set(LINK_TARGETS afft::afft-header-only mexw::mexw)
+  set(LINK_TARGETS afft::afft-header-only matlabw::matlabw)
 endif()
 
-set(MEX_SOURCES src/mex/afft-matlab.cpp)
+set(MEX_SOURCES src/mex/entrypoint.cpp src/mex/plan.cpp)
 
 matlab_add_mex(
   NAME          afft-matlab
