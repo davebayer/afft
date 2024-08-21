@@ -37,7 +37,9 @@ using namespace matlabw;
 enum class Call : std::uint32_t
 {
   // Package management calls
-  clearCache = 0,
+  mlock = 0,
+  munlock,
+  clearPlanCache,
 
   // Plan calls
   planCreate = 1000,
@@ -84,8 +86,14 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   switch (static_cast<Call>(mx::NumericArrayCref<std::uint32_t>{rhs[0]}[0]))
   {
   // Package management calls
-  case Call::clearCache:
-    clearCache(lhs, rhsSubspan);
+  case Call::mlock:
+    lock();
+    break;
+  case Call::munlock:
+    unlock();
+    break;
+  case Call::clearPlanCache:
+    clearPlanCache(lhs, rhsSubspan);
     break;
 
   // Plan calls

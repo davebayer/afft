@@ -33,6 +33,6 @@
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.
  */
-void clearCache(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+void clearPlanCache(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
 #endif /* PACKAGE_MANAGEMENT_HPP */
