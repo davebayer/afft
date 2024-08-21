@@ -65,11 +65,8 @@ enum class Call : std::uint32_t
  */
 void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
-  // Keep the function in the memory even when called `clear all`. Prevents MATLAB crashes due to invalid pointers.
-  if (!isLocked())
-  {
-    lock();
-  }
+  // When the library is first loaded, lock the package.
+  static bool _initialLocker = [&](){ lock(); return true; }();
 
   // Initialize the afft library.
   afft::init();
