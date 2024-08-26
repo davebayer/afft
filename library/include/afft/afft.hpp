@@ -40,6 +40,11 @@
 #include "detail/include.hpp"
 #define AFFT_TOP_LEVEL_INCLUDE
 
+// Check for std::uintptr_t.
+#ifndef UINTPTR_MAX
+# error "afft library requires std::uintptr_t"
+#endif
+
 // Include all public headers.
 #include "backend.hpp"
 #include "common.hpp"
@@ -53,7 +58,7 @@
 #include "memory.hpp"
 #include "mp.hpp"
 #include "Plan.hpp"
-// #include "PlanCache.hpp"
+#include "PlanCache.hpp"
 #include "Span.hpp"
 #include "target.hpp"
 #include "transform.hpp"

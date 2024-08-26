@@ -35,6 +35,11 @@
 #include "detail/include.h"
 #define AFFT_TOP_LEVEL_INCLUDE
 
+// Check for uintptr_t.
+#ifndef UINTPTR_MAX
+# error "afft library requires uintptr_t"
+#endif
+
 // Include all public headers.
 #include "backend.h"
 #include "common.h"
