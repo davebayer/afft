@@ -185,6 +185,47 @@ namespace afft::detail
                       "invalid target parameters type");
       }
 
+      /**
+       * @brief Constructor from target parameters variant
+       * @param targetParamsVariant Target parameters variant
+       */
+      TargetDesc(const TargetParametersVariant& targetParamsVariant)
+      : TargetDesc{[&]()
+          {
+#         ifdef AFFT_ENABLE_CPU
+            if (std::holds_alternative<cpu::Parameters>(targetParamsVariant))
+            {
+              return TargetDesc{std::get<cpu::Parameters>(targetParamsVariant)};
+            }
+#         endif
+#         ifdef AFFT_ENABLE_CUDA
+            if (std::holds_alternative<cuda::Parameters>(targetParamsVariant))
+            {
+              return TargetDesc{std::get<cuda::Parameters>(targetParamsVariant)};
+            }
+#         endif
+#         ifdef AFFT_ENABLE_HIP
+            if (std::holds_alternative<hip::Parameters>(targetParamsVariant))
+            {
+              return TargetDesc{std::get<hip::Parameters>(targetParamsVariant)};
+            }
+#         endif
+#         ifdef AFFT_ENABLE_OPENCL
+            if (std::holds_alternative<opencl::Parameters>(targetParamsVariant))
+            {
+              return TargetDesc{std::get<opencl::Parameters>(targetParamsVariant)};
+            }
+#         endif
+#         ifdef AFFT_ENABLE_OPENMP
+            if (std::holds_alternative<openmp::Parameters>(targetParamsVariant))
+            {
+              return TargetDesc{std::get<openmp::Parameters>(targetParamsVariant)};
+            }
+#         endif
+            throw Exception{Error::invalidArgument, "invalid target parameters variant"};
+          }()}
+      {}
+
       /// @brief Copy constructor is default
       TargetDesc(const TargetDesc&) = default;
 

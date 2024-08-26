@@ -71,6 +71,15 @@ AFFT_EXPORT namespace afft
     MPI_Comm comm{MPI_COMM_WORLD}; ///< MPI communicator
   };
 #endif
+
+  /// @brief Multi-process parameters variant
+  using MpBackendParametersVariant = std::variant<
+    std::monostate,
+    SingleProcessParameters
+# ifdef AFFT_ENABLE_MPI
+  , mpi::Parameters
+# endif
+  >;
 } // namespace afft
 
 #endif /* AFFT_MP_HPP */

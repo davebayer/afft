@@ -538,6 +538,40 @@ AFFT_EXPORT namespace afft
     View<Backend>  order{};                         ///< Backend initialization order
   };
 
+  /// @brief Backend parameters variant
+  using BackendParametersVariant = std::variant<
+    std::monostate
+#ifdef AFFT_ENABLE_CPU
+  , cpu::BackendParameters
+#endif
+#ifdef AFFT_ENABLE_CUDA
+  , cuda::BackendParameters
+#endif
+#ifdef AFFT_ENABLE_HIP
+  , hip::BackendParameters
+#endif
+#ifdef AFFT_ENABLE_OPENCL
+  , opencl::BackendParameters
+#endif
+#ifdef AFFT_ENABLE_OPENMP
+  , openmp::BackendParameters
+#endif
+#ifdef AFFT_ENABLE_MPI
+# ifdef AFFT_ENABLE_CPU
+  , mpi::cpu::BackendParameters
+# endif
+# ifdef AFFT_ENABLE_CUDA
+  , mpi::cuda::BackendParameters
+# endif
+# ifdef AFFT_ENABLE_HIP 
+  , mpi::hip::BackendParameters
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+  , mpi::opencl::BackendParameters
+# endif
+#endif
+  >;
+
   /**
    * @brief Feedback from the backend initialization.
    */

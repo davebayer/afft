@@ -114,6 +114,32 @@ namespace afft::detail
 
       /**
        * @brief Constructor.
+       * @param transformParamsVariant Transform parameters variant.
+       */
+      TransformDesc(const TransformParametersVariant& transformParamsVariant)
+      : TransformDesc{[&]()
+          {
+            if (std::holds_alternative<dft::Parameters>(transformParamsVariant))
+            {
+              return TransformDesc{std::get<dft::Parameters>(transformParamsVariant)};
+            }
+            else if (std::holds_alternative<dht::Parameters>(transformParamsVariant))
+            {
+              return TransformDesc{std::get<dht::Parameters>(transformParamsVariant)};
+            }
+            else if (std::holds_alternative<dtt::Parameters>(transformParamsVariant))
+            {
+              return TransformDesc{std::get<dtt::Parameters>(transformParamsVariant)};
+            }
+            else
+            {
+              throw Exception{Error::invalidArgument, "invalid transform parameters variant"};
+            }
+          }()}
+      {}
+
+      /**
+       * @brief Constructor.
        * @tparam TransformParamsT Type of the transform parameters.
        * @param transformParams Transform parameters.
        * @param axesRank Rank of the axes.

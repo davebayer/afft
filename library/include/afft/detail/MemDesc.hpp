@@ -502,6 +502,45 @@ namespace afft::detail
                       "MemoryLayoutT must be a memory layout parameters type");
       }
 
+      /**
+       * @brief Construct a memory descriptor.
+       * @param memLayoutVariant Memory layout variant.
+       * @param transformDesc Transform descriptor.
+       * @param mpDesc MP descriptor.
+       * @param targetDesc Target descriptor.
+       */
+      MemDesc(const MemoryLayoutVariant& memLayoutVariant,
+              const TransformDesc&       transformDesc,
+              const MpDesc&              mpDesc,
+              const TargetDesc&          targetDesc)
+      : MemDesc([&]()
+          {
+            if (std::holds_alternative<std::monostate>(memLayoutVariant))
+            {
+              if (mpDesc.getMpBackend() == MpBackend::none || targetDesc.getTargetCount() == 1)
+              {
+                return MemDesc{CentralizedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
+              }
+              else
+              {
+                return MemDesc{DistributedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
+              }
+            }
+            else if (std::holds_alternative<CentralizedMemoryLayout>(memLayoutVariant))
+            {
+              return MemDesc{std::get<CentralizedMemoryLayout>(memLayoutVariant), transformDesc, mpDesc, targetDesc};
+            }
+            else if (std::holds_alternative<DistributedMemoryLayout>(memLayoutVariant))
+            {
+              return MemDesc{std::get<DistributedMemoryLayout>(memLayoutVariant), transformDesc, mpDesc, targetDesc};
+            }
+            else
+            {
+              throw Exception{Error::invalidArgument, "invalid memory layout variant"};
+            }
+          }())
+      {}
+
       MemDesc(const MemDesc&) = default;
 
       MemDesc(MemDesc&&) = default;

@@ -99,6 +99,9 @@ AFFT_EXPORT namespace afft
     const Axis*        dstAxesOrder{};                            ///< order of the destination axes
   };
 
+  /// @brief Memory layout variant
+  using MemoryLayoutVariant = std::variant<std::monostate, CentralizedMemoryLayout, DistributedMemoryLayout>;
+
   /**
    * @brief Aligned memory deleter
    * @tparam T Type of the memory

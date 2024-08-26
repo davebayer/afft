@@ -158,6 +158,46 @@ AFFT_EXPORT namespace afft
     bool nowait{}; ///< Nowait
   };
 #endif
+
+  /// @brief Target parameters variant
+  using TargetParametersVariant = std::variant<
+    std::monostate
+# ifdef AFFT_ENABLE_CPU
+  , cpu::Parameters
+# endif
+# ifdef AFFT_ENABLE_CUDA
+  , cuda::Parameters
+# endif
+# ifdef AFFT_ENABLE_HIP
+  , hip::Parameters
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+  , opencl::Parameters
+# endif
+# ifdef AFFT_ENABLE_OPENMP
+  , openmp::Parameters
+# endif
+  >;
+
+  /// @brief Target execution parameters variant
+  using TargetExecutionParametersVariant = std::variant<
+    std::monostate
+# ifdef AFFT_ENABLE_CPU
+  , cpu::ExecutionParameters
+# endif
+# ifdef AFFT_ENABLE_CUDA
+  , cuda::ExecutionParameters
+# endif
+# ifdef AFFT_ENABLE_HIP
+  , hip::ExecutionParameters
+# endif
+# ifdef AFFT_ENABLE_OPENCL
+  , opencl::ExecutionParameters
+# endif
+# ifdef AFFT_ENABLE_OPENMP
+  , openmp::ExecutionParameters
+# endif
+  >;
 } // namespace afft
 
 #endif /* AFFT_TARGET_HPP */
