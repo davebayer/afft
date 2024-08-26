@@ -37,9 +37,7 @@ using namespace matlabw;
 enum class Call : std::uint32_t
 {
   // Package management calls
-  mlock = 0,
-  munlock,
-  clearPlanCache,
+  clearPlanCache = 0,
 
   // Plan calls
   planCreate = 1000,
@@ -66,7 +64,10 @@ enum class Call : std::uint32_t
 void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
   // When the library is first loaded, lock the package.
-  [[maybe_unused]] static bool _initialLocker = [&](){ lock(); return true; }();
+  if (!isLocked())
+  {
+    lock();
+  }
 
   // Initialize the afft library.
   afft::init();
@@ -83,12 +84,6 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   switch (static_cast<Call>(mx::NumericArrayCref<std::uint32_t>{rhs[0]}[0]))
   {
   // Package management calls
-  case Call::mlock:
-    lock();
-    break;
-  case Call::munlock:
-    unlock();
-    break;
   case Call::clearPlanCache:
     clearPlanCache(lhs, rhsSubspan);
     break;
