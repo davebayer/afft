@@ -1,5 +1,5 @@
-function Y = fft2(varargin)
-% afft.fft2 - Computes the 2D Fast Fourier Transform (FFT) of a given signal.
+function Y = fft2(X, varargin)
+% afft.fft2 - Computes the forward 2D Fast Fourier Transform (FFT) of a given signal.
 %
 % Syntax:
 %   Y = afft.fft2(X)
@@ -47,5 +47,5 @@ function Y = fft2(varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
 
-  Y = afft_matlab(uint32(2001), varargin{:});
+  Y = afft_matlab(uint32(2001), X, varargin{:});
 end

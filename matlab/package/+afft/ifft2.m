@@ -1,5 +1,5 @@
-function X = ifft2(varargin)
-% afft.ifft2 - Computes the 2D Inverse Fast Fourier Transform (IFFT) of a given signal.
+function X = ifft2(Y, varargin)
+% afft.ifft2 - Computes the inverse 2D Fast Fourier Transform (FFT) of a given signal.
 %
 % Syntax:
 %   X = afft.ifft2(Y)
@@ -48,5 +48,5 @@ function X = ifft2(varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
 
-  X = afft_matlab(uint32(3001), varargin{:});
+  X = afft_matlab(uint32(3001), Y, varargin{:});
 end

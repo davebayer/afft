@@ -1,5 +1,5 @@
-function Y = fftn(varargin)
-% afft.fftn - Computes the N-D Fast Fourier Transform (FFT) of a given signal.
+function Y = fftn(X, varargin)
+% afft.fftn - Computes the forward N-D Fast Fourier Transform (FFT) of a given signal.
 %
 % Syntax:
 %   Y = afft.fftn(X)
@@ -41,5 +41,5 @@ function Y = fftn(varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
 
-  Y = afft_matlab(uint32(2002), varargin{:});
+  Y = afft_matlab(uint32(2002), X, varargin{:});
 end
