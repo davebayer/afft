@@ -42,7 +42,7 @@
 
 // Check for std::uintptr_t.
 #ifndef UINTPTR_MAX
-# error "afft library requires std::uintptr_t"
+# error "afft C++ library requires std::uintptr_t. Please use standard C++ library implementing std::uintptr_t."
 #endif
 
 // Include all public headers.

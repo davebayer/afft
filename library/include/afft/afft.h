@@ -37,7 +37,7 @@
 
 // Check for uintptr_t.
 #ifndef UINTPTR_MAX
-# error "afft library requires uintptr_t"
+# error "afft C library requires uintptr_t. Please use standard C library implementing uintptr_t."
 #endif
 
 // Include all public headers.

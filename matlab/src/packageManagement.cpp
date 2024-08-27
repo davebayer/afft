@@ -22,15 +22,24 @@
   SOFTWARE.
 */
 
-#ifndef PLAN_CACHE_HPP
-#define PLAN_CACHE_HPP
+#include "packageManagement.hpp"
+#include "planCache.hpp"
 
-#include <afft/afft.hpp>
+using namespace matlabw;
 
-/// @brief Plan cache. Used to store all created plans.
-inline afft::PlanCache planCache{};
+/**
+ * @brief Clear the plan cache.
+ * @param lhs Left-hand side array of size 0.
+ * @param rhs Right-hand side array of size 0.
+ */
+void clearPlanCache(mx::Span<mx::Array>, mx::View<mx::ArrayCref>)
+{
+  // If the plan cache epoch overflows, throw an exception. This should probably never happen.
+  if (planCacheEpoch == std::numeric_limits<std::uint64_t>::max())
+  {
+    throw mx::Exception{"afft:clearPlanCache:epochOverflow", "Plan cache epoch overflow."};
+  }
 
-/// @brief Plan cache epoch.
-inline std::uint64_t   planCacheEpoch{};
-
-#endif /* PLAN_CACHE_HPP */
+  planCache.clear();
+  ++planCacheEpoch;
+}
