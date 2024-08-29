@@ -100,7 +100,7 @@ AFFT_EXPORT namespace afft
   };
 
   /// @brief Memory layout variant
-  using MemoryLayoutVariant = std::variant<std::monostate, CentralizedMemoryLayout, DistributedMemoryLayout>;
+  using MemoryLayoutParametersVariant = std::variant<std::monostate, CentralizedMemoryLayout, DistributedMemoryLayout>;
 
   /**
    * @brief Aligned memory deleter

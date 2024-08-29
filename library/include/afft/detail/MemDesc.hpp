@@ -489,7 +489,9 @@ namespace afft::detail
     public:
       MemDesc() = delete;
 
-      template<typename MemoryLayoutT>
+      AFFT_TEMPL_REQUIRES(typename MemoryLayoutT,
+                          (isCxxMemoryLayoutParameters<MemoryLayoutT> ||
+                           isCMemoryLayoutParameters<MemoryLayoutT>))
       MemDesc(const MemoryLayoutT& memLayout,
               const TransformDesc& transformDesc,
               const MpDesc&        mpDesc,
@@ -497,10 +499,7 @@ namespace afft::detail
       : mAlignment{static_cast<afft::Alignment>(memLayout.alignment)},
         mComplexFormat{static_cast<afft::ComplexFormat>(memLayout.complexFormat)},
         mMemVariant{makeMemVariant(memLayout, transformDesc, mpDesc, targetDesc)}
-      {
-        static_assert(isCxxMemoryLayoutParameters<MemoryLayoutT> || isCMemoryLayoutParameters<MemoryLayoutT>,
-                      "MemoryLayoutT must be a memory layout parameters type");
-      }
+      {}
 
       /**
        * @brief Construct a memory descriptor.
@@ -509,10 +508,10 @@ namespace afft::detail
        * @param mpDesc MP descriptor.
        * @param targetDesc Target descriptor.
        */
-      MemDesc(const MemoryLayoutVariant& memLayoutVariant,
-              const TransformDesc&       transformDesc,
-              const MpDesc&              mpDesc,
-              const TargetDesc&          targetDesc)
+      MemDesc(const MemoryLayoutParametersVariant& memLayoutVariant,
+              const TransformDesc&                 transformDesc,
+              const MpDesc&                        mpDesc,
+              const TargetDesc&                    targetDesc)
       : MemDesc([&]()
           {
             if (std::holds_alternative<std::monostate>(memLayoutVariant))

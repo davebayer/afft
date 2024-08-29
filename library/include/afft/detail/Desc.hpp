@@ -60,25 +60,25 @@ namespace afft::detail
                 static_cast<MpDesc&>(*this),
                 static_cast<TargetDesc&>(*this)}
       {
-        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
-        static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
-        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
-        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
+        // static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        // static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
+        // static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+        // static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
       }
 
-      /**
-       * @brief Constructor.
-       * @param planParams The plan parameters.
-       */
-      Desc(const ::afft_PlanParameters& planParams)
-      : TransformDesc{makeTransformDesc(static_cast<Transform>(planParams.transform), planParams.transformParams)},
-        MpDesc{makeMpDesc(static_cast<MpBackend>(planParams.mpBackend), planParams.mpBackendParams)},
-        TargetDesc{makeTargetDesc(static_cast<Target>(planParams.target), planParams.targetParams)},
-        MemDesc{makeMemDesc(planParams.memoryLayout,
-                            static_cast<TransformDesc&>(*this),
-                            static_cast<MpDesc&>(*this),
-                            static_cast<TargetDesc&>(*this))}
-      {}
+      // /**
+      //  * @brief Constructor.
+      //  * @param planParams The plan parameters.
+      //  */
+      // Desc(const ::afft_PlanParameters& planParams)
+      // : TransformDesc{makeTransformDesc(static_cast<Transform>(planParams.transform), planParams.transformParams)},
+      //   MpDesc{makeMpDesc(static_cast<MpBackend>(planParams.mpBackend), planParams.mpBackendParams)},
+      //   TargetDesc{makeTargetDesc(static_cast<Target>(planParams.target), planParams.targetParams)},
+      //   MemDesc{makeMemDesc(planParams.memoryLayout,
+      //                       static_cast<TransformDesc&>(*this),
+      //                       static_cast<MpDesc&>(*this),
+      //                       static_cast<TargetDesc&>(*this))}
+      // {}
 
       /// @brief Copy constructor.
       Desc(const Desc&) = default;
@@ -199,6 +199,34 @@ namespace afft::detail
       // {
       //   return !(lhs == rhs);
       // }
+
+      /**
+       * @brief Equality operator.
+       * @param lhs Left-hand side.
+       * @param rhs Right-hand side.
+       * @return True if equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator==(const Desc&, const Desc&) noexcept
+      {
+        // TODO: Implement this
+        return false;
+        // return static_cast<const TransformDesc&>(lhs) == static_cast<const TransformDesc&>(rhs) &&
+        //        static_cast<const MpDesc&>(lhs) == static_cast<const MpDesc&>(rhs) &&
+        //        static_cast<const TargetDesc&>(lhs) == static_cast<const TargetDesc&>(rhs) &&
+        //        static_cast<const MemDesc&>(lhs) == static_cast<const MemDesc&>(rhs);
+      }
+
+      /**
+       * @brief Inequality operator.
+       * @param lhs Left-hand side.
+       * @param rhs Right-hand side.
+       * @return True if not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const Desc& lhs, const Desc& rhs) noexcept
+      {
+        return !(lhs == rhs);
+      }
+
     private:
       [[nodiscard]] static TransformDesc makeTransformDesc(const Transform transform, const void* cTransformParams)
       {
@@ -337,20 +365,19 @@ namespace afft::detail
       }
   };
 
-  /// @brief Helper struct to get the Desc object from an object.
-  struct DescGetter
+  /// @brief Helper struct to limit the access to the Desc object.
+  class DescToken
   {
-    /**
-     * @brief Get the Desc object from an object.
-     * @tparam T The type of the object.
-     * @param obj The object.
-     * @return The Desc object.
-     */
-    template<typename T>
-    [[nodiscard]] static const Desc& get(T& obj)
-    {
-      return obj.getDesc();
-    }
+    public:
+      /// @brief Make a Desc object.
+      [[nodiscard]] static constexpr DescToken make() noexcept
+      {
+        return DescToken{};
+      }
+
+    private:
+      /// @brief Default constructor.
+      DescToken() = default;
   };
 } // namespace afft::detail
 
@@ -358,6 +385,11 @@ namespace afft::detail
 template<>
 struct std::hash<afft::detail::Desc>
 {
+  /**
+   * @brief Hash function for afft::detail::Desc.
+   * @param desc The afft::detail::Desc object.
+   * @return The hash value.
+   */
   [[nodiscard]] constexpr std::size_t operator()(const afft::detail::Desc&) const noexcept
   {
     return 0;
