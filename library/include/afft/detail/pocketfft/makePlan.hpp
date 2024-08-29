@@ -43,14 +43,16 @@ namespace afft::detail::pocketfft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT&)
+  makePlan(const Description& desc, const BackendParamsT&)
   {
-    if (desc.getTargetCount() != 1)
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTargetCount() != 1)
     {
       throw Exception{Error::pocketfft, "only single target is supported"};
     }
 
-    if (desc.getComplexFormat() != ComplexFormat::interleaved)
+    if (descImpl.getComplexFormat() != ComplexFormat::interleaved)
     {
       throw Exception{Error::pocketfft, "only interleaved complex format is supported"};
     }

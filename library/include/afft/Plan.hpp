@@ -30,6 +30,7 @@
 #endif
 
 #include "backend.hpp"
+#include "Description.hpp"
 #include "common.hpp"
 #include "memory.hpp"
 #include "target.hpp"
@@ -39,10 +40,9 @@
 
 AFFT_EXPORT namespace afft
 {
-  class Plan : public std::enable_shared_from_this<Plan>
+  /// @brief Plan base class.
+  class Plan : public std::enable_shared_from_this<Plan>, protected Description
   {
-    friend struct detail::DescGetter;
-
     private:
       /// @brief Default execution parameters helper.
       struct DefaultExecParams
@@ -80,115 +80,13 @@ AFFT_EXPORT namespace afft
       /// @brief Move assignment operator.
       Plan& operator=(Plan&&) = default;
 
-      /// @brief Get multi-process backend.
-      [[nodiscard]] constexpr MpBackend getMpBackend() const
-      {
-        return mDesc.getMpBackend();
-      }
-
       /**
-       * @brief Get multi-process backend parameters.
-       * @tparam mpBackend Multi-process backend type
-       * @return Multi-process backend parameters
+       * @brief Get the plan description.
+       * @return Plan description.
        */
-      template<MpBackend mpBackend>
-      [[nodiscard]] constexpr MpBackendParameters<mpBackend> getMpBackendParameters() const
+      [[nodiscard]] constexpr const Description& getDescription() const noexcept
       {
-        static_assert(detail::isValid(mpBackend), "invalid multi-process backend type");
-
-        if (mpBackend != getMpBackend())
-        {
-          throw Exception{Error::invalidArgument, "plan multi-process backend does not match requested multi-process backend"};
-        }
-
-        return mDesc.getCxxMpParameters<mpBackend>();
-      }
-
-      /// @brief Get the transform.
-      [[nodiscard]] constexpr Transform getTransform() const
-      {
-        return mDesc.getTransform();
-      }
-
-      /**
-       * @brief Get transform parameters.
-       * @tparam transform Transform type
-       * @return Transform parameters
-       */
-      template<Transform transform>
-      [[nodiscard]] constexpr TransformParameters<transform> getTransformParameters() const
-      {
-        static_assert(detail::isValid(transform), "invalid transform type");
-
-        if (transform != getTransform())
-        {
-          throw Exception{Error::invalidArgument, "plan transform does not match requested transform"};
-        }
-
-        return mDesc.getCxxTransformParameters<transform>();
-      }
-
-      /**
-       * @brief Get target.
-       * @return Target
-       */
-      [[nodiscard]] constexpr Target getTarget() const noexcept
-      {
-        return mDesc.getTarget();
-      }
-
-      /**
-       * @brief Get target count.
-       * @return Target count.
-       */
-      [[nodiscard]] constexpr std::size_t getTargetCount() const noexcept
-      {
-        return mDesc.getTargetCount();
-      }
-
-      /**
-       * @brief Get target parameters.
-       * @tparam target Target type
-       * @return Target parameters
-       */
-      template<Target target>
-      [[nodiscard]] constexpr TargetParameters<target> getTargetParameters() const
-      {
-        static_assert(detail::isValid(target), "invalid target type");
-
-        if (target != getTarget())
-        {
-          throw Exception{Error::invalidArgument, "plan target does not match requested target"};
-        }
-
-        return mDesc.getCxxTargetParameters<target>();
-      }
-
-      /**
-       * @brief Get memory layout.
-       * @return Memory layout.
-       */
-      [[nodiscard]] MemoryLayout getMemoryLayout() const noexcept
-      {
-        return mDesc.getMemoryLayout();
-      }
-
-      /**
-       * @brief Get memory layout parameters.
-       * @tparam memoryLayout Memory layout type
-       * @return Memory layout parameters
-       */
-      template<MemoryLayout memoryLayout>
-      [[nodiscard]] MemoryLayoutParameters<memoryLayout> getMemoryLayoutParameters() const
-      {
-        static_assert(detail::isValid(memoryLayout), "invalid memory layout type");
-
-        if (memoryLayout != getMemoryLayout())
-        {
-          throw Exception{Error::invalidArgument, "plan memory layout does not match requested memory layout"};
-        }
-
-        return mDesc.getCxxMemoryLayoutParameters<memoryLayout>();
+        return *this;
       }
 
       /**
@@ -389,16 +287,10 @@ AFFT_EXPORT namespace afft
       Plan() = delete;
 
       /// @brief Constructor.
-      Plan(const detail::Desc& desc, Workspace workspace)
-      : mDesc{desc},
+      Plan(const Description& desc, Workspace workspace)
+      : Description{desc},
         mWorkspace{workspace}
       {}
-
-      /// @brief Get the plan description.
-      [[nodiscard]] const detail::Desc& getDesc() const noexcept
-      {
-        return mDesc;
-      }
 
       /**
        * @brief Execute the plan backend implementation.
@@ -465,8 +357,7 @@ AFFT_EXPORT namespace afft
         throw std::logic_error{"backend does not implement openmp execution"};
       }
     
-      detail::Desc mDesc;      ///< Plan description.
-      Workspace    mWorkspace; ///< Workspace.
+      Workspace mWorkspace{}; ///< Workspace.
     private:
       /**
        * @brief Check execution type properties.

@@ -60,7 +60,7 @@ namespace afft::detail::fftw3::sp::cpu
   {
     private:
       /// @brief Alias for the parent class
-      using Parent = fftw3::Plan;
+      using Parent  = fftw3::Plan;
 
       /// @brief Alias for the FFTW library real type.
       using R2RKind = typename Lib<library>::R2RKind;
@@ -132,7 +132,7 @@ namespace afft::detail::fftw3::sp::cpu
         const auto [dims, howManyDims] = makeIoDims(mDesc);
         const auto flags               = makeFlags(mDesc, backendParams);
 
-        typename Lib<library>::Plan* plan{};       
+        typename Lib<library>::Plan* plan{};
 
         switch (mDesc.getTransform())
         {

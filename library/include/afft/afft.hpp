@@ -48,6 +48,7 @@
 // Include all public headers.
 #include "backend.hpp"
 #include "common.hpp"
+#include "Description.hpp"
 #include "error.hpp"
 #include "fftw3.hpp"
 #ifdef AFFT_CXX_HAS_FORMAT

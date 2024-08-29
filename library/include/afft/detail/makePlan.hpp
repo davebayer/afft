@@ -172,7 +172,7 @@ namespace afft::detail
    * @brief Make plan implementation of the specified backend.
    * @tparam BackendParamsT Backend parameters type.
    * @param backend Backend.
-   * @param desc Descriptor.
+   * @param desc Plan description.
    * @param backendParams Backend parameters.
    * @param feedbackMessage Feedback message.
    * @return Plan implementation.
@@ -180,7 +180,7 @@ namespace afft::detail
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<Plan>
   makePlan(Backend                                backend,
-           [[maybe_unused]] const Desc&           desc,
+           [[maybe_unused]] const Description&    desc,
            [[maybe_unused]] const BackendParamsT& backendParams,
            std::string*                           feedbackMessage)
   {
@@ -274,14 +274,16 @@ namespace afft::detail
   /**
    * @brief Make the first plan implementation.
    * @tparam BackendParamsT Backend parameters type.
-   * @param desc Descriptor.
+   * @param desc Plan description.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makeFirstPlan(const Desc& desc, const BackendParamsT& backendParams, std::vector<Feedback>* feedbacks)
+  makeFirstPlan(const Description&     desc,
+                const BackendParamsT&  backendParams,
+                std::vector<Feedback>* feedbacks)
   {
     std::unique_ptr<Plan> plan{};
 
@@ -309,15 +311,15 @@ namespace afft::detail
   /**
    * @brief Make the best plan implementation.
    * @tparam BackendParamsT Backend parameters type.
-   * @param desc Descriptor.
+   * @param desc Plan description.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makeBestPlan([[maybe_unused]] const Desc& desc,
-               [[maybe_unused]] const BackendParamsT& backendParams,
+  makeBestPlan([[maybe_unused]] const Description&     desc,
+               [[maybe_unused]] const BackendParamsT&  backendParams,
                [[maybe_unused]] std::vector<Feedback>* feedbacks)
   {
     return {};
@@ -326,14 +328,16 @@ namespace afft::detail
   /**
    * @brief Make plan implementation.
    * @tparam BackendParamsT Backend parameters type.
-   * @param desc Descriptor.
+   * @param desc Plan description.
    * @param backendParams Backend parameters.
    * @param feedbacks Feedbacks.
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams, std::vector<Feedback>* feedbacks = nullptr)
+  makePlan(const Description&     desc,
+           const BackendParamsT&  backendParams,
+           std::vector<Feedback>* feedbacks = nullptr)
   {
     validate(backendParams.strategy);
 
@@ -353,10 +357,81 @@ namespace afft::detail
 
     if (!plan)
     {
-      throw std::runtime_error{"Failed to create plan implementation"};
+      // Fixme: this should not be an internal error
+      throw Exception{Error::internal, "No plan implementation found"};
     }
 
     return plan;
+  }
+
+  /**
+   * @brief Make plan with default backend parameters helper.
+   * @tparam mpBackend Multi-process backend.
+   * @param desc Plan description.
+   * @return Plan.
+   */
+  template<MpBackend mpBackend>
+  [[nodiscard]] inline std::unique_ptr<Plan>
+  makePlanWithDefaultBackendParametersHelper(const Description& desc)
+  {
+    switch (desc.getTarget())
+    {
+    case Target::cpu:
+#   ifdef AFFT_ENABLE_CPU
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cpu>{});
+#   else
+      throw Exception{Error::invalidArgument, "CPU backend is not enabled"};
+#   endif
+    case Target::cuda:
+#   ifdef AFFT_ENABLE_CUDA
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cuda>{});
+#   else
+      throw Exception{Error::invalidArgument, "CUDA backend is not enabled"};
+#   endif
+    case Target::hip:
+#   ifdef AFFT_ENABLE_HIP
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::hip>{});
+#   else
+      throw Exception{Error::invalidArgument, "HIP backend is not enabled"};
+#   endif
+    case Target::opencl:
+#   ifdef AFFT_ENABLE_OPENCL
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::opencl>{});
+#   else
+      throw Exception{Error::invalidArgument, "OpenCL backend is not enabled"};
+#   endif
+    case Target::openmp:
+#   ifdef AFFT_ENABLE_OPENMP
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::openmp>{});
+#   else
+      throw Exception{Error::invalidArgument, "OpenMP backend is not enabled"};
+#   endif
+    default:
+      cxx::unreachable();
+    }
+  }
+
+  /**
+   * @brief Make plan with default backend parameters.
+   * @param desc Plan description.
+   * @return Plan.
+   */
+  [[nodiscard]] inline std::unique_ptr<Plan>
+  makePlanWithDefaultBackendParameters(const Description& desc)
+  {
+    switch (desc.getMpBackend())
+    {
+    case MpBackend::none:
+      return makePlanWithDefaultBackendParametersHelper<MpBackend::none>(desc);
+    case MpBackend::mpi:
+#   ifdef AFFT_ENABLE_MPI
+      return makePlanWithDefaultBackendParametersHelper<MpBackend::mpi>(desc);
+#   else
+      throw Exception{Error::invalidArgument, "MPI backend is not enabled"};
+#   endif
+    default:
+      cxx::unreachable();
+    }
   }
 } // namespace afft::detail
 

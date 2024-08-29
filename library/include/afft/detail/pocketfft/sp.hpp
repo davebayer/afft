@@ -72,7 +72,7 @@ namespace afft::detail::pocketfft::sp::cpu
        * @brief Constructor
        * @param Desc The plan description
        */
-      Plan(const Desc& desc)
+      Plan(const Description& desc)
       : Parent{desc, Workspace::none},
         mShape(mDesc.getShapeRank()),
         mSrcStrides(mDesc.getShapeRank()),
@@ -361,8 +361,10 @@ namespace afft::detail::pocketfft::sp::cpu
    * @param desc Plan description.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Description& desc)
   {
+    const auto& descImpl = desc.get(DescToken::make());
+
     // TODO: Adapt this and add DHT checks
     //
     // switch (config.getTransform())
@@ -407,12 +409,12 @@ namespace afft::detail::pocketfft::sp::cpu
     //   throw std::runtime_error{"Unsupported transform type"};
     // }
 
-    if (!desc.hasUniformPrecision())
+    if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::pocketfft, "only same precision for execution, source and destination is supported"};
     }
 
-    switch (const auto precision = desc.getPrecision().execution)
+    switch (const auto precision = descImpl.getPrecision().execution)
     {
       case Precision::_float:
         return std::make_unique<Plan<float>>(desc);
