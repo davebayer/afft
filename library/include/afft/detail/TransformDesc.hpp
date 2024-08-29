@@ -664,10 +664,16 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
       {
+        const auto lhsShape = lhs.getShape();
+        const auto rhsShape = rhs.getShape();
+
+        const auto lhsAxes = lhs.getTransformAxes();
+        const auto rhsAxes = rhs.getTransformAxes();
+
         return (lhs.mDirection == rhs.mDirection) &&
                (lhs.mPrecision == rhs.mPrecision) &&
-               std::equal(lhs.getShape().begin(), lhs.getShape().end(), rhs.getShape().begin(), rhs.getShape().end()) &&
-               std::equal(lhs.getTransformAxes().begin(), lhs.getTransformAxes().end(), rhs.getTransformAxes().begin(), rhs.getTransformAxes().end()) &&
+               std::equal(lhsShape.begin(), lhsShape.end(), rhsShape.begin(), rhsShape.end()) &&
+               std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(), rhsAxes.end()) &&
                (lhs.mNormalization == rhs.mNormalization) &&
                (lhs.mPlacement == rhs.mPlacement) &&
                (lhs.mDestructive == rhs.mDestructive) &&
