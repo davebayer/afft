@@ -138,6 +138,20 @@ struct afft_DistributedMemoryLayout
   const afft_Axis*        dstAxesOrder;   ///< Destination axes order (null for default or array of size shapeRank)
 };
 
+/// @brief Memory layout parameters variant
+typedef struct afft_MemoryLayoutParametersVariant afft_MemoryLayoutParametersVariant;
+
+/// @brief Memory layout parameters variant structure
+struct afft_MemoryLayoutParametersVariant
+{
+  afft_MemoryLayout layout;                   ///< Memory layout
+  union
+  {
+    afft_CentralizedMemoryLayout centralized; ///< Centralized memory layout
+    afft_DistributedMemoryLayout distributed; ///< Distributed memory layout
+  };
+};
+
 /**
  * @brief Allocate aligned memory.
  * @param sizeInBytes Size of the memory block in bytes.

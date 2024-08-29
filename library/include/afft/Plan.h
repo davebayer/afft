@@ -30,8 +30,9 @@
 #endif
 
 #include "backend.h"
-#include "error.h"
+#include "Description.h"
 #include "common.h"
+#include "error.h"
 #include "memory.h"
 #include "mp.h"
 #include "target.h"
@@ -45,30 +46,18 @@ extern "C"
 /// @brief Plan structure (opaque)
 typedef struct afft_Plan afft_Plan;
 
-/// @brief Plan parameters structure
-typedef struct afft_PlanParameters afft_PlanParameters;
-
-/// @brief Plan parameters structure
-struct afft_PlanParameters
-{
-  afft_Transform transform;       ///< Transform type
-  afft_MpBackend mpBackend;       ///< Multi-process backend
-  afft_Target    target;          ///< Target architecture
-  const void*    transformParams; ///< Transform parameters
-  const void*    mpBackendParams; ///< Multi-process backend parameters
-  const void*    targetParams;    ///< Target parameters
-  const void*    memoryLayout;    ///< Memory layout
-  const void*    backendParams;   ///< Backend parameters
-};
-
 /**
- * @brief Create a plan for given parameters.
- * @param planParams Plan parameters.
+ * @brief Create a plan.
+ * @param desc Plan description.
+ * @param backendParams Backend parameters.
  * @param planPtr Pointer to the plan.
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_create(afft_PlanParameters planParams, afft_Plan** planPtr, afft_ErrorDetails* errDetails);
+afft_Error afft_Plan_create(const afft_Description* desc,
+                            const void*             backendParams,
+                            afft_Plan**             planPtr,
+                            afft_ErrorDetails*      errDetails);
 
 /**
  * @brief Destroy a plan.
@@ -77,67 +66,15 @@ afft_Error afft_Plan_create(afft_PlanParameters planParams, afft_Plan** planPtr,
 void afft_Plan_destroy(afft_Plan* plan);
 
 /**
- * @brief Get the plan multi-process backend.
+ * @brief Get the plan description. Do not modify the plan description nor destroy it.
  * @param plan Plan object.
- * @param mpBackend Pointer to the multi-process backend variable.
+ * @param desc Pointer to the plan description.
  * @param errDetails Error details.
  * @return Error code.
  */
-afft_Error afft_Plan_getMpBackend(afft_Plan* plan, afft_MpBackend* mpBackend, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the plan multi-process backend parameters.
- * @param plan Plan object.
- * @param mpBackendParams Pointer to the multi-process backend parameters.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getMpBackendParameters(afft_Plan* plan, void* mpBackendParams, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the plan transform.
- * @param plan Plan object.
- * @param transform Pointer to the transform variable.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getTransform(afft_Plan* plan, afft_Transform* transform, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the plan transform parameters.
- * @param plan Plan object.
- * @param transformParams Pointer to the transform parameters.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getTransformParameters(afft_Plan* plan, void* transformParams, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the plan target.
- * @param plan Plan object.
- * @param target Pointer to the target variable.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getTarget(afft_Plan* plan, afft_Target* target, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the target count.
- * @param plan Plan object.
- * @param targetCount Pointer to the target count variable.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getTargetCount(afft_Plan* plan, size_t* targetCount, afft_ErrorDetails* errDetails);
-
-/**
- * @brief Get the plan target parameters.
- * @param plan Plan object.
- * @param targetParams Pointer to the target parameters.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getTargetParameters(afft_Plan* plan, void* targetParams, afft_ErrorDetails* errDetails);
+afft_Error afft_Plan_getDescription(const afft_Plan*         plan,
+                                    const afft_Description** desc,
+                                    afft_ErrorDetails*       errDetails);
 
 /**
  * @brief Get the plan backend.

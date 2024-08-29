@@ -43,6 +43,7 @@
 // Include all public headers.
 #include "backend.h"
 #include "common.h"
+#include "Description.h"
 #include "error.h"
 #include "fftw3.h"
 #include "init.h"

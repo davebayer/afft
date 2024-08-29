@@ -52,6 +52,22 @@ struct afft_mpi_Parameters
 };
 #endif
 
+/// @brief Multi-process backend parameters variant
+typedef union afft_MpBackendParametersVariant afft_MpBackendParametersVariant;
+
+/// @brief Multi-process backend parameters variant structure
+union afft_MpBackendParametersVariant
+{
+  afft_MpBackend mpBackend;     ///< Multi-process backend
+  union
+  {
+# ifdef AFFT_ENABLE_MPI
+    afft_mpi_Parameters mpi;    ///< MPI multi-process parameters
+# endif
+    char                _dummy; ///< Dummy member to ensure non-empty union
+  };
+};
+
 #ifdef __cplusplus
 }
 #endif

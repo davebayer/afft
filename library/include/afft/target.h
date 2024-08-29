@@ -146,4 +146,32 @@ struct afft_openmp_ExecutionParameters
 };
 #endif
 
+/// @brief Target parameters variant
+typedef struct afft_TargetParametersVariant afft_TargetParametersVariant;
+
+/// @brief Target parameters variant structure
+struct afft_TargetParametersVariant
+{
+  afft_Target target;              ///< Target type
+  union
+  {
+#ifdef AFFT_ENABLE_CPU
+    afft_cpu_Parameters cpu;       ///< CPU parameters
+#endif
+#ifdef AFFT_ENABLE_CUDA
+    afft_cuda_Parameters cuda;     ///< CUDA parameters
+#endif
+#ifdef AFFT_ENABLE_HIP
+    afft_hip_Parameters hip;       ///< HIP parameters
+#endif
+#ifdef AFFT_ENABLE_OPENCL
+    afft_opencl_Parameters opencl; ///< OpenCL parameters
+#endif
+#ifdef AFFT_ENABLE_OPENMP
+    afft_openmp_Parameters openmp; ///< OpenMP parameters
+#endif
+    char                   _dummy; ///< Dummy member to ensure that the union is not empty
+  };
+};
+
 #endif /* AFFT_TARGET_H */

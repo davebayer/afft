@@ -186,6 +186,24 @@ struct afft_dtt_Parameters
   const afft_dtt_Type* types;         ///< Types of the transform
 };
 
+/**********************************************************************************************************************/
+// Transform parameters variant
+/**********************************************************************************************************************/
+/// @brief Transform parameters variant
+typedef struct afft_TransformParametersVariant afft_TransformParametersVariant;
+
+/// @brief Transform parameters variant structure
+struct afft_TransformParametersVariant
+{
+  afft_Transform transform;  ///< Transform type
+  union
+  {
+    afft_dft_Parameters dft; ///< DFT parameters
+    afft_dht_Parameters dht; ///< DHT parameters
+    afft_dtt_Parameters dtt; ///< DTT parameters
+  };
+};
+
 #ifdef __cplusplus
 }
 #endif
