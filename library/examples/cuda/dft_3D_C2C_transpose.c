@@ -9,8 +9,6 @@
 #include <helpers/afft.h>
 #include <helpers/cuda.h>
 
-afft_ErrorDetails errDetails = {};
-
 int main(void)
 {
   const afft_Size shape[]          = {500, 250, 1020};

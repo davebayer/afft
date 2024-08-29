@@ -36,18 +36,25 @@ extern "C"
 #endif
 
 /**
+ * @brief Check CUDA runtime error and exit if not success. Should not be used directly, use CUDART_CALL macro instead.
+ * @param error CUDA runtime error
+ * @param file file name
+ * @param line line number
+ */
+static inline void check_cudart_error(cudaError_t error, const char* file, int line)
+{
+  if (error != cudaSuccess)
+  {
+    fprintf(stderr, "CUDA error (%s:%d) - %s\n", file, line, cudaGetErrorString(error));
+    exit(EXIT_FAILURE);
+  }
+}
+
+/**
  * @brief Macro for checking CUDA runtime errors. The call cannot contain _error variable.
  * @param call CUDA runtime function call
  */
-#define CUDART_CALL(call) \
-  do { \
-    const cudaError_t _error = (call); \
-    if (_error != cudaSuccess) \
-    { \
-      fprintf(stderr, "CUDA error (%s:%d) - %s\n", __FILE__, __LINE__, cudaGetErrorString(_error)); \
-      exit(EXIT_FAILURE); \
-    } \
-  } while (0)
+#define CUDART_CALL(call) check_cudart_error((call), __FILE__, __LINE__)
 
 /**
  * @brief Get the number of CUDA devices

@@ -7,8 +7,6 @@
 
 typedef float _Complex FloatComplex;
 
-afft_ErrorDetails errDetails = {};
-
 int main(void)
 {
   const size_t shape[]          = {500, 250, 1020};

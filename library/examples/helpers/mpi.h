@@ -36,18 +36,25 @@ extern "C"
 #endif
 
 /**
+ * @brief Check MPI error and exit if not success. Should not be used directly, use MPI_CALL macro instead.
+ * @param error MPI error
+ * @param file file name
+ * @param line line number
+ */
+static inline void check_mpi_error(int error, const char* file, int line)
+{
+  if (error != MPI_SUCCESS)
+  {
+    fprintf(stderr, "MPI error (%s:%d) - error code #%d\n", file, line, error);
+    exit(EXIT_FAILURE);
+  }
+}
+
+/**
  * @brief Macro for checking MPI errors. The call cannot contain _error variable.
  * @param call MPI function call
  */
-#define MPI_CALL(call) \
-  do { \
-    const int _error = (call); \
-    if (_error != MPI_SUCCESS) \
-    { \
-      fprintf(stderr, "MPI error (%s:%d) - error code #%d\n", __FILE__, __LINE__, _error); \
-      exit(EXIT_FAILURE); \
-    } \
-  } while (0)
+#define MPI_CALL(call) check_mpi_error((call), __FILE__, __LINE__)
 
 /**
  * @brief Get the rank of the MPI process in the communicator.
