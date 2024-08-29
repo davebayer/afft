@@ -206,14 +206,12 @@ namespace afft::detail
        * @param rhs Right-hand side.
        * @return True if equal, false otherwise.
        */
-      [[nodiscard]] friend bool operator==(const Desc&, const Desc&) noexcept
+      [[nodiscard]] friend bool operator==(const Desc& lhs, const Desc& rhs)
       {
-        // TODO: Implement this
-        return false;
-        // return static_cast<const TransformDesc&>(lhs) == static_cast<const TransformDesc&>(rhs) &&
-        //        static_cast<const MpDesc&>(lhs) == static_cast<const MpDesc&>(rhs) &&
-        //        static_cast<const TargetDesc&>(lhs) == static_cast<const TargetDesc&>(rhs) &&
-        //        static_cast<const MemDesc&>(lhs) == static_cast<const MemDesc&>(rhs);
+        return static_cast<const TransformDesc&>(lhs) == static_cast<const TransformDesc&>(rhs) &&
+               static_cast<const MpDesc&>(lhs) == static_cast<const MpDesc&>(rhs) &&
+               static_cast<const TargetDesc&>(lhs) == static_cast<const TargetDesc&>(rhs) &&
+               static_cast<const MemDesc&>(lhs) == static_cast<const MemDesc&>(rhs);
       }
 
       /**

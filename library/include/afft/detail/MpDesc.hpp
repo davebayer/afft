@@ -39,13 +39,24 @@ namespace afft::detail
   {
     /**
      * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
+     * @param[in] lhs Left-hand side
+     * @param[in] rhs Right-hand side
      * @return True if equal, false otherwise
      */
-    [[nodiscard]] constexpr friend bool operator==(const SingleProcessDesc&, const SingleProcessDesc&)
+    [[nodiscard]] constexpr friend bool operator==(const SingleProcessDesc&, const SingleProcessDesc&) noexcept
     {
       return true;
+    }
+
+    /**
+     * @brief Inequality operator
+     * @param[in] lhs Left-hand side
+     * @param[in] rhs Right-hand side
+     * @return True if not equal, false otherwise
+     */
+    [[nodiscard]] constexpr friend bool operator!=(const SingleProcessDesc&, const SingleProcessDesc&) noexcept
+    {
+      return false;
     }
   };
 
@@ -58,18 +69,29 @@ namespace afft::detail
   
     /**
      * @brief Equality operator
-     * @param lhs Left-hand side
-     * @param rhs Right-hand side
+     * @param[in] lhs Left-hand side
+     * @param[in] rhs Right-hand side
      * @return True if equal, false otherwise
      */
     [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const MpiDesc& lhs,
-                                                   [[maybe_unused]] const MpiDesc& rhs)
+                                                   [[maybe_unused]] const MpiDesc& rhs) noexcept
     {
 #   ifdef AFFT_ENABLE_MPI
       return lhs.comm == rhs.comm;
 #   else
       return true;
 #   endif
+    }
+
+    /**
+     * @brief Inequality operator
+     * @param[in] lhs Left-hand side
+     * @param[in] rhs Right-hand side
+     * @return True if not equal, false otherwise
+     */
+    [[nodiscard]] constexpr friend bool operator!=(const MpiDesc& lhs, const MpiDesc& rhs) noexcept
+    {
+      return !(lhs == rhs);
     }
   };
 
@@ -207,21 +229,33 @@ namespace afft::detail
 
       /**
        * @brief Equality operator
-       * @param lhs Left-hand side
-       * @param rhs Right-hand side
+       * @param[in] lhs Left-hand side
+       * @param[in] rhs Right-hand side
        * @return True if equal, false otherwise
        */
       [[nodiscard]] constexpr friend bool operator==(const MpDesc& lhs, const MpDesc& rhs)
       {
         return lhs.mMpVariant == rhs.mMpVariant;
       }
+
+      /**
+       * @brief Inequality operator
+       * @param[in] lhs Left-hand side
+       * @param[in] rhs Right-hand side
+       * @return True if not equal, false otherwise
+       */
+      [[nodiscard]] constexpr friend bool operator!=(const MpDesc& lhs, const MpDesc& rhs)
+      {
+        return !(lhs == rhs);
+      }
+
     private:
       /// @brief Multi-process variant type
       using MpVariant = std::variant<SingleProcessDesc, MpiDesc>;
 
       /**
        * @brief Make a multi-process variant
-       * @param spParams Single-process parameters
+       * @param[in] spParams Single-process parameters
        * @return Multi-process variant
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const SingleProcessParameters&)
@@ -232,7 +266,7 @@ namespace afft::detail
 #   ifdef AFFT_ENABLE_MPI
       /**
        * @brief Make a multi-process variant
-       * @param mpiParams MPI parameters
+       * @param[in] mpiParams MPI parameters
        * @return Multi-process variant
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const afft::mpi::Parameters& mpiParams)
@@ -244,7 +278,7 @@ namespace afft::detail
 #   ifdef AFFT_ENABLE_MPI
       /**
        * @brief Make a multi-process variant
-       * @param mpiParams MPI parameters
+       * @param[in] mpiParams MPI parameters
        * @return Multi-process variant
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const afft_mpi_Parameters& mpiParams)

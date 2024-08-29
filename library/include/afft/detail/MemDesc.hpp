@@ -48,17 +48,21 @@ namespace afft::detail
       CentralMemDesc() = default;
 
       /**
-       * @brief Construct a centralized memory descriptor.
-       * @param memLayout Memory layout.
-       * @param shapeRank Shape rank.
+       * @brief Constructor.
+       * @param[in] srcStrides Source strides.
+       * @param[in] dstStrides Destination strides.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc MPI descriptor.
+       * @param[in] targetDesc Target descriptor.
        */
-      CentralMemDesc(const CentralizedMemoryLayout& memLayout,
-                     const TransformDesc&           transformDesc,
-                     const MpDesc&                  mpDesc,
-                     const TargetDesc&              targetDesc)
+      CentralMemDesc(const Size*          srcStrides,
+                     const Size*          dstStrides,
+                     const TransformDesc& transformDesc,
+                     const MpDesc&        mpDesc,
+                     const TargetDesc&    targetDesc)
       : mShapeRank{transformDesc.getShapeRank()},
-        mHasDefaultSrcStrides{memLayout.srcStrides == nullptr},
-        mHasDefaultDstStrides{memLayout.dstStrides == nullptr}
+        mHasDefaultSrcStrides{srcStrides == nullptr},
+        mHasDefaultDstStrides{dstStrides == nullptr}
       {
         if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() != 1)
         {
@@ -81,7 +85,7 @@ namespace afft::detail
         }
         else
         {
-          std::copy_n(memLayout.srcStrides, mShapeRank, mSrcStrides.data);
+          std::copy_n(srcStrides, mShapeRank, mSrcStrides.data);
         }
 
         if (mHasDefaultDstStrides)
@@ -100,64 +104,7 @@ namespace afft::detail
         }
         else
         {
-          std::copy_n(memLayout.dstStrides, mShapeRank, mDstStrides.data);
-        }
-      }
-
-      /**
-       * @brief Construct a centralized memory descriptor.
-       * @param memLayout Memory layout.
-       * @param shapeRank Shape rank.
-       */
-      CentralMemDesc(const afft_CentralizedMemoryLayout& memLayout,
-                     const TransformDesc&                transformDesc,
-                     const MpDesc&                       mpDesc,
-                     const TargetDesc&                   targetDesc)
-      : mShapeRank{transformDesc.getShapeRank()},
-        mHasDefaultSrcStrides{memLayout.srcStrides == nullptr},
-        mHasDefaultDstStrides{memLayout.dstStrides == nullptr}
-      {
-        if (mpDesc.getMpBackend() != MpBackend::none || targetDesc.getTargetCount() != 1)
-        {
-          throw Exception{Error::invalidArgument, "Centralized memory layout can be used only with single-process application on sigle target"};
-        }
-
-        if (mHasDefaultSrcStrides)
-        {
-          auto srcShape = transformDesc.getSrcShape();
-
-          if (transformDesc.getTransform() == Transform::dft && transformDesc.getPlacement() == Placement::inPlace)
-          {
-            if (transformDesc.getTransformDesc<Transform::dft>().type == dft::Type::realToComplex)
-            {
-              srcShape[mShapeRank - 1] = (srcShape[mShapeRank - 1] / 2 + 1) * 2;
-            }
-          }
-
-          makeStrides(mShapeRank, srcShape.data, mSrcStrides.data);
-        }
-        else
-        {
-          std::copy_n(memLayout.srcStrides, mShapeRank, mSrcStrides.data);
-        }
-
-        if (mHasDefaultDstStrides)
-        {
-          auto dstShape = transformDesc.getDstShape();
-
-          if (transformDesc.getTransform() == Transform::dft && transformDesc.getPlacement() == Placement::inPlace)
-          {
-            if (transformDesc.getTransformDesc<Transform::dft>().type == dft::Type::complexToReal)
-            {
-              dstShape[mShapeRank - 1] = (dstShape[mShapeRank - 1] / 2 + 1) * 2;
-            }
-          }
-
-          makeStrides(mShapeRank, dstShape.data, mDstStrides.data);
-        }
-        else
-        {
-          std::copy_n(memLayout.dstStrides, mShapeRank, mDstStrides.data);
+          std::copy_n(dstStrides, mShapeRank, mDstStrides.data);
         }
       }
 
@@ -213,43 +160,9 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the number of elements in the source.
-       * @return Number of elements in the source.
-       */
-      [[nodiscard]] constexpr std::size_t getSrcElemCount() const noexcept
-      {
-        // fixme
-        std::size_t elemCount{1};
-
-        for (std::size_t i{}; i < mShapeRank; ++i)
-        {
-          elemCount *= mSrcStrides[i];
-        }
-
-        return elemCount;
-      }
-
-      /**
-       * @brief Get the number of elements in the destination.
-       * @return Number of elements in the destination.
-       */
-      [[nodiscard]] constexpr std::size_t getDstElemCount() const noexcept
-      {
-        // fixme
-        std::size_t elemCount{1};
-
-        for (std::size_t i{}; i < mShapeRank; ++i)
-        {
-          elemCount *= mDstStrides[i];
-        }
-
-        return elemCount;
-      }
-
-      /**
-       * @brief Equality operator
-       * @param lhs Left-hand side.
-       * @param rhs Right-hand side.
+       * @brief Equality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
        * @return True if the memory descriptors are equal, false otherwise.
        */
       [[nodiscard]] friend bool operator==(const CentralMemDesc& lhs, const CentralMemDesc& rhs) noexcept
@@ -257,6 +170,17 @@ namespace afft::detail
         return lhs.mShapeRank == rhs.mShapeRank &&
                std::equal(lhs.getSrcStrides().begin(), lhs.getSrcStrides().end(), rhs.getSrcStrides().begin()) &&
                std::equal(lhs.getDstStrides().begin(), lhs.getDstStrides().end(), rhs.getDstStrides().begin());
+      }
+
+      /**
+       * @brief Inequality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if the memory descriptors are not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const CentralMemDesc& lhs, const CentralMemDesc& rhs) noexcept
+      {
+        return !(lhs == rhs);
       }
 
     private:
@@ -449,8 +373,10 @@ namespace afft::detail
         return mHasDefaultDstStrides;
       }
 
-      // [[nodiscard]] friend bool operator==(const DistribMemDesc& lhs, const DistribMemDesc& rhs) noexcept
-      // {
+      [[nodiscard]] friend bool operator==(const DistribMemDesc& lhs, const DistribMemDesc& rhs) noexcept
+      {
+        // TODO: fixme
+        return true;
       //   return lhs.mShapeRank == rhs.mShapeRank &&
       //          lhs.mTargetCount == rhs.mTargetCount &&
       //          (lhs.hasDefaultSrcAxesOrder() ||
@@ -465,30 +391,40 @@ namespace afft::detail
       //          (lhs.hasDefaultDstMemoryBlocks() ||
       //            rhs.hasDefaultDstMemoryBlocks() ||
       //            std::equal(lhs.getDstMemoryBlocks().begin(), lhs.getDstMemoryBlocks().end(), rhs.getDstMemoryBlocks().begin()));
-      // }
+      }
 
     private:
-      std::size_t                       mShapeRank{};                 ///< Shape rank.
-      std::size_t                       mTargetCount{};               ///< Target count.
-      std::unique_ptr<MemBlockDesc[]>   mMemBlockDescs{};             ///< Source and destination memory block descriptors.
-      std::unique_ptr<MemoryBlock[]>    mMemoryBlocks{};              ///< View over memory blocks.
-      MaxDimBuffer<Axis>                mSrcDistribAxes{};            ///< Source distributed axes.
-      MaxDimBuffer<Axis>                mDstDistribAxes{};            ///< Destination distributed axes.
-      MaxDimBuffer<Axis>                mSrcAxesOrder{};              ///< Source axes order.
-      MaxDimBuffer<Axis>                mDstAxesOrder{};              ///< Destination axes order.
-      bool                              mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
-      bool                              mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
-      bool                              mHasDefaultSrcMemoryBlocks{}; ///< Has default source memory blocks.
-      bool                              mHasDefaultDstMemoryBlocks{}; ///< Has default destination memory blocks.
-      bool                              mHasDefaultSrcStrides{};      ///< Has default source strides.
-      bool                              mHasDefaultDstStrides{};      ///< Has default destination strides.
+      std::size_t                     mShapeRank{};                 ///< Shape rank.
+      std::size_t                     mTargetCount{};               ///< Target count.
+      std::unique_ptr<MemBlockDesc[]> mMemBlockDescs{};             ///< Source and destination memory block descriptors.
+      std::unique_ptr<MemoryBlock[]>  mMemoryBlocks{};              ///< View over memory blocks.
+      MaxDimBuffer<Axis>              mSrcDistribAxes{};            ///< Source distributed axes.
+      MaxDimBuffer<Axis>              mDstDistribAxes{};            ///< Destination distributed axes.
+      MaxDimBuffer<Axis>              mSrcAxesOrder{};              ///< Source axes order.
+      MaxDimBuffer<Axis>              mDstAxesOrder{};              ///< Destination axes order.
+      bool                            mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
+      bool                            mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
+      bool                            mHasDefaultSrcMemoryBlocks{}; ///< Has default source memory blocks.
+      bool                            mHasDefaultDstMemoryBlocks{}; ///< Has default destination memory blocks.
+      bool                            mHasDefaultSrcStrides{};      ///< Has default source strides.
+      bool                            mHasDefaultDstStrides{};      ///< Has default destination strides.
   };
 
+  /// @brief Memory descriptor.
   class MemDesc
   {
     public:
+      /// @brief Default constructor is deleted.
       MemDesc() = delete;
 
+      /**
+       * @brief Construct a memory descriptor.
+       * @tparam MemoryLayoutT Memory layout type.
+       * @param[in] memLayout     Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc        MP descriptor.
+       * @param[in] targetDesc    Target descriptor.
+       */
       AFFT_TEMPL_REQUIRES(typename MemoryLayoutT,
                           (isCxxMemoryLayoutParameters<MemoryLayoutT> ||
                            isCMemoryLayoutParameters<MemoryLayoutT>))
@@ -503,10 +439,10 @@ namespace afft::detail
 
       /**
        * @brief Construct a memory descriptor.
-       * @param memLayoutVariant Memory layout variant.
-       * @param transformDesc Transform descriptor.
-       * @param mpDesc MP descriptor.
-       * @param targetDesc Target descriptor.
+       * @param[in] memLayoutVariant Memory layout variant.
+       * @param[in] transformDesc    Transform descriptor.
+       * @param[in] mpDesc           MP descriptor.
+       * @param[in] targetDesc       Target descriptor.
        */
       MemDesc(const MemoryLayoutParametersVariant& memLayoutVariant,
               const TransformDesc&                 transformDesc,
@@ -540,16 +476,25 @@ namespace afft::detail
           }())
       {}
 
+      /// @brief Copy constructor is default.
       MemDesc(const MemDesc&) = default;
 
+      /// @brief Move constructor is default.
       MemDesc(MemDesc&&) = default;
 
+      /// @brief Destructor is default.
       ~MemDesc() = default;
 
+      /// @brief Copy assignment operator is default.
       MemDesc& operator=(const MemDesc&) = default;
 
+      /// @brief Move assignment operator is default.
       MemDesc& operator=(MemDesc&&) = default;
 
+      /**
+       * @brief Get the memory layout.
+       * @return Memory layout.
+       */
       [[nodiscard]] constexpr MemoryLayout getMemoryLayout() const
       {
         switch (mMemVariant.index())
@@ -563,6 +508,11 @@ namespace afft::detail
         }
       }
 
+      /**
+       * @brief Get the memory descriptor for the given memory layout.
+       * @tparam memoryLayout Memory layout.
+       * @return Memory descriptor.
+       */
       template<MemoryLayout memoryLayout>
       [[nodiscard]] constexpr const auto& getMemDesc() const
       {
@@ -599,8 +549,9 @@ namespace afft::detail
       }
 
       /**
-       * @brief Reconstruct the C++ memory layout.
-       * @return Memory layout.
+       * @brief Reconstruct the C++ memory layout parameters.
+       * @tparam memoryLayout Memory layout.
+       * @return Memory layout parameters.
        */
       template<MemoryLayout memoryLayout>
       [[nodiscard]] constexpr MemoryLayoutParameters<memoryLayout> getCxxMemoryLayoutParameters() const noexcept
@@ -633,17 +584,59 @@ namespace afft::detail
 
         return memLayout;
       }
+
+      /**
+       * @brief Equality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator==(const MemDesc& lhs, const MemDesc& rhs)
+      {
+        return lhs.mAlignment == rhs.mAlignment &&
+               lhs.mComplexFormat == rhs.mComplexFormat &&
+               lhs.mMemVariant == rhs.mMemVariant;
+      }
+
+      /**
+       * @brief Inequality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const MemDesc& lhs, const MemDesc& rhs)
+      {
+        return !(lhs == rhs);
+      }
+
     private:
+      /// @brief Memory variant type.
       using MemVariant = std::variant<CentralMemDesc, DistribMemDesc>;
 
+      /**
+       * @brief Make a memory variant.
+       * @param[in] memLayout     Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc        MP descriptor.
+       * @param[in] targetDesc    Target descriptor.
+       * @return Memory variant.
+       */
       [[nodiscard]] static CentralMemDesc makeMemVariant(const CentralizedMemoryLayout& memLayout,
                                                          const TransformDesc&           transformDesc,
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
       {
-        return CentralMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+        return CentralMemDesc{memLayout.srcStrides, memLayout.dstStrides, transformDesc, mpDesc, targetDesc};
       }
 
+      /**
+       * @brief Make a memory variant.
+       * @param[in] memLayout     Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc        MP descriptor.
+       * @param[in] targetDesc    Target descriptor.
+       * @return Memory variant.
+       */
       [[nodiscard]] static DistribMemDesc makeMemVariant(const DistributedMemoryLayout& memLayout,
                                                          const TransformDesc&           transformDesc,
                                                          const MpDesc&                  mpDesc,
@@ -652,14 +645,30 @@ namespace afft::detail
         return DistribMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
       }
 
+      /**
+       * @brief Make a memory variant.
+       * @param[in] memLayout     Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc        MP descriptor.
+       * @param[in] targetDesc    Target descriptor.
+       * @return Memory variant.
+       */
       [[nodiscard]] static CentralMemDesc makeMemVariant(const afft_CentralizedMemoryLayout& memLayout,
                                                          const TransformDesc&                transformDesc,
                                                          const MpDesc&                       mpDesc,
                                                          const TargetDesc&                   targetDesc)
       {
-        return CentralMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+        return CentralMemDesc{memLayout.srcStrides, memLayout.dstStrides, transformDesc, mpDesc, targetDesc};
       }
 
+      /**
+       * @brief Make a memory variant.
+       * @param[in] memLayout     Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc        MP descriptor.
+       * @param[in] targetDesc    Target descriptor.
+       * @return Memory variant.
+       */
       [[nodiscard]] static DistribMemDesc makeMemVariant(const afft_DistributedMemoryLayout& memLayout,
                                                          const TransformDesc&                transformDesc,
                                                          const MpDesc&                       mpDesc,

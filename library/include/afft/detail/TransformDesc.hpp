@@ -656,21 +656,34 @@ namespace afft::detail
         return sizeOf(getPrecision().destination) * cmplScale;
       }
 
-      // [[nodiscard]] friend bool operator==(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
-      // {
-      //   return (lhs.mDirection == rhs.mDirection) &&
-      //          (lhs.mPrecision == rhs.mPrecision) &&
-      //          std::equal(lhs.getShape().begin(), lhs.getShape().end(), rhs.getShape().begin(), rhs.getShape().end()) &&
-      //          std::equal(lhs.getTransformAxes().begin(), lhs.getTransformAxes().end(), rhs.getTransformAxes().begin(), rhs.getTransformAxes().end()) &&
-      //          (lhs.mNormalization == rhs.mNormalization) &&
-      //          (lhs.mPlacement == rhs.mPlacement) &&
-      //          (lhs.mTransformVariant == rhs.mTransformVariant);
-      // }
+      /**
+       * @brief Equality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if the transform descriptions are equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator==(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
+      {
+        return (lhs.mDirection == rhs.mDirection) &&
+               (lhs.mPrecision == rhs.mPrecision) &&
+               std::equal(lhs.getShape().begin(), lhs.getShape().end(), rhs.getShape().begin(), rhs.getShape().end()) &&
+               std::equal(lhs.getTransformAxes().begin(), lhs.getTransformAxes().end(), rhs.getTransformAxes().begin(), rhs.getTransformAxes().end()) &&
+               (lhs.mNormalization == rhs.mNormalization) &&
+               (lhs.mPlacement == rhs.mPlacement) &&
+               (lhs.mDestructive == rhs.mDestructive) &&
+               (lhs.mTransformVariant == rhs.mTransformVariant);
+      }
 
-      // [[nodiscard]] friend bool operator!=(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
-      // {
-      //   return !(lhs == rhs);
-      // }
+      /**
+       * @brief Inequality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if the transform descriptions are not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
+      {
+        return !(lhs == rhs);
+      }
 
     private:
       /// @brief Transform variant type.
