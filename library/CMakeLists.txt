@@ -305,15 +305,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h.in
                ${CMAKE_CURRENT_SOURCE_DIR}/include/afft/afft-config.h)
 
 ########################################################################################################################
-
-# Just a temporary solution
-iF(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wimplicit-fallthrough")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wconversion -Wimplicit-fallthrough")
-endif()
-
-########################################################################################################################
 # Create targets
 ########################################################################################################################
 add_subdirectory(src)
