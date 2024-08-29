@@ -47,15 +47,15 @@ typedef struct afft_Description afft_Description;
 
 /**
  * @brief Create plan description.
- * @param transform Transform
- * @param mpBackend Multi-process backend
- * @param target Target
- * @param transformParams Transform parameters
- * @param mpBackendParams Multi-process backend parameters
- * @param targetParams Target parameters
- * @param memoryLayout Memory layout
- * @param desc Plan description
- * @param errorDetails Error details
+ * @param[in]  transform       Transform
+ * @param[in]  mpBackend       Multi-process backend
+ * @param[in]  target          Target
+ * @param[in]  transformParams Transform parameters
+ * @param[in]  mpBackendParams Multi-process backend parameters
+ * @param[in]  targetParams    Target parameters
+ * @param[in]  memoryLayout    Memory layout
+ * @param[out] desc            Plan description
+ * @param[out] errorDetails    Error details
  * @return Error code
  */
 afft_Error afft_Description_create(afft_Transform     transform,
@@ -70,15 +70,15 @@ afft_Error afft_Description_create(afft_Transform     transform,
 
 /**
  * @brief Destroy plan description.
- * @param desc Plan description
+ * @param[in] desc Plan description
  */
 void afft_Description_destroy(afft_Description* desc);
 
 /**
  * @brief Get transform.
- * @param desc Plan description
- * @param transform Transform
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] transform    Transform
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getTransform(const afft_Description* desc,
@@ -87,9 +87,9 @@ afft_Error afft_Description_getTransform(const afft_Description* desc,
 
 /**
  * @brief Get transform parameters.
- * @param desc Plan description
- * @param transformParams Transform parameters
- * @param errorDetails Error details
+ * @param[in]  desc            Plan description
+ * @param[out] transformParams Transform parameters
+ * @param[out] errorDetails    Error details
  * @return Error code
  */
 afft_Error afft_Description_getTransformParameters(const afft_Description* desc,
@@ -98,9 +98,9 @@ afft_Error afft_Description_getTransformParameters(const afft_Description* desc,
 
 /**
  * @brief Get transform parameters variant.
- * @param desc Plan description
- * @param transformParamsVariant Transform parameters variant
- * @param errorDetails Error details
+ * @param[in]  desc                   Plan description
+ * @param[out] transformParamsVariant Transform parameters variant
+ * @param[out] errorDetails           Error details
  * @return Error code
  */
 afft_Error afft_Description_getTransformParametersVariant(const afft_Description*          desc,
@@ -109,9 +109,9 @@ afft_Error afft_Description_getTransformParametersVariant(const afft_Description
 
 /**
  * @brief Get multi-process backend.
- * @param desc Plan description
- * @param mpBackend Multi-process backend
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] mpBackend    Multi-process backend
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getMpBackend(const afft_Description* desc,
@@ -120,9 +120,9 @@ afft_Error afft_Description_getMpBackend(const afft_Description* desc,
 
 /**
  * @brief Get multi-process backend parameters.
- * @param desc Plan description
- * @param mpBackendParams Multi-process backend parameters
- * @param errorDetails Error details
+ * @param[in]  desc            Plan description
+ * @param[out] mpBackendParams Multi-process backend parameters
+ * @param[out] errorDetails    Error details
  * @return Error code
  */
 afft_Error afft_Description_getMpBackendParameters(const afft_Description* desc,
@@ -131,9 +131,9 @@ afft_Error afft_Description_getMpBackendParameters(const afft_Description* desc,
 
 /**
  * @brief Get multi-process backend parameters variant.
- * @param desc Plan description
- * @param mpBackendParamsVariant Multi-process backend parameters variant
- * @param errorDetails Error details
+ * @param[in]  desc                   Plan description
+ * @param[out] mpBackendParamsVariant Multi-process backend parameters variant
+ * @param[out] errorDetails           Error details
  * @return Error code
  */
 afft_Error afft_Description_getMpBackendParametersVariant(const afft_Description*          desc,
@@ -142,9 +142,9 @@ afft_Error afft_Description_getMpBackendParametersVariant(const afft_Description
 
 /**
  * @brief Get target.
- * @param desc Plan description
- * @param target Target
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] target       Target
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getTarget(const afft_Description* desc,
@@ -153,9 +153,9 @@ afft_Error afft_Description_getTarget(const afft_Description* desc,
 
 /**
  * @brief Get target count.
- * @param desc Plan description
- * @param targetCount Target count
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] targetCount  Target count
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getTargetCount(const afft_Description* desc,
@@ -164,9 +164,9 @@ afft_Error afft_Description_getTargetCount(const afft_Description* desc,
 
 /**
  * @brief Get target parameters.
- * @param desc Plan description
- * @param targetParams Target parameters
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] targetParams Target parameters
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getTargetParameters(const afft_Description* desc,
@@ -175,9 +175,9 @@ afft_Error afft_Description_getTargetParameters(const afft_Description* desc,
 
 /**
  * @brief Get target parameters variant.
- * @param desc Plan description
- * @param targetParamsVariant Target parameters variant
- * @param errorDetails Error details
+ * @param[in]  desc                Plan description
+ * @param[out] targetParamsVariant Target parameters variant
+ * @param[out] errorDetails        Error details
  * @return Error code
  */
 afft_Error afft_Description_getTargetParametersVariant(const afft_Description*       desc,
@@ -186,9 +186,9 @@ afft_Error afft_Description_getTargetParametersVariant(const afft_Description*  
 
 /**
  * @brief Get memory layout.
- * @param desc Plan description
- * @param memoryLayout Memory layout
- * @param errorDetails Error details
+ * @param[in]  desc         Plan description
+ * @param[out] memoryLayout Memory layout
+ * @param[out] errorDetails Error details
  * @return Error code
  */
 afft_Error afft_Description_getMemoryLayout(const afft_Description* desc,
@@ -197,9 +197,9 @@ afft_Error afft_Description_getMemoryLayout(const afft_Description* desc,
 
 /**
  * @brief Get memory layout parameters.
- * @param desc Plan description
- * @param memoryLayoutParams Memory layout parameters
- * @param errorDetails Error details
+ * @param[in]  desc               Plan description
+ * @param[out] memoryLayoutParams Memory layout parameters
+ * @param[out] errorDetails       Error details
  * @return Error code
  */
 afft_Error afft_Description_getMemoryLayoutParameters(const afft_Description* desc,
@@ -208,9 +208,9 @@ afft_Error afft_Description_getMemoryLayoutParameters(const afft_Description* de
 
 /**
  * @brief Get memory layout parameters variant.
- * @param desc Plan description
- * @param memoryLayoutParamsVariant Memory layout parameters variant
- * @param errorDetails Error details
+ * @param[in]  desc                      Plan description
+ * @param[out] memoryLayoutParamsVariant Memory layout parameters variant
+ * @param[out] errorDetails              Error details
  * @return Error code
  */
 afft_Error afft_Description_getMemoryLayoutParametersVariant(const afft_Description*             desc,

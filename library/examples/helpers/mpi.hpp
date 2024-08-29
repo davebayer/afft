@@ -31,7 +31,7 @@ namespace helpers::mpi
 {
   /**
    * @brief Get the rank of the MPI process in the communicator.
-   * @param comm MPI communicator
+   * @param[in] comm MPI communicator
    * @return Rank of the MPI process
    */
   inline int getRank(MPI_Comm comm)

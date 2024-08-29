@@ -60,7 +60,7 @@
 
 /**
  * @brief Define AFFT_PARAM macro to enable passing parameters containing commas
- * @param ... Parameter
+ * @param[in] ... Parameter
  */
 #define AFFT_PARAM(...)         __VA_ARGS__
 

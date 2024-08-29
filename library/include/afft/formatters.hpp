@@ -50,8 +50,8 @@ struct std::formatter<afft::Backend> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a backend.
-   * @param backend Backend
-   * @param ctx Format context
+   * @param[in] backend Backend
+   * @param[in] ctx     Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -69,8 +69,8 @@ struct std::formatter<afft::BackendMask> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a backend mask.
-   * @param mask Backend mask
-   * @param ctx Format context
+   * @param[in] mask Backend mask
+   * @param[in] ctx  Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -103,8 +103,8 @@ struct std::formatter<afft::SelectStrategy> : afft::detail::ParseFormatterSkippe
 {
   /**
    * @brief Format a select strategy.
-   * @param strategy Select strategy
-   * @param ctx Format context
+   * @param[in] strategy Select strategy
+   * @param[in] ctx      Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -139,8 +139,8 @@ struct std::formatter<afft::Error> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format an error.
-   * @param error Error
-   * @param ctx Format context
+   * @param[in] error Error
+   * @param[in] ctx   Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -203,8 +203,8 @@ struct std::formatter<afft::MemoryLayout> : afft::detail::ParseFormatterSkipper<
 {
   /**
    * @brief Format a memory layout.
-   * @param layout Memory layout
-   * @param ctx Format context
+   * @param[in] layout Memory layout
+   * @param[in] ctx    Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -236,8 +236,8 @@ struct std::formatter<afft::Alignment> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format an alignment.
-   * @param alignment Alignment
-   * @param ctx Format context
+   * @param[in] alignment Alignment
+   * @param[in] ctx       Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -254,8 +254,8 @@ struct std::formatter<afft::ComplexFormat> : afft::detail::ParseFormatterSkipper
 {
   /**
    * @brief Format a complex format.
-   * @param format Complex format
-   * @param ctx Format context
+   * @param[in] format Complex format
+   * @param[in] ctx    Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -290,8 +290,8 @@ struct std::formatter<afft::MpBackend> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a multi-process backend.
-   * @param backend Multi-process backend
-   * @param ctx Format context
+   * @param[in] backend Multi-process backend
+   * @param[in] ctx     Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -326,8 +326,8 @@ struct std::formatter<afft::Target> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a target.
-   * @param target Target
-   * @param ctx Format context
+   * @param[in] target Target
+   * @param[in] ctx    Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -366,8 +366,8 @@ struct std::formatter<afft::Transform> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a transform.
-   * @param transform Transform
-   * @param ctx Format context
+   * @param[in] transform Transform
+   * @param[in] ctx       Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -401,8 +401,8 @@ struct std::formatter<afft::Direction> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a direction.
-   * @param direction Direction
-   * @param ctx Format context
+   * @param[in] direction Direction
+   * @param[in] ctx       Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -434,8 +434,8 @@ struct std::formatter<afft::Normalization> : afft::detail::ParseFormatterSkipper
 {
   /**
    * @brief Format a normalization.
-   * @param normalization Normalization
-   * @param ctx Format context
+   * @param[in] normalization Normalization
+   * @param[in] ctx           Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -469,8 +469,8 @@ struct std::formatter<afft::Placement> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a placement.
-   * @param placement Placement
-   * @param ctx Format context
+   * @param[in] placement Placement
+   * @param[in] ctx       Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -502,8 +502,8 @@ struct std::formatter<afft::PrecisionTriad> : afft::detail::ParseFormatterSkippe
 {
   /**
    * @brief Format a precision triad.
-   * @param triad Precision triad
-   * @param ctx Format context
+   * @param[in] triad Precision triad
+   * @param[in] ctx   Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -520,8 +520,8 @@ struct std::formatter<afft::dft::Type> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a DFT type.
-   * @param type DFT type
-   * @param ctx Format context
+   * @param[in] type DFT type
+   * @param[in] ctx  Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -555,8 +555,8 @@ struct std::formatter<afft::dht::Type> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a DHT type.
-   * @param type DHT type
-   * @param ctx Format context
+   * @param[in] type DHT type
+   * @param[in] ctx  Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -586,8 +586,8 @@ struct std::formatter<afft::dtt::Type> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a DTT type.
-   * @param type DTT type
-   * @param ctx Format context
+   * @param[in] type DTT type
+   * @param[in] ctx  Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -650,8 +650,8 @@ struct std::formatter<afft::Precision> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a precision.
-   * @param precision Precision
-   * @param ctx Format context
+   * @param[in] precision Precision
+   * @param[in] ctx       Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -693,8 +693,8 @@ struct std::formatter<afft::Complexity> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a complexity.
-   * @param complexity Complexity
-   * @param ctx Format context
+   * @param[in] complexity Complexity
+   * @param[in] ctx        Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -726,8 +726,8 @@ struct std::formatter<afft::TypeProperties<T>> : afft::detail::ParseFormatterSki
 {
   /**
    * @brief Format a type properties.
-   * @param properties Type properties
-   * @param ctx Format context
+   * @param[in] properties Type properties
+   * @param[in] ctx        Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>
@@ -747,8 +747,8 @@ struct std::formatter<afft::Version> : afft::detail::ParseFormatterSkipper<>
 {
   /**
    * @brief Format a version.
-   * @param version Version
-   * @param ctx Format context
+   * @param[in] version Version
+   * @param[in] ctx     Format context
    * @return decltype(ctx.out())
    */
   template<typename FormatContext>

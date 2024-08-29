@@ -40,70 +40,70 @@ extern "C"
 
 /**
  * @brief Export FFTW3 wisdom to a file.
- * @param library FFTW3 library type.
- * @param filename Name of the file to export the wisdom to.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  filename   Name of the file to export the wisdom to.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_exportWisdomToFilename(afft_fftw3_Library library, const char* filename, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Export FFTW3 wisdom to a file.
- * @param library FFTW3 library type.
- * @param file File to export the wisdom to.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  file       File to export the wisdom to.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_exportWisdomToFile(afft_fftw3_Library library, FILE* file, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Export FFTW3 wisdom to a string. The string must be freed by the caller using free().
- * @param library FFTW3 library type.
- * @param str String to export the wisdom to.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[out] str        String to export the wisdom to.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_exportWisdomToString(afft_fftw3_Library library, char** str, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Import FFTW3 system wisdom.
- * @param library FFTW3 library type.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_importSystemWisdom(afft_fftw3_Library library, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Import FFTW3 wisdom from a file.
- * @param library FFTW3 library type.
- * @param filename Name of the file to import the wisdom from.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  filename   Name of the file to import the wisdom from.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_importWisdomFromFilename(afft_fftw3_Library library, const char* filename, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Import FFTW3 wisdom from a file.
- * @param library FFTW3 library type.
- * @param file File to import the wisdom from.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  file       File to import the wisdom from.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_importWisdomFromFile(afft_fftw3_Library library, FILE* file, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Import FFTW3 wisdom from a string.
- * @param library FFTW3 library type.
- * @param str String to import the wisdom from.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  str        String to import the wisdom from.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_importWisdomFromString(afft_fftw3_Library library, const char* str, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Forget FFTW3 wisdom.
- * @param library FFTW3 library type.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_forgetWisdom(afft_fftw3_Library library, afft_ErrorDetails* errDetails);
@@ -111,18 +111,18 @@ afft_Error afft_fftw3_forgetWisdom(afft_fftw3_Library library, afft_ErrorDetails
 #ifdef AFFT_ENABLE_MPI
 /**
  * @brief Broadcast FFTW3 wisdom.
- * @param library FFTW3 library type.
- * @param comm MPI communicator.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  comm       MPI communicator.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_mpi_broadcastWisdom(afft_fftw3_Library library, MPI_Comm comm, afft_ErrorDetails* errDetails);
 
 /**
  * @brief Gather FFTW3 wisdom.
- * @param library FFTW3 library type.
- * @param comm MPI communicator.
- * @param errDetails Error details.
+ * @param[in]  library    FFTW3 library type.
+ * @param[in]  comm       MPI communicator.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_fftw3_mpi_gatherWisdom(afft_fftw3_Library library, MPI_Comm comm, afft_ErrorDetails* errDetails);

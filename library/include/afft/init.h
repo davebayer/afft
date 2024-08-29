@@ -38,14 +38,14 @@ extern "C"
 
 /**
  * @brief Initialize the library
- * @param errDetails Error details.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_init(afft_ErrorDetails* errDetails);
 
 /**
  * @brief Finalize the library
- * @param errDetails Error details.
+ * @param[out] errDetails Error details.
  * @return Error code.
  */
 afft_Error afft_finalize(afft_ErrorDetails* errDetails);

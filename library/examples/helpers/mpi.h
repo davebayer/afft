@@ -37,9 +37,9 @@ extern "C"
 
 /**
  * @brief Check MPI error and exit if not success. Should not be used directly, use MPI_CALL macro instead.
- * @param error MPI error
- * @param file file name
- * @param line line number
+ * @param[in] error MPI error
+ * @param[in] file  file name
+ * @param[in] line  line number
  */
 static inline void check_mpi_error(int error, const char* file, int line)
 {
@@ -52,13 +52,13 @@ static inline void check_mpi_error(int error, const char* file, int line)
 
 /**
  * @brief Macro for checking MPI errors. The call cannot contain _error variable.
- * @param call MPI function call
+ * @param[in] call MPI function call
  */
 #define MPI_CALL(call) check_mpi_error((call), __FILE__, __LINE__)
 
 /**
  * @brief Get the rank of the MPI process in the communicator.
- * @param comm MPI communicator
+ * @param[in] comm MPI communicator
  * @return Rank of the MPI process
  */
 static inline int helpers_mpi_getRank(MPI_Comm comm)

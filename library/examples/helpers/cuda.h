@@ -37,9 +37,9 @@ extern "C"
 
 /**
  * @brief Check CUDA runtime error and exit if not success. Should not be used directly, use CUDART_CALL macro instead.
- * @param error CUDA runtime error
- * @param file file name
- * @param line line number
+ * @param[in] error CUDA runtime error
+ * @param[in] file  file name
+ * @param[in] line  line number
  */
 static inline void check_cudart_error(cudaError_t error, const char* file, int line)
 {
@@ -52,7 +52,7 @@ static inline void check_cudart_error(cudaError_t error, const char* file, int l
 
 /**
  * @brief Macro for checking CUDA runtime errors. The call cannot contain _error variable.
- * @param call CUDA runtime function call
+ * @param[in] call CUDA runtime function call
  */
 #define CUDART_CALL(call) check_cudart_error((call), __FILE__, __LINE__)
 

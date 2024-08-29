@@ -89,9 +89,9 @@ AFFT_EXPORT namespace afft
       /**
        * @brief Constructor
        * @tparam RetvalT Error return value type
-       * @param error Error code
-       * @param what Error message
-       * @param retval Error return value
+       * @param[in] error  Error code
+       * @param[in] what   Error message
+       * @param[in] retval Error return value
        */
       template<typename RetvalT = std::monostate>
       explicit Exception(Error error, const char* what, RetvalT&& retval = {}) noexcept

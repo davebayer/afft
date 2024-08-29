@@ -51,8 +51,8 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor.
-       * @param transformParams Transform parameters.
-       * @param targetParams Target parameters.
+       * @param[in] transformParams Transform parameters.
+       * @param[in] targetParams    Target parameters.
        */
       Description(const TransformParametersVariant& transformParams,
                   const TargetParametersVariant&    targetParams)
@@ -61,9 +61,9 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor.
-       * @param transformParams Transform parameters.
-       * @param targetParams Target parameters.
-       * @param memoryLayoutParams Memory layout parameters.
+       * @param[in] transformParams    Transform parameters.
+       * @param[in] targetParams       Target parameters.
+       * @param[in] memoryLayoutParams Memory layout parameters.
        */
       Description(const TransformParametersVariant&    transformParams,
                   const TargetParametersVariant&       targetParams,
@@ -73,9 +73,9 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor.
-       * @param transformParams Transform parameters.
-       * @param mpBackendParams Multi-process backend parameters.
-       * @param targetParams Target parameters.
+       * @param[in] transformParams Transform parameters.
+       * @param[in] mpBackendParams Multi-process backend parameters.
+       * @param[in] targetParams    Target parameters.
        */
       Description(const TransformParametersVariant& transformParams,
                   const MpBackendParametersVariant& mpBackendParams,
@@ -85,10 +85,10 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor.
-       * @param transformParams Transform parameters.
-       * @param mpBackendParams Multi-process backend parameters.
-       * @param targetParams Target parameters.
-       * @param memoryLayoutParams Memory layout parameters.
+       * @param[in] transformParams    Transform parameters.
+       * @param[in] mpBackendParams    Multi-process backend parameters.
+       * @param[in] targetParams       Target parameters.
+       * @param[in] memoryLayoutParams Memory layout parameters.
        */
       Description(const TransformParametersVariant&    transformParams,
                   const MpBackendParametersVariant&    mpBackendParams,
@@ -99,8 +99,8 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor. Internal use only.
-       * @param desc Plan description.
-       * @param token Description token.
+       * @param[in] desc  Plan description.
+       * @param[in] token Description token.
        */
       Description(const detail::Desc& desc, detail::DescToken)
       : mDesc{desc}
@@ -313,8 +313,8 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Equality operator.
-       * @param lhs Left-hand side.
-       * @param rhs Right-hand side.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
        * @return True if equal, false otherwise.
        */
       [[nodiscard]] friend bool operator==(const Description& lhs, const Description& rhs) noexcept
@@ -324,8 +324,8 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Inequality operator.
-       * @param lhs Left-hand side.
-       * @param rhs Right-hand side.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
        * @return True if not equal, false otherwise.
        */
       [[nodiscard]] friend bool operator!=(const Description& lhs, const Description& rhs) noexcept
@@ -344,7 +344,7 @@ struct std::hash<afft::Description>
 {
   /**
    * @brief Hash function.
-   * @param desc Description.
+   * @param[in] desc Description.
    * @return Hash value.
    */
   [[nodiscard]] std::size_t operator()(const afft::Description& desc) const noexcept

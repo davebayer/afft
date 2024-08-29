@@ -99,7 +99,7 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
-   * @param value Value to apply the operation to.
+   * @param[in] value Value to apply the operation to.
    * @return Result of the operation.
    */
   [[nodiscard]] constexpr BackendMask operator~(BackendMask value) noexcept
@@ -111,8 +111,8 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `and` operation to a BackendMask or Backend.
-   * @param lhs Left-hand side of the operation.
-   * @param rhs Right-hand side of the operation.
+   * @param[in] lhs Left-hand side of the operation.
+   * @param[in] rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
   [[nodiscard]] constexpr BackendMask operator&(BackendMask lhs, BackendMask rhs) noexcept
@@ -125,8 +125,8 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `or` operation to a BackendMask or Backend.
-   * @param lhs Left-hand side of the operation.
-   * @param rhs Right-hand side of the operation.
+   * @param[in] lhs Left-hand side of the operation.
+   * @param[in] rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
   [[nodiscard]] constexpr BackendMask operator|(BackendMask lhs, BackendMask rhs) noexcept
@@ -139,8 +139,8 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Applies the bitwise `xor` operation to a BackendMask or Backend.
-   * @param lhs Left-hand side of the operation.
-   * @param rhs Right-hand side of the operation.
+   * @param[in] lhs Left-hand side of the operation.
+   * @param[in] rhs Right-hand side of the operation.
    * @return Result of the operation.
    */
   [[nodiscard]] constexpr BackendMask operator^(BackendMask lhs, BackendMask rhs) noexcept
@@ -153,7 +153,7 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Makes a BackendMask from a Backend.
-   * @param backend Backend.
+   * @param[in] backend Backend.
    * @return BackendMask.
    */
   [[nodiscard]] constexpr BackendMask makeBackendMask(Backend backend) noexcept
@@ -584,7 +584,7 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Get the name of the backend.
-   * @param backend Backend.
+   * @param[in] backend Backend.
    * @return Name of the backend.
    */
   [[nodiscard]] constexpr std::string_view getBackendName(Backend backend) noexcept

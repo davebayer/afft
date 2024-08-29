@@ -71,7 +71,7 @@ typedef uint16_t afft_BackendMask;
 
 /**
  * @brief Make backend mask from backend
- * @param backend Backend
+ * @param[in] backend Backend
  * @return Backend mask
  */
 static inline afft_BackendMask afft_makeBackendMask(afft_Backend backend)
@@ -383,7 +383,7 @@ typedef struct
 
 /**
  * @brief Get the name of the backend
- * @param backend Backend
+ * @param[in] backend Backend
  * @return Name of the backend
  */
 const char* afft_getBackendName(afft_Backend backend);
