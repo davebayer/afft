@@ -177,10 +177,17 @@ namespace afft::detail
        * @param[in] devices CUDA devices.
        */
       CudaDesc(const View<int> devices)
-      : targetCount{devices.size()},
-        devices{std::make_unique<int[]>(targetCount)}
+      : mTargetCount{devices.size()}
       {
-        std::copy(devices.begin(), devices.end(), this->devices.get());
+        if (mTargetCout < maxLocDevices)
+        {
+          std::copy(devices.begin(), devices.end(), mDevices.loc);
+        }
+        else
+        {
+          mDevices.ext = new int[mTargetCount];
+          std::copy(devices.begin(), devices.end(), mDevices.ext);
+        }
       }
 
       /**
@@ -191,25 +198,61 @@ namespace afft::detail
       : CudaDesc{other.getDevices()}
       {}
 
-      /// @brief Move constructor.
-      CudaDesc(CudaDesc&&) = default;
+      /**
+       * @brief Move constructor.
+       * @param[in] other Other.
+       */
+      CudaDesc(CudaDesc&& other)
+      : mTargetCount{std::exchange(other.mTargetCount, 0)},
+        mDevices{std::exchange(other.mDevices, {})}
+      {}
 
       /// @brief Destructor.
-      ~CudaDesc() = default;
+      ~CudaDesc()
+      {
+        destroy();
+      }
 
-      /// @brief Copy assignment operator.
+      /**
+       * @brief Copy assignment operator.
+       * @param[in] other Other.
+       * @return Reference to this.
+       */
       CudaDesc& operator=(const CudaDesc& other)
       {
         if (this != std::addressof(other))
         {
-          targetCount = other.targetCount;
-          devices     = std::make_unique<int[]>(targetCount);
-          std::copy(other.devices.get(), other.devices.get() + targetCount, devices.get());
+          destroy();
+
+          mTargetCount = other.mTargetCount;
+
+          if (mTargetCout < maxLocDevices)
+          {
+            std::copy(devices.begin(), devices.end(), mDevices.loc);
+          }
+          else
+          {
+            mDevices.ext = new int[mTargetCount];
+            std::copy(devices.begin(), devices.end(), mDevices.ext);
+          }
         }
       }
 
-      /// @brief Move assignment operator.
-      CudaDesc& operator=(CudaDesc&&) = default;
+      /**
+       * @brief Move assignment operator.
+       * @param[in] other Other.
+       * @return Reference to this.
+       */
+      CudaDesc& operator=(CudaDesc&& other)
+      {
+        if (this != std::addressof(other))
+        {
+          destroy();
+
+          mTargetCount = std::exchange(other.mTargetCount, 0);
+          mDevices     = std::exchange(other.mDevices, {});
+        }
+      }
 
       /**
        * @brief Get the target.
@@ -226,7 +269,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr std::size_t getTargetCount() const noexcept
       {
-        return targetCount;
+        return mTargetCount;
       }
 
       /**
@@ -235,7 +278,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr View<int> getDevices() const noexcept
       {
-        return View<int>{devices.get(), targetCount};
+        return View<int>{(mTargetCount < maxLocDevices) ? &mDevices.loc : mDevices.ext, mTargetCount};
       }
 
       /**
@@ -246,7 +289,11 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const CudaDesc& lhs, const CudaDesc& rhs) noexcept
       {
-        return std::equal(lhs.devices.get(), lhs.devices.get() + lhs.targetCount, rhs.devices.get());
+        const auto lhsDevices = lhs.getDevices();
+        const auto rhsDevices = rhs.getDevices();
+
+        return lhsDevices.size() == rhsDevices.size() &&
+               std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin());
       }
 
       /**
@@ -261,111 +308,32 @@ namespace afft::detail
       }
 
     private:
-      std::size_t            targetCount{}; ///< Number of targets
-      std::unique_ptr<int[]> devices{};     ///< CUDA devices    
+      /// @brief Devices union. Enables small buffer optimization.
+      union Devices
+      {
+        /// @brief Maximum number of local devices
+        static constexpr std::size_t maxLocDevices{sizeof(int[]) / sizeof(int)};
+
+        int  loc[maxLocDevices]; ///< Local devices
+        int* ext;                ///< External devices
+      };
+
+      /// @brief Destroy the object.
+      void destroy()
+      {
+        if (mTargetCount >= maxLocDevices)
+        {
+          delete[] mDevices.ext;
+        }
+      }
+
+      std::size_t mTargetCount{}; ///< Number of targets
+      Devices     mDevices{};     ///< CUDA devices
   };
 #endif /* AFFT_ENABLE_CUDA */
 
 #ifdef AFFT_ENABLE_HIP
-  /// @brief HIP descriptor
-  class HipDesc
-  {
-    public:
-      /// @brief Default constructor.
-      HipDesc() = default;
-
-      /**
-       * @brief Constructor from HIP devices.
-       * @param[in] devices HIP devices.
-       */
-      HipDesc(const View<int> devices)
-      : targetCount{devices.size()},
-        devices{std::make_unique<int[]>(targetCount)}
-      {
-        std::copy(devices.begin(), devices.end(), this->devices.get());
-      }
-
-      /**
-       * @brief Copy constructor.
-       * @param[in] other Other.
-       */
-      HipDesc(const HipDesc& other)
-      : HipDesc{other.getDevices()}
-      {}
-
-      /// @brief Move constructor.
-      HipDesc(HipDesc&&) = default;
-
-      /// @brief Destructor.
-      ~HipDesc() = default;
-
-      /// @brief Copy assignment operator.
-      HipDesc& operator=(const HipDesc& other)
-      {
-        if (this != std::addressof(other))
-        {
-          targetCount = other.targetCount;
-          devices     = std::make_unique<int[]>(targetCount);
-          std::copy(other.devices.get(), other.devices.get() + targetCount, devices.get());
-        }
-      }
-
-      /// @brief Move assignment operator.
-      HipDesc& operator=(HipDesc&&) = default;
-
-      /**
-       * @brief Get the target.
-       * @return Target.
-       */
-      [[nodiscard]] constexpr Target getTarget() const noexcept
-      {
-        return Target::hip;
-      }
-
-      /**
-       * @brief Get the number of targets.
-       * @return Number of targets.
-       */
-      [[nodiscard]] constexpr std::size_t getTargetCount() const noexcept
-      {
-        return targetCount;
-      }
-
-      /**
-       * @brief Get the HIP devices.
-       * @return HIP devices.
-       */
-      [[nodiscard]] constexpr View<int> getDevices() const noexcept
-      {
-        return View<int>{devices.get(), targetCount};
-      }
-
-      /**
-       * @brief Equality operator.
-       * @param[in] lhs Left-hand side.
-       * @param[in] rhs Right-hand side.
-       * @return True if equal, false otherwise.
-       */
-      [[nodiscard]] friend bool operator==(const HipDesc& lhs, const HipDesc& rhs) noexcept
-      {
-        return std::equal(lhs.devices.get(), lhs.devices.get() + lhs.targetCount, rhs.devices.get());
-      }
-
-      /**
-       * @brief Inequality operator.
-       * @param[in] lhs Left-hand side.
-       * @param[in] rhs Right-hand side.
-       * @return True if not equal, false otherwise.
-       */
-      [[nodiscard]] friend bool operator!=(const HipDesc& lhs, const HipDesc& rhs) noexcept
-      {
-        return !(lhs == rhs);
-      }
-
-    private:
-      std::size_t            targetCount{}; ///< Number of targets
-      std::unique_ptr<int[]> devices{};     ///< HIP devices    
-  };
+  // TODO: first test cuda, then copy and adapt for hip
 #endif /* AFFT_ENABLE_HIP */
   
 #ifdef AFFT_ENABLE_OPENCL
