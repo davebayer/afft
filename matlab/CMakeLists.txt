@@ -37,14 +37,17 @@ endif()
 # Add mex-cpp-wrapper
 add_subdirectory(3rdparty/mex-cpp-wrapper)
 
+# Select link targets based on GPU support
 if(MEXW_ENABLE_GPU)
   set(LINK_TARGETS afft::afft-header-only matlabw::matlabw-gpu)
 else()
   set(LINK_TARGETS afft::afft-header-only matlabw::matlabw)
 endif()
 
+# Set mex sources
 set(MEX_SOURCES src/entrypoint.cpp src/plan.cpp)
 
+# Add mex target
 matlab_add_mex(
   NAME          afft-matlab
   SRC           ${MEX_SOURCES}
@@ -52,8 +55,12 @@ matlab_add_mex(
   LINK_TO       ${LINK_TARGETS}
   R2018a
 )
+
+# Copy package to build directory before building
 add_custom_command(TARGET afft-matlab PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/package ${CMAKE_CURRENT_BINARY_DIR}/package
 )
+
+# Set output directory for mex file
 set_property(TARGET afft-matlab
   PROPERTY LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/package/+afft/private)
