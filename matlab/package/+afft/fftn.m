@@ -39,7 +39,7 @@ function Y = fftn(X, varargin)
 %   fftn, afft.ifftn, ifftn
 %
 % This file is part of the afft library. For more information, see the official <a href="matlab:
-% web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
+% web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
   Y = afft_matlab(uint32(2002), X, varargin{:});
 end

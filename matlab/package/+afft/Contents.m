@@ -53,4 +53,4 @@
 % See also fft, fft2, fftn, ifft, ifft2, ifftn, dct, dct2, idct, idct2, dst, idst
 %
 % This file is part of the afft library. For more information, see the official <a href="matlab:
-% web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
+% web('https://github.com/DejvBayer/afft.git')">GitHub</a>.

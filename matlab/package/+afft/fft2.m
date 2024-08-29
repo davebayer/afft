@@ -45,7 +45,7 @@ function Y = fft2(X, varargin)
 %   fft2, afft.ifft2, ifft2
 %
 % This file is part of the afft library. For more information, see the official <a href="matlab:
-% web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
+% web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
   Y = afft_matlab(uint32(2001), X, varargin{:});
 end

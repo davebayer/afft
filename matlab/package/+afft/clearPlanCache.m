@@ -12,7 +12,7 @@ function clearPlanCache()
 %   afft.Plan
 %
 % This file is part of the afft library. For more information, see the official <a href="matlab:
-% web('https://github.com/DejvBayer/afft.git')">afft GitHub</a>.
+% web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
   afft_matlab(uint32(0))
 end
