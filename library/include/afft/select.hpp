@@ -22,40 +22,31 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_H
-#define AFFT_H
+#ifndef AFFT_SELECT_HPP
+#define AFFT_SELECT_HPP
 
-// Include the version header.
-#include "afft-version.h"
-
-// Include the config header.
-#include "detail/config.h"
-
-// Include only once in the top-level header.
-#include "detail/include.h"
-#define AFFT_TOP_LEVEL_INCLUDE
-
-// Check for uintptr_t.
-#ifndef UINTPTR_MAX
-# error "afft C library requires uintptr_t. Please use standard C library implementing uintptr_t."
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.hpp"
 #endif
 
-// Include all public headers.
-#include "backend.h"
-#include "common.h"
-#include "Description.h"
-#include "error.h"
-#include "fftw3.h"
-#include "init.h"
-#include "memory.h"
-#include "mp.h"
-#include "Plan.h"
-// #include "PlanCache.h"
-#include "select.h"
-#include "target.h"
-#include "transform.h"
-#include "type.h"
-#include "utils.h"
-#include "version.h"
+#include "backend.hpp"
 
-#endif /* AFFT_H */
+namespace afft
+{
+  /// @brief Backend select strategy
+  enum class SelectStrategy : ::afft_SelectStrategy
+  {
+    first = afft_SelectStrategy_first, ///< Select the first available backend
+    best  = afft_SelectStrategy_best,  ///< Select the best available backend
+  };
+
+  /// @brief Backend selection parameters
+  struct SelectParameters
+  {
+    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask    mask{BackendMask::all};          ///< Backend mask
+    View<Backend>  order{};                         ///< Backend initialization order
+  };
+} // namespace afft
+
+#endif /* AFFT_SELECT_HPP */

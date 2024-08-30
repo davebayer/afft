@@ -43,7 +43,7 @@ namespace afft::detail::pocketfft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Description& desc, const BackendParamsT&)
+  makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
     const auto& descImpl = desc.get(DescToken::make());
 
@@ -61,7 +61,7 @@ namespace afft::detail::pocketfft
     {
       if constexpr (BackendParamsT::target == Target::cpu)
       {
-        return sp::cpu::makePlan(desc);
+        return sp::cpu::makePlan(desc, backendParams);
       }
       else
       {

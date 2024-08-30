@@ -71,14 +71,17 @@ int main()
 
   // make backend parameters
   afft::cpu::BackendParameters backendParams{};
-  backendParams.strategy          = afft::SelectStrategy::first;
-  backendParams.mask              = (afft::BackendMask::fftw3 | afft::BackendMask::mkl | afft::BackendMask::pocketfft);
-  backendParams.order             = backendOrder;
   backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::measure; // FFTW3 specific planner flag
   backendParams.fftw3.timeLimit   = std::chrono::seconds{2}; // limit the time for the FFTW3 planner
 
+  // make select parameters
+  afft::SelectParameters selectParams{};
+  selectParams.strategy = afft::SelectStrategy::first;
+  selectParams.mask     = (afft::BackendMask::fftw3 | afft::BackendMask::mkl | afft::BackendMask::pocketfft);
+  selectParams.order    = backendOrder;
+
   // make the plan with the parameters
-  std::unique_ptr<afft::Plan> plan = afft::makePlan(dftParams, cpuParams, memoryLayout, backendParams);
+  std::unique_ptr<afft::Plan> plan = afft::makePlan({dftParams, cpuParams, memoryLayout}, backendParams, selectParams);
 
   // create source and destination vectors
   AlignedVector<std::complex<PrecT>> src(plan->getSrcElemCounts().front()); // source vector

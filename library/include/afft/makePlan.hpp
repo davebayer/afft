@@ -33,6 +33,7 @@
 #include "init.hpp"
 #include "memory.hpp"
 #include "Plan.hpp"
+#include "select.hpp"
 #include "detail/makePlan.hpp"
 
 AFFT_EXPORT namespace afft
@@ -45,8 +46,9 @@ AFFT_EXPORT namespace afft
    * @return The plan.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&    desc,
-                                               const BackendParamsT& backendParams)
+  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&      desc,
+                                               const BackendParamsT&   backendParams,
+                                               const SelectParameters& selectParams = {})
   {
     static_assert(isBackendParameters<BackendParamsT>, "invalid backend parameters");
 
@@ -55,7 +57,7 @@ AFFT_EXPORT namespace afft
       throw Exception{Error::invalidArgument, "invalid backend parameters"};
     }
 
-    return detail::makePlan(desc, backendParams);
+    return detail::makePlan(desc, backendParams, selectParams);
   }
 
   /**
@@ -63,9 +65,10 @@ AFFT_EXPORT namespace afft
    * @param desc Plan description.
    * @return The plan.
    */
-  [[nodiscard]] inline std::unique_ptr<Plan> makePlan(const Description& desc)
+  [[nodiscard]] inline std::unique_ptr<Plan> makePlan(const Description&      desc,
+                                                      const SelectParameters& selectParams = {})
   {
-    return detail::makePlanWithDefaultBackendParameters(desc);
+    return detail::makePlanWithDefaultBackendParameters(desc, selectParams);
   }
 
   /**
@@ -75,17 +78,18 @@ AFFT_EXPORT namespace afft
    * @return The plan.
    */
   [[nodiscard]] inline std::unique_ptr<Plan> makePlan(const Description&              desc,
-                                                      const BackendParametersVariant& backendParamsVariant)
+                                                      const BackendParametersVariant& backendParamsVariant,
+                                                      const SelectParameters&         selectParams = {})
   {
     return std::visit([&](const auto& backendParams)
     {
       if constexpr (std::is_same_v<std::decay_t<decltype(backendParams)>, std::monostate>)
       {
-        return makePlan(desc);
+        return makePlan(desc, selectParams);
       }
       else
       {
-        return makePlan(desc, backendParams);
+        return makePlan(desc, backendParams, selectParams);
       }
     }, backendParamsVariant);
   }

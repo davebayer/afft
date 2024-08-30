@@ -32,7 +32,7 @@ int main(void)
   afft::CentralizedMemoryLayout memoryLayout{}; // set up memory layout
   memoryLayout.alignment = afft::alignmentOf(src.data(), dst.data());
 
-  auto plan = afft::makePlan(dftParams, cpuParams, memoryLayout); // generate the plan of the transform
+  auto plan = afft::makePlan({dftParams, cpuParams, memoryLayout}); // generate the plan of the transform
 
   plan->execute(src.data(), dst.data()); // execute the transform
 

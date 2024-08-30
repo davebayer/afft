@@ -167,9 +167,14 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const CentralMemDesc& lhs, const CentralMemDesc& rhs) noexcept
       {
-        return lhs.mShapeRank == rhs.mShapeRank &&
-               std::equal(lhs.getSrcStrides().begin(), lhs.getSrcStrides().end(), rhs.getSrcStrides().begin()) &&
-               std::equal(lhs.getDstStrides().begin(), lhs.getDstStrides().end(), rhs.getDstStrides().begin());
+        const auto lhsSrcStrides = lhs.getSrcStrides();
+        const auto rhsSrcStrides = rhs.getSrcStrides();
+
+        const auto lhsDstStrides = lhs.getDstStrides();
+        const auto rhsDstStrides = rhs.getDstStrides();
+
+        return std::equal(lhsSrcStrides.begin(), lhsSrcStrides.end(), rhsSrcStrides.begin(), rhsSrcStrides.end()) &&
+               std::equal(lhsDstStrides.begin(), lhsDstStrides.end(), rhsDstStrides.begin(), rhsDstStrides.end());
       }
 
       /**

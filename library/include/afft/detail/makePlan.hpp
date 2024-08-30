@@ -281,25 +281,25 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makeFirstPlan(const Description&     desc,
-                const BackendParamsT&  backendParams,
-                std::vector<Feedback>* feedbacks)
+  makeFirstPlan(const Description&      desc,
+                const BackendParamsT&   backendParams,
+                const SelectParameters& selectParams)
   {
     std::unique_ptr<Plan> plan{};
 
-    forEachBackend(backendParams.mask, backendParams.order, [&](Backend backend)
+    forEachBackend(selectParams.mask, selectParams.order, [&](Backend backend)
     {
       if (!plan)
       {
         std::string* feedbackMessage{};
 
-        if (feedbacks != nullptr)
-        {
-          auto& feedback = feedbacks->emplace_back();
-          feedback.backend = backend;
+        // if (feedbacks != nullptr)
+        // {
+        //   auto& feedback = feedbacks->emplace_back();
+        //   feedback.backend = backend;
 
-          feedbackMessage = &feedback.message;
-        }
+        //   feedbackMessage = &feedback.message;
+        // }
         
         plan = makePlan(backend, desc, backendParams, feedbackMessage);
       }
@@ -318,9 +318,9 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makeBestPlan([[maybe_unused]] const Description&     desc,
-               [[maybe_unused]] const BackendParamsT&  backendParams,
-               [[maybe_unused]] std::vector<Feedback>* feedbacks)
+  makeBestPlan([[maybe_unused]] const Description&      desc,
+               [[maybe_unused]] const BackendParamsT&   backendParams,
+               [[maybe_unused]] const SelectParameters& selectParams)
   {
     return {};
   }
@@ -335,21 +335,21 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makePlan(const Description&     desc,
-           const BackendParamsT&  backendParams,
-           std::vector<Feedback>* feedbacks = nullptr)
+  makePlan(const Description&      desc,
+           const BackendParamsT&   backendParams,
+           const SelectParameters& selectParams)
   {
-    validate(backendParams.strategy);
+    validate(selectParams.strategy);
 
     std::unique_ptr<Plan> plan{};
 
-    switch (backendParams.strategy)
+    switch (selectParams.strategy)
     {
     case SelectStrategy::first:
-      plan = makeFirstPlan(desc, backendParams, feedbacks);
+      plan = makeFirstPlan(desc, backendParams, selectParams);
       break;
     case SelectStrategy::best:
-      plan = makeBestPlan(desc, backendParams, feedbacks);
+      plan = makeBestPlan(desc, backendParams, selectParams);
       break;
     default:
       cxx::unreachable();
@@ -372,37 +372,37 @@ namespace afft::detail
    */
   template<MpBackend mpBackend>
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makePlanWithDefaultBackendParametersHelper(const Description& desc)
+  makePlanWithDefaultBackendParametersHelper(const Description& desc, const SelectParameters& selectParams)
   {
     switch (desc.getTarget())
     {
     case Target::cpu:
 #   ifdef AFFT_ENABLE_CPU
-      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cpu>{});
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cpu>{}, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "CPU backend is not enabled"};
 #   endif
     case Target::cuda:
 #   ifdef AFFT_ENABLE_CUDA
-      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cuda>{});
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::cuda>{}, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "CUDA backend is not enabled"};
 #   endif
     case Target::hip:
 #   ifdef AFFT_ENABLE_HIP
-      return detail::makePlan(desc, BackendParameters<mpBackend, Target::hip>{});
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::hip>{}, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "HIP backend is not enabled"};
 #   endif
     case Target::opencl:
 #   ifdef AFFT_ENABLE_OPENCL
-      return detail::makePlan(desc, BackendParameters<mpBackend, Target::opencl>{});
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::opencl>{}, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "OpenCL backend is not enabled"};
 #   endif
     case Target::openmp:
 #   ifdef AFFT_ENABLE_OPENMP
-      return detail::makePlan(desc, BackendParameters<mpBackend, Target::openmp>{});
+      return detail::makePlan(desc, BackendParameters<mpBackend, Target::openmp>{}, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "OpenMP backend is not enabled"};
 #   endif
@@ -417,15 +417,15 @@ namespace afft::detail
    * @return Plan.
    */
   [[nodiscard]] inline std::unique_ptr<Plan>
-  makePlanWithDefaultBackendParameters(const Description& desc)
+  makePlanWithDefaultBackendParameters(const Description& desc, const SelectParameters& selectParams)
   {
     switch (desc.getMpBackend())
     {
     case MpBackend::none:
-      return makePlanWithDefaultBackendParametersHelper<MpBackend::none>(desc);
+      return makePlanWithDefaultBackendParametersHelper<MpBackend::none>(desc, selectParams);
     case MpBackend::mpi:
 #   ifdef AFFT_ENABLE_MPI
-      return makePlanWithDefaultBackendParametersHelper<MpBackend::mpi>(desc);
+      return makePlanWithDefaultBackendParametersHelper<MpBackend::mpi>(desc, selectParams);
 #   else
       throw Exception{Error::invalidArgument, "MPI backend is not enabled"};
 #   endif

@@ -292,8 +292,7 @@ namespace afft::detail
         const auto lhsDevices = lhs.getDevices();
         const auto rhsDevices = rhs.getDevices();
 
-        return lhsDevices.size() == rhsDevices.size() &&
-               std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin());
+        return std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin(), rhsDevices.end());
       }
 
       /**

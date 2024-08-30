@@ -35,10 +35,13 @@ namespace afft::detail::pocketfft::sp::cpu
 {
   /**
    * @brief Create a pocketfft single process cpu plan implementation.
-   * @param desc Plan description.
+   * @param[in] desc Plan description.
+   * @param[in] backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
+  [[nodiscard]] std::unique_ptr<afft::Plan>
+  makePlan(const Description&                  desc,
+           const afft::cpu::BackendParameters& backendParams);
 } // namespace afft::detail::pocketfft::sp::cpu
 
 #ifdef AFFT_HEADER_ONLY
@@ -358,10 +361,13 @@ namespace afft::detail::pocketfft::sp::cpu
 
   /**
    * @brief Create a pocketfft single process cpu plan implementation.
-   * @param desc Plan description.
+   * @param[in] desc Plan description.
+   * @param[in] backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Description& desc)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
+  makePlan(const Description&                  desc,
+           const afft::cpu::BackendParameters& backendParams)
   {
     const auto& descImpl = desc.get(DescToken::make());
 

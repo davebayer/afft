@@ -79,13 +79,6 @@ static inline afft_BackendMask afft_makeBackendMask(afft_Backend backend)
   return (afft_BackendMask)(1 << backend);
 }
 
-/// @brief Select strategy type
-typedef uint8_t afft_SelectStrategy;
-
-/// @brief Select strategy enumeration
-#define afft_SelectStrategy_first (afft_SelectStrategy)0 ///< Select the first available backend
-#define afft_SelectStrategy_best  (afft_SelectStrategy)1 ///< Select the best available backend
-
 /// @brief Workspace type
 typedef uint8_t afft_Workspace;
 
@@ -263,54 +256,34 @@ typedef struct afft_openmp_BackendParameters afft_openmp_BackendParameters;
 /// @brief Backend parameters for cpu target
 struct afft_cpu_BackendParameters
 {
-  afft_SelectStrategy       strategy;  ///< Select strategy
   afft_Workspace            workspace; ///< Workspace
-  afft_BackendMask          mask;      ///< Backend mask
-  size_t                    orderSize; ///< Number of backends in the order
-  const afft_Backend*       order;     ///< Order of the backends
   afft_fftw3_cpu_Parameters fftw3;     ///< FFTW3 parameters
 };
 
 /// @brief Backend parameters for cuda target
 struct afft_cuda_BackendParameters
 {
-  afft_SelectStrategy        strategy;  ///< Select strategy
   afft_Workspace             workspace; ///< Workspace
-  afft_BackendMask           mask;      ///< Backend mask
-  size_t                     orderSize; ///< Number of backends in the order
-  const afft_Backend*        order;     ///< Order of the backends
   afft_cufft_cuda_Parameters cufft;     ///< cuFFT parameters
 };
 
 /// @brief Backend parameters for hip target
 struct afft_hip_BackendParameters
 {
-  afft_SelectStrategy        strategy;  ///< Select strategy
-  afft_Workspace             workspace; ///< Workspace
-  afft_BackendMask           mask;      ///< Backend mask
-  size_t                     orderSize; ///< Number of backends in the order
-  const afft_Backend*        order;     ///< Order of the backends
+  afft_Workspace workspace; ///< Workspace
 };
 
 /// @brief Backend parameters for opencl target
 struct afft_opencl_BackendParameters
 {
-  afft_SelectStrategy          strategy;  ///< Select strategy
   afft_Workspace               workspace; ///< Workspace
-  afft_BackendMask             mask;      ///< Backend mask
-  size_t                       orderSize; ///< Number of backends in the order
-  const afft_Backend*          order;     ///< Order of the backends
   afft_clfft_opencl_Parameters clfft;     ///< clFFT parameters
 };
 
 /// @brief Backend parameters for openmp target
 struct afft_openmp_BackendParameters
 {
-  afft_SelectStrategy strategy;  ///< Select strategy
-  afft_Workspace      workspace; ///< Workspace
-  afft_BackendMask    mask;      ///< Backend mask
-  size_t              orderSize; ///< Number of backends in the order
-  const afft_Backend* order;     ///< Order of the backends
+  afft_Workspace workspace; ///< Workspace
 };
 
 /**********************************************************************************************************************/
@@ -331,11 +304,7 @@ typedef struct afft_mpi_opencl_BackendParameters afft_mpi_opencl_BackendParamete
 /// @brief Backend parameters for cpu target
 struct afft_mpi_cpu_BackendParameters
 {
-  afft_SelectStrategy            strategy;  ///< Select strategy
   afft_Workspace                 workspace; ///< Workspace
-  afft_BackendMask               mask;      ///< Backend mask
-  size_t                         orderSize; ///< Number of backends in the order
-  const afft_Backend*            order;     ///< Order of the backends
   afft_fftw3_mpi_cpu_Parameters  fftw3;     ///< FFTW3 parameters
   afft_heffte_mpi_cpu_Parameters heffte;    ///< HeFFTe parameters
 };
@@ -343,11 +312,7 @@ struct afft_mpi_cpu_BackendParameters
 /// @brief Backend parameters for cuda target
 struct afft_mpi_cuda_BackendParameters
 {
-  afft_SelectStrategy             strategy;  ///< Select strategy
   afft_Workspace                  workspace; ///< Workspace
-  afft_BackendMask                mask;      ///< Backend mask
-  size_t                          orderSize; ///< Number of backends in the order
-  const afft_Backend*             order;     ///< Order of the backends
   afft_cufft_mpi_cuda_Parameters  cufft;     ///< cuFFT parameters
   afft_heffte_mpi_cuda_Parameters heffte;    ///< HeFFTe parameters
 };
@@ -355,22 +320,14 @@ struct afft_mpi_cuda_BackendParameters
 /// @brief Backend parameters for hip target
 struct afft_mpi_hip_BackendParameters
 {
-  afft_SelectStrategy            strategy;  ///< Select strategy
   afft_Workspace                 workspace; ///< Workspace
-  afft_BackendMask               mask;      ///< Backend mask
-  size_t                         orderSize; ///< Number of backends in the order
-  const afft_Backend*            order;     ///< Order of the backends
   afft_heffte_mpi_hip_Parameters heffte;    ///< HeFFTe parameters
 };
 
 /// @brief Backend parameters for cuda target
 struct afft_mpi_opencl_BackendParameters
 {
-  afft_SelectStrategy          strategy;  ///< Select strategy
-  afft_Workspace               workspace; ///< Workspace
-  afft_BackendMask             mask;      ///< Backend mask
-  size_t                       orderSize; ///< Number of backends in the order
-  const afft_Backend*          order;     ///< Order of the backends
+  afft_Workspace workspace; ///< Workspace
 };
 
 /// @brief Feedback structure

@@ -33,6 +33,7 @@
 #include "../backend.hpp"
 #include "../memory.hpp"
 #include "../mp.hpp"
+#include "../select.hpp"
 #include "../Span.hpp"
 #include "../target.hpp"
 #include "../transform.hpp"

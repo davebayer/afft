@@ -22,40 +22,41 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_H
-#define AFFT_H
+#ifndef AFFT_SELECT_H
+#define AFFT_SELECT_H
 
-// Include the version header.
-#include "afft-version.h"
-
-// Include the config header.
-#include "detail/config.h"
-
-// Include only once in the top-level header.
-#include "detail/include.h"
-#define AFFT_TOP_LEVEL_INCLUDE
-
-// Check for uintptr_t.
-#ifndef UINTPTR_MAX
-# error "afft C library requires uintptr_t. Please use standard C library implementing uintptr_t."
+#ifndef AFFT_TOP_LEVEL_INCLUDE
+# include "detail/include.h"
 #endif
 
-// Include all public headers.
 #include "backend.h"
-#include "common.h"
-#include "Description.h"
-#include "error.h"
-#include "fftw3.h"
-#include "init.h"
-#include "memory.h"
-#include "mp.h"
-#include "Plan.h"
-// #include "PlanCache.h"
-#include "select.h"
-#include "target.h"
-#include "transform.h"
-#include "type.h"
-#include "utils.h"
-#include "version.h"
 
-#endif /* AFFT_H */
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+/// @brief Select strategy type
+typedef uint8_t afft_SelectStrategy;
+
+/// @brief Select strategy enumeration
+#define afft_SelectStrategy_first (afft_SelectStrategy)0 ///< Select the first available backend
+#define afft_SelectStrategy_best  (afft_SelectStrategy)1 ///< Select the best available backend
+
+/// @brief Backend selection parameters
+typedef struct afft_SelectParameters afft_SelectParameters;
+
+/// @brief Backend selection parameters structure
+struct afft_SelectParameters
+{
+  afft_SelectStrategy strategy;  ///< Backend select strategy
+  afft_BackendMask    mask;      ///< Backend mask
+  size_t              orderSize; ///< Number of backends in the order
+  const afft_Backend* order;     ///< Order of the backends
+};
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* AFFT_SELECT_H */

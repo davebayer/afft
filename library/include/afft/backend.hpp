@@ -80,13 +80,6 @@ AFFT_EXPORT namespace afft
   static_assert((sizeof(::afft_BackendMask) * CHAR_BIT) >= backendCount,
                 "BackendMask does not have sufficient size to store all Backend values");
 
-  /// @brief Backend select strategy
-  enum class SelectStrategy : ::afft_SelectStrategy
-  {
-    first = afft_SelectStrategy_first, ///< Select the first available backend
-    best  = afft_SelectStrategy_best,  ///< Select the best available backend
-  };
-
   /// @brief Workspace type
   enum class Workspace : ::afft_Workspace
   {
@@ -400,53 +393,38 @@ AFFT_EXPORT namespace afft
   struct cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
-    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                workspace{Workspace::any};       ///< Workspace type
-    BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order
-    fftw3::BackendParameters fftw3{};                         ///< FFTW3 backend initialization parameters
+    Workspace                workspace{Workspace::any}; ///< Workspace type
+    fftw3::BackendParameters fftw3{};                   ///< FFTW3 backend initialization parameters
   };
 
   /// @brief CUDA backend parameters
   struct cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
-    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                workspace{Workspace::any};       ///< Workspace type
-    BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order
-    cufft::BackendParameters cufft{};                         ///< cuFFT backend initialization parameters
+    Workspace                workspace{Workspace::any}; ///< Workspace type
+    cufft::BackendParameters cufft{};                   ///< cuFFT backend initialization parameters
   };
 
   /// @brief HIP backend parameters
   struct hip::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace      workspace{Workspace::any};       ///< Workspace type
-    BackendMask    mask{BackendMask::all};          ///< Backend mask
-    View<Backend>  order{};                         ///< Backend initialization order
+    Workspace workspace{Workspace::any}; ///< Workspace type
   };
 
   /// @brief OpenCL backend parameters
   struct opencl::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>
   {
-    SelectStrategy           strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                workspace{Workspace::any};       ///< Workspace type
-    BackendMask              mask{BackendMask::all};          ///< Backend mask
-    View<Backend>            order{};                         ///< Backend initialization order
-    clfft::BackendParameters clfft{};                         ///< clFFT backend initialization parameters
+    Workspace                workspace{Workspace::any}; ///< Workspace type
+    clfft::BackendParameters clfft{};                   ///< clFFT backend initialization parameters
   };
 
   /// @brief OpenMP backend parameters
   struct openmp::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::openmp>
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace      workspace{Workspace::any};       ///< Workspace type
-    BackendMask    mask{BackendMask::all};          ///< Backend mask
-    View<Backend>  order{};                         ///< Backend initialization order
+    Workspace workspace{Workspace::any}; ///< Workspace type
   };
 
   namespace mpi
@@ -497,45 +475,33 @@ AFFT_EXPORT namespace afft
   struct mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
-    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                 workspace{Workspace::any};       ///< Workspace type
-    BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order
-    fftw3::BackendParameters  fftw3{};                         ///< FFTW3 backend initialization parameters
-    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+    Workspace                 workspace{Workspace::any}; ///< Workspace type
+    fftw3::BackendParameters  fftw3{};                   ///< FFTW3 backend initialization parameters
+    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };
 
   /// @brief MPI CUDA backend parameters
   struct mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
   {
-    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                 workspace{Workspace::any};       ///< Workspace type
-    BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order
-    cufft::BackendParameters  cufft{};                         ///< cuFFT backend initialization parameters
-    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+    Workspace                 workspace{Workspace::any}; ///< Workspace type
+    cufft::BackendParameters  cufft{};                   ///< cuFFT backend initialization parameters
+    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };
 
   /// @brief MPI HIP backend parameters
   struct mpi::hip::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
   {
-    SelectStrategy            strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace                 workspace{Workspace::any};       ///< Workspace type
-    BackendMask               mask{BackendMask::all};          ///< Backend mask
-    View<Backend>             order{};                         ///< Backend initialization order
-    heffte::BackendParameters heffte{};                        ///< HeFFTe backend initialization parameters
+    Workspace                 workspace{Workspace::any}; ///< Workspace type
+    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };
 
   /// @brief MPI OpenCL backend parameters
   struct mpi::opencl::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::opencl>
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
-    Workspace      workspace{Workspace::any};       ///< Workspace type
-    BackendMask    mask{BackendMask::all};          ///< Backend mask
-    View<Backend>  order{};                         ///< Backend initialization order
+    Workspace workspace{Workspace::any}; ///< Workspace type
   };
 
   /// @brief Backend parameters variant
