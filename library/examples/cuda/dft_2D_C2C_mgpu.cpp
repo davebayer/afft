@@ -30,7 +30,7 @@ int main(void)
   memoryLayout.dstDistribAxes = {{0}}; // distribute the transform along the first axis
   memoryLayout.srcDistribAxes = {{1}}; // distribute the transform along the second axis
 
-  auto plan = afft::makePlan(dftParams, cudaParams); // generate the plan of the transform, uses current device
+  auto plan = afft::makePlan({dftParams, cudaParams, memoryLayout}); // generate the plan of the transform, uses current device
 
   const auto srcElemCounts = plan->getSrcElemCounts(); // get the number of elements in the source buffers
   const auto dstElemCounts = plan->getDstElemCounts(); // get the number of elements in the destination buffers

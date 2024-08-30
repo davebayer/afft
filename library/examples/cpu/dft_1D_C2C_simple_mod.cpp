@@ -34,7 +34,7 @@ int main(void)
     .threadLimit = 16, // we will use up to 16 threads
   };
 
-  auto plan = afft::makePlan(dftParams, cpuParams); // generate the plan of the transform
+  auto plan = afft::makePlan({dftParams, cpuParams}); // generate the plan of the transform
 
   plan->execute(src.data(), dst.data()); // execute the transform
 

@@ -179,7 +179,7 @@ namespace afft::detail
       CudaDesc(const View<int> devices)
       : mTargetCount{devices.size()}
       {
-        if (mTargetCout < maxLocDevices)
+        if (mTargetCount < Devices::maxLocDevices)
         {
           std::copy(devices.begin(), devices.end(), mDevices.loc);
         }
@@ -224,18 +224,22 @@ namespace afft::detail
         {
           destroy();
 
-          mTargetCount = other.mTargetCount;
+          const auto otherDevices = other.getDevices();
 
-          if (mTargetCout < maxLocDevices)
+          mTargetCount = otherDevices.size();
+
+          if (mTargetCount < Devices::maxLocDevices)
           {
-            std::copy(devices.begin(), devices.end(), mDevices.loc);
+            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.loc);
           }
           else
           {
             mDevices.ext = new int[mTargetCount];
-            std::copy(devices.begin(), devices.end(), mDevices.ext);
+            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.ext);
           }
         }
+
+        return *this;
       }
 
       /**
@@ -252,6 +256,8 @@ namespace afft::detail
           mTargetCount = std::exchange(other.mTargetCount, 0);
           mDevices     = std::exchange(other.mDevices, {});
         }
+
+        return *this;
       }
 
       /**
@@ -278,7 +284,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr View<int> getDevices() const noexcept
       {
-        return View<int>{(mTargetCount < maxLocDevices) ? &mDevices.loc : mDevices.ext, mTargetCount};
+        return View<int>{(mTargetCount < Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
       }
 
       /**
@@ -311,7 +317,7 @@ namespace afft::detail
       union Devices
       {
         /// @brief Maximum number of local devices
-        static constexpr std::size_t maxLocDevices{sizeof(int[]) / sizeof(int)};
+        static constexpr std::size_t maxLocDevices{sizeof(int*) / sizeof(int)};
 
         int  loc[maxLocDevices]; ///< Local devices
         int* ext;                ///< External devices
@@ -320,7 +326,7 @@ namespace afft::detail
       /// @brief Destroy the object.
       void destroy()
       {
-        if (mTargetCount >= maxLocDevices)
+        if (mTargetCount >= Devices::maxLocDevices)
         {
           delete[] mDevices.ext;
         }
@@ -423,33 +429,33 @@ namespace afft::detail
       : TargetDesc{[&]()
           {
 #         ifdef AFFT_ENABLE_CPU
-            if (std::holds_alternative<cpu::Parameters>(targetParamsVariant))
+            if (std::holds_alternative<afft::cpu::Parameters>(targetParamsVariant))
             {
-              return TargetDesc{std::get<cpu::Parameters>(targetParamsVariant)};
+              return TargetDesc{std::get<afft::cpu::Parameters>(targetParamsVariant)};
             }
 #         endif
 #         ifdef AFFT_ENABLE_CUDA
-            if (std::holds_alternative<cuda::Parameters>(targetParamsVariant))
+            if (std::holds_alternative<afft::cuda::Parameters>(targetParamsVariant))
             {
-              return TargetDesc{std::get<cuda::Parameters>(targetParamsVariant)};
+              return TargetDesc{std::get<afft::cuda::Parameters>(targetParamsVariant)};
             }
 #         endif
 #         ifdef AFFT_ENABLE_HIP
-            if (std::holds_alternative<hip::Parameters>(targetParamsVariant))
+            if (std::holds_alternative<afft::hip::Parameters>(targetParamsVariant))
             {
-              return TargetDesc{std::get<hip::Parameters>(targetParamsVariant)};
+              return TargetDesc{std::get<afft::hip::Parameters>(targetParamsVariant)};
             }
 #         endif
 #         ifdef AFFT_ENABLE_OPENCL
-            if (std::holds_alternative<opencl::Parameters>(targetParamsVariant))
+            if (std::holds_alternative<afft::opencl::Parameters>(targetParamsVariant))
             {
-              return TargetDesc{std::get<opencl::Parameters>(targetParamsVariant)};
+              return TargetDesc{std::get<afft::opencl::Parameters>(targetParamsVariant)};
             }
 #         endif
 #         ifdef AFFT_ENABLE_OPENMP
-            if (std::holds_alternative<openmp::Parameters>(targetParamsVariant))
+            if (std::holds_alternative<afft::openmp::Parameters>(targetParamsVariant))
             {
-              return TargetDesc{std::get<openmp::Parameters>(targetParamsVariant)};
+              return TargetDesc{std::get<afft::openmp::Parameters>(targetParamsVariant)};
             }
 #         endif
             throw Exception{Error::invalidArgument, "invalid target parameters variant"};
@@ -602,15 +608,15 @@ namespace afft::detail
         {
 #       ifdef AFFT_ENABLE_CPU
           const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
-          targetParams.threadLimit = cpuDesc.threadLimit;
+          targetParams.threadLimit = cpuDesc.getThreadLimit();
 #       endif
         }
         else if constexpr (target == Target::cuda)
         {
 #       ifdef AFFT_ENABLE_CUDA
-          const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
-          targetParams.deviceCount = cudaDesc.targetCount;
-          targetParams.devices     = cudaDesc.devices.get();
+          const auto cudaDevices = std::get<CudaDesc>(mTargetVariant).getDevices();
+          targetParams.deviceCount = cudaDevices.size();
+          targetParams.devices     = cudaDevices.data();
 #       endif
         }
         else if constexpr (target == Target::hip)
