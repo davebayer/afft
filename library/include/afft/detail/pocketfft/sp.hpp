@@ -73,7 +73,7 @@ namespace afft::detail::pocketfft::sp::cpu
 
       /**
        * @brief Constructor
-       * @param Desc The plan description
+       * @param desc The plan description
        */
       Plan(const Description& desc)
       : Parent{desc, Workspace::none},

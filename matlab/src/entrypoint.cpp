@@ -81,7 +81,7 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   mx::View<mx::ArrayCref> rhsSubspan{rhs.subspan(1)};
 
   // Dispatch the call.
-  switch (static_cast<Call>(mx::NumericArrayCref<std::uint32_t>{rhs[0]}[0]))
+  switch (static_cast<Call>(rhs[0].getScalarAs<std::uint32_t>()))
   {
   // Package management calls
   case Call::clearPlanCache:
