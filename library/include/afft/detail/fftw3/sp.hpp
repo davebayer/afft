@@ -35,12 +35,12 @@ namespace afft::detail::fftw3::sp::cpu
 {
   /**
    * @brief Create a fftw3 single process cpu plan implementation.
-   * @param backendParams Backend parameters.
-   * @param desc Plan description.
+   * @param[in] desc Plan description.
+   * @param[in] backendParams Backend parameters.
    * @return Plan implementation.
    */
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc&                         desc,
+  makePlan(const Description&                  desc,
            const afft::cpu::BackendParameters& backendParams);
 } // namespace afft::detail::fftw3::sp::cpu
 
@@ -79,15 +79,14 @@ namespace afft::detail::fftw3::sp::cpu
 
       /**
        * @brief Constructor
-       * @param Desc The plan description
+       * @param desc The plan description
        */
-      Plan(const Desc&                                desc,
+      Plan(const Description&                         desc,
            const afft::fftw3::cpu::BackendParameters& backendParams)
       : Parent{desc, Workspace::internal}
       {
         mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
 
-        // TODO: allocate src and dst buffers
         std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> src{};
         std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> dst{};
 
@@ -424,9 +423,11 @@ namespace afft::detail::fftw3::sp::cpu
    * @return Plan implementation.
    */
   [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
-  makePlan(const Desc&                         desc,
+  makePlan(const Description&                  desc,
            const afft::cpu::BackendParameters& backendParams)
   {
+    const auto& descImpl = desc.get(DescToken::make());
+
     switch (backendParams.workspace)
     {
     case Workspace::any:
@@ -436,7 +437,7 @@ namespace afft::detail::fftw3::sp::cpu
       throw Exception{Error::fftw3, "unsupported workspace"};
     }
 
-    const auto prec = desc.getPrecision().execution;
+    const auto prec = descImpl.getPrecision().execution;
 
 # ifdef AFFT_FFTW3_HAS_FLOAT
     if (prec == Precision::_float)

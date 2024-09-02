@@ -181,7 +181,7 @@ namespace afft::detail::fftw3
        */
       [[nodiscard]] constexpr int getThreadLimit() const
       {
-        return static_cast<int>(mDesc.getTargetDesc<Target::cpu>().threadLimit);
+        return static_cast<int>(mDesc.getTargetDesc<Target::cpu>().getThreadLimit());
       }
 
       /**

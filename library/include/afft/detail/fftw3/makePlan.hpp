@@ -43,14 +43,16 @@ namespace afft::detail::fftw3
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams)
+  makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
-    if (desc.getTargetCount() != 1)
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTargetCount() != 1)
     {
       throw Exception{Error::fftw3, "only single target is supported"};
     }
 
-    switch (desc.getTransform())
+    switch (descImpl.getTransform())
     {
     case Transform::dft:
     case Transform::dtt:
@@ -59,7 +61,7 @@ namespace afft::detail::fftw3
       throw Exception{Error::fftw3, "unsupported transform"};
     }
 
-    if (!desc.hasUniformPrecision())
+    if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::fftw3, "only uniform precision is supported"};
     }
