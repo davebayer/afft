@@ -18,7 +18,7 @@ int main(void)
 
   const afft_Alignment alignment = afft_Alignment_cpuNative;
 
-  AFFT_CALL(afft_init(&errDetails)); // initialize afft library
+  CALL_AFFT(afft_init(&errDetails)); // initialize afft library
 
   FloatComplex* src = afft_alignedAlloc(srcElemCount * sizeof(FloatComplex), alignment); // source vector
   FloatComplex* dst = afft_alignedAlloc(dstElemCount * sizeof(FloatComplex), alignment); // destination vector
@@ -48,8 +48,8 @@ int main(void)
   afft_Size srcStrides[3] = {0};
   afft_Size dstStrides[3] = {0};
 
-  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, srcStrides, 1, &errDetails));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, dstStrides, 1, &errDetails));
+  CALL_AFFT(afft_makeStrides(3, srcPaddedShape, srcStrides, 1, &errDetails));
+  CALL_AFFT(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, dstStrides, 1, &errDetails));
 
   afft_cpu_Parameters cpuParams =
   {
@@ -76,7 +76,7 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
+  CALL_AFFT(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
                                                    .target          = afft_Target_cpu,
                                                    .transformParams = &dftParams,
                                                    .targetParams    = &cpuParams,
@@ -85,7 +85,7 @@ int main(void)
                              &plan,
                              &errDetails)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_execute(plan,
+  CALL_AFFT(afft_Plan_execute(plan,
                               (void* const*)&src,
                               (void* const*)&dst,
                               NULL,
@@ -98,5 +98,5 @@ int main(void)
   afft_alignedFree(src, alignment); // free source vector
   afft_alignedFree(dst, alignment); // free destination vector
 
-  AFFT_CALL(afft_finalize(&errDetails)); // deinitialize afft library
+  CALL_AFFT(afft_finalize(&errDetails)); // deinitialize afft library
 }

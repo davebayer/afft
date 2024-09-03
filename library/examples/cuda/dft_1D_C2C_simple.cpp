@@ -38,7 +38,7 @@ int main(void)
 
   plan->execute(src.data(), dst.data(), cudaExecParams); // execute the transform into zero stream
 
-  CUDART_CALL(cudaDeviceSynchronize()); // synchronize the device
+  CALL_CUDART(cudaDeviceSynchronize()); // synchronize the device
 
   // use results from dst vector
 

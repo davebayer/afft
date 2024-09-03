@@ -39,7 +39,7 @@ extern "C"
 static afft_ErrorDetails errDetails;
 
 /**
- * @brief Check afft error and exit if not success. Should not be used directly, use AFFT_CALL macro instead.
+ * @brief Check afft error and exit if not success. Should not be used directly, use CALL_AFFT macro instead.
  * @param[in] error afft error
  * @param[in] file  file name
  * @param[in] line  line number
@@ -57,7 +57,7 @@ static inline check_afft_error(afft_Error error, const char* file, int line)
  * @brief Macro for checking afft errors. The call cannot contain _err variable.
  * @param[in] call afft function call
  */
-#define AFFT_CALL(call) check_afft_error((call), __FILE__, __LINE__)
+#define CALL_AFFT(call) check_afft_error((call), __FILE__, __LINE__)
 
 #ifdef __cplusplus
 }

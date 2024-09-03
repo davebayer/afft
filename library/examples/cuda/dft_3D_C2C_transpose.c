@@ -20,13 +20,13 @@ int main(void)
 
   const afft_Alignment alignment = afft_Alignment_avx2;
 
-  AFFT_CALL(afft_init(&errDetails)); // initialize afft library
+  CALL_AFFT(afft_init(&errDetails)); // initialize afft library
 
   cuComplex* src;
   cuComplex* dst;
 
-  CUDART_CALL(cudaMallocManaged((void**)&src, srcElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
-  CUDART_CALL(cudaMallocManaged((void**)&dst, dstElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
+  CALL_CUDART(cudaMallocManaged((void**)&src, srcElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
+  CALL_CUDART(cudaMallocManaged((void**)&dst, dstElemCount * sizeof(cuComplex), cudaMemAttachGlobal));
 
   // check if src and dst are not NULL
   // initialize source vector
@@ -47,8 +47,8 @@ int main(void)
   afft_Size srcStrides[3] = {0};
   afft_Size dstStrides[3] = {0};
 
-  AFFT_CALL(afft_makeStrides(3, srcPaddedShape, srcStrides, 1, &errDetails));
-  AFFT_CALL(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, dstStrides, 1, &errDetails));
+  CALL_AFFT(afft_makeStrides(3, srcPaddedShape, srcStrides, 1, &errDetails));
+  CALL_AFFT(afft_makeTransposedStrides(3, dstPaddedShape, (afft_Axis[]){0, 2, 1}, dstStrides, 1, &errDetails));
 
   afft_cuda_Parameters cudaParams =
   {
@@ -73,7 +73,7 @@ int main(void)
 
   afft_Plan* plan = NULL;
 
-  AFFT_CALL(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
+  CALL_AFFT(afft_Plan_create((afft_PlanParameters){.transform       = afft_Transform_dft,
                                                    .target          = afft_Target_cuda,
                                                    .transformParams = &dftParams,
                                                    .targetParams    = &cudaParams,
@@ -82,16 +82,16 @@ int main(void)
                              &plan,
                              &errDetails)); // generate the plan of the transform
 
-  AFFT_CALL(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst, NULL, &errDetails)); // execute the transform
+  CALL_AFFT(afft_Plan_execute(plan, (void* const*)&src, (void* const*)&dst, NULL, &errDetails)); // execute the transform
 
-  CUDART_CALL(cudaDeviceSynchronize()); // synchronize the device
+  CALL_CUDART(cudaDeviceSynchronize()); // synchronize the device
 
   // use results from dst vector
 
   afft_Plan_destroy(plan); // destroy the plan of the transform
 
-  CUDART_CALL(cudaFree(src)); // free source vector
-  CUDART_CALL(cudaFree(dst)); // free destination vector
+  CALL_CUDART(cudaFree(src)); // free source vector
+  CALL_CUDART(cudaFree(dst)); // free destination vector
 
-  AFFT_CALL(afft_finalize(&errDetails)); // deinitialize afft library
+  CALL_AFFT(afft_finalize(&errDetails)); // deinitialize afft library
 }

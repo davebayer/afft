@@ -36,7 +36,7 @@ extern "C"
 #endif
 
 /**
- * @brief Check CUDA runtime error and exit if not success. Should not be used directly, use CUDART_CALL macro instead.
+ * @brief Check CUDA runtime error and exit if not success. Should not be used directly, use CALL_CUDART macro instead.
  * @param[in] error CUDA runtime error
  * @param[in] file  file name
  * @param[in] line  line number
@@ -54,7 +54,7 @@ static inline void check_cudart_error(cudaError_t error, const char* file, int l
  * @brief Macro for checking CUDA runtime errors. The call cannot contain _error variable.
  * @param[in] call CUDA runtime function call
  */
-#define CUDART_CALL(call) check_cudart_error((call), __FILE__, __LINE__)
+#define CALL_CUDART(call) check_cudart_error((call), __FILE__, __LINE__)
 
 /**
  * @brief Get the number of CUDA devices
@@ -64,7 +64,7 @@ static inline int helpers_cuda_getDeviceCount()
 {
   int deviceCount;
 
-  CUDART_CALL(cudaGetDeviceCount(&deviceCount));
+  CALL_CUDART(cudaGetDeviceCount(&deviceCount));
 
   return deviceCount;
 }
