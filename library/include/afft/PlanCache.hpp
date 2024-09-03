@@ -62,6 +62,7 @@ AFFT_EXPORT namespace afft
       
     public:
       using value_type             = List::value_type;             ///< The value type of the cache.
+      using key_type               = Description;                  ///< The key type of the cache.
       using size_type              = List::size_type;              ///< The size type of the cache.
       using difference_type        = List::difference_type;        ///< The difference type of the cache.
       using reference	             = List::reference;              ///< The reference type of the cache.
@@ -103,7 +104,7 @@ AFFT_EXPORT namespace afft
       PlanCache(size_type maxSize, std::initializer_list<value_type> plans)
       : PlanCache{maxSize}
       {
-        for (auto& plan : plans)
+        for (const auto& plan : plans)
         {
           insert(plan);
         }
@@ -124,161 +125,27 @@ AFFT_EXPORT namespace afft
       /// @brief Move assignment operator is defaulted.
       PlanCache& operator=(PlanCache&&) = default;
 
+    /******************************************************************************************************************/
+    // Element access
+    /******************************************************************************************************************/
       /**
-       * @brief Is the cache empty?
-       * @return True if the cache is empty, otherwise false.
-       */
-      [[nodiscard]] bool isEmpty() const noexcept
-      {
-        return mList.empty();
-      }
-
-      /**
-       * @brief Get the number of plans in the cache.
-       * @return The number of plans in the cache.
-       */
-      [[nodiscard]] size_type getSize() const noexcept
-      {
-        return mList.size();
-      }
-
-      /**
-       * @brief Get the maximum number of plans that the cache can hold.
-       * @return The maximum number of plans that the cache can hold.
-       */
-      [[nodiscard]] size_type getMaxSize() const noexcept
-      {
-        return mMaxSize;
-      }
-
-      /**
-       * @brief Set the maximum number of plans that the cache can hold.
-       * @param maxSize The maximum number of plans that the cache can hold.
-       */
-      void setMaxSize(size_type maxSize)
-      {
-        mMaxSize = checkMaxSize(maxSize);
-
-        while (mList.size() > mMaxSize)
-        {
-          mMap.erase(mList.back()->getDescription());
-          mList.pop_back();
-        }
-      }
-
-      /**
-       * @brief Clear the cache.
-       */
-      void clear() noexcept
-      {
-        mMap.clear();
-        mList.clear();
-      }
-
-      /**
-       * @brief Insert a plan into the cache.
-       * @param plan The plan to insert.
-       * @return The inserted plan.
-       */
-      iterator insert(value_type plan)
-      {
-        // Check if the value is null
-        if (!plan)
-        {
-          throw Exception{Error::invalidArgument, "Cannot insert a null plan into the cache"};
-        }
-
-        // Check if the plan has a centralized memory layout
-        if (plan->getDescription().getMemoryLayout() != MemoryLayout::centralized)
-        {
-          throw Exception{Error::invalidArgument, "Only plans with centralized memory layout can be inserted into the cache"};
-        }
-
-        // Check if the capacity has been reached
-        if (mList.size() >= mMaxSize)
-        {
-          // Remove the last element from the list and the map
-          mMap.erase(mList.back()->getDescription());
-          mList.pop_back();
-        }
-
-        // Insert the new element at the front of the list
-        mList.emplace_front(std::move(plan));
-
-        // Insert the new element into the map
-        auto [it, inserted] = mMap.emplace(mList.front()->getDescription(), mList.begin());
-
-        if (!inserted)
-        {
-          throw std::runtime_error{"Failed to insert plan into cache"};
-        }
-
-        return it->second;
-      }
-
-      /**
-       * @brief Erase a plan from the cache that matches the plan description.
-       * @param desc The description of the plan to erase.
-       */
-      void erase(const Description& desc);
-
-      /**
-       * @brief Swap the contents of this cache with another cache.
-       * @param other The other cache to swap with.
-       */
-      void swap(PlanCache& other) noexcept
-      {
-        mMap.swap(other.mMap);
-        mList.swap(other.mList);
-        std::swap(mMaxSize, other.mMaxSize);
-      }
-
-      /**
-       * @brief Merge the contents of this cache with another cache.
-       * @param other The other cache to merge with.
-       */
-      void merge(PlanCache& other)
-      {
-        if (this == &other)
-        {
-          return;
-        }
-
-        if (getSize() + other.getSize() > mMaxSize)
-        {
-          throw std::runtime_error{"cannot merge plan caches because the maximum size would be exceeded"};
-        }
-
-        for (auto& plan : other.mList)
-        {
-          insert(std::move(plan));
-        }
-
-        other.clear();
-      }
-
-      /**
-       * @brief Find a plan in the cache that matches the plan description.
-       * @param desc The description of the plan to find.
+       * @brief Get the plan with the specified key.
+       * @param key The key of the plan to get.
        * @return The plan if found.
        */
-      [[nodiscard]] iterator find(const Description& desc)
+      [[nodiscard]] value_type at(const key_type& key) const
       {
-        if (auto mapIter = mMap.find(desc); mapIter != mMap.end())
+        if (auto it = find(key); it != end())
         {
-          auto listIter = mapIter->second;
-
-          if (listIter != mList.begin())
-          {
-            mList.splice(mList.begin(), mList, std::next(listIter));
-          }
-
-          return iterator{begin()};
+          return *it;
         }
 
-        return iterator{end()};
+        throw Exception{Error::invalidArgument, "Plan not found in cache"};
       }
 
+    /******************************************************************************************************************/
+    // Iterators
+    /******************************************************************************************************************/
       /**
        * @brief Get an iterator to the first plan in the cache.
        * @return An iterator to the first plan in the cache.
@@ -386,14 +253,308 @@ AFFT_EXPORT namespace afft
       {
         return const_reverse_iterator{mList.crend()};
       }
-    protected:
+
+    /******************************************************************************************************************/
+    // Capacity
+    /******************************************************************************************************************/
+      /**
+       * @brief Is the cache empty?
+       * @return True if the cache is empty, otherwise false.
+       */
+      [[nodiscard]] bool isEmpty() const noexcept
+      {
+        return mList.empty();
+      }
+
+      /**
+       * @brief Get the number of plans in the cache.
+       * @return The number of plans in the cache.
+       */
+      [[nodiscard]] size_type getSize() const noexcept
+      {
+        return mList.size();
+      }
+
+      /**
+       * @brief Get the maximum number of plans that the cache can hold.
+       * @return The maximum number of plans that the cache can hold.
+       */
+      [[nodiscard]] size_type getMaxSize() const noexcept
+      {
+        return mMaxSize;
+      }
+
+    /******************************************************************************************************************/
+    // Modifiers
+    /******************************************************************************************************************/
+      /**
+       * @brief Set the maximum number of plans that the cache can hold.
+       * @param maxSize The maximum number of plans that the cache can hold.
+       */
+      void setMaxSize(size_type maxSize)
+      {
+        mMaxSize = checkMaxSize(maxSize);
+
+        // Remove the least recently used plans
+        while (getSize() > mMaxSize)
+        {
+          erase(std::prev(end()));
+        }
+      }
+
+      /**
+       * @brief Clear the cache.
+       */
+      void clear() noexcept
+      {
+        mMap.clear();
+        mList.clear();
+      }
+
+      /**
+       * @brief Insert a plan into the cache.
+       * @param plan The plan to insert.
+       * @return The inserted plan.
+       */
+      iterator insert(value_type plan)
+      {
+        // Check if the value is null
+        if (!plan)
+        {
+          throw Exception{Error::invalidArgument, "Cannot insert a null plan into the cache"};
+        }
+
+        // Check if the capacity has been reached
+        if (getSize() >= mMaxSize)
+        {
+          // Remove the least recently used plan
+          erase(std::prev(end()));
+        }
+
+        // Insert the new element at the front of the list
+        mList.emplace_front(std::move(plan));
+
+        // Insert the new element into the map
+        auto [it, inserted] = mMap.emplace(mList.front()->getDescription(), mList.begin());
+
+        if (!inserted)
+        {
+          throw std::runtime_error{"Failed to insert plan into cache"};
+        }
+
+        return it->second;
+      }
+
+      /**
+       * @brief Emplace a plan into the cache.
+       * @tparam Args The types of the arguments to construct the plan.
+       * @param args The arguments to construct the plan.
+       * @return The iterator to the inserted plan.
+       */
+      template<typename... Args>
+      iterator emplace(Args&&... args)
+      {
+        // Check if the capacity has been reached
+        if (getSize() >= mMaxSize)
+        {
+          // Remove the least recently used plan
+          erase(std::prev(end()));
+        }
+
+        // Insert the new element at the front of the list
+        mList.emplace_front(makePlan(std::forward<Args>(args)...));
+
+        // Insert the new element into the map
+        auto [it, inserted] = mMap.emplace(mList.front()->getDescription(), mList.begin());
+
+        if (!inserted)
+        {
+          throw std::runtime_error{"Failed to insert plan into cache"};
+        }
+
+        return it->second;
+      }
+
+      /**
+       * @brief Erase a plan from the cache.
+       * @param[in] it The iterator to the plan to erase.
+       * @return The iterator to the next plan in the cache.
+       */
+      iterator erase(iterator it)
+      {
+        if (it != end())
+        {
+          mMap.erase((*it)->getDescription());
+          return iterator{mList.erase(it.mIter)};
+        }
+      }
+
+      /**
+       * @brief Erase a plan from the cache.
+       * @param[in] it The iterator to the plan to erase.
+       * @return The iterator to the next plan in the cache.
+       */
+      const_iterator erase(const_iterator it)
+      {
+        if (it != end())
+        {
+          mMap.erase((*it)->getDescription());
+          return const_iterator{mList.erase(it.mIter)};
+        }
+      }
+
+      /**
+       * @brief Erase a range of plans from the cache.
+       * @param[in] first The iterator to the first plan to erase.
+       * @param[in] last The iterator to the last plan to erase.
+       * @return The iterator to the last plan in the range.
+       */
+      iterator erase(iterator first, iterator last)
+      {
+        while (first != last)
+        {
+          first = erase(first);
+        }
+
+        return last;
+      }
+
+      /**
+       * @brief Erase a range of plans from the cache.
+       * @param[in] first The iterator to the first plan to erase.
+       * @param[in] last The iterator to the last plan to erase.
+       * @return The iterator to the last plan in the range.
+       */
+      const_iterator erase(const_iterator first, const_iterator last)
+      {
+        while (first != last)
+        {
+          first = erase(first);
+        }
+
+        return last;
+      }
+
+
+      /**
+       * @brief Erase a plan from the cache that matches the plan description.
+       * @param key The description of the plan to erase.
+       */
+      size_type erase(const key_type& key)
+      {
+        if (auto it = find(key); it != end())
+        {
+          erase(it);
+          return 1;
+        }
+
+        return 0;
+      }
+
+      /**
+       * @brief Swap the contents of this cache with another cache.
+       * @param other The other cache to swap with.
+       */
+      void swap(PlanCache& other) noexcept
+      {
+        mMap.swap(other.mMap);
+        mList.swap(other.mList);
+        std::swap(mMaxSize, other.mMaxSize);
+      }
+
+      /**
+       * @brief Merge the contents of this cache with another cache.
+       * @param other The other cache to merge with.
+       */
+      void merge(PlanCache& other)
+      {
+        if (this == std::addressof(other))
+        {
+          return;
+        }
+
+        for (auto& plan : other.mList)
+        {
+          insert(std::move(plan));
+        }
+
+        other.clear();
+      }
+
+    /******************************************************************************************************************/
+    // Lookup
+    /******************************************************************************************************************/
+      /**
+       * @brief Get the count of plans in the cache that match the plan description.
+       * @param[in] key The key of the plan to count.
+       * @return The count of plans in the cache that match the plan description.
+       */
+      [[nodiscard]] size_type getCount(const key_type& key) const
+      {
+        return mMap.count(key);
+      }
+
+      /**
+       * @brief Find a plan in the cache that matches the plan description.
+       * @param key The description of the plan to find.
+       * @return The plan if found.
+       */
+      [[nodiscard]] iterator find(const key_type& key)
+      {
+        if (auto mapIter = mMap.find(key); mapIter != mMap.end())
+        {
+          auto listIter = mapIter->second;
+
+          if (listIter != mList.begin())
+          {
+            mList.splice(mList.begin(), mList, std::next(listIter));
+          }
+
+          return iterator{begin()};
+        }
+
+        return iterator{end()};
+      }
+
+      /**
+       * @brief Find a plan in the cache that matches the plan description.
+       * @param key The description of the plan to find.
+       * @return The plan if found.
+       */
+      [[nodiscard]] const_iterator find(const key_type& key) const
+      {
+        if (auto mapIter = mMap.find(key); mapIter != mMap.end())
+        {
+          auto listIter = mapIter->second;
+
+          if (listIter != mList.begin())
+          {
+            mList.splice(mList.begin(), mList, std::next(listIter));
+          }
+
+          return const_iterator{begin()};
+        }
+
+        return const_iterator{end()};
+      }
+
+      /**
+       * @brief Check if a plan exists in the cache that matches the plan description.
+       * @param key The description of the plan to check.
+       * @return True if the plan exists in the cache, otherwise false.
+       */
+      [[nodiscard]] bool contains(const key_type& key) const
+      {
+        return mMap.find(key) != mMap.end();
+      }
+
     private:
       /**
        * @brief Checks if the maximum size of the cache is valid.
        * @param maxSize The maximum size of the cache.
        * @return The maximum size of the cache.
        */
-      static constexpr size_type checkMaxSize(size_type maxSize)
+      [[nodiscard]] static constexpr size_type checkMaxSize(size_type maxSize)
       {
         if (maxSize == 0)
         {
