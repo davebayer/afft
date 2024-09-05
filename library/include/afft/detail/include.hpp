@@ -164,7 +164,7 @@
 #       endif
 #     endif
       // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions
-#     define VKFFT_MAX_FFT_DIMENSIONS AFFT_MAX_DIM_COUNT
+#     define VKFFT_MAX_FFT_DIMENSIONS (AFFT_MAX_DIM_COUNT + 1)
       // define VKFFT_USE_DOUBLEDOUBLE_FP128 if double-double precision is enabled
 #     ifdef AFFT_VKFFT_HAS_DOUBLE_DOUBLE
 #       define VKFFT_USE_DOUBLEDOUBLE_FP128
