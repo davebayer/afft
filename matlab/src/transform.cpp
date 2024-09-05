@@ -22,9 +22,45 @@
   SOFTWARE.
 */
 
+#ifdef MATLABW_ENABLE_GPU
+# include <cuda_runtime.h>
+#endif
+
 #include "transform.hpp"
 
 using namespace matlabw;
+
+#ifdef MATLABW_ENABLE_GPU
+/**
+ * @brief Get the current GPU device.
+ * @param[in] errorId Error identifier to throw.
+ * @return Current GPU device.
+ */
+static inline int getCurrentGpuDevice(const char* errorId)
+{
+  int device{};
+
+  if (cudaGetDevice(&device) != cudaSuccess)
+  {
+    throw mx::Exception{errorId, "failed to get current CUDA device"};
+  }
+
+  return device;
+}
+#endif
+
+/**
+ * @brief Check if the shape rank is within the maximum dimension count.
+ * @param[in] shapeRank Shape rank to check.
+ * @param[in] errorId Error identifier to throw.
+ */
+static constexpr void checkShapeRank(const std::size_t shapeRank, const char* errorId)
+{
+  if (shapeRank >= afft::maxDimCount)
+  {
+    throw mx::Exception{errorId, "input array rank exceeds maximum dimension count"};
+  }
+}
 
 /**
  * @brief Perform a 1D forward Fourier transform.
