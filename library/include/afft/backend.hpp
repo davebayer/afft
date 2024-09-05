@@ -394,6 +394,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
     Workspace                workspace{Workspace::any}; ///< Workspace type
+    std::uint32_t            threadLimit{};             ///< Thread limit
     fftw3::BackendParameters fftw3{};                   ///< FFTW3 backend initialization parameters
   };
 
@@ -476,6 +477,7 @@ AFFT_EXPORT namespace afft
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
     Workspace                 workspace{Workspace::any}; ///< Workspace type
+    std::uint32_t             threadLimit{1};            ///< Thread limit
     fftw3::BackendParameters  fftw3{};                   ///< FFTW3 backend initialization parameters
     heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };

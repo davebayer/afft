@@ -339,7 +339,7 @@ AFFT_EXPORT namespace afft
 } // namespace afft
 
 /// @brief Hash function for afft::Description.
-template<>
+AFFT_EXPORT template<>
 struct std::hash<afft::Description>
 {
   /**

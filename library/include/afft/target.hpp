@@ -60,45 +60,59 @@ AFFT_EXPORT namespace afft
   template<Target _target>
   struct TargetConstant
   {
-    static constexpr Target target = _target;
+    static constexpr Target target = _target; ///< Target
   };
 
   namespace cpu
   {
+    /// @brief CPU parameters
     struct Parameters;
+
+    /// @brief CPU execution parameters
     struct ExecutionParameters;
   } // namespace cpu
 
   namespace cuda
   {
+    /// @brief CUDA parameters
     struct Parameters;
+
+    /// @brief CUDA execution parameters
     struct ExecutionParameters;
   } // namespace cuda
 
   namespace hip
   {
+    /// @brief HIP parameters
     struct Parameters;
+
+    /// @brief HIP execution parameters
     struct ExecutionParameters;
   } // namespace hip
 
   namespace opencl
   {
+    /// @brief OpenCL parameters
     struct Parameters;
+
+    /// @brief OpenCL execution parameters
     struct ExecutionParameters;
   } // namespace opencl
 
   namespace openmp
   {
+    /// @brief OpenMP parameters
     struct Parameters;
+
+    /// @brief OpenMP execution parameters
     struct ExecutionParameters;
   } // namespace openmp
 
 #ifdef AFFT_ENABLE_CPU
-  struct cpu::Parameters : TargetConstant<Target::cpu>
-  {
-    unsigned threadLimit{}; ///< Thread limit for transform, 0 for no limit
-  };
+  /// @brief CPU parameters
+  struct cpu::Parameters : TargetConstant<Target::cpu> {};
   
+  /// @brief CPU execution parameters
   struct cpu::ExecutionParameters : TargetConstant<Target::cpu>
   {
     void* externalWorkspace{}; ///< External workspace, if Workspace::external is used
@@ -106,11 +120,13 @@ AFFT_EXPORT namespace afft
 #endif
 
 #ifdef AFFT_ENABLE_CUDA
+  /// @brief CUDA parameters
   struct cuda::Parameters : TargetConstant<Target::cuda>
   {
     View<int> devices{}; ///< CUDA devices
   };
 
+  /// @brief CUDA execution parameters
   struct cuda::ExecutionParameters : TargetConstant<Target::cuda>
   {
     cudaStream_t stream{0};            ///< CUDA stream
@@ -119,11 +135,13 @@ AFFT_EXPORT namespace afft
 #endif
 
 #ifdef AFFT_ENABLE_HIP
+  /// @brief HIP parameters
   struct hip::Parameters : TargetConstant<Target::hip>
   {
     View<int> devices{}; ///< HIP devices
   };
 
+  /// @brief HIP execution parameters
   struct hip::ExecutionParameters : TargetConstant<Target::hip>
   {
     hipStream_t stream{0};            ///< HIP stream
@@ -132,12 +150,14 @@ AFFT_EXPORT namespace afft
 #endif
 
 #ifdef AFFT_ENABLE_OPENCL
+  /// @brief OpenCL parameters
   struct opencl::Parameters : TargetConstant<Target::opencl>
   {
     cl_context         context{}; ///< OpenCL context
     View<cl_device_id> devices{}; ///< OpenCL devices
   };
 
+  /// @brief OpenCL execution parameters
   struct opencl::ExecutionParameters : TargetConstant<Target::opencl>
   {
     cl_command_queue queue{};              ///< OpenCL command queue

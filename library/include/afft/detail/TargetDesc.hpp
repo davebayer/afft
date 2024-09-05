@@ -31,6 +31,7 @@
 
 #include "common.hpp"
 #include "validate.hpp"
+#include "typeTraits.hpp"
 #include "../target.hpp"
 
 namespace afft::detail
@@ -84,32 +85,6 @@ namespace afft::detail
   class CpuDesc
   {
     public:
-      /// @brief Default constructor.
-      CpuDesc() = default;
-
-      /**
-       * @brief Constructor from thread limit.
-       * @param[in] threadLimit Thread limit.
-       */
-      CpuDesc(const unsigned threadLimit)
-      : threadLimit{threadLimit}
-      {}
-
-      /// @brief Copy constructor.
-      CpuDesc(const CpuDesc&) = default;
-
-      /// @brief Move constructor.
-      CpuDesc(CpuDesc&&) = default;
-
-      /// @brief Destructor.
-      ~CpuDesc() = default;
-
-      /// @brief Copy assignment operator.
-      CpuDesc& operator=(const CpuDesc&) = default;
-
-      /// @brief Move assignment operator.
-      CpuDesc& operator=(CpuDesc&&) = default;
-
       /**
        * @brief Get the target.
        * @return Target.
@@ -129,24 +104,14 @@ namespace afft::detail
       }
 
       /**
-       * @brief Get the thread limit.
-       * @return Thread limit.
-       */
-      [[nodiscard]] constexpr unsigned getThreadLimit() const noexcept
-      {
-        return threadLimit;
-      }
-
-      /**
        * @brief Equality operator.
        * @param[in] lhs Left-hand side.
        * @param[in] rhs Right-hand side.
        * @return True if equal, false otherwise.
        */
-      [[nodiscard]] constexpr friend bool operator==([[maybe_unused]] const CpuDesc& lhs,
-                                                     [[maybe_unused]] const CpuDesc& rhs) noexcept
+      [[nodiscard]] constexpr friend bool operator==(const CpuDesc&, const CpuDesc&) noexcept
       {
-        return lhs.threadLimit == rhs.threadLimit;
+        return true;
       }
 
       /**
@@ -159,8 +124,6 @@ namespace afft::detail
       {
         return !(lhs == rhs);
       }
-    private:
-      unsigned threadLimit{}; ///< Thread limit
   };
 #endif /* AFFT_ENABLE_CPU */
 
@@ -413,20 +376,18 @@ namespace afft::detail
        * @tparam TargetParamsT Target parameters type
        * @param targetParams Target parameters
        */
-      template<typename TargetParamsT>
+      AFFT_TEMPL_REQUIRES(typename TargetParamsT,
+                          isCxxTargetParameters<TargetParamsT> || isCTargetParameters<TargetParamsT>)
       TargetDesc(const TargetParamsT& targetParams)
       : mTargetVariant{makeTargetVariant(targetParams)}
-      {
-        static_assert(isCxxTargetParameters<TargetParamsT> || isCTargetParameters<TargetParamsT>,
-                      "invalid target parameters type");
-      }
+      {}
 
       /**
        * @brief Constructor from target parameters variant
        * @param targetParamsVariant Target parameters variant
        */
       TargetDesc(const TargetParametersVariant& targetParamsVariant)
-      : TargetDesc{[&]()
+      : TargetDesc{[&]() -> TargetVariant
           {
 #         ifdef AFFT_ENABLE_CPU
             if (std::holds_alternative<afft::cpu::Parameters>(targetParamsVariant))
@@ -687,7 +648,7 @@ namespace afft::detail
       /// @brief Make a target variant from the given target parameters.
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
       {
-        return CpuDesc{cpuParams.threadLimit};
+        return CpuDesc{};
       }
 #   endif
 
@@ -740,7 +701,7 @@ namespace afft::detail
       /// @brief Make a target variant from the given target parameters.
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
       {
-        return CpuDesc{cpuParams.threadLimit};
+        return CpuDesc{};
       }
 #   endif
 

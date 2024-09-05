@@ -380,7 +380,7 @@ namespace afft::detail
 } // namespace afft::detail
 
 /// @brief Specialization of std::hash for afft::detail::Desc.
-template<>
+AFFT_EXPORT template<>
 struct std::hash<afft::detail::Desc>
 {
   /**
