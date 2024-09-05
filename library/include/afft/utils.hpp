@@ -46,7 +46,7 @@ AFFT_EXPORT namespace afft
     template<typename T>
     void operator()(T* ptr) const noexcept
     {
-      std::free(ptr);
+      std::free(const_cast<std::remove_const_t<T>*>(ptr));
     }
   };
 
