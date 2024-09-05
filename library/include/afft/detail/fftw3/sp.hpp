@@ -83,7 +83,7 @@ namespace afft::detail::fftw3::sp::cpu
        */
       Plan(const Description&                         desc,
            const afft::fftw3::cpu::BackendParameters& backendParams)
-      : Parent{desc, Workspace::internal}
+      : Parent{desc}
       {
         mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
 
@@ -427,15 +427,6 @@ namespace afft::detail::fftw3::sp::cpu
            const afft::cpu::BackendParameters& backendParams)
   {
     const auto& descImpl = desc.get(DescToken::make());
-
-    switch (backendParams.workspace)
-    {
-    case Workspace::any:
-    case Workspace::internal:
-      break;
-    default:
-      throw Exception{Error::fftw3, "unsupported workspace"};
-    }
 
     const auto prec = descImpl.getPrecision().execution;
 

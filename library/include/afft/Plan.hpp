@@ -287,9 +287,8 @@ AFFT_EXPORT namespace afft
       Plan() = delete;
 
       /// @brief Constructor.
-      Plan(const Description& desc, Workspace workspace)
-      : Description{desc},
-        mWorkspace{workspace}
+      Plan(const Description& desc)
+      : Description{desc}
       {}
 
       /**
@@ -356,8 +355,6 @@ AFFT_EXPORT namespace afft
       {
         throw std::logic_error{"backend does not implement openmp execution"};
       }
-    
-      Workspace mWorkspace{}; ///< Workspace.
     private:
       /**
        * @brief Check execution type properties.

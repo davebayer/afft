@@ -80,16 +80,6 @@ AFFT_EXPORT namespace afft
   static_assert((sizeof(::afft_BackendMask) * CHAR_BIT) >= backendCount,
                 "BackendMask does not have sufficient size to store all Backend values");
 
-  /// @brief Workspace type
-  enum class Workspace : ::afft_Workspace
-  {
-    any            = afft_Workspace_any,            ///< any workspace
-    none           = afft_Workspace_none,           ///< no workspace
-    internal       = afft_Workspace_internal,       ///< internal workspace
-    external       = afft_Workspace_external,       ///< external workspace
-    enlargedBuffer = afft_Workspace_enlargedBuffer, ///< enlarged buffer
-  };
-
   /**
    * @brief Applies the bitwise `not` operation to a BackendMask or Backend.
    * @param[in] value Value to apply the operation to.
@@ -354,6 +344,35 @@ AFFT_EXPORT namespace afft
   };
 
 /**********************************************************************************************************************/
+// Intel MKL
+/**********************************************************************************************************************/
+  namespace mkl
+  {
+    namespace cpu
+    {
+      struct BackendParameters;
+    } // namespace cpu
+    namespace mpi::cpu
+    {
+      struct BackendParameters;
+    } // namespace mpi::cpu
+  } // namespace mkl
+
+  /// @brief Intel MKL cpu backend parameters
+  struct mkl::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>, BackendConstant<Backend::mkl>
+  {
+    bool avoidWorkspace{false}; ///< Avoid workspace
+  };
+
+  /// @brief Intel MKL MPI cpu backend parameters
+  struct mkl::mpi::cpu::BackendParameters
+    : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>, BackendConstant<Backend::mkl>
+  {
+    bool avoidWorkspace{false}; ///< Avoid workspace
+  };
+
+/**********************************************************************************************************************/
 // Backend parameters
 /**********************************************************************************************************************/
   namespace cpu
@@ -362,6 +381,10 @@ AFFT_EXPORT namespace afft
     {
       using afft::fftw3::cpu::BackendParameters;
     } // namespace fftw3
+    namespace mkl
+    {
+      using afft::mkl::cpu::BackendParameters;
+    } // namespace mkl
     struct BackendParameters;
   } // namespace cpu
   namespace cuda
@@ -393,39 +416,38 @@ AFFT_EXPORT namespace afft
   struct cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
-    Workspace                workspace{Workspace::any}; ///< Workspace type
-    std::uint32_t            threadLimit{};             ///< Thread limit
-    fftw3::BackendParameters fftw3{};                   ///< FFTW3 backend initialization parameters
+    std::uint32_t            threadLimit{};    ///< Thread limit
+    fftw3::BackendParameters fftw3{};          ///< FFTW3 backend initialization parameters
+    mkl::BackendParameters   mkl{};            ///< Intel MKL backend initialization parameters
   };
 
   /// @brief CUDA backend parameters
   struct cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
-    Workspace                workspace{Workspace::any}; ///< Workspace type
-    cufft::BackendParameters cufft{};                   ///< cuFFT backend initialization parameters
+    bool                     useExternalWorkspace{}; ///< Use external workspace
+    cufft::BackendParameters cufft{};                ///< cuFFT backend initialization parameters
   };
 
   /// @brief HIP backend parameters
   struct hip::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
-    Workspace workspace{Workspace::any}; ///< Workspace type
+    bool useExternalWorkspace{}; ///< Use external workspace
   };
 
   /// @brief OpenCL backend parameters
   struct opencl::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>
   {
-    Workspace                workspace{Workspace::any}; ///< Workspace type
-    clfft::BackendParameters clfft{};                   ///< clFFT backend initialization parameters
+    bool                     useExternalWorkspace{}; ///< Use external workspace
+    clfft::BackendParameters clfft{};                ///< clFFT backend initialization parameters
   };
 
   /// @brief OpenMP backend parameters
   struct openmp::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::openmp>
   {
-    Workspace workspace{Workspace::any}; ///< Workspace type
   };
 
   namespace mpi
@@ -440,6 +462,10 @@ AFFT_EXPORT namespace afft
       {
         using afft::heffte::mpi::cpu::BackendParameters;
       } // namespace heffte
+      namespace mkl
+      {
+        using afft::mkl::mpi::cpu::BackendParameters;
+      } // namespace mkl
       struct BackendParameters;
     } // namespace cpu
     namespace cuda
@@ -476,17 +502,16 @@ AFFT_EXPORT namespace afft
   struct mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
-    Workspace                 workspace{Workspace::any}; ///< Workspace type
-    std::uint32_t             threadLimit{1};            ///< Thread limit
-    fftw3::BackendParameters  fftw3{};                   ///< FFTW3 backend initialization parameters
-    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
+    std::uint32_t             threadLimit{1}; ///< Thread limit
+    fftw3::BackendParameters  fftw3{};        ///< FFTW3 backend initialization parameters
+    heffte::BackendParameters heffte{};       ///< HeFFTe backend initialization parameters
+    mkl::BackendParameters    mkl{};          ///< Intel MKL backend initialization parameters
   };
 
   /// @brief MPI CUDA backend parameters
   struct mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
   {
-    Workspace                 workspace{Workspace::any}; ///< Workspace type
     cufft::BackendParameters  cufft{};                   ///< cuFFT backend initialization parameters
     heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };
@@ -495,7 +520,6 @@ AFFT_EXPORT namespace afft
   struct mpi::hip::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
   {
-    Workspace                 workspace{Workspace::any}; ///< Workspace type
     heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
   };
 
@@ -503,7 +527,6 @@ AFFT_EXPORT namespace afft
   struct mpi::opencl::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::opencl>
   {
-    Workspace workspace{Workspace::any}; ///< Workspace type
   };
 
   /// @brief Backend parameters variant

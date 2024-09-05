@@ -79,16 +79,6 @@ static inline afft_BackendMask afft_makeBackendMask(afft_Backend backend)
   return (afft_BackendMask)(1 << backend);
 }
 
-/// @brief Workspace type
-typedef uint8_t afft_Workspace;
-
-/// @brief Workspace enumeration
-#define afft_Workspace_any            (afft_Workspace)0 ///< Any workspace
-#define afft_Workspace_none           (afft_Workspace)1 ///< No workspace
-#define afft_Workspace_internal       (afft_Workspace)2 ///< internal workspace
-#define afft_Workspace_external       (afft_Workspace)3 ///< external workspace
-#define afft_Workspace_enlargedBuffer (afft_Workspace)4 ///< enlarged buffer
-
 /**********************************************************************************************************************/
 // clFFT
 /**********************************************************************************************************************/
@@ -256,34 +246,29 @@ typedef struct afft_openmp_BackendParameters afft_openmp_BackendParameters;
 /// @brief Backend parameters for cpu target
 struct afft_cpu_BackendParameters
 {
-  afft_Workspace            workspace; ///< Workspace
   afft_fftw3_cpu_Parameters fftw3;     ///< FFTW3 parameters
 };
 
 /// @brief Backend parameters for cuda target
 struct afft_cuda_BackendParameters
 {
-  afft_Workspace             workspace; ///< Workspace
   afft_cufft_cuda_Parameters cufft;     ///< cuFFT parameters
 };
 
 /// @brief Backend parameters for hip target
 struct afft_hip_BackendParameters
 {
-  afft_Workspace workspace; ///< Workspace
 };
 
 /// @brief Backend parameters for opencl target
 struct afft_opencl_BackendParameters
 {
-  afft_Workspace               workspace; ///< Workspace
   afft_clfft_opencl_Parameters clfft;     ///< clFFT parameters
 };
 
 /// @brief Backend parameters for openmp target
 struct afft_openmp_BackendParameters
 {
-  afft_Workspace workspace; ///< Workspace
 };
 
 /**********************************************************************************************************************/
@@ -304,7 +289,6 @@ typedef struct afft_mpi_opencl_BackendParameters afft_mpi_opencl_BackendParamete
 /// @brief Backend parameters for cpu target
 struct afft_mpi_cpu_BackendParameters
 {
-  afft_Workspace                 workspace; ///< Workspace
   afft_fftw3_mpi_cpu_Parameters  fftw3;     ///< FFTW3 parameters
   afft_heffte_mpi_cpu_Parameters heffte;    ///< HeFFTe parameters
 };
@@ -312,7 +296,6 @@ struct afft_mpi_cpu_BackendParameters
 /// @brief Backend parameters for cuda target
 struct afft_mpi_cuda_BackendParameters
 {
-  afft_Workspace                  workspace; ///< Workspace
   afft_cufft_mpi_cuda_Parameters  cufft;     ///< cuFFT parameters
   afft_heffte_mpi_cuda_Parameters heffte;    ///< HeFFTe parameters
 };
@@ -320,14 +303,12 @@ struct afft_mpi_cuda_BackendParameters
 /// @brief Backend parameters for hip target
 struct afft_mpi_hip_BackendParameters
 {
-  afft_Workspace                 workspace; ///< Workspace
   afft_heffte_mpi_hip_Parameters heffte;    ///< HeFFTe parameters
 };
 
 /// @brief Backend parameters for cuda target
 struct afft_mpi_opencl_BackendParameters
 {
-  afft_Workspace workspace; ///< Workspace
 };
 
 /// @brief Feedback structure

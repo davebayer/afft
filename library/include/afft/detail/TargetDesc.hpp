@@ -387,7 +387,7 @@ namespace afft::detail
        * @param targetParamsVariant Target parameters variant
        */
       TargetDesc(const TargetParametersVariant& targetParamsVariant)
-      : TargetDesc{[&]() -> TargetVariant
+      : TargetDesc{[&]()
           {
 #         ifdef AFFT_ENABLE_CPU
             if (std::holds_alternative<afft::cpu::Parameters>(targetParamsVariant))
@@ -515,7 +515,6 @@ namespace afft::detail
         if constexpr (target == Target::cpu)
         {
 #       ifdef AFFT_ENABLE_CPU
-          targetParams.threadLimit = getTargetDesc<Target::cpu>().getThreadLimit();
 #       endif
         }
         else if constexpr (target == Target::cuda)
@@ -568,8 +567,6 @@ namespace afft::detail
         if constexpr (target == Target::cpu)
         {
 #       ifdef AFFT_ENABLE_CPU
-          const auto& cpuDesc = std::get<CpuDesc>(mTargetVariant);
-          targetParams.threadLimit = cpuDesc.getThreadLimit();
 #       endif
         }
         else if constexpr (target == Target::cuda)

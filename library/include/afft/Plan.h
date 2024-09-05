@@ -86,15 +86,6 @@ afft_Error afft_Plan_getDescription(const afft_Plan*         plan,
 afft_Error afft_Plan_getBackend(afft_Plan* plan, afft_Backend* backend, afft_ErrorDetails* errDetails);
 
 /**
- * @brief Get the plan workspace.
- * @param plan Plan object.
- * @param workspace Pointer to the workspace.
- * @param errDetails Error details.
- * @return Error code.
- */
-afft_Error afft_Plan_getWorkspace(afft_Plan* plan, afft_Workspace* workspace, afft_ErrorDetails* errDetails);
-
-/**
  * @brief Get the plan workspace size. Only valid if external workspace is used.
  * @param plan Plan object.
  * @param workspaceSizes Pointer to the workspace sizes of target count size.
