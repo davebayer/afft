@@ -29,17 +29,18 @@
 # include "../include.hpp"
 #endif
 
+#include "common.hpp"
 #include "error.hpp"
-#include "../../Plan.hpp"
+#include "../Plan.hpp"
 
 namespace afft::detail::vkfft
 {
   /// @brief The vkfft plan implementation base class.
-  class Plan : public afft::Plan
+  class Plan : public detail::Plan<MpBackend::none, target>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::Plan;
+      using Parent = detail::Plan<MpBackend::none, target>;
 
     public:
       /// @brief Inherit constructor.

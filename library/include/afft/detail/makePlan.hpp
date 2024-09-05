@@ -178,7 +178,7 @@ namespace afft::detail
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan(Backend                                backend,
            [[maybe_unused]] const Description&    desc,
            [[maybe_unused]] const BackendParamsT& backendParams,
@@ -194,7 +194,7 @@ namespace afft::detail
       }
     };
 
-    std::unique_ptr<Plan> plan{};
+    std::unique_ptr<afft::Plan> plan{};
 
     const auto supportedBackendMask = getSupportedBackendMask<BackendParamsT::mpBackend, BackendParamsT::target>(desc.getTargetCount());
     
@@ -280,12 +280,12 @@ namespace afft::detail
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] inline std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makeFirstPlan(const Description&      desc,
                 const BackendParamsT&   backendParams,
                 const SelectParameters& selectParams)
   {
-    std::unique_ptr<Plan> plan{};
+    std::unique_ptr<afft::Plan> plan{};
 
     forEachBackend(selectParams.mask, selectParams.order, [&](Backend backend)
     {
@@ -317,7 +317,7 @@ namespace afft::detail
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] inline std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makeBestPlan([[maybe_unused]] const Description&      desc,
                [[maybe_unused]] const BackendParamsT&   backendParams,
                [[maybe_unused]] const SelectParameters& selectParams)
@@ -334,14 +334,14 @@ namespace afft::detail
    * @return Plan implementation.
    */
   template<typename BackendParamsT>
-  [[nodiscard]] inline std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan(const Description&      desc,
            const BackendParamsT&   backendParams,
            const SelectParameters& selectParams)
   {
     validate(selectParams.strategy);
 
-    std::unique_ptr<Plan> plan{};
+    std::unique_ptr<afft::Plan> plan{};
 
     switch (selectParams.strategy)
     {
@@ -371,7 +371,7 @@ namespace afft::detail
    * @return Plan.
    */
   template<MpBackend mpBackend>
-  [[nodiscard]] inline std::unique_ptr<Plan>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlanWithDefaultBackendParametersHelper(const Description& desc, const SelectParameters& selectParams)
   {
     switch (desc.getTarget())
@@ -416,7 +416,7 @@ namespace afft::detail
    * @param desc Plan description.
    * @return Plan.
    */
-  [[nodiscard]] inline std::unique_ptr<Plan>
+  [[nodiscard]] inline std::unique_ptr<afft::Plan>
   makePlanWithDefaultBackendParameters(const Description& desc, const SelectParameters& selectParams)
   {
     switch (desc.getMpBackend())

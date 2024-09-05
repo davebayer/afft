@@ -30,26 +30,27 @@
 #endif
 
 #include "error.hpp"
-#include "../../Plan.hpp"
+#include "../Plan.hpp"
 
 namespace afft::detail::mkl
 {
   /// @brief The mkl plan implementation base class.
-  class Plan : public afft::Plan
+  template<MpBackend mpBackend, Target target>
+  class Plan : public detail::Plan<mpBackend, target>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::Plan;
+      using Parent = detail::Plan<mpBackend, target>;
 
     public:
       /// @brief Inherit constructor.
       using Parent::Parent;
 
-      /// @brief Inherit assignment operator.
-      using Parent::operator=;
-
       /// @brief Default destructor.
       virtual ~Plan() = default;
+
+      /// @brief Inherit assignment operator.
+      using Parent::operator=;
 
       /**
        * @brief Get the backend.
@@ -64,9 +65,9 @@ namespace afft::detail::mkl
        * @brief Get the precision.
        * @return The precision.
        */
-      [[nodiscard]] DFTI_CONFIG_VALUE getPrecision() const
+      [[nodiscard]] constexpr DFTI_CONFIG_VALUE getPrecision() const
       {
-        switch (mDesc.getPrecision().execution)
+        switch (Parent::mDesc.getPrecision().execution)
         {
         case Precision::f32:
           return DFTI_SINGLE;
@@ -81,9 +82,9 @@ namespace afft::detail::mkl
        * @brief Get the forward domain.
        * @return The forward domain.
        */
-      [[nodiscard]] DFTI_CONFIG_VALUE getForwardDomain() const
+      [[nodiscard]] constexpr DFTI_CONFIG_VALUE getForwardDomain() const
       {
-        return (mDesc.getTransformDesc<Transform::dft>().type == dft::Type::complexToComplex)
+        return (Parent::mDesc.getTransformDesc<Transform::dft>().type == dft::Type::complexToComplex)
           ? DFTI_COMPLEX : DFTI_REAL;
       }
 
@@ -91,19 +92,20 @@ namespace afft::detail::mkl
        * @brief Get the placement.
        * @return The placement.
        */
-      [[nodiscard]] DFTI_CONFIG_VALUE getPlacement() const
+      [[nodiscard]] constexpr DFTI_CONFIG_VALUE getPlacement() const
       {
-        return (mDesc.getPlacement() == Placement::inPlace)
+        return (Parent::mDesc.getPlacement() == Placement::inPlace)
           ? DFTI_INPLACE : DFTI_NOT_INPLACE;
       }
 
       /**
-       * @brief Get the thread limit.
-       * @return The thread limit.
+       * @brief Get the scale config parameter.
+       * @return The scale config parameter.
        */
-      [[nodiscard]] int getThreadLimit() const
+      [[nodiscard]] DFTI_CONFIG_PARAM getScaleConfigParam() const
       {
-        return static_cast<int>(mDesc.getTargetDesc<Target::cpu>().threadLimit);
+        return (Parent::mDesc.getDirection() == Direction::forward)
+          ? DFTI_FORWARD_SCALE : DFTI_BACKWARD_SCALE;
       }
   };
 } // namespace afft::detail::mkl

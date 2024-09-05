@@ -377,30 +377,24 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Erase a plan from the cache.
-       * @param[in] it The iterator to the plan to erase.
+       * @param[in] it The iterator to the plan to erase. Must be dereferenceable.
        * @return The iterator to the next plan in the cache.
        */
       iterator erase(iterator it)
       {
-        if (it != end())
-        {
-          mMap.erase((*it)->getDescription());
-          return iterator{mList.erase(it.mIter)};
-        }
+        mMap.erase((*it)->getDescription());
+        return iterator{mList.erase(it)};
       }
 
       /**
        * @brief Erase a plan from the cache.
-       * @param[in] it The iterator to the plan to erase.
+       * @param[in] it The iterator to the plan to erase. Must be dereferenceable.
        * @return The iterator to the next plan in the cache.
        */
       const_iterator erase(const_iterator it)
       {
-        if (it != end())
-        {
-          mMap.erase((*it)->getDescription());
-          return const_iterator{mList.erase(it.mIter)};
-        }
+        mMap.erase((*it)->getDescription());
+        return const_iterator{mList.erase(it)};
       }
 
       /**
@@ -564,9 +558,9 @@ AFFT_EXPORT namespace afft
         return maxSize;
       }
 
-      Map       mMap{};                   ///< The map of the cache.
-      List      mList{};                  ///< The list of the cache.
-      size_type mMaxSize{defaultMaxSize}; ///< The maximum size of the cache.
+      Map          mMap{};                   ///< The map of the cache.
+      mutable List mList{};                  ///< The list of the cache.
+      size_type    mMaxSize{defaultMaxSize}; ///< The maximum size of the cache.
   };  
 } // namespace afft
 

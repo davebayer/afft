@@ -30,16 +30,16 @@
 #endif
 
 #include "common.hpp"
-#include "../../Plan.hpp"
+#include "../Plan.hpp"
 
 namespace afft::detail::pocketfft
 {
   /// @brief The pocketfft plan implementation base class.
-  class Plan : public afft::Plan
+  class Plan : public afft::detail::Plan<MpBackend::none, Target::cpu>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::Plan;
+      using Parent = afft::detail::Plan<MpBackend::none, Target::cpu>;
 
     public:
       /// @brief Inherit constructor.
@@ -64,7 +64,7 @@ namespace afft::detail::pocketfft
        * @brief Get the pocketfft direction from the plan description.
        * @return The pocketfft direction.
        */
-      [[nodiscard]] auto getDirection() const noexcept
+      [[nodiscard]] constexpr auto getDirection() const noexcept
       {
         switch (mDesc.getDirection())
         {
@@ -83,7 +83,7 @@ namespace afft::detail::pocketfft
        */
       [[nodiscard]] constexpr std::size_t getThreadCount() const
       {
-        return static_cast<std::size_t>(mDesc.getTargetDesc<Target::cpu>().getThreadLimit());
+        return static_cast<std::size_t>(Parent::mBackendParams.threadLimit);
       }
   };
 } // namespace afft::detail::pocketfft

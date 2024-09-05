@@ -29,16 +29,17 @@
 # include "../include.hpp"
 #endif
 
-#include "../../Plan.hpp"
+#include "../Plan.hpp"
 
 namespace afft::detail::fftw3
 {
-  /// @brief The mkl plan implementation base class.
-  class Plan : public afft::Plan
+  /// @brief The fftw3 plan implementation base class.
+  template<MpBackend mpBackend, afft::fftw3::Library library>
+  class Plan : public detail::Plan<mpBackend, Target::cpu>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::Plan;
+      using Parent = detail::Plan<mpBackend, Target::cpu>;
 
     public:
       /// @brief Inherit constructor.
@@ -60,7 +61,6 @@ namespace afft::detail::fftw3
       }
     protected:
       /// @brief The plan deleter.
-      template<afft::fftw3::Library library>
       struct PlanDeleter
       {
         /**
@@ -172,36 +172,48 @@ namespace afft::detail::fftw3
        */
       [[nodiscard]] constexpr int getSign() const noexcept
       {
-        return (mDesc.getDirection() == Direction::forward) ? FFTW_FORWARD : FFTW_BACKWARD;
+        return (Parent::mDesc.getDirection() == Direction::forward) ? FFTW_FORWARD : FFTW_BACKWARD;
       }
 
       /**
-       * @brief Get the thread limit.
-       * @return The thread limit.
+       * @brief Set the FFTW3 thread limit.
        */
-      [[nodiscard]] constexpr int getThreadLimit() const
+      void setThreadLimit()
       {
-        return static_cast<int>(mDesc.getTargetDesc<Target::cpu>().getThreadLimit());
+        Lib<library>::planWithNThreads(static_cast<int>(Parent::mBackendParams.threadLimit));
+      }
+
+      /**
+       * @brief Set the FFTW3 planner time limit.
+       */
+      void setPlannerTimeLimit()
+      {
+        double timeLimit = Parent::mBackendParams.fftw3.timeLimit.count();
+
+        if (timeLimit < 0.0)
+        {
+          timeLimit = FFTW_NO_TIMELIMIT;
+        }
+
+        Lib<library>::setTimeLimit(timeLimit);
       }
 
       /**
        * @brief Gets the FFTW3 R2R kinds.
-       * @tparam library The library.
        * @return The FFTW3 R2R kinds.
        */
-      template<afft::fftw3::Library library>
       [[nodiscard]] MaxDimBuffer<typename Lib<library>::R2RKind>
       getR2RKinds() const
       {
         MaxDimBuffer<typename Lib<library>::R2RKind> r2rKinds{};
 
-        const auto rank = mDesc.getTransformRank();
+        const auto rank = Parent::mDesc.getTransformRank();
 
-        switch (mDesc.getTransform())
+        switch (Parent::mDesc.getTransform())
         {
         case Transform::dht:
         {
-          if (mDesc.getTransformDesc<Transform::dht>().type != dht::Type::separable)
+          if (Parent::mDesc.template getTransformDesc<Transform::dht>().type != dht::Type::separable)
           {
             throw Exception{Error::fftw3, "only separable DHT is supported"};
           }
@@ -211,9 +223,9 @@ namespace afft::detail::fftw3
         }
         case Transform::dtt:
         {
-          const auto dttTypes = mDesc.getTransformDesc<Transform::dtt>().types;
+          const auto dttTypes = Parent::mDesc.template getTransformDesc<Transform::dtt>().types;
 
-          auto cvtDttType = [direction = mDesc.getDirection()](dtt::Type dttType)
+          auto cvtDttType = [direction = Parent::mDesc.getDirection()](dtt::Type dttType)
           {
             switch (dttType)
             {

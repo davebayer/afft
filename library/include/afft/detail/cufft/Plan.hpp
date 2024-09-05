@@ -32,18 +32,19 @@
 #include "common.hpp"
 #include "error.hpp"
 #include "../cxx.hpp"
-#include "../../Plan.hpp"
+#include "../Plan.hpp"
 
 namespace afft::detail::cufft
 {
   /**
    * @brief cuFFT plan implementation.
    */
-  class Plan : public afft::Plan
+  template<MpBackend mpBackend>
+  class Plan : public detail::Plan<mpBackend, Target::cuda>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::Plan;
+      using Parent = detail::Plan<mpBackend, Target::cuda>;
 
     public:
       /// @brief Inherit constructors from the parent class.
@@ -95,7 +96,7 @@ namespace afft::detail::cufft
        */
       [[nodiscard]] int getDirection() const noexcept
       {
-        switch (mDesc.getDirection())
+        switch (Parent::mDesc.getDirection())
         {
           case Direction::forward:
             return CUFFT_FORWARD;

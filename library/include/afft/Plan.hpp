@@ -89,6 +89,7 @@ AFFT_EXPORT namespace afft
         return *this;
       }
 
+
       /**
        * @brief Get backend.
        * @return Backend
@@ -96,12 +97,50 @@ AFFT_EXPORT namespace afft
       [[nodiscard]] virtual Backend getBackend() const noexcept = 0;
 
       /**
-       * @brief Get workspace.
-       * @return Workspace
+       * @brief Get the backend parameters.
+       * @tparam mpBackend Multi-process backend.
+       * @tparam target Target.
+       * @return Backend parameters.
        */
-      [[nodiscard]] Workspace getWorkspace() const noexcept
+      template<MpBackend mpBackend, Target target>
+      [[nodiscard]] constexpr const BackendParameters<mpBackend, target>& getBackendParameters() const noexcept
       {
-        return mWorkspace;
+        if (mpBackend != mDesc.getMpBackend())
+        {
+          throw Exception{Error::invalidArgument, "mpBackend does not match the actual multi-process backend"};
+        }
+
+        if (target != mDesc.getTarget())
+        {
+          throw Exception{Error::invalidArgument, "target does not match the actual target"};
+        }
+
+        return *static_cast<const BackendParameters<mpBackend, target>*>(getBackendParametersImpl());
+      }
+
+      /**
+       * @brief Get the backend parameters variant.
+       * @return Backend parameters variant.
+       */
+      [[nodiscard]] virtual BackendParametersVariant getBackendParametersVariant() const noexcept = 0;
+
+      /**
+       * @brief Get the precision of the source and destination buffers.
+       * @return Source and destination buffer precision.
+       */
+      [[nodiscard]] constexpr std::pair<Precision, Precision> getSrcDstPrecision() const noexcept
+      {
+        const auto& prec = mDesc.getPrecision();
+        return std::make_pair(prec.source, prec.destination);
+      }
+
+      /**
+       * @brief Get source and destination buffer complexity.
+       * @return Source and destination buffer complexity.
+       */
+      [[nodiscard]] constexpr std::pair<Complexity, Complexity> getSrcDstComplexity() const noexcept
+      {
+        return mDesc.getSrcDstComplexity();
       }
 
       /**
@@ -290,6 +329,12 @@ AFFT_EXPORT namespace afft
       Plan(const Description& desc)
       : Description{desc}
       {}
+
+      /**
+       * @brief Get the backend parameters implementation.
+       * @return Backend parameters implementation.
+       */
+      [[nodiscard]] virtual const void* getBackendParametersImpl() const noexcept = 0;
 
       /**
        * @brief Execute the plan backend implementation.
