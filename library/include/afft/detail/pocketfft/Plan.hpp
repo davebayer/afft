@@ -35,11 +35,11 @@
 namespace afft::detail::pocketfft
 {
   /// @brief The pocketfft plan implementation base class.
-  class Plan : public afft::detail::Plan<MpBackend::none, Target::cpu>
+  class Plan : public afft::detail::Plan<MpBackend::none, Target::cpu, Backend::pocketfft>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = afft::detail::Plan<MpBackend::none, Target::cpu>;
+      using Parent = afft::detail::Plan<MpBackend::none, Target::cpu, Backend::pocketfft>;
 
     public:
       /// @brief Inherit constructor.
@@ -51,14 +51,6 @@ namespace afft::detail::pocketfft
       /// @brief Default destructor.
       virtual ~Plan() = default;
 
-      /**
-       * @brief Get the backend.
-       * @return The backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
-      {
-        return Backend::pocketfft;
-      }
     protected:
       /**
        * @brief Get the pocketfft direction from the plan description.

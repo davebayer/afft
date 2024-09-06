@@ -81,7 +81,7 @@ namespace afft::detail
    * @tparam mpBackend Multi-process backend.
    * @tparam target Target.
    */
-  template<MpBackend mpBackend, Target target>
+  template<MpBackend mpBackend, Target target, Backend backend>
   class Plan : public afft::Plan, protected BackendData<mpBackend, target>
   {
     private:
@@ -130,6 +130,15 @@ namespace afft::detail
        * @return Reference to this plan.
        */
       Plan& operator=(Plan&&) = default;
+
+      /**
+       * @brief Get the backend.
+       * @return The backend.
+       */
+      [[nodiscard]] Backend getBackend() const noexcept override
+      {
+        return backend;
+      }
 
       /**
        * @brief Get the backend parameters implementation.

@@ -36,11 +36,11 @@ namespace afft::detail::mkl
 {
   /// @brief The mkl plan implementation base class.
   template<MpBackend mpBackend, Target target>
-  class Plan : public detail::Plan<mpBackend, target>
+  class Plan : public detail::Plan<mpBackend, target, Backend::mkl>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::Plan<mpBackend, target>;
+      using Parent = detail::Plan<mpBackend, target, Backend::mkl>;
 
     public:
       /// @brief Inherit constructor.
@@ -51,15 +51,7 @@ namespace afft::detail::mkl
 
       /// @brief Inherit assignment operator.
       using Parent::operator=;
-
-      /**
-       * @brief Get the backend.
-       * @return The backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
-      {
-        return Backend::mkl;
-      }
+      
     protected:
       /**
        * @brief Get the precision.

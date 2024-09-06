@@ -35,11 +35,11 @@ namespace afft::detail::fftw3
 {
   /// @brief The fftw3 plan implementation base class.
   template<MpBackend mpBackend, afft::fftw3::Library library>
-  class Plan : public detail::Plan<mpBackend, Target::cpu>
+  class Plan : public detail::Plan<mpBackend, Target::cpu, Backend::fftw3>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::Plan<mpBackend, Target::cpu>;
+      using Parent = detail::Plan<mpBackend, Target::cpu, Backend::fftw3>;
 
     public:
       /// @brief Inherit constructor.
@@ -51,14 +51,6 @@ namespace afft::detail::fftw3
       /// @brief Default destructor.
       virtual ~Plan() = default;
 
-      /**
-       * @brief Get the backend.
-       * @return The backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
-      {
-        return Backend::fftw3;
-      }
     protected:
       /// @brief The plan deleter.
       struct PlanDeleter

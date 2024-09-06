@@ -40,11 +40,11 @@ namespace afft::detail::cufft
    * @brief cuFFT plan implementation.
    */
   template<MpBackend mpBackend>
-  class Plan : public detail::Plan<mpBackend, Target::cuda>
+  class Plan : public detail::Plan<mpBackend, Target::cuda, Backend::cufft>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::Plan<mpBackend, Target::cuda>;
+      using Parent = detail::Plan<mpBackend, Target::cuda, Backend::cufft>;
 
     public:
       /// @brief Inherit constructors from the parent class.
@@ -55,15 +55,6 @@ namespace afft::detail::cufft
 
       /// @brief Inherit assignment operator from the parent class.
       using Parent::operator=;
-
-      /**
-       * @brief Get the backend.
-       * @return The backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
-      {
-        return Backend::cufft;
-      }
 
     protected:
       static void makeCufftPlan(cufftHandle          handle,

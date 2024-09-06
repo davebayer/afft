@@ -36,11 +36,11 @@
 namespace afft::detail::vkfft
 {
   /// @brief The vkfft plan implementation base class.
-  class Plan : public detail::Plan<MpBackend::none, target>
+  class Plan : public detail::Plan<MpBackend::none, target, Backend::vkfft>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = detail::Plan<MpBackend::none, target>;
+      using Parent = detail::Plan<MpBackend::none, target, Backend::vkfft>;
 
     public:
       /// @brief Inherit constructor.
@@ -51,15 +51,7 @@ namespace afft::detail::vkfft
 
       /// @brief Inherit assignment operator.
       using Parent::operator=;
-
-      /**
-       * @brief Get the backend.
-       * @return The backend.
-       */
-      [[nodiscard]] Backend getBackend() const noexcept override
-      {
-        return Backend::vkfft;
-      }
+      
     protected:
       /**
        * @brief Get the vkfft direction from the plan description.
