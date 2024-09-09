@@ -35,10 +35,14 @@ namespace afft::detail::mkl::sp
 {
   /**
    * @brief Create a mkl single process plan implementation.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Plan description.
+   * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
+  makePlan(const Description& desc, const BackendParamsT& backendParams);
 } // namespace afft::detail::mkl::sp
 
 #ifdef AFFT_HEADER_ONLY
@@ -60,9 +64,12 @@ namespace afft::detail::mkl::sp
     /**
      * @brief Create a mkl single process cpu plan implementation.
      * @param desc Plan description.
+     * @param backendParams Backend parameters.
      * @return Plan implementation.
      */
-    [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
+    [[nodiscard]] std::unique_ptr<afft::Plan>
+    makePlan(const Description&                  desc,
+             const afft::cpu::BackendParameters& backendParams);
   } // namespace cpu
 
   namespace openmp
@@ -76,21 +83,40 @@ namespace afft::detail::mkl::sp
     /**
      * @brief Create a mkl single process openmp plan implementation.
      * @param desc Plan description.
+     * @param backendParams Backend parameters.
      * @return Plan implementation.
      */
-    [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace);
+    [[nodiscard]] std::unique_ptr<afft::Plan>
+    makePlan(const Description&                     desc,
+             const afft::openmp::BackendParameters& backendParams);
   } // namespace openmp
+
+  /// @brief Alias for the dfti descriptor.
+  using DftiDesc = std::remove_pointer_t<DFTI_DESCRIPTOR_HANDLE>;
+
+  /// @brief Delete the dfi descriptor.
+  struct DftiDescDeleter
+  {
+    /**
+     * @brief Delete the descriptor.
+     * @param desc The descriptor.
+     */
+    void operator()(DftiDesc* desc) const
+    {
+      DftiFreeDescriptor(&desc);
+    }
+  };
 
 #ifdef AFFT_ENABLE_CPU  
   /**
    * @class Plan
    * @brief The mkl single process cpu plan implementation.
    */
-  class cpu::Plan final : public mkl::Plan
+  class cpu::Plan final : public mkl::Plan<MpBackend::none, Target::cpu>
   {
     private:
       /// @brief Alias for the parent class
-      using Parent = mkl::Plan;
+      using Parent = mkl::Plan<MpBackend::none, Target::cpu>;
 
     public:
       /// @brief Inherit constructor.
@@ -98,10 +124,11 @@ namespace afft::detail::mkl::sp
 
       /**
        * @brief Constructor
-       * @param Desc The plan description
+       * @param desc The plan description
+       * @param backendParams Backend parameters
        */
-      Plan(const Desc& desc, Workspace workspace)
-      : Parent{desc, workspace}
+      Plan(const Description& desc, const afft::cpu::BackendParameters& backendParams)
+      : Parent{desc, backendParams}
       {
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
@@ -134,23 +161,16 @@ namespace afft::detail::mkl::sp
                                 DFTI_PLACEMENT,
                                 getPlacement()));
 
-        const auto scaleConfigParam = (mDesc.getDirection() == Direction::forward) ? DFTI_FORWARD_SCALE : DFTI_BACKWARD_SCALE;
         if (getPrecision() == DFTI_DOUBLE)
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  scaleConfigParam,
-                                  mDesc.getNormalizationFactor<double>()));
+          checkError(DftiSetValue(mDftiHandle.get(), getScaleConfigParam(), mDesc.getNormalizationFactor<double>()));
         }
         else
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  scaleConfigParam,
-                                  mDesc.getNormalizationFactor<float>()));
+          checkError(DftiSetValue(mDftiHandle.get(), getScaleConfigParam(), mDesc.getNormalizationFactor<float>()));
         }
 
-        checkError(DftiSetValue(mDftiHandle.get(),
-                                DFTI_THREAD_LIMIT,
-                                getThreadLimit()));
+        checkError(DftiSetValue(mDftiHandle.get(), DFTI_THREAD_LIMIT, Parent::mBackendParams.threadLimit));
 
         if (!memDesc.hasDefaultSrcStrides())
         {
@@ -192,18 +212,14 @@ namespace afft::detail::mkl::sp
           cxx::unreachable();
         }
 
-        if (getWorkspace() == Workspace::none)
+        if (Parent::mBackendParams.mkl.avoidWorkspace)
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  DFTI_WORKSPACE,
-                                  DFTI_AVOID));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_WORKSPACE, DFTI_AVOID));
         }
 
         if (mDesc.isDestructive())
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  DFTI_DESTROY_INPUT,
-                                  DFTI_ALLOW));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_DESTROY_INPUT, DFTI_ALLOW));
         }
 
         checkError(DftiCommitDescriptor(mDftiHandle.get()));
@@ -270,38 +286,22 @@ namespace afft::detail::mkl::sp
       }
     
     private:
-      /// @brief Alias for the dfti descriptor.
-      using DftiDesc = std::remove_pointer_t<DFTI_DESCRIPTOR_HANDLE>;
-
-      /// @brief Delete the dfi descriptor.
-      struct DftiDescDeleter
-      {
-        /**
-         * @brief Delete the descriptor.
-         * @param desc The descriptor.
-         */
-        void operator()(DftiDesc* desc) const
-        {
-          DftiFreeDescriptor(&desc);
-        }
-      };
-
       std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};   ///< MKL DFTI descriptor handle
       std::array<std::size_t, 2>                 mSrcElemCount{}; ///< The number of elements in the source buffer
       std::array<std::size_t, 2>                 mDstElemCount{}; ///< The number of elements in the destination buffer
   };
 #endif /* AFFT_ENABLE_CPU */
 
-#ifdef AFFT_ENABLE_OPENMP  
+#if defined(AFFT_ENABLE_OPENMP) && defined(AFFT_MKL_HAS_OMP_OFFLOAD)
   /**
    * @class Plan
    * @brief The mkl single process openmp plan implementation.
    */
-  class openmp::Plan final : public mkl::Plan
+  class openmp::Plan final : public mkl::Plan<MpBackend::none, Target::openmp>
   {
     private:
       /// @brief Alias for the parent class
-      using Parent = mkl::Plan;
+      using Parent = mkl::Plan<MpBackend::none, Target::openmp>;
 
     public:
       /// @brief Inherit constructor.
@@ -309,10 +309,11 @@ namespace afft::detail::mkl::sp
 
       /**
        * @brief Constructor
-       * @param Desc The plan description
+       * @param desc The plan description
+       * @param backendParams Backend parameters
        */
-      Plan(const Desc& desc, Workspace workspace)
-      : Parent{desc, workspace}
+      Plan(const Description& desc, afft::openmp::BackendParameters backendParams)
+      : Parent{desc, backendParams}
       {
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
@@ -345,18 +346,13 @@ namespace afft::detail::mkl::sp
                                 DFTI_PLACEMENT,
                                 getPlacement()));
 
-        const auto scaleConfigParam = (mDesc.getDirection() == Direction::forward) ? DFTI_FORWARD_SCALE : DFTI_BACKWARD_SCALE;
         if (getPrecision() == DFTI_DOUBLE)
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  scaleConfigParam,
-                                  mDesc.getNormalizationFactor<double>()));
+          checkError(DftiSetValue(mDftiHandle.get(), getScaleConfigParam(), mDesc.getNormalizationFactor<double>()));
         }
         else
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  scaleConfigParam,
-                                  mDesc.getNormalizationFactor<float>()));
+          checkError(DftiSetValue(mDftiHandle.get(), getScaleConfigParam(), mDesc.getNormalizationFactor<float>()));
         }
 
         if (!memDesc.hasDefaultSrcStrides())
@@ -377,22 +373,10 @@ namespace afft::detail::mkl::sp
         switch (mDesc.getTransformDesc<Transform::dft>().type)
         {
         case dft::Type::complexToComplex:
-          if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
-          {
-            checkError(DftiSetValue(mDftiHandle.get(), DFTI_COMPLEX_STORAGE, DFTI_COMPLEX_COMPLEX));
-          }
-          else
-          {
-            checkError(DftiSetValue(mDftiHandle.get(), DFTI_COMPLEX_STORAGE, DFTI_REAL_REAL));
-          }
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_COMPLEX_STORAGE, DFTI_COMPLEX_COMPLEX));
           break;
         case dft::Type::realToComplex:
         case dft::Type::complexToReal:
-          if (mDesc.getComplexFormat() == ComplexFormat::planar)
-          {
-            throw Exception{Error::mkl, "Planar format is not supported for real-to-complex or complex-to-real transforms"};
-          }
-
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_CONJUGATE_EVEN_STORAGE, DFTI_COMPLEX_COMPLEX));
           break;
         default:
@@ -401,16 +385,12 @@ namespace afft::detail::mkl::sp
 
         if (getWorkspace() == Workspace::none)
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  DFTI_WORKSPACE,
-                                  DFTI_AVOID));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_WORKSPACE, DFTI_AVOID));
         }
 
         if (mDesc.isDestructive())
         {
-          checkError(DftiSetValue(mDftiHandle.get(),
-                                  DFTI_DESTROY_INPUT,
-                                  DFTI_ALLOW));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_DESTROY_INPUT, DFTI_ALLOW));
         }
 
         {
@@ -524,22 +504,6 @@ namespace afft::detail::mkl::sp
       }
     
     private:
-      /// @brief Alias for the dfti descriptor.
-      using DftiDesc = std::remove_pointer_t<DFTI_DESCRIPTOR_HANDLE>;
-
-      /// @brief Delete the dfi descriptor.
-      struct DftiDescDeleter
-      {
-        /**
-         * @brief Delete the descriptor.
-         * @param desc The descriptor.
-         */
-        void operator()(DftiDesc* desc) const
-        {
-          DftiFreeDescriptor(&desc);
-        }
-      };
-
       std::unique_ptr<DftiDesc, DftiDescDeleter> mDftiHandle{};   ///< MKL DFTI descriptor handle
       std::array<std::size_t, 2>                 mSrcElemCount{}; ///< The number of elements in the source buffer
       std::array<std::size_t, 2>                 mDstElemCount{}; ///< The number of elements in the destination buffer
@@ -549,37 +513,30 @@ namespace afft::detail::mkl::sp
   /**
    * @brief Create a mkl single process cpu plan implementation.
    * @param desc Plan description.
+   * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> cpu::makePlan(const Desc& desc, Workspace workspace)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
+  cpu::makePlan(const Description&                  desc,
+                const afft::cpu::BackendParameters& backendParams)
   {
 # ifdef AFFT_ENABLE_CPU
     // MKL DFTI for cpu supports up to 7 dimensions
     static constexpr std::size_t dftiMaxDimCount{7};
 
-    if (desc.getTransformRank() > dftiMaxDimCount)
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTransformRank() > dftiMaxDimCount)
     {
       throw Exception{Error::mkl, "only up to 7 transformed dimensions are supported"};
     }
 
-    switch (workspace)
-    {
-    case Workspace::any:
-      workspace = Workspace::internal;
-      break;
-    case Workspace::internal:
-    case Workspace::none:
-      break;
-    default:
-      throw Exception{Error::mkl, "only internal, none or any workspace is supported"};
-    }
-
-    if (!desc.hasUniformPrecision())
+    if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
     }
 
-    return std::make_unique<Plan>(desc, workspace);
+    return std::make_unique<Plan>(desc, backendParams);
 # else
     throw Exception{Error::mkl, "cpu backend is not enabled"};
 # endif
@@ -588,61 +545,70 @@ namespace afft::detail::mkl::sp
   /**
    * @brief Create a mkl single process openmp plan implementation.
    * @param desc Plan description.
+   * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> openmp::makePlan(const Desc& desc, Workspace workspace)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
+  openmp::makePlan(const Description&                     desc,
+                   const afft::openmp::BackendParameters& backendParams)
   {
 # ifdef AFFT_ENABLE_OPENMP
+#   ifdef AFFT_MKL_HAS_OMP_OFFLOAD
     // MKL DFTI for cpu supports up to 7 dimensions
-    static constexpr std::size_t dftiMaxDimCount{3};
+    static constexpr std::size_t dftiOmpOffloadMaxDimCount{3};
 
-    if (desc.getTransformRank() > dftiMaxDimCount)
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTransformRank() > dftiOmpOffloadMaxDimCount)
     {
       throw Exception{Error::mkl, "only up to 3 transformed dimensions are supported"};
     }
 
-    switch (workspace)
+    if (descImpl.getTransform() != Transform::dft)
     {
-    case Workspace::any:
-      workspace = Workspace::internal;
-      break;
-    case Workspace::internal:
-    case Workspace::none:
-      break;
-    default:
-      throw Exception{Error::mkl, "only internal, none or any workspace is supported"};
+      throw Exception{Error::mkl, "only DFT transform is supported"};
     }
 
-    if (!desc.hasUniformPrecision())
+    if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
     }
 
-    if (desc.getComplexFormat() != ComplexFormat::interleaved)
+    if (descImpl.getComplexFormat() != ComplexFormat::interleaved)
     {
       throw Exception{Error::mkl, "only interleaved complex format is supported"};
     }
 
-    return std::make_unique<Plan>(desc, workspace);
+    return std::make_unique<Plan>(desc, backendParams);
+#   else
+    throw Exception{Error::mkl, "mkl omp offload is disabled"};
+#   endif /* AFFT_MKL_HAS_OMP_OFFLOAD */
 # else
-    throw Exception{Error::mkl, "cpu backend is not enabled"};
+    throw Exception{Error::mkl, "openmp backend is not enabled"};
 # endif /* AFFT_ENABLE_OPENMP */
   }
 
   /**
-   * @brief Create a mkl single process openmp plan implementation.
+   * @brief Create a mkl single process plan implementation.
+   * @tparam BackendParamsT Backend parameters type.
    * @param desc Plan description.
+   * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc, Workspace workspace)
+  template<typename BackendParamsT>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
+  makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
-    switch (desc.getTarget())
+    if constexpr (BackendParamsT::target == Target::cpu)
     {
-    case Target::cpu:
-      return cpu::makePlan(desc, workspace);
-    case Target::openmp:
-      return openmp::makePlan(desc, workspace);
-    default:
+      return cpu::makePlan(desc, backendParams);
+    }
+    else if constexpr (BackendParamsT::target == Target::openmp)
+    {
+      return openmp::makePlan(desc, backendParams);
+    }
+    else
+    {
       throw Exception{Error::mkl, "unsupported target"};
     }
   }

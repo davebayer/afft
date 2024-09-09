@@ -75,13 +75,15 @@ namespace afft::detail::pocketfft::sp::cpu
        * @brief Constructor
        * @param desc The plan description
        */
-      Plan(const Description& desc)
-      : Parent{desc, Workspace::none},
+      Plan(const Description& desc, const afft::cpu::BackendParameters& backendParams)
+      : Parent{desc, backendParams},
         mShape(mDesc.getShapeRank()),
         mSrcStrides(mDesc.getShapeRank()),
         mDstStrides(mDesc.getShapeRank()),
         mAxes(mDesc.getTransformRank())
       {
+        Parent::mBackendParams.threadLimit = std::thread::hardware_concurrency();
+
         std::transform(mDesc.getShape().begin(),
                        mDesc.getShape().end(),
                        mShape.begin(),
@@ -423,13 +425,13 @@ namespace afft::detail::pocketfft::sp::cpu
     switch (const auto precision = descImpl.getPrecision().execution)
     {
       case Precision::_float:
-        return std::make_unique<Plan<float>>(desc);
+        return std::make_unique<Plan<float>>(desc, backendParams);
       case Precision::_double:
-        return std::make_unique<Plan<double>>(desc);
+        return std::make_unique<Plan<double>>(desc, backendParams);
       default:
         if (precision == Precision::_longDouble)
         {
-          return std::make_unique<Plan<long double>>(desc);
+          return std::make_unique<Plan<long double>>(desc, backendParams);
         }
         else
         {

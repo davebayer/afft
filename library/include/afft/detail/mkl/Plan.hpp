@@ -76,7 +76,7 @@ namespace afft::detail::mkl
        */
       [[nodiscard]] constexpr DFTI_CONFIG_VALUE getForwardDomain() const
       {
-        return (Parent::mDesc.getTransformDesc<Transform::dft>().type == dft::Type::complexToComplex)
+        return (Parent::mDesc.template getTransformDesc<Transform::dft>().type == dft::Type::complexToComplex)
           ? DFTI_COMPLEX : DFTI_REAL;
       }
 

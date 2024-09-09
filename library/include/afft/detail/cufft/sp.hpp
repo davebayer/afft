@@ -36,11 +36,11 @@ namespace afft::detail::cufft::sp
   /**
    * @brief Create a cufft sp plan.
    * @param desc The plan descriptor.
-   * @param cufftParams The cuFFT parameters.
+   * @param backendParams The backend parameters.
    * @return The plan.
    */
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const afft::cufft::cuda::BackendParameters& cufftParams);
+  makePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams);
 } // namespace afft::detail::cufft::sp
 
 #ifdef AFFT_HEADER_ONLY
@@ -55,11 +55,11 @@ namespace afft::detail::cufft::sp
    * @class PlanImpl
    * @brief Implementation of the sp plan interface for cuFFT.
    */
-  class Plan final : public cufft::Plan
+  class Plan final : public cufft::Plan<MpBackend::none>
   {
     private:
       /// @brief Alias for the parent class.
-      using Parent = cufft::Plan;
+      using Parent = cufft::Plan<MpBackend::none>;
 
     public:
       /// @brief inherit constructors
@@ -70,15 +70,12 @@ namespace afft::detail::cufft::sp
        * @param desc The plan descriptor.
        * @param cufftParams The cuFFT parameters.
        */
-      Plan(const Desc& desc, const afft::cufft::cuda::BackendParameters& cufftParams)
-      : Parent{desc}
+      Plan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
+      : Parent{desc, backendParams}
       {
-        const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
-
-        mSrcElemCount = memDesc.getSrcElemCount();
-        mDstElemCount = memDesc.getDstElemCount();
+        const auto& memDesc = Parent::mDesc.getMemDesc<MemoryLayout::centralized>();
         
-        if (cufftParams.usePatientJit)
+        if (Parent::mBackendParams.cufft.usePatientJit)
         {
 #       if CUFFT_VERSION >= 11200
           checkError(cufftSetPlanPropertyInt64(mHandle, NVFFT_PLAN_PROPERTY_INT64_PATIENT_JIT, 1));
@@ -127,10 +124,10 @@ namespace afft::detail::cufft::sp
       }
 
       /**
-       * @brief Get the workspace sizes
+       * @brief Get the external workspace sizes
        * @return The workspace sizes
        */
-      [[nodiscard]] View<std::size_t> getWorkspaceSizes() const noexcept override
+      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
       {
         return makeScalarView(mWorkspaceSize);
       }
@@ -163,16 +160,18 @@ namespace afft::detail::cufft::sp
   /**
    * @brief Create a cufft sp plan.
    * @param desc The plan descriptor.
-   * @param cufftParams The cuFFT parameters.
+   * @param backendParams The backend parameters.
    * @return The plan.
    */
   [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const afft::cufft::cuda::BackendParameters& cufftParams)
+  makePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
   {
     if (desc.getTargetCount() == 1)
     {
-      cuda::ScopedDevice scopedDevice{desc.getTargetDesc<Target::cuda>().devices[0]};
-      return std::make_unique<Plan>(desc, cufftParams);
+      const auto& descImpl = desc.get(DescToken::make());
+
+      cuda::ScopedDevice scopedDevice{descImpl.getTargetDesc<Target::cuda>().getDevices()[0]};
+      return std::make_unique<Plan>(desc, backendParams);
     }
     else
     {

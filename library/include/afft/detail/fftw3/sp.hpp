@@ -56,11 +56,11 @@ namespace afft::detail::fftw3::sp::cpu
    * @tparam library FFTW3 library type.
    */
   template<afft::fftw3::Library library>
-  class Plan final : public fftw3::Plan
+  class Plan final : public fftw3::Plan<MpBackend::none, library>
   {
     private:
       /// @brief Alias for the parent class
-      using Parent  = fftw3::Plan;
+      using Parent  = fftw3::Plan<MpBackend::none, library>;
 
       /// @brief Alias for the FFTW library real type.
       using R2RKind = typename Lib<library>::R2RKind;
@@ -81,74 +81,74 @@ namespace afft::detail::fftw3::sp::cpu
        * @brief Constructor
        * @param desc The plan description
        */
-      Plan(const Description&                         desc,
-           const afft::fftw3::cpu::BackendParameters& backendParams)
-      : Parent{desc}
+      Plan(const Description&                  desc,
+           const afft::cpu::BackendParameters& backendParams)
+      : Parent{desc, backendParams}
       {
-        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
+        Parent::mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
 
         std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> src{};
         std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> dst{};
 
-        if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+        if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
         {
-          const auto [srcComplexity, dstComplexity] = mDesc.getSrcDstComplexity();
+          const auto [srcComplexity, dstComplexity] = Parent::mDesc.getSrcDstComplexity();
 
           const std::size_t srcElemCount = mSrcElemCount[0] * ((srcComplexity == Complexity::real) ? 1 : 2);
           const std::size_t dstElemCount = mDstElemCount[0] * ((dstComplexity == Complexity::real) ? 1 : 2);
 
-          if (mDesc.getPlacement() == Placement::outOfPlace)
+          if (Parent::mDesc.getPlacement() == Placement::outOfPlace)
           {
-            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), srcElemCount);
-            dst[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), dstElemCount);
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), srcElemCount);
+            dst[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), dstElemCount);
           }
           else
           {
-            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(srcElemCount, dstElemCount));
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), std::max(srcElemCount, dstElemCount));
           }
         }
         else
         {
-          if (mDesc.getPlacement() == Placement::outOfPlace)
+          if (Parent::mDesc.getPlacement() == Placement::outOfPlace)
           {
-            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mSrcElemCount[0]);
-            src[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mSrcElemCount[1]);
-            dst[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mDstElemCount[0]);
-            dst[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), mDstElemCount[1]);
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), mSrcElemCount[0]);
+            src[1] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), mSrcElemCount[1]);
+            dst[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), mDstElemCount[0]);
+            dst[1] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), mDstElemCount[1]);
           }
           else
           {
-            src[0] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(mSrcElemCount[0], mDstElemCount[0]));
-            src[1] = makeAlignedUniqueForOverwrite<R[]>(mDesc.getAlignment(), std::max(mSrcElemCount[1], mDstElemCount[1]));
+            src[0] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), std::max(mSrcElemCount[0], mDstElemCount[0]));
+            src[1] = makeAlignedUniqueForOverwrite<R[]>(Parent::mDesc.getAlignment(), std::max(mSrcElemCount[1], mDstElemCount[1]));
           }
         }
 
-        Lib<library>::planWithNThreads(getThreadLimit());
-        Lib<library>::setTimeLimit((backendParams.timeLimit.count() < 0.0) ? FFTW_NO_TIMELIMIT : backendParams.timeLimit.count());
+        Parent::setThreadLimit();
+        Parent::setPlannerTimeLimit();
 
-        const auto rank                = static_cast<int>(mDesc.getTransformRank());
-        const auto howManyRank         = static_cast<int>(mDesc.getTransformHowManyRank());
-        const auto [dims, howManyDims] = makeIoDims(mDesc);
-        const auto flags               = makeFlags(mDesc, backendParams);
+        const auto rank                = static_cast<int>(Parent::mDesc.getTransformRank());
+        const auto howManyRank         = static_cast<int>(Parent::mDesc.getTransformHowManyRank());
+        const auto [dims, howManyDims] = makeIoDims(Parent::mDesc);
+        const auto flags               = makeFlags(Parent::mDesc, Parent::mBackendParams.fftw3);
 
         typename Lib<library>::Plan* plan{};
 
-        switch (mDesc.getTransform())
+        switch (Parent::mDesc.getTransform())
         {
         case Transform::dft:
         {
-          switch (mDesc.getTransformDesc<Transform::dft>().type)
+          switch (Parent::mDesc.template getTransformDesc<Transform::dft>().type)
           {
           case dft::Type::complexToComplex:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               plan = Lib<library>::planGuruC2C(rank,
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
                                                reinterpret_cast<C*>(src[0].get()),
-                                               reinterpret_cast<C*>((mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
-                                               getSign(),
+                                               reinterpret_cast<C*>((Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
+                                               Parent::getSign(),
                                                flags);
             }
             else
@@ -159,20 +159,20 @@ namespace afft::detail::fftw3::sp::cpu
                                                     howManyDims.data,
                                                     src[0].get(),
                                                     src[1].get(),
-                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
-                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
+                                                    (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                                    (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
                                                     flags);
             }
             break;
           case dft::Type::realToComplex:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               plan = Lib<library>::planGuruR2C(rank,
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
                                                src[0].get(),
-                                               reinterpret_cast<C*>((mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
+                                               reinterpret_cast<C*>((Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get()),
                                                flags);
             }
             else
@@ -182,20 +182,20 @@ namespace afft::detail::fftw3::sp::cpu
                                                     howManyRank,
                                                     howManyDims.data,
                                                     src[0].get(),
-                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
-                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
+                                                    (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                                    (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[1].get() : src[1].get(),
                                                     flags);
             }
             break;
           case dft::Type::complexToReal:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               plan = Lib<library>::planGuruC2R(rank,
                                                dims.data,
                                                howManyRank,
                                                howManyDims.data,
                                                reinterpret_cast<C*>(src[0].get()),
-                                               (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                               (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
                                                flags);
             }
             else
@@ -206,7 +206,7 @@ namespace afft::detail::fftw3::sp::cpu
                                                     howManyDims.data,
                                                     src[0].get(),
                                                     src[1].get(),
-                                                    (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                                    (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
                                                     flags);
             }
             break;
@@ -223,8 +223,8 @@ namespace afft::detail::fftw3::sp::cpu
                                            howManyRank,
                                            howManyDims.data,
                                            src[0].get(),
-                                           (mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
-                                           getR2RKinds<library>().data,
+                                           (Parent::mDesc.getPlacement() == Placement::outOfPlace) ? dst[0].get() : src[0].get(),
+                                           Parent::getR2RKinds().data,
                                            flags);
 
           break;
@@ -253,7 +253,7 @@ namespace afft::detail::fftw3::sp::cpu
        */
       [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
       {
-        return {mSrcElemCount.data(), mDesc.getSrcDstBufferCount().first};
+        return {mSrcElemCount.data(), Parent::mDesc.getSrcDstBufferCount().first};
       }
 
       /**
@@ -262,7 +262,7 @@ namespace afft::detail::fftw3::sp::cpu
        */
       [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
       {
-        return {mDstElemCount.data(), mDesc.getSrcDstBufferCount().second};
+        return {mDstElemCount.data(), Parent::mDesc.getSrcDstBufferCount().second};
       }
 
       /**
@@ -272,13 +272,13 @@ namespace afft::detail::fftw3::sp::cpu
        */
       void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters&) override
       {
-        switch (mDesc.getTransform())
+        switch (Parent::mDesc.getTransform())
         {
         case Transform::dft:
-          switch (mDesc.getTransformDesc<Transform::dft>().type)
+          switch (Parent::mDesc.template getTransformDesc<Transform::dft>().type)
           {
           case dft::Type::complexToComplex:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               Lib<library>::executeC2C(mPlan.get(),
                                        reinterpret_cast<C*>(src[0]),
@@ -286,7 +286,7 @@ namespace afft::detail::fftw3::sp::cpu
             }
             else
             {
-              if (mDesc.getDirection() == Direction::forward)
+              if (Parent::mDesc.getDirection() == Direction::forward)
               {     
                 Lib<library>::executeSplitC2C(mPlan.get(),
                                               reinterpret_cast<R*>(src[0]),
@@ -305,7 +305,7 @@ namespace afft::detail::fftw3::sp::cpu
             }
             break;
           case dft::Type::realToComplex:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               Lib<library>::executeR2C(mPlan.get(),
                                        reinterpret_cast<R*>(src[0]),
@@ -320,7 +320,7 @@ namespace afft::detail::fftw3::sp::cpu
             }
             break;
           case dft::Type::complexToReal:
-            if (mDesc.getComplexFormat() == ComplexFormat::interleaved)
+            if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
             {
               Lib<library>::executeC2R(mPlan.get(),
                                        reinterpret_cast<C*>(src[0]),
@@ -360,13 +360,13 @@ namespace afft::detail::fftw3::sp::cpu
       makeFlags(const Desc&                                desc,
                 const afft::fftw3::cpu::BackendParameters& backendParams)
       {
-        return makePlannerFlag(backendParams.plannerFlag) |
-               makeConserveMemoryFlag(backendParams.conserveMemory) |
-               makeWisdomOnlyFlag(backendParams.wisdomOnly) |
-               makeAllowLargeGenericFlag(backendParams.allowLargeGeneric) |
-               makeAllowPruningFlag(backendParams.allowPruning) |
-               makeDestructiveFlag(desc.isDestructive()) |
-               makeAlignmentFlag(desc.getAlignment());
+        return Parent::makePlannerFlag(backendParams.plannerFlag) |
+               Parent::makeConserveMemoryFlag(backendParams.conserveMemory) |
+               Parent::makeWisdomOnlyFlag(backendParams.wisdomOnly) |
+               Parent::makeAllowLargeGenericFlag(backendParams.allowLargeGeneric) |
+               Parent::makeAllowPruningFlag(backendParams.allowPruning) |
+               Parent::makeDestructiveFlag(desc.isDestructive()) |
+               Parent::makeAlignmentFlag(desc.getAlignment());
       }
 
       /**
@@ -411,9 +411,9 @@ namespace afft::detail::fftw3::sp::cpu
         return std::make_tuple(dims, howManyDims);
       }
 
-      std::unique_ptr<typename Lib<library>::Plan, PlanDeleter<library>> mPlan;            ///< The FFTW3 plan.
-      std::array<std::size_t, 2>                                         mSrcElemCount{};  ///< The number of elements in the source buffer
-      std::array<std::size_t, 2>                                         mDstElemCount{};  ///< The number of elements in the destination buffer
+      std::unique_ptr<typename Lib<library>::Plan, typename Parent::PlanDeleter> mPlan;            ///< The FFTW3 plan.
+      std::array<std::size_t, 2>                                                 mSrcElemCount{};  ///< The number of elements in the source buffer
+      std::array<std::size_t, 2>                                                 mDstElemCount{};  ///< The number of elements in the destination buffer
   };
 
   /**
@@ -433,25 +433,25 @@ namespace afft::detail::fftw3::sp::cpu
 # ifdef AFFT_FFTW3_HAS_FLOAT
     if (prec == Precision::_float)
     {
-      return std::make_unique<Plan<afft::fftw3::Library::_float>>(desc, backendParams.fftw3);
+      return std::make_unique<Plan<afft::fftw3::Library::_float>>(desc, backendParams);
     }
 # endif
 # ifdef AFFT_FFTW3_HAS_DOUBLE
     if (prec == Precision::_double)
     {
-      return std::make_unique<Plan<afft::fftw3::Library::_double>>(desc, backendParams.fftw3);
+      return std::make_unique<Plan<afft::fftw3::Library::_double>>(desc, backendParams);
     }
 # endif
 # ifdef AFFT_FFTW3_HAS_LONG
     if (prec == Precision::_longDouble)
     {
-      return std::make_unique<Plan<afft::fftw3::Library::longDouble>>(desc, backendParams.fftw3);
+      return std::make_unique<Plan<afft::fftw3::Library::longDouble>>(desc, backendParams);
     }
 # endif
 # ifdef AFFT_FFTW3_HAS_QUAD
     if (prec == Precision::_quad)
     {
-      return std::make_unique<Plan<afft::fftw3::Library::quad>>(desc, backendParams.fftw3);
+      return std::make_unique<Plan<afft::fftw3::Library::quad>>(desc, backendParams);
     }
 # endif
 

@@ -30,7 +30,11 @@
 #endif
 
 #include "../../Plan.hpp"
+
 #include "sp.hpp"
+#ifdef AFFT_ENABLE_MPI
+# include "mpi.hpp"
+#endif
 
 namespace afft::detail::mkl
 {
@@ -43,7 +47,7 @@ namespace afft::detail::mkl
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams)
+  makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
     if (desc.getTargetCount() != 1)
     {
@@ -52,11 +56,15 @@ namespace afft::detail::mkl
     
     if constexpr (BackendParamsT::mpBackend == MpBackend::none)
     {
-      return sp::makePlan(desc, backendParams.workspace);
+      return sp::makePlan(desc, backendParams);
     }
     else if constexpr (BackendParamsT::mpBackend == MpBackend::mpi)
     {
-      throw Exception{Error::mkl, "distributed computation over MPI is not supported yet"};
+#   ifdef AFFT_ENABLE_MPI
+      return mpi::makePlan(desc, backendParams);
+#   else
+      throw Exception{Error::mkl, "mpi multi-process backend is not enabled"};
+#   endif
     }
     else
     {

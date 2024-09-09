@@ -22,55 +22,28 @@
   SOFTWARE.
 */
 
-#ifndef AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP
-#define AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP
+#ifndef AFFT_DETAIL_VKFFT_COMMON_HPP
+#define AFFT_DETAIL_VKFFT_COMMON_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
 # include "../include.hpp"
 #endif
 
-#include "../../Plan.hpp"
-#include "sp.hpp"
+#include "../common.hpp"
 
 namespace afft::detail::vkfft
 {
-  /**
-   * @brief Create a plan implementation.
-   * @tparam BackendParamsT Backend parameters type.
-   * @param desc Plan description.
-   * @param backendParams Backend parameters.
-   * @return Plan implementation.
-   */
-  template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan([[maybe_unused]] const Description& desc, const BackendParamsT& backendParams)
-  {
-    if (desc.getMpBackend() != MpBackend::none)
-    {
-      throw Exception{Error::vkfft, "no multi process distribution is supported"};
-    }
+  /// @brief VkFFT target.
+  inline constexpr Target target{
+# if AFFT_VKFFT_BACKEND == 1
+    Target::cuda
+# elif AFFT_VKFFT_BACKEND == 2
+    Target::hip
+# elif AFFT_VKFFT_BACKEND == 3
+    Target::opencl
+# endif
+  };
 
-    if (desc.getTargetCount() != 1)
-    {
-      throw Exception{Error::vkfft, "only one target is supported"};
-    }
-
-    if constexpr (BackendParamsT::target == Target::cuda)
-    {
-      if constexpr (BackendParamsT::mpBackend == MpBackend::none)
-      {
-        return sp::makePlan(desc, backendParams);
-      }
-      else
-      {
-        throw Exception{Error::vkfft, "only none backend is supported"};
-      }
-    }
-    else
-    {
-      throw Exception{Error::vkfft, "unsupported target"};
-    }
-  }
 } // namespace afft::detail::vkfft
 
-#endif /* AFFT_DETAIL_VKFFT_MAKE_PLAN_HPP */
+#endif /* AFFT_DETAIL_VKFFT_COMMON_HPP */

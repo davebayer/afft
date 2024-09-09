@@ -29,16 +29,18 @@
 # include "../include.hpp"
 #endif
 
+#include "common.hpp"
 #include "../../Plan.hpp"
 
 namespace afft::detail::vkfft::sp
 {
   /**
-   * @brief Create a vkfft sp plan.
+   * @brief Create a vkfft sp plan implementation.
    * @param desc Plan description.
-   * @return Plan.
+   * @param backendParams Backend parameters.
+   * @return Plan implementation.
    */
-  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc);
+  [[nodiscard]] std::unique_ptr<afft::Plan> makePlan(const Desc& desc, const BackendParameters<MpBackend::none, vkfft::target>& backendParams);
 } // namespace afft::detail::vkfft::sp
 
 #ifdef AFFT_HEADER_ONLY
@@ -68,14 +70,14 @@ namespace afft::detail::vkfft::sp
        * @brief Constructor
        * @param Desc The plan description
        */
-      Plan(const Desc& desc)
-      : Parent{desc},
+      Plan(const Description& desc, const afft::BackendParameters<MpBackend::none, target>& backendParams)
+      : Parent{desc, backendParams},
         mTargetData{makeTargetData(desc)}
       {
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
-        mSrcElemCount = memDesc.getSrcElemCount();
-        mDstElemCount = memDesc.getDstElemCount();
+        // mSrcElemCount = memDesc.getSrcElemCount();
+        // mDstElemCount = memDesc.getDstElemCount();
 
         VkFFTConfiguration vkfftConfig{};
         fillConfigTarget(vkfftConfig, mTargetData);
@@ -126,7 +128,7 @@ namespace afft::detail::vkfft::sp
        * @brief Get the workspace sizes
        * @return The workspace sizes
        */
-      [[nodiscard]] View<std::size_t> getWorkspaceSizes() const noexcept override
+      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
       {
         return makeScalarView(mWorkspaceSize);
       }
@@ -147,7 +149,7 @@ namespace afft::detail::vkfft::sp
 #     endif
       };
 
-      [[nodiscard]] static TargetData makeTargetData(const Desc& desc)
+      [[nodiscard]] static TargetData makeTargetData(const Description& desc)
       {
         if (desc.getTargetCount() != 1)
         {
@@ -156,19 +158,21 @@ namespace afft::detail::vkfft::sp
 
         TargetData targetData{};
 
+        const auto& descImpl = desc.get(DescToken::make());
+
 #     if AFFT_VKFFT_BACKEND == 1
-        const auto& cudaDesc = desc.getTargetDesc<Target::cuda>();
+        const auto& cudaDesc = descImpl.getTargetDesc<Target::cuda>();
 
-        cuda::checkError(cuDeviceGet(&targetData.device, cudaDesc.devices[0]));
+        cuda::checkError(cuDeviceGet(&targetData.device, cudaDesc.getDevices()[0]));
 #     elif AFFT_VKFFT_BACKEND == 2
-        const auto& hipDesc = desc.getTargetDesc<Target::hip>();
+        const auto& hipDesc = descImpl.getTargetDesc<Target::hip>();
 
-        hip::checkError(hipGetDevice(&targetData.device, hipDesc.devices[0]));
+        hip::checkError(hipGetDevice(&targetData.device, hipDesc.getDevices()[0]));
 #     elif AFFT_VKFFT_BACKEND == 3
-        const auto& openclDesc = desc.getTargetDesc<Target::opencl>();
+        const auto& openclDesc = descImpl.getTargetDesc<Target::opencl>();
 
         targetData.context = openclDesc.context;
-        targetData.device  = openclDesc.devices[0];
+        targetData.device  = openclDesc.getDevices()[0];
 #     endif
   
         return targetData;
@@ -502,11 +506,16 @@ namespace afft::detail::vkfft::sp
   /**
    * @brief Create a vkfft sp plan implementation.
    * @param desc Plan description.
+   * @param backendParams Backend parameters.
    * @return Plan implementation.
    */
-  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan> makePlan(const Desc& desc)
+  [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
+  makePlan(const Description&                                       desc,
+           const BackendParameters<MpBackend::none, vkfft::target>& backendParams)
   {
-    const auto& precision = desc.getPrecision();
+    const auto& descImpl = desc.get(DescToken::make());
+
+    const auto& precision = descImpl.getPrecision();
 
     if (precision.source != precision.destination)
     {
@@ -517,13 +526,13 @@ namespace afft::detail::vkfft::sp
     {
 #   if AFFT_VKFFT_BACKEND == 1
     case Target::cuda:
-      return std::make_unique<Plan>(desc);
+      return std::make_unique<Plan>(desc, backendParams);
 #   elif AFFT_VKFFT_BACKEND == 2
     case Target::hip:
-      return std::make_unique<Plan>(desc);
+      return std::make_unique<Plan>(desc, backendParams);
 #   elif AFFT_VKFFT_BACKEND == 3
     case Target::opencl:
-      return std::make_unique<Plan>(desc);
+      return std::make_unique<Plan>(desc, backendParams);
 #   endif
     default:
       throw Exception{Error::vkfft, "unsupported target"};

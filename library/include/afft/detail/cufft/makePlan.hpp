@@ -43,23 +43,25 @@ namespace afft::detail::cufft
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Desc& desc, const BackendParamsT& backendParams)
+  makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
-    if (desc.getTransformHowManyRank() > 1)
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTransformHowManyRank() > 1)
     {
       throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
     }
 
-    if (desc.getComplexFormat() != ComplexFormat::interleaved)
+    if (descImpl.getComplexFormat() != ComplexFormat::interleaved)
     {
       throw Exception{Error::cufft, "only interleaved complex format is supported"};
     }
 
-    if (desc.getTransform() == Transform::dft)
+    if (descImpl.getTransform() == Transform::dft)
     {
-      const auto& dftDesc = desc.getTransformDesc<Transform::dft>();
+      const auto& dftDesc = descImpl.getTransformDesc<Transform::dft>();
 
-      if (dftDesc.type == dft::Type::complexToReal && !desc.isDestructive())
+      if (dftDesc.type == dft::Type::complexToReal && !descImpl.isDestructive())
       {
         throw Exception{Error::cufft, "preserving the source for complex-to-real transforms is not supported"};
       }
@@ -69,12 +71,12 @@ namespace afft::detail::cufft
       throw Exception{Error::cufft, "only DFT transforms are supported"};
     }
 
-    if (const auto& prec = desc.getPrecision(); prec.execution != prec.source || prec.execution != prec.destination)
+    if (const auto& prec = descImpl.getPrecision(); prec.execution != prec.source || prec.execution != prec.destination)
     {
       throw Exception{Error::cufft, "execution, source and destination must precision match"};
     }
 
-    if (desc.getNormalization() != Normalization::none)
+    if (descImpl.getNormalization() != Normalization::none)
     {
       throw Exception{Error::cufft, "normalization is not supported"};
     }
@@ -83,7 +85,7 @@ namespace afft::detail::cufft
     {
       if constexpr (BackendParamsT::mpBackend == MpBackend::none)
       {
-        return sp::makePlan(desc, backendParams.cufft);
+        return sp::makePlan(desc, backendParams);
       }
       else
       {
