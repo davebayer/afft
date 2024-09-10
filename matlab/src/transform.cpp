@@ -26,6 +26,7 @@
 # include <cuda_runtime.h>
 #endif
 
+#include "planCache.hpp"
 #include "transform.hpp"
 
 using namespace matlabw;
@@ -36,7 +37,7 @@ using namespace matlabw;
  * @param[in] errorId Error identifier to throw.
  * @return Current GPU device.
  */
-static inline int getCurrentGpuDevice(const char* errorId)
+[[nodiscard]] static inline int getCurrentGpuDevice(const char* errorId)
 {
   int device{};
 
@@ -59,6 +60,22 @@ static constexpr void checkShapeRank(const std::size_t shapeRank, const char* er
   if (shapeRank >= afft::maxDimCount)
   {
     throw mx::Exception{errorId, "input array rank exceeds maximum dimension count"};
+  }
+}
+
+/**
+ * @brief Get the transform precision from the input array.
+ * @param[in] array Input array to get the precision from.
+ * @return Transform precision.
+ */
+[[nodiscard]] static inline afft::PrecisionTriad getTransformPrecision(const mx::ArrayCref array)
+{
+  switch (array.getClassId())
+  {
+  case mx::ClassId::single:
+    return afft::makePrecision<float>();
+  default:
+    return afft::makePrecision<double>();
   }
 }
 
