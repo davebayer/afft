@@ -142,7 +142,7 @@ typedef struct afft_fftw3_cpu_Parameters afft_fftw3_cpu_Parameters;
 typedef struct afft_fftw3_mpi_cpu_Parameters afft_fftw3_mpi_cpu_Parameters;
 
 /// @brief No time limit for the planner
-#define AFFT_FFTW3_NO_TIME_LIMIT -1.0
+#define AFFT_FFTW3_NO_TIME_LIMIT (-1.0)
 
 /// @brief FFTW3 backend parameters for cpu target
 struct afft_fftw3_cpu_Parameters
