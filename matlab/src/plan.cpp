@@ -771,7 +771,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
   switch (rhs[0].getClassId())
   {
-  case ClassId::single:
+  case mx::ClassId::single:
     if (srcPrec != afft::Precision::f32)
     {
       throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
@@ -781,7 +781,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array complexity"};
     }
     break;
-  case ClassId::_double:
+  case mx::ClassId::_double:
     if (srcPrec != afft::Precision::f64)
     {
       throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
@@ -816,4 +816,28 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   // TODO: check input array type and size
 
   planData->plan->executeUnsafe(rhs[1].getData(), lhs[0].getData());
+}
+
+/**
+ * @brief Get the transform parameters of a plan.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the transform parameters as a scalar StructArray.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the pointer to the plan as a scalar NumericArray<std::uint64_t>.
+ */
+void planGetTransformParameters(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  
+}
+
+/**
+ * @brief Get the target parameters of a plan.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the target parameters as a scalar StructArray.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the pointer to the plan as a scalar NumericArray<std::uint64_t>.
+ */
+void planGetTargetParameters(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  
 }
