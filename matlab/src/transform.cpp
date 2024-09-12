@@ -31,6 +31,13 @@
 
 using namespace matlabw;
 
+/// @brief Default cpu backend order.
+static constexpr std::array cpuBackendOrder{afft::Backend::mkl, afft::Backend::fftw3, afft::Backend::pocketfft};
+
+/// @brief Default gpu backend order.
+// TODO: Add CUDA backend when implemented.
+static constexpr std::array gpuBackendOrder{afft::Backend::vkfft};
+
 #ifdef MATLABW_ENABLE_GPU
 /**
  * @brief Get the current GPU device.
@@ -188,9 +195,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   dftParams.axes          = afft::allAxes;
   dftParams.normalization = afft::Normalization::none;
   dftParams.placement     = afft::Placement::outOfPlace;
-  dftParams.destructive   = false;
   dftParams.type          = afft::dft::Type::complexToComplex;
-
 
 #ifdef MATLABW_ENABLE_GPU
   if (rhs[0].isGpuArray())
@@ -212,6 +217,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       throw mx::Exception{"afft:fftn:invalidInputClass", "input array must be floating-point"};
     }
 
+    // Should be removed when real-to-complex transforms are implemented.
     if (!src.isComplex())
     {
       throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
@@ -228,12 +234,27 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     auto it = planCache.find(desc);
     if (it == planCache.end())
     {
-      it = planCache.insert(afft::makePlan(desc));
+      afft::cuda::BackendParameters backendParams{};
+      backendParams.allowDestructive = true;
+
+      afft::SelectParameters selectParams{};
+      selectParams.order = gpuBackendOrder;
+
+      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
     }
 
     auto dst = mx::gpu::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    (*it)->executeUnsafe(src.getData(), dst.getData());
+    if (auto& plan = **it; plan.isDestructive())
+    {
+      mx::gpu::Array tmp{src};
+
+      plan.executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan.executeUnsafe(src.getData(), dst.getData());
+    }
 
     mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
@@ -255,6 +276,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       throw mx::Exception{"afft:fftn:invalidInputClass", "input array must be floating-point"};
     }
 
+    // Should be removed when real-to-complex transforms are implemented.
     if (!src.isComplex())
     {
       throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
@@ -269,15 +291,28 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     if (it == planCache.end())
     {
       afft::cpu::BackendParameters backendParams{};
+      backendParams.allowDestructive  = true;
       backendParams.threadLimit       = 4;
       backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-      it = planCache.insert(afft::makePlan(desc, backendParams));
+      afft::SelectParameters selectParams{};
+      selectParams.order = cpuBackendOrder;
+
+      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
     }
 
     auto dst = mx::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    (*it)->executeUnsafe(src.getData(), dst.getData());
+    if (auto& plan = **it; plan.isDestructive())
+    {
+      mx::Array tmp{src};
+
+      plan.executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan.executeUnsafe(src.getData(), dst.getData());
+    }
 
     mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
@@ -349,7 +384,6 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   dftParams.axes          = afft::allAxes;
   dftParams.normalization = afft::Normalization::unitary;
   dftParams.placement     = afft::Placement::outOfPlace;
-  dftParams.destructive   = false;
   dftParams.type          = afft::dft::Type::complexToComplex;
 
 #ifdef MATLABW_ENABLE_GPU
@@ -388,12 +422,27 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     auto it = planCache.find(desc);
     if (it == planCache.end())
     {
-      it = planCache.insert(afft::makePlan(desc));
+      afft::cuda::BackendParameters backendParams{};
+      backendParams.allowDestructive = true;
+
+      afft::SelectParameters selectParams{};
+      selectParams.order = gpuBackendOrder;
+
+      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
     }
 
     auto dst = mx::gpu::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    (*it)->executeUnsafe(src.getData(), dst.getData());
+    if (auto& plan = **it; plan.isDestructive())
+    {
+      mx::gpu::Array tmp{src};
+
+      plan.executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan.executeUnsafe(src.getData(), dst.getData());
+    }
 
     mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
@@ -429,15 +478,28 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     if (it == planCache.end())
     {
       afft::cpu::BackendParameters backendParams{};
+      backendParams.allowDestructive  = true;
       backendParams.threadLimit       = 4;
       backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-      it = planCache.insert(afft::makePlan(desc, backendParams));
+      afft::SelectParameters selectParams{};
+      selectParams.order = cpuBackendOrder;
+
+      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
     }
 
     auto dst = mx::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    (*it)->executeUnsafe(src.getData(), dst.getData());
+    if (auto& plan = **it; plan.isDestructive())
+    {
+      mx::Array tmp{src};
+
+      plan.executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan.executeUnsafe(src.getData(), dst.getData());
+    }
 
     mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
