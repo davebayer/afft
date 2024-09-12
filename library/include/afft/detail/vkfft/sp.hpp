@@ -382,10 +382,20 @@ namespace afft::detail::vkfft::sp
 
         const auto& memDesc = desc.getMemDesc<MemoryLayout::centralized>();
 
-        for (std::size_t i{}; i < desc.getShapeRank(); ++i)
+        if (memDesc.getSrcStrides().back() != 1)
         {
-          srcStrides[i] = safeIntCast<UInt>(memDesc.getSrcStrides()[desc.getShapeRank() - i - 1]);
-          dstStrides[i] = safeIntCast<UInt>(memDesc.getDstStrides()[desc.getShapeRank() - i - 1]);
+          throw Exception{Error::vkfft, "source fastest axis stride must be 1"};
+        }
+
+        if (memDesc.getDstStrides().back() != 1)
+        {
+          throw Exception{Error::vkfft, "destination fastest axis stride must be 1"};
+        }
+
+        for (std::size_t i{}; i < desc.getShapeRank() - 1; ++i)
+        {
+          srcStrides[i] = safeIntCast<UInt>(memDesc.getSrcStrides()[desc.getShapeRank() - i - 2]);
+          dstStrides[i] = safeIntCast<UInt>(memDesc.getDstStrides()[desc.getShapeRank() - i - 2]);
         }
       }
 
