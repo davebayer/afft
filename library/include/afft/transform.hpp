@@ -109,7 +109,6 @@ AFFT_EXPORT namespace afft
     View<Axis>     axes{};                             ///< axes of the transform
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
-    bool           destructive{};                      ///< destructive transform
     Type           type{Type::complexToComplex};       ///< type of the transform
   };
 
@@ -137,7 +136,6 @@ AFFT_EXPORT namespace afft
     View<Axis>     axes{};                             ///< axes of the transform
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
-    bool           destructive{};                      ///< destructive transform
     Type           type{Type::separable};              ///< type of the transform
   };
 
@@ -182,7 +180,6 @@ AFFT_EXPORT namespace afft
     View<Axis>     axes{};                             ///< axes of the transform
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
-    bool           destructive{};                      ///< destructive transform
     View<Type>     types{};                            ///< types of the transform, must have size of transform rank or 1
   };
 

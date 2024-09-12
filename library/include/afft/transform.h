@@ -111,7 +111,6 @@ struct afft_dft_Parameters
   const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
-  bool                destructive;   ///< Destructive transform
   afft_dft_Type       type;          ///< Type of the transform
 };
 
@@ -138,7 +137,6 @@ struct afft_dht_Parameters
   const afft_Axis*    axes;          ///< Axes of the transform
   afft_Normalization  normalization; ///< Normalization
   afft_Placement      placement;     ///< Placement of the transform
-  bool                destructive;   ///< Destructive transform
   afft_dht_Type       type;          ///< Type of the transform
 };
 
@@ -182,7 +180,6 @@ struct afft_dtt_Parameters
   const afft_Axis*     axes;          ///< Axes of the transform
   afft_Normalization   normalization; ///< Normalization
   afft_Placement       placement;     ///< Placement of the transform
-  bool                 destructive;   ///< Destructive transform
   const afft_dtt_Type* types;         ///< Types of the transform
 };
 

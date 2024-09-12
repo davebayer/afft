@@ -74,6 +74,9 @@ namespace afft::detail::vkfft::sp
       : Parent{desc, backendParams},
         mTargetData{makeTargetData(desc)}
       {
+        Parent::mIsDestructive = (Parent::mDesc.getDirection() == Direction::inverse ||
+                                  Parent::mDesc.getPlacement() == Placement::inPlace);
+
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
         // mSrcElemCount = memDesc.getSrcElemCount();
@@ -530,6 +533,11 @@ namespace afft::detail::vkfft::sp
     if (precision.source != precision.destination)
     {
       throw Exception{Error::vkfft, "source and destination precision must match"};
+    }
+
+    if (descImpl.getDirection() == Direction::inverse && !backendParams.allowDestructive)
+    {
+      throw Exception{Error::vkfft, "inverse transform is always destructive"};
     }
 
     switch (desc.getTarget())

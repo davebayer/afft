@@ -416,15 +416,17 @@ AFFT_EXPORT namespace afft
   struct cpu::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cpu>
   {
-    std::uint32_t            threadLimit{};    ///< Thread limit
-    fftw3::BackendParameters fftw3{};          ///< FFTW3 backend initialization parameters
-    mkl::BackendParameters   mkl{};            ///< Intel MKL backend initialization parameters
+    bool                     allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
+    std::uint32_t            threadLimit{};      ///< Thread limit
+    fftw3::BackendParameters fftw3{};            ///< FFTW3 backend initialization parameters
+    mkl::BackendParameters   mkl{};              ///< Intel MKL backend initialization parameters
   };
 
   /// @brief CUDA backend parameters
   struct cuda::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::cuda>
   {
+    bool                     allowDestructive{};     ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
     bool                     useExternalWorkspace{}; ///< Use external workspace
     cufft::BackendParameters cufft{};                ///< cuFFT backend initialization parameters
   };
@@ -433,6 +435,7 @@ AFFT_EXPORT namespace afft
   struct hip::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::hip>
   {
+    bool allowDestructive{};     ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
     bool useExternalWorkspace{}; ///< Use external workspace
   };
 
@@ -440,6 +443,7 @@ AFFT_EXPORT namespace afft
   struct opencl::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::opencl>
   {
+    bool                     allowDestructive{};     ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
     bool                     useExternalWorkspace{}; ///< Use external workspace
     clfft::BackendParameters clfft{};                ///< clFFT backend initialization parameters
   };
@@ -448,6 +452,7 @@ AFFT_EXPORT namespace afft
   struct openmp::BackendParameters
     : MpBackendConstant<MpBackend::none>, TargetConstant<Target::openmp>
   {
+    bool allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
   };
 
   namespace mpi
@@ -502,31 +507,35 @@ AFFT_EXPORT namespace afft
   struct mpi::cpu::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cpu>
   {
-    std::uint32_t             threadLimit{1}; ///< Thread limit
-    fftw3::BackendParameters  fftw3{};        ///< FFTW3 backend initialization parameters
-    heffte::BackendParameters heffte{};       ///< HeFFTe backend initialization parameters
-    mkl::BackendParameters    mkl{};          ///< Intel MKL backend initialization parameters
+    bool                      allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
+    std::uint32_t             threadLimit{1};     ///< Thread limit
+    fftw3::BackendParameters  fftw3{};            ///< FFTW3 backend initialization parameters
+    heffte::BackendParameters heffte{};           ///< HeFFTe backend initialization parameters
+    mkl::BackendParameters    mkl{};              ///< Intel MKL backend initialization parameters
   };
 
   /// @brief MPI CUDA backend parameters
   struct mpi::cuda::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::cuda>
   {
-    cufft::BackendParameters  cufft{};                   ///< cuFFT backend initialization parameters
-    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
+    bool                      allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
+    cufft::BackendParameters  cufft{};            ///< cuFFT backend initialization parameters
+    heffte::BackendParameters heffte{};           ///< HeFFTe backend initialization parameters
   };
 
   /// @brief MPI HIP backend parameters
   struct mpi::hip::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::hip>
   {
-    heffte::BackendParameters heffte{};                  ///< HeFFTe backend initialization parameters
+    bool                      allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
+    heffte::BackendParameters heffte{};           ///< HeFFTe backend initialization parameters
   };
 
   /// @brief MPI OpenCL backend parameters
   struct mpi::opencl::BackendParameters
     : MpBackendConstant<MpBackend::mpi>, TargetConstant<Target::opencl>
   {
+    bool allowDestructive{}; ///< Allow backend to overwrite the source buffer (always true for in-place transforms)
   };
 
   /// @brief Backend parameters variant

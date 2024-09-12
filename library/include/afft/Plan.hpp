@@ -89,7 +89,6 @@ AFFT_EXPORT namespace afft
         return *this;
       }
 
-
       /**
        * @brief Get backend.
        * @return Backend
@@ -123,6 +122,15 @@ AFFT_EXPORT namespace afft
        * @return Backend parameters variant.
        */
       [[nodiscard]] virtual BackendParametersVariant getBackendParametersVariant() const noexcept = 0;
+
+      /**
+       * @brief Does the plan overwrite the source buffer?
+       * @return True if the plan is destructive.
+       */
+      [[nodiscard]] constexpr bool isDestructive() const noexcept
+      {
+        return mIsDestructive;
+      }
 
       /**
        * @brief Get the precision of the source and destination buffers.
@@ -400,6 +408,8 @@ AFFT_EXPORT namespace afft
       {
         throw std::logic_error{"backend does not implement openmp execution"};
       }
+
+      bool mIsDestructive{mDesc.getPlacement() == Placement::inPlace}; ///< Is the plan destructive?
     private:
       /**
        * @brief Check execution type properties.
@@ -458,7 +468,7 @@ AFFT_EXPORT namespace afft
       /// @brief Check if the source is preserved.
       void checkSrcIsPreserved() const
       {
-        if (mDesc.isDestructive())
+        if (isDestructive())
         {
           throw Exception{Error::invalidArgument, "running destructive transform on const source data"};
         }

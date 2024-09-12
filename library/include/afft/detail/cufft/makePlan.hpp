@@ -61,7 +61,9 @@ namespace afft::detail::cufft
     {
       const auto& dftDesc = descImpl.getTransformDesc<Transform::dft>();
 
-      if (dftDesc.type == dft::Type::complexToReal && !descImpl.isDestructive())
+      if (dftDesc.type == dft::Type::complexToReal &&
+          descImpl.getPlacement() == Placement::outOfPlace &&
+          !backendParams.allowDestructive)
       {
         throw Exception{Error::cufft, "preserving the source for complex-to-real transforms is not supported"};
       }

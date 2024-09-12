@@ -217,7 +217,7 @@ namespace afft::detail::mkl::sp
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_WORKSPACE, DFTI_AVOID));
         }
 
-        if (mDesc.isDestructive())
+        if (Parent::mBackendParams.allowDestructive)
         {
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_DESTROY_INPUT, DFTI_ALLOW));
         }

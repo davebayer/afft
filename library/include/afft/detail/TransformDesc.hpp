@@ -108,7 +108,6 @@ namespace afft::detail
         mTransformAxes(makeTransformAxes(transformParams.axes, mShapeRank)),
         mNormalization{validateAndReturn(transformParams.normalization)},
         mPlacement{validateAndReturn(transformParams.placement)},
-        mDestructive{transformParams.destructive},
         mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
       {}
 
@@ -156,7 +155,6 @@ namespace afft::detail
         mTransformAxes(makeTransformAxes(afft::View<afft::Axis>{transformParams.axes, mTransformRank}, mShapeRank)),
         mNormalization{validateAndReturn(static_cast<afft::Normalization>(transformParams.normalization))},
         mPlacement{validateAndReturn(static_cast<afft::Placement>(transformParams.placement))},
-        mDestructive{transformParams.destructive},
         mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
       {}
 
@@ -432,15 +430,6 @@ namespace afft::detail
       }
 
       /**
-       * @brief Check if the transform is destructive.
-       * @return True if the transform is destructive, false otherwise.
-       */
-      [[nodiscard]] constexpr bool isDestructive() const noexcept
-      {
-        return mDestructive;
-      }
-
-      /**
        * @brief Get the transform type.
        * @return Transform type.
        */
@@ -576,7 +565,6 @@ namespace afft::detail
         transformParams.axes          = getTransformAxes();
         transformParams.normalization = getNormalization();
         transformParams.placement     = getPlacement();
-        transformParams.destructive   = isDestructive();
 
         if constexpr (transform == Transform::dft)
         {
@@ -616,7 +604,6 @@ namespace afft::detail
         transformParams.axes                  = getTransformAxes().data();
         transformParams.normalization         = static_cast<afft_Normalization>(getNormalization());
         transformParams.placement             = static_cast<afft_Placement>(getPlacement());
-        transformParams.destructive           = isDestructive();
 
         if constexpr (transform == Transform::dft)
         {
@@ -676,7 +663,6 @@ namespace afft::detail
                std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(), rhsAxes.end()) &&
                (lhs.mNormalization == rhs.mNormalization) &&
                (lhs.mPlacement == rhs.mPlacement) &&
-               (lhs.mDestructive == rhs.mDestructive) &&
                (lhs.mTransformVariant == rhs.mTransformVariant);
       }
 
@@ -873,7 +859,6 @@ namespace afft::detail
       MaxDimBuffer<Axis> mTransformAxes{};  ///< Axes of the transform.
       Normalization      mNormalization{};  ///< Normalization of the transform.
       Placement          mPlacement{};      ///< Placement of the transform.
-      bool               mDestructive{};    ///< Destructive transform.
       TransformVariant   mTransformVariant; ///< Transform variant.
   };
 } // namespace afft::detail

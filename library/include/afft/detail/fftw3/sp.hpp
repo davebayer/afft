@@ -85,6 +85,8 @@ namespace afft::detail::fftw3::sp::cpu
            const afft::cpu::BackendParameters& backendParams)
       : Parent{desc, backendParams}
       {
+        Parent::mIsDestructive = (Parent::mBackendParams.allowDestructive ||
+                                  Parent::mDesc.getPlacement() == Placement::inPlace);
         Parent::mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
 
         std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> src{};
@@ -129,7 +131,7 @@ namespace afft::detail::fftw3::sp::cpu
         const auto rank                = static_cast<int>(Parent::mDesc.getTransformRank());
         const auto howManyRank         = static_cast<int>(Parent::mDesc.getTransformHowManyRank());
         const auto [dims, howManyDims] = makeIoDims(Parent::mDesc);
-        const auto flags               = makeFlags(Parent::mDesc, Parent::mBackendParams.fftw3);
+        const auto flags               = makeFlags(Parent::mDesc, Parent::mBackendParams);
 
         typename Lib<library>::Plan* plan{};
 
@@ -357,15 +359,15 @@ namespace afft::detail::fftw3::sp::cpu
        * @return The FFTW3 flags.
        */
       [[nodiscard]] static constexpr unsigned
-      makeFlags(const Desc&                                desc,
-                const afft::fftw3::cpu::BackendParameters& backendParams)
+      makeFlags(const Desc&                         desc,
+                const afft::cpu::BackendParameters& backendParams)
       {
-        return Parent::makePlannerFlag(backendParams.plannerFlag) |
-               Parent::makeConserveMemoryFlag(backendParams.conserveMemory) |
-               Parent::makeWisdomOnlyFlag(backendParams.wisdomOnly) |
-               Parent::makeAllowLargeGenericFlag(backendParams.allowLargeGeneric) |
-               Parent::makeAllowPruningFlag(backendParams.allowPruning) |
-               Parent::makeDestructiveFlag(desc.isDestructive()) |
+        return Parent::makePlannerFlag(backendParams.fftw3.plannerFlag) |
+               Parent::makeConserveMemoryFlag(backendParams.fftw3.conserveMemory) |
+               Parent::makeWisdomOnlyFlag(backendParams.fftw3.wisdomOnly) |
+               Parent::makeAllowLargeGenericFlag(backendParams.fftw3.allowLargeGeneric) |
+               Parent::makeAllowPruningFlag(backendParams.fftw3.allowPruning) |
+               Parent::makeDestructiveFlag(desc.getPlacement() == Placement::inPlace || backendParams.allowDestructive) |
                Parent::makeAlignmentFlag(desc.getAlignment());
       }
 
