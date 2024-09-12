@@ -549,8 +549,8 @@ namespace afft::detail::mkl::sp
    * @return Plan implementation.
    */
   [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
-  openmp::makePlan(const Description&                     desc,
-                   const afft::openmp::BackendParameters& backendParams)
+  openmp::makePlan([[maybe_unused]] const Description&                     desc,
+                   [[maybe_unused]] const afft::openmp::BackendParameters& backendParams)
   {
 # ifdef AFFT_ENABLE_OPENMP
 #   ifdef AFFT_MKL_HAS_OMP_OFFLOAD

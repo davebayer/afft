@@ -46,7 +46,7 @@ namespace afft
     SelectStrategy                strategy{SelectStrategy::first}; ///< Backend select strategy
     BackendMask                   mask{BackendMask::all};          ///< Backend mask
     View<Backend>                 order{};                         ///< Backend initialization order
-    std::chrono::duration<double> destructivePenalty{};            ///< Penalty for destructive backends
+    std::chrono::duration<double> destructiveTimePenalty{};        ///< Time penalty for destructive backends
   };
 } // namespace afft
 

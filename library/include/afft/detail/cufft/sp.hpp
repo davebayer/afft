@@ -72,9 +72,7 @@ namespace afft::detail::cufft::sp
        */
       Plan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
       : Parent{desc, backendParams}
-      {
-        const auto& memDesc = Parent::mDesc.getMemDesc<MemoryLayout::centralized>();
-        
+      {        
         if (Parent::mBackendParams.cufft.usePatientJit)
         {
 #       if CUFFT_VERSION >= 11200

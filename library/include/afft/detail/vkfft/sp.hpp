@@ -77,8 +77,6 @@ namespace afft::detail::vkfft::sp
         Parent::mIsDestructive = (Parent::mDesc.getDirection() == Direction::inverse ||
                                   Parent::mDesc.getPlacement() == Placement::inPlace);
 
-        const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
-
         // mSrcElemCount = memDesc.getSrcElemCount();
         // mDstElemCount = memDesc.getDstElemCount();
 

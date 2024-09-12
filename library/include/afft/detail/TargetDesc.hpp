@@ -643,7 +643,7 @@ namespace afft::detail
 
 #   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters& cpuParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters&)
       {
         return CpuDesc{};
       }
@@ -696,7 +696,7 @@ namespace afft::detail
 
 #   ifdef AFFT_ENABLE_CPU
       /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters& cpuParams)
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters&)
       {
         return CpuDesc{};
       }
