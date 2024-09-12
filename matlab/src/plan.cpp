@@ -115,7 +115,6 @@ class TransformParametersParser
       dftParams.axes          = parseAxes(transformParamsStruct);
       dftParams.normalization = parseNormalization(transformParamsStruct);
       dftParams.placement     = afft::Placement::outOfPlace;
-      dftParams.destructive   = true;
       dftParams.type          = parseDftType(transformParamsStruct);
 
       return dftParams;
@@ -135,7 +134,6 @@ class TransformParametersParser
       dhtParams.axes          = parseAxes(transformParamsStruct);
       dhtParams.normalization = parseNormalization(transformParamsStruct);
       dhtParams.placement     = afft::Placement::outOfPlace;
-      dhtParams.destructive   = true;
       dhtParams.type          = parseDhtType(transformParamsStruct);
 
       return dhtParams;
@@ -155,7 +153,6 @@ class TransformParametersParser
       dttParams.axes          = parseAxes(transformParamsStruct);
       dttParams.normalization = parseNormalization(transformParamsStruct);
       dttParams.placement     = afft::Placement::outOfPlace;
-      dttParams.destructive   = true;
       dttParams.types         = parseDttTypes(transformParamsStruct);
 
       return dttParams;

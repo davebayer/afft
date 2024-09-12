@@ -43,9 +43,10 @@ namespace afft
   /// @brief Backend selection parameters
   struct SelectParameters
   {
-    SelectStrategy strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask    mask{BackendMask::all};          ///< Backend mask
-    View<Backend>  order{};                         ///< Backend initialization order
+    SelectStrategy                strategy{SelectStrategy::first}; ///< Backend select strategy
+    BackendMask                   mask{BackendMask::all};          ///< Backend mask
+    View<Backend>                 order{};                         ///< Backend initialization order
+    std::chrono::duration<double> destructivePenalty{};            ///< Penalty for destructive backends
   };
 } // namespace afft
 
