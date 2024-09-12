@@ -65,6 +65,11 @@ namespace afft::detail::fftw3
     {
       throw Exception{Error::fftw3, "only uniform precision is supported"};
     }
+
+    if (descImpl.getNormalization() != Normalization::none)
+    {
+      throw Exception{Error::fftw3, "normalization is unsupported"};
+    }
     
     if constexpr (BackendParamsT::mpBackend == MpBackend::none)
     {
