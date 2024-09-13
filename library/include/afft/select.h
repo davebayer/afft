@@ -40,20 +40,33 @@ extern "C"
 typedef uint8_t afft_SelectStrategy;
 
 /// @brief Select strategy enumeration
-#define afft_SelectStrategy_first (afft_SelectStrategy)0 ///< Select the first available backend
-#define afft_SelectStrategy_best  (afft_SelectStrategy)1 ///< Select the best available backend
+#define afft_SelectStrategy_first   (afft_SelectStrategy)0    ///< Select the first available backend
+#define afft_SelectStrategy_best    (afft_SelectStrategy)1    ///< Select the best available backend
+#define afft_SelectStrategy_default afft_SelectStrategy_first ///< Default select strategy, alias for first
 
-/// @brief Backend selection parameters
-typedef struct afft_SelectParameters afft_SelectParameters;
+/// @brief First backend selection parameters
+typedef struct afft_FirstSelectParameters afft_FirstSelectParameters;
 
-/// @brief Backend selection parameters structure
-struct afft_SelectParameters
+/// @brief Select parameters for selecting first backend supporting the transform
+struct afft_FirstSelectParameters
 {
-  afft_SelectStrategy strategy;  ///< Backend select strategy
   afft_BackendMask    mask;      ///< Backend mask
   size_t              orderSize; ///< Number of backends in the order
   const afft_Backend* order;     ///< Order of the backends
 };
+
+/// @brief Select parameters for selecting best of all the backends supporting the transform
+typedef struct afft_BestSelectParameters afft_BestSelectParameters;
+
+/// @brief Select parameters for selecting best of all the backends supporting the transform
+struct afft_BestSelectParameters
+{
+  afft_BackendMask mask;                   ///< Backend mask
+  double           destructiveTimePenalty; ///< Time penalty for destructive backends
+};
+
+/// @brief Default select parameters
+typedef afft_FirstSelectParameters afft_DefaultSelectParameters;
 
 #ifdef __cplusplus
 }

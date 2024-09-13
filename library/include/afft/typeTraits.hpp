@@ -147,6 +147,20 @@ AFFT_EXPORT namespace afft
    */
   template<typename T>
   inline constexpr bool isExecutionParameters = detail::isCxxExecutionParameters<T>;
+
+  /**
+   * @brief SelectParameters type for given select strategy.
+   * @tparam selectStrategy The select strategy.
+   */
+  template<SelectStrategy selectStrategy>
+  using SelectParameters = typename detail::SelectParametersSelect<selectStrategy>::CxxType;
+
+  /**
+   * @brief Check if the type is SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isSelectParameters = detail::isCxxSelectParameters<T>;
 } // namespace afft
 
 #endif /* AFFT_TYPE_TRAITS_HPP */

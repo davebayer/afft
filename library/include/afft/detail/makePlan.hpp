@@ -281,9 +281,9 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makeFirstPlan(const Description&      desc,
-                const BackendParamsT&   backendParams,
-                const SelectParameters& selectParams)
+  makePlan(const Description&           desc,
+           const BackendParamsT&        backendParams,
+           const FirstSelectParameters& selectParams)
   {
     std::unique_ptr<afft::Plan> plan{};
 
@@ -305,6 +305,11 @@ namespace afft::detail
       }
     });
 
+    if (!plan)
+    {
+      throw Exception{Error::internal, "No plan implementation found"};
+    }
+
     return plan;
   }
 
@@ -318,61 +323,24 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makeBestPlan([[maybe_unused]] const Description&      desc,
-               [[maybe_unused]] const BackendParamsT&   backendParams,
-               [[maybe_unused]] const SelectParameters& selectParams)
+  makeBestPlan([[maybe_unused]] const Description&          desc,
+               [[maybe_unused]] const BackendParamsT&       backendParams,
+               [[maybe_unused]] const BestSelectParameters& selectParams)
   {
-    return {};
-  }
-
-  /**
-   * @brief Make plan implementation.
-   * @tparam BackendParamsT Backend parameters type.
-   * @param desc Plan description.
-   * @param backendParams Backend parameters.
-   * @param feedbacks Feedbacks.
-   * @return Plan implementation.
-   */
-  template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlan(const Description&      desc,
-           const BackendParamsT&   backendParams,
-           const SelectParameters& selectParams)
-  {
-    validate(selectParams.strategy);
-
-    std::unique_ptr<afft::Plan> plan{};
-
-    switch (selectParams.strategy)
-    {
-    case SelectStrategy::first:
-      plan = makeFirstPlan(desc, backendParams, selectParams);
-      break;
-    case SelectStrategy::best:
-      plan = makeBestPlan(desc, backendParams, selectParams);
-      break;
-    default:
-      cxx::unreachable();
-    }
-
-    if (!plan)
-    {
-      // Fixme: this should not be an internal error
-      throw Exception{Error::internal, "No plan implementation found"};
-    }
-
-    return plan;
+    throw Exception{Error::internal, "Best plan selection is not implemented"};
   }
 
   /**
    * @brief Make plan with default backend parameters helper.
    * @tparam mpBackend Multi-process backend.
+   * @tparam SelectParamsT Select parameters type.
    * @param desc Plan description.
+   * @param selectParams Select parameters.
    * @return Plan.
    */
-  template<MpBackend mpBackend>
+  template<MpBackend mpBackend, typename SelectParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makePlanWithDefaultBackendParametersHelper(const Description& desc, const SelectParameters& selectParams)
+  makePlanWithDefaultBackendParametersHelper(const Description& desc, const SelectParamsT& selectParams)
   {
     switch (desc.getTarget())
     {
@@ -413,11 +381,14 @@ namespace afft::detail
 
   /**
    * @brief Make plan with default backend parameters.
+   * @tparam SelectParamsT Select parameters type.
    * @param desc Plan description.
+   * @param selectParams Select parameters.
    * @return Plan.
    */
-  [[nodiscard]] inline std::unique_ptr<afft::Plan>
-  makePlanWithDefaultBackendParameters(const Description& desc, const SelectParameters& selectParams)
+  template<typename SelectParamsT>
+  [[nodiscard]] std::unique_ptr<afft::Plan>
+  makePlanWithDefaultBackendParameters(const Description& desc, const SelectParamsT& selectParams)
   {
     switch (desc.getMpBackend())
     {

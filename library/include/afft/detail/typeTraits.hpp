@@ -33,6 +33,7 @@
 #include "../backend.hpp"
 #include "../memory.hpp"
 #include "../mp.hpp"
+#include "../select.hpp"
 #include "../target.hpp"
 #include "../transform.hpp"
 #include "../type.hpp"
@@ -511,6 +512,62 @@ namespace afft::detail
    */
   template<typename T>
   inline constexpr bool isCExecutionParameters = IsCExecutionParameters<T>::value;
+
+  /**
+   * @brief Select parameters select for given select strategy.
+   * @tparam selectStrategy The select strategy.
+   */
+  template<SelectStrategy selectStrategy>
+  struct SelectParametersSelect;
+
+  /// @brief Specialization for first select strategy.
+  template<>
+  struct SelectParametersSelect<SelectStrategy::first>
+  {
+    using CType   = afft_FirstSelectParameters;
+    using CxxType = afft::FirstSelectParameters;
+  };
+
+  /// @brief Specialization for best select strategy.
+  template<>
+  struct SelectParametersSelect<SelectStrategy::best>
+  {
+    using CType   = afft_BestSelectParameters;
+    using CxxType = afft::BestSelectParameters;
+  };
+
+  /**
+   * @brief Check if the type is C++ SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCxxSelectParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft::FirstSelectParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft::BestSelectParameters>> {};
+
+  /**
+   * @brief Check if the type is C SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct IsCSelectParameters
+    : std::bool_constant<std::is_same_v<cxx::remove_cvref_t<T>, afft_FirstSelectParameters> ||
+                         std::is_same_v<cxx::remove_cvref_t<T>, afft_BestSelectParameters>> {};
+
+  /**
+   * @brief Check if the type is C++ SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCxxSelectParameters = IsCxxSelectParameters<T>::value;
+
+  /**
+   * @brief Check if the type is C SelectParameters.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isCSelectParameters = IsCSelectParameters<T>::value;
+
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */

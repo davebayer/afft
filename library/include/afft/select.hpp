@@ -36,18 +36,37 @@ namespace afft
   /// @brief Backend select strategy
   enum class SelectStrategy : ::afft_SelectStrategy
   {
-    first = afft_SelectStrategy_first, ///< Select the first available backend
-    best  = afft_SelectStrategy_best,  ///< Select the best available backend
+    first    = afft_SelectStrategy_first,   ///< Select the first available backend
+    best     = afft_SelectStrategy_best,    ///< Select the best available backend
+    _default = afft_SelectStrategy_default, ///< Default select strategy
   };
 
-  /// @brief Backend selection parameters
-  struct SelectParameters
+  /**
+   * @brief Backend select strategy constant.
+   * @tparam _selectStrategy Select strategy.
+   */
+  template<SelectStrategy _selectStrategy>
+  struct SelectStrategyConstant
   {
-    SelectStrategy                strategy{SelectStrategy::first}; ///< Backend select strategy
-    BackendMask                   mask{BackendMask::all};          ///< Backend mask
-    View<Backend>                 order{};                         ///< Backend initialization order
-    std::chrono::duration<double> destructiveTimePenalty{};        ///< Time penalty for destructive backends
+    static constexpr SelectStrategy selectStratgy = _selectStrategy; ///< Select strategy
   };
+
+  /// @brief Select parameters for selecting first backend supporting the transform
+  struct FirstSelectParameters : SelectStrategyConstant<SelectStrategy::first>
+  {
+    BackendMask   mask{BackendMask::all}; ///< Backend mask
+    View<Backend> order{};                ///< Backend initialization order
+  };
+
+  /// @brief Select parameters for selecting best of all the backends supporting the transform
+  struct BestSelectParameters : SelectStrategyConstant<SelectStrategy::best>
+  {
+    BackendMask                   mask{BackendMask::all};   ///< Backend mask
+    std::chrono::duration<double> destructiveTimePenalty{}; ///< Time penalty for destructive backends
+  };
+  
+  /// @brief Default select parameters
+  using DefaultSelectParameters = FirstSelectParameters;
 } // namespace afft
 
 #endif /* AFFT_SELECT_HPP */

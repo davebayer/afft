@@ -280,7 +280,7 @@ namespace afft::detail
       union Devices
       {
         /// @brief Maximum number of local devices
-        static constexpr std::size_t maxLocDevices{sizeof(int*) / sizeof(int)};
+        static constexpr std::size_t maxLocDevices{sizeof(void*) / sizeof(int)};
 
         int  loc[maxLocDevices]; ///< Local devices
         int* ext;                ///< External devices

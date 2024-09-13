@@ -41,16 +41,19 @@ AFFT_EXPORT namespace afft
   /**
    * @brief Make a plan.
    * @tparam BackendParamsT Backend parameters.
+   * @tparam SelectParamsT Select parameters.
    * @param desc Plan description.
    * @param backendParams Backend parameters.
+   * @param selectParams Select parameters.
    * @return The plan.
    */
-  template<typename BackendParamsT>
-  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&      desc,
-                                               const BackendParamsT&   backendParams,
-                                               const SelectParameters& selectParams = {})
+  template<typename BackendParamsT, typename SelectParamsT = DefaultSelectParameters>
+  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&    desc,
+                                               const BackendParamsT& backendParams,
+                                               const SelectParamsT&  selectParams = {})
   {
     static_assert(isBackendParameters<BackendParamsT>, "invalid backend parameters");
+    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
 
     if (backendParams.mpBackend != desc.getMpBackend() || backendParams.target != desc.getTarget())
     {
@@ -62,25 +65,35 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make a plan.
+   * @tparam SelectParamsT Select parameters.
    * @param desc Plan description.
+   * @param selectParams Select parameters.
    * @return The plan.
    */
-  [[nodiscard]] inline std::unique_ptr<Plan> makePlan(const Description&      desc,
-                                                      const SelectParameters& selectParams = {})
+  template<typename SelectParamsT = DefaultSelectParameters>
+  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&   desc,
+                                               const SelectParamsT& selectParams = {})
   {
+    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
+
     return detail::makePlanWithDefaultBackendParameters(desc, selectParams);
   }
 
   /**
    * @brief Make a plan.
+   * @tparam SelectParamsT Select parameters.
    * @param desc Plan description.
    * @param backendParamsVariant Backend parameters variant.
+   * @param selectParams Select parameters.
    * @return The plan.
    */
-  [[nodiscard]] inline std::unique_ptr<Plan> makePlan(const Description&              desc,
-                                                      const BackendParametersVariant& backendParamsVariant,
-                                                      const SelectParameters&         selectParams = {})
+  template<typename SelectParamsT = DefaultSelectParameters>
+  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&              desc,
+                                               const BackendParametersVariant& backendParamsVariant,
+                                               const SelectParamsT&            selectParams = {})
   {
+    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
+
     return std::visit([&](const auto& backendParams)
     {
       if constexpr (std::is_same_v<std::decay_t<decltype(backendParams)>, std::monostate>)
