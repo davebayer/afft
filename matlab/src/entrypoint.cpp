@@ -52,17 +52,15 @@ enum class Call : std::uint32_t
   ifft,
   ifft2,
   ifftn,
-
-  // Real-data discrete Fourier transform calls
-  rfft = 3000,
+  rfft,
   rfft2,
   rfftn,
   irfft,
   irfft2,
   irfftn,
 
-  // Discrete hartley transform calls
-  dht = 4000,
+  // Discrete Hartley transform calls
+  dht = 3000,
   dht2,
   dhtn,
   idht,
@@ -70,7 +68,7 @@ enum class Call : std::uint32_t
   idhtn,
 
   // Discrete cosine transform calls
-  dct = 5000,
+  dct = 4000,
   dct2,
   dctn,
   idct,
@@ -78,7 +76,7 @@ enum class Call : std::uint32_t
   idctn,
 
   // Discrete sine transform calls
-  dst = 6000,
+  dst = 5000,
   dst2,
   dstn,
   idst,

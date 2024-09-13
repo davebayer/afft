@@ -1,3 +1,3 @@
-function Y = irfft(X, rn, varargin)
-  Y = afft.irfft(uint32(3003), X, rn, varargin{:});
+function X = irfft(Y, rn, varargin)
+  X = afft.irfft(uint32(2009), Y, rn, varargin{:});
 end
