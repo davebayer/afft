@@ -35,8 +35,7 @@ using namespace matlabw;
 static constexpr std::array cpuBackendOrder{afft::Backend::mkl, afft::Backend::fftw3, afft::Backend::pocketfft};
 
 /// @brief Default gpu backend order.
-// TODO: Add CUDA backend when implemented.
-static constexpr std::array gpuBackendOrder{afft::Backend::vkfft};
+static constexpr std::array gpuBackendOrder{afft::Backend::vkfft, afft::Backend::cufft};
 
 #ifdef MATLABW_ENABLE_GPU
 /**
@@ -237,7 +236,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       afft::cuda::BackendParameters backendParams{};
       backendParams.allowDestructive = true;
 
-      afft::SelectParameters selectParams{};
+      afft::FirstSelectParameters selectParams{};
       selectParams.order = gpuBackendOrder;
 
       it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
@@ -295,7 +294,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       backendParams.threadLimit       = 4;
       backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-      afft::SelectParameters selectParams{};
+      afft::FirstSelectParameters selectParams{};
       selectParams.order = cpuBackendOrder;
 
       it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
@@ -425,7 +424,7 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       afft::cuda::BackendParameters backendParams{};
       backendParams.allowDestructive = true;
 
-      afft::SelectParameters selectParams{};
+      afft::FirstSelectParameters selectParams{};
       selectParams.order = gpuBackendOrder;
 
       it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
@@ -482,7 +481,7 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
       backendParams.threadLimit       = 4;
       backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-      afft::SelectParameters selectParams{};
+      afft::FirstSelectParameters selectParams{};
       selectParams.order = cpuBackendOrder;
 
       it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
