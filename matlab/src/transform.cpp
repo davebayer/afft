@@ -505,3 +505,85 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     lhs[0] = std::move(dst);
   }
 }
+
+/**
+ * @brief Perform a 1D forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ */
+void rfft(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:rfft:unimplemented", "not yet implemented"};
+}
+
+/**
+ * @brief Perform a 2D forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional M resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional N resize parameter as a scalar numeric array.
+ */
+void rfft2(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:rfft2:unimplemented", "not yet implemented"};
+}
+
+/**
+ * @brief Perform an N-dimensional forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a numeric array of size equal to input rank.
+ */
+void rfftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:rfftn:unimplemented", "not yet implemented"};
+}
+
+/**
+ * @brief Perform a 1D inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ */
+void irfft(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:irfft:unimplemented", "not yet implemented"};
+}
+
+/**
+ * @brief Perform a 2D inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output n size in transformed as a scalar numeric array.
+ *            - rhs[2] holds the output m size in transformed as a scalar numeric array.
+ */
+void irfft2(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:irfft2:unimplemented", "not yet implemented"};
+}
+
+/**
+ * @brief Perform an N-dimensional inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
+ */
+void irfftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  throw mx::Exception{"afft:irfftn:unimplemented", "not yet implemented"};
+}

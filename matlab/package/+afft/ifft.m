@@ -55,5 +55,5 @@ function X = ifft(Y, varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
-  X = afft_matlab(uint32(3000), Y, varargin{:});
+  X = afft_matlab(uint32(2003), Y, varargin{:});
 end

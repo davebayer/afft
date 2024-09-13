@@ -95,4 +95,68 @@ void ifft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw:
  */
 void ifftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
+/**
+ * @brief Perform a 1D forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ */
+void rfft(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 2D forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional M resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional N resize parameter as a scalar numeric array.
+ */
+void rfft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform an N-dimensional forward Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a numeric array of size equal to input rank.
+ */
+void rfftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 1D inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ */
+void irfft(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 2D inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output n size in transformed as a scalar numeric array.
+ *            - rhs[2] holds the output m size in transformed as a scalar numeric array.
+ */
+void irfft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform an N-dimensional inverse Fourier transform on real input.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1-3.
+ *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
+ */
+void irfftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
 #endif /* TRANSFORM_HPP */

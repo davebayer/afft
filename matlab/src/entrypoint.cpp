@@ -45,36 +45,42 @@ enum class Call : std::uint32_t
   planGetTransformParameters,
   planGetTargetParameters,
 
-  // Forward transform calls
+  // Discrete Fourier transform calls
   fft = 2000,
   fft2,
   fftn,
-  rfft,
-  rfft2,
-  rfftn,
-  dht,
-  dht2,
-  dhtn,
-  dct,
-  dct2,
-  dctn,
-  dst,
-  dst2,
-  dstn,
-
-  // Inverse transform calls
-  ifft = 3000,
+  ifft,
   ifft2,
   ifftn,
+
+  // Real-data discrete Fourier transform calls
+  rfft = 3000,
+  rfft2,
+  rfftn,
   irfft,
   irfft2,
   irfftn,
+
+  // Discrete hartley transform calls
+  dht = 4000,
+  dht2,
+  dhtn,
   idht,
   idht2,
   idhtn,
+
+  // Discrete cosine transform calls
+  dct = 5000,
+  dct2,
+  dctn,
   idct,
   idct2,
   idctn,
+
+  // Discrete sine transform calls
+  dst = 6000,
+  dst2,
+  dstn,
   idst,
   idst2,
   idstn,
@@ -126,7 +132,7 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
     planGetTargetParameters(lhs, rhsSubspan);
     break;
 
-  // Forward transform calls
+  // Discrete Fourier transform calls
   case Call::fft:
     fft(lhs, rhsSubspan);
     break;
@@ -136,8 +142,6 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   case Call::fftn:
     fftn(lhs, rhsSubspan);
     break;
-
-  // Inverse transform calls
   case Call::ifft:
     ifft(lhs, rhsSubspan);
     break;
@@ -147,6 +151,27 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   case Call::ifftn:
     ifftn(lhs, rhsSubspan);
     break;
+
+  // Real-data discrete Fourier transform calls
+  case Call::rfft:
+    rfft(lhs, rhsSubspan);
+    break;
+  case Call::rfft2:
+    rfft2(lhs, rhsSubspan);
+    break;
+  case Call::rfftn:
+    rfftn(lhs, rhsSubspan);
+    break;
+  case Call::irfft:
+    irfft(lhs, rhsSubspan);
+    break;
+  case Call::irfft2:
+    irfft2(lhs, rhsSubspan);
+    break;
+  case Call::irfftn:
+    irfftn(lhs, rhsSubspan);
+    break;
+  
   default:
     throw mx::Exception{"afft:internal:invalidCall", "invalid call"};
   }
