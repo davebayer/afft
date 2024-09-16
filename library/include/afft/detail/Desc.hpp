@@ -45,6 +45,51 @@ namespace afft::detail
 
       /// @brief Constructor.
       template<typename TransformParamsT,
+               typename TargetParamsT>
+      Desc(const TransformParamsT& transformParams,
+           const TargetParamsT&    targetParams)
+      : TransformDesc{transformParams},
+        MpDesc{SingleProcessParameters{}},
+        TargetDesc{targetParams},
+        MemDesc{[&]()
+                {
+                  if (static_cast<TargetDesc&>(*this).getTargetCount() != 1)
+                  {
+                    throw Exception{Error::invalidArgument, "only non-distributed memory layouts can be defaulted"};
+                  }
+
+                  return CentralizedMemoryLayout{};
+                }(),
+                static_cast<TransformDesc&>(*this),
+                static_cast<MpDesc&>(*this),
+                static_cast<TargetDesc&>(*this)}
+      {
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+      }
+
+      /// @brief Constructor.
+      template<typename TransformParamsT,
+               typename TargetParamsT,
+               typename MemoryLayoutT>
+      Desc(const TransformParamsT& transformParams,
+           const TargetParamsT&    targetParams,
+           const MemoryLayoutT&    memoryLayout)
+      : TransformDesc{transformParams},
+        MpDesc{},
+        TargetDesc{targetParams},
+        MemDesc{memoryLayout,
+                static_cast<TransformDesc&>(*this),
+                static_cast<MpDesc&>(*this),
+                static_cast<TargetDesc&>(*this)}
+      {
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
+      }
+
+      /// @brief Constructor.
+      template<typename TransformParamsT,
                typename MpBackendParamsT,
                typename TargetParamsT,
                typename MemoryLayoutT>
@@ -60,10 +105,10 @@ namespace afft::detail
                 static_cast<MpDesc&>(*this),
                 static_cast<TargetDesc&>(*this)}
       {
-        // static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
-        // static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
-        // static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
-        // static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
+        static_assert(isTransformParameters<TransformParamsT>, "TransformParamsT must be a transform parameters type");
+        static_assert(isMpBackendParameters<MpBackendParamsT>, "MpBackendParamsT must be an MPI backend parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "TargetParamsT must be a target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT>, "MemoryLayoutT must be a memory layout type");
       }
 
       // /**

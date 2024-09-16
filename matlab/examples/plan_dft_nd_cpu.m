@@ -1,19 +1,40 @@
-dims = [128, 64, 32];                               % these are the dimensions of the data
+% these are the dimensions of the data
+dims = [128, 64, 32];
 
-transformParams.type          = 'dft';              % let's do a DFT
-transformParams.direction     = 'forward';          % in the forward direction
-transformParams.precision     = 'double';           % of double precision
-transformParams.shape         = dims;               % of size dims
-transformParams.axes          = 1:ndims(dims);      % along all axes (could be removed, all axes are implict)
-transformParams.normalization = 'none';             % without normalization
-transformParams.type          = 'complexToComplex'; % on complex data (could be specified as 'c2c' as well)
+% let's do a DFT
+transformParams.transform     = 'dft';
+% in the forward direction
+transformParams.direction     = 'forward';
+% of double precision
+transformParams.precision     = 'double';
+% of size dims
+transformParams.shape         = dims;
+% along all axes (could be removed, all axes are implict)
+transformParams.axes          = 1:ndims(dims);
+% without normalization
+transformParams.normalization = 'none';
+% on complex data (could be specified as 'c2c' as well)
+transformParams.type          = 'complexToComplex';
 
-targetParams.type             = 'cpu';              % the transform will be executed on the CPU
-targetParams.threadLimit      = 4;                  % using maximum 4 threads
+% the transform will be executed on the CPU (could be removed, the CPU is the default target)
+targetParams.target = 'cpu';
 
-dftPlan = afft.Plan(transformParams, targetParams); % create the plan
+% using maximum 4 threads
+backendParams.threadLimit       = 4;
+% use the FFTW_ESTIMATE planner flag
+backendParams.fftw3.plannerFlag = 'estimate';
 
-X = rand(dims, 'like', 1i);                         % create input data
-Y = dftPlan.execute(X);                             % execute the plan
+% select the first available backend (could be removed, the first available backend is the default)
+selectParams.strategy = 'first';
 
-disp(Y);                                            % display the result
+% create the plan
+dftPlan = afft.Plan(transformParams, targetParams, backendParams);
+
+% create input data
+X = rand(dims, 'like', 1i);
+
+% execute the plan
+Y = dftPlan.execute(X);
+
+% display the result
+disp(Y);

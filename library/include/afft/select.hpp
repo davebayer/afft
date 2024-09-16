@@ -67,6 +67,9 @@ namespace afft
   
   /// @brief Default select parameters
   using DefaultSelectParameters = FirstSelectParameters;
+
+  /// @brief Select parameters variant
+  using SelectParametersVariant = std::variant<std::monostate, FirstSelectParameters, BestSelectParameters>;
 } // namespace afft
 
 #endif /* AFFT_SELECT_HPP */

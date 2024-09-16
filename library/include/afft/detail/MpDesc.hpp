@@ -100,7 +100,9 @@ namespace afft::detail
   {
     public:
       /// @brief Default constructor is deleted
-      MpDesc() = delete;
+      MpDesc()
+      : mMpVariant{SingleProcessDesc{}}
+      {}
 
       /**
        * @brief Constructor from multi-process parameters
@@ -113,31 +115,7 @@ namespace afft::detail
       {
         static_assert(isCxxMpBackendParameters<MpParamsT> || isCMpBackendParameters<MpParamsT>,
                       "invalid multi-process parameters");
-      }
-
-      /**
-       * @brief Constructor from multi-process parameters variant
-       * @param mpParamsVariant Multi-process parameters variant
-       */
-      explicit constexpr MpDesc(const MpBackendParametersVariant& mpParamsVariant)
-      : MpDesc{[&]()
-          {
-            if (std::holds_alternative<std::monostate>(mpParamsVariant) ||
-                std::holds_alternative<SingleProcessParameters>(mpParamsVariant))
-            {
-              return MpDesc{std::get<SingleProcessParameters>(mpParamsVariant)};
-            }
-#         ifdef AFFT_ENABLE_MPI
-            if (std::holds_alternative<afft::mpi::Parameters>(mpParamsVariant))
-            {
-              return MpDesc{std::get<afft::mpi::Parameters>(mpParamsVariant)};
-            }
-#         endif
-
-            throw Exception{Error::invalidArgument, "invalid multi-process parameters variant"};
-          }()}
-      {}
-      
+      }      
 
       /// @brief Copy constructor is default
       MpDesc(const MpDesc&) = default;

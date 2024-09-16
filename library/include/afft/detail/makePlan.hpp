@@ -323,9 +323,9 @@ namespace afft::detail
    */
   template<typename BackendParamsT>
   [[nodiscard]] std::unique_ptr<afft::Plan>
-  makeBestPlan([[maybe_unused]] const Description&          desc,
-               [[maybe_unused]] const BackendParamsT&       backendParams,
-               [[maybe_unused]] const BestSelectParameters& selectParams)
+  makePlan([[maybe_unused]] const Description&          desc,
+           [[maybe_unused]] const BackendParamsT&       backendParams,
+           [[maybe_unused]] const BestSelectParameters& selectParams)
   {
     throw Exception{Error::internal, "Best plan selection is not implemented"};
   }

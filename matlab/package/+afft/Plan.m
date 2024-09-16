@@ -13,12 +13,14 @@ classdef Plan
   end
   
   methods
-    function obj = Plan(transformParams, targetParams)
+    function obj = Plan(transformParams, targetParams, backendParams, selectParams)
       arguments
         transformParams (1, 1) struct
-        targetParams    (1, 1) struct = struct('target', 'cpu')
+        targetParams    (1, 1) struct = struct()
+        backendParams   (1, 1) struct = struct()
+        selectParams    (1, 1) struct = struct()
       end
-      obj.data = afft_matlab(uint32(1000), transformParams, targetParams);
+      obj.data = afft_matlab(uint32(1000), transformParams, targetParams, backendParams, selectParams);
     end
     function Y = execute(obj, X)
       % execute Execute the transform plan

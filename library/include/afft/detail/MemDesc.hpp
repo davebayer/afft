@@ -196,6 +196,7 @@ namespace afft::detail
       bool               mHasDefaultDstStrides{}; ///< Has default destination strides.
   };
 
+  /// @brief Memory block descriptor.
   struct MemBlockDesc
   {
     MaxDimBuffer<Size> starts{};  ///< Starts.
@@ -203,11 +204,20 @@ namespace afft::detail
     MaxDimBuffer<Size> strides{}; ///< Strides.
   };
 
+  /// @brief Distributed memory layout descriptor.
   class DistribMemDesc
   {
     public:
+      /// @brief Default constructor.
       DistribMemDesc() = default;
 
+      /**
+       * @brief Constructor.
+       * @param[in] memLayout Memory layout.
+       * @param[in] transformDesc Transform descriptor.
+       * @param[in] mpDesc MPI descriptor.
+       * @param[in] targetDesc Target descriptor.
+       */
       DistribMemDesc(const DistributedMemoryLayout& memLayout,
                      const TransformDesc&           transformDesc,
                      const MpDesc&                  ,
@@ -440,45 +450,6 @@ namespace afft::detail
       : mAlignment{static_cast<afft::Alignment>(memLayout.alignment)},
         mComplexFormat{static_cast<afft::ComplexFormat>(memLayout.complexFormat)},
         mMemVariant{makeMemVariant(memLayout, transformDesc, mpDesc, targetDesc)}
-      {}
-
-      /**
-       * @brief Construct a memory descriptor.
-       * @param[in] memLayoutVariant Memory layout variant.
-       * @param[in] transformDesc    Transform descriptor.
-       * @param[in] mpDesc           MP descriptor.
-       * @param[in] targetDesc       Target descriptor.
-       */
-      MemDesc(const MemoryLayoutParametersVariant& memLayoutVariant,
-              const TransformDesc&                 transformDesc,
-              const MpDesc&                        mpDesc,
-              const TargetDesc&                    targetDesc)
-      : MemDesc([&]()
-          {
-            if (std::holds_alternative<std::monostate>(memLayoutVariant))
-            {
-              if (mpDesc.getMpBackend() == MpBackend::none || targetDesc.getTargetCount() == 1)
-              {
-                return MemDesc{CentralizedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
-              }
-              else
-              {
-                return MemDesc{DistributedMemoryLayout{}, transformDesc, mpDesc, targetDesc};
-              }
-            }
-            else if (std::holds_alternative<CentralizedMemoryLayout>(memLayoutVariant))
-            {
-              return MemDesc{std::get<CentralizedMemoryLayout>(memLayoutVariant), transformDesc, mpDesc, targetDesc};
-            }
-            else if (std::holds_alternative<DistributedMemoryLayout>(memLayoutVariant))
-            {
-              return MemDesc{std::get<DistributedMemoryLayout>(memLayoutVariant), transformDesc, mpDesc, targetDesc};
-            }
-            else
-            {
-              throw Exception{Error::invalidArgument, "invalid memory layout variant"};
-            }
-          }())
       {}
 
       /// @brief Copy constructor is default.

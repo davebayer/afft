@@ -674,6 +674,33 @@ class TargetParametersParser
   };
 };
 
+/// @brief Backend parameters parser.
+class BackendParametersParser
+{
+  public:
+    [[nodiscard]] afft::BackendParametersVariant operator()(mx::StructArrayCref backendParamsStruct, afft::Target target)
+    {
+      return {};
+    }
+  private:
+};
+
+/// @brief Select parameters parser.
+class SelectParametersParser
+{
+  public:
+    /**
+     * @brief Parse select parameters.
+     * @param selectParamsStruct Select parameters struct.
+     * @return Select parameters.
+     */
+    [[nodiscard]] afft::SelectParametersVariant operator()(mx::StructArrayCref selectParamsStruct)
+    {
+      return {};
+    }
+  private:
+};
+
 /**
  * @brief Create a plan.
  * @param lhs Left-hand side array of size 1.
@@ -684,7 +711,7 @@ class TargetParametersParser
  */
 void planCreate(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
-  if (rhs.size() != 2)
+  if (rhs.size() != 4)
   {
     throw mx::Exception("afft:planCreate:invalidInputCount", "invalid number of input arguments, expected 2");
   }
@@ -704,17 +731,69 @@ void planCreate(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     throw mx::Exception("afft:planCreate:invalidArgument", "target parameters must be a struct");
   }
 
+  if (!rhs[2].isStruct())
+  {
+    throw mx::Exception("afft:planCreate:invalidArgument", "backend parameters must be a struct");
+  }
+
+  if (!rhs[3].isStruct())
+  {
+    throw mx::Exception("afft:planCreate:invalidArgument", "select parameters must be a struct");
+  }
+
   TransformParametersParser transformParamsParser{};
   TargetParametersParser    targetParamsParser{};
 
-  const afft::Description desc{transformParamsParser(mx::StructArrayCref{rhs[0]}),
-                               targetParamsParser(mx::StructArrayCref{rhs[1]})};
+  const auto transformParamsVariant = transformParamsParser(mx::StructArrayCref{rhs[0]});
+  const auto targetParamsVariant    = targetParamsParser(mx::StructArrayCref{rhs[1]});
+
+  afft::Description desc = std::visit([&](const auto& transformParams, const auto& targetParams) -> afft::Description
+  {
+    using TransformParamsT = std::decay_t<decltype(transformParams)>;
+    using TargetParamsT    = std::decay_t<decltype(targetParams)>;
+
+    if constexpr (std::is_same_v<TransformParamsT, std::monostate>)
+    {
+      throw mx::Exception("afft:planCreate:invalidArgument", "invalid transform parameters");
+    }
+    else if constexpr (std::is_same_v<TargetParamsT, std::monostate>)
+    {
+      throw mx::Exception("afft:planCreate:invalidArgument", "invalid target parameters");
+    }
+    else
+    {
+      return afft::Description{transformParams, targetParams};
+    }
+  }, transformParamsVariant, targetParamsVariant);
 
   auto planIt = planCache.find(desc);
 
   if (planIt == planCache.end())
   {
-    planIt = planCache.emplace(std::cref(desc));
+    BackendParametersParser backendParamsParser{};
+    SelectParametersParser  selectParamsParser{};
+
+    const auto backendParamsVariant = backendParamsParser(mx::StructArrayCref{rhs[2]}, desc.getTarget());
+    const auto selectParamsVariant  = selectParamsParser(mx::StructArrayCref{rhs[3]});
+
+    planIt = std::visit([&](const auto& backendParams, const auto& selectParams) -> afft::PlanCache::iterator
+    {
+      using BackendParamsT = std::decay_t<decltype(backendParams)>;
+      using SelectParamsT  = std::decay_t<decltype(selectParams)>;
+
+      if constexpr (std::is_same_v<BackendParamsT, std::monostate>)
+      {
+        throw mx::Exception{"afft:planCreate:invalidArgument", "invalid backend parameters"};
+      }
+      else if constexpr (std::is_same_v<SelectParamsT, std::monostate>)
+      {
+        throw mx::Exception{"afft:planCreate:invalidArgument", "invalid select parameters"};
+      }
+      else
+      {
+        return planCache.emplace(std::cref(desc), backendParams, selectParams);
+      }
+    }, backendParamsVariant, selectParamsVariant);
   }
 
   lhs[0] = mx::makeUninitNumericArray<std::uint8_t>({{sizeof(PlanData)}});
@@ -806,13 +885,20 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     throw mx::Exception{"afft:Plan:execute:internalError", "invalid destination precision"};
   }
 
-  lhs[0] = mx::makeUninitNumericArray(dims,
+  lhs[0] = mx::makeUninitNumericArray({},
                                       dstClassId,
                                       (srcCmpl == afft::Complexity::complex) ? mx::Complexity::complex : mx::Complexity::real);
 
   // TODO: check input array type and size
 
-  planData->plan->executeUnsafe(rhs[1].getData(), lhs[0].getData());
+  if (plan->isDestructive())
+  {
+    // TODO: make copy of the input array and execute the plan
+  }
+  else
+  {
+    // TODO: execute the plan
+  }
 }
 
 /**

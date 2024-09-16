@@ -31,10 +31,12 @@
 /**
  * @brief Create a plan.
  * @param lhs Left-hand side array of size 1.
- *            * lhs[0] holds the address of the created plan.
+ *            * lhs[0] holds the internal plan data as a scalar NumericArray<std::uint8_t>.
  * @param rhs Right-hand side array of size 2.
  *            * rhs[0] holds the transform parameters as a scalar StructArray,
  *            * rhs[1] holds the target parameters as a scalar StructArray.
+ *            * rhs[2] holds the backend parameters as a scalar StructArray.
+ *            * rhs[3] holds the select parameters as a scalar StructArray.
  */
 void planCreate(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
@@ -43,7 +45,7 @@ void planCreate(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<mat
  * @param lhs Left-hand side array of size 1.
  *            * lhs[0] holds the output array.
  * @param rhs Right-hand side array of size 2.
- *            * rhs[0] holds the pointer to the plan as a scalar NumericArray<std::uint64_t>,
+ *            * rhs[0] holds the pointer to the plan interlan data as a scalar NumericArray<std::uint8_t>.
  *            * rhs[1] holds the input array.
  */
 void planExecute(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
@@ -53,7 +55,7 @@ void planExecute(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<ma
  * @param lhs Left-hand side array of size 1.
  *            * lhs[0] holds the transform parameters as a scalar StructArray.
  * @param rhs Right-hand side array of size 1.
- *            * rhs[0] holds the pointer to the plan as a scalar NumericArray<std::uint64_t>.
+ *            * rhs[0] holds the pointer to the plan interlan data as a scalar NumericArray<std::uint8_t>.
  */
 void planGetTransformParameters(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
@@ -62,7 +64,7 @@ void planGetTransformParameters(matlabw::mx::Span<matlabw::mx::Array> lhs, matla
  * @param lhs Left-hand side array of size 1.
  *            * lhs[0] holds the target parameters as a scalar StructArray.
  * @param rhs Right-hand side array of size 1.
- *            * rhs[0] holds the pointer to the plan as a scalar NumericArray<std::uint64_t>.
+ *            * rhs[0] holds the pointer to the plan interlan data as a scalar NumericArray<std::uint8_t>.
  */
 void planGetTargetParameters(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 

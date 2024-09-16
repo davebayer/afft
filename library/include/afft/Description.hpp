@@ -51,51 +51,68 @@ AFFT_EXPORT namespace afft
 
       /**
        * @brief Constructor.
+       * @tparam TransformParamsT Transform parameters type.
+       * @tparam TargetParamsT Target parameters type.
        * @param[in] transformParams Transform parameters.
        * @param[in] targetParams    Target parameters.
        */
-      Description(const TransformParametersVariant& transformParams,
-                  const TargetParametersVariant&    targetParams)
-      : mDesc{transformParams, SingleProcessParameters{}, targetParams, std::monostate{}}
-      {}
+      template<typename TransformParamsT, typename TargetParamsT>
+      Description(const TransformParamsT& transformParams,
+                  const TargetParamsT&    targetParams)
+      : mDesc{transformParams, targetParams}
+      {
+        static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters type");
+      }
 
       /**
        * @brief Constructor.
+       * @tparam TransformParamsT Transform parameters type.
+       * @tparam TargetParamsT Target parameters type.
+       * @tparam MemoryLayoutParamsT Memory layout parameters type.
        * @param[in] transformParams    Transform parameters.
        * @param[in] targetParams       Target parameters.
        * @param[in] memoryLayoutParams Memory layout parameters.
        */
-      Description(const TransformParametersVariant&    transformParams,
-                  const TargetParametersVariant&       targetParams,
-                  const MemoryLayoutParametersVariant& memoryLayoutParams)
-      : mDesc{transformParams, SingleProcessParameters{}, targetParams, memoryLayoutParams}
-      {}
+      template<typename TransformParamsT,
+               typename TargetParamsT,
+               typename MemoryLayoutParamsT>
+      Description(const TransformParamsT&    transformParams,
+                  const TargetParamsT&       targetParams,
+                  const MemoryLayoutParamsT& memoryLayoutParams)
+      : mDesc{transformParams, targetParams, memoryLayoutParams}
+      {
+        static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutParamsT>, "invalid memory layout parameters type");
+      }
 
       /**
        * @brief Constructor.
-       * @param[in] transformParams Transform parameters.
-       * @param[in] mpBackendParams Multi-process backend parameters.
-       * @param[in] targetParams    Target parameters.
-       */
-      Description(const TransformParametersVariant& transformParams,
-                  const MpBackendParametersVariant& mpBackendParams,
-                  const TargetParametersVariant&    targetParams)
-      : mDesc{transformParams, mpBackendParams, targetParams, std::monostate{}}
-      {}
-
-      /**
-       * @brief Constructor.
+       * @tparam TransformParamsT Transform parameters type.
+       * @tparam MpBackendParamsT Multi process backend parameters type.
+       * @tparam TargetParamsT Target parameters type.
+       * @tparam MemoryLayoutParamsT Memory layout parameters type.
        * @param[in] transformParams    Transform parameters.
        * @param[in] mpBackendParams    Multi-process backend parameters.
        * @param[in] targetParams       Target parameters.
        * @param[in] memoryLayoutParams Memory layout parameters.
        */
-      Description(const TransformParametersVariant&    transformParams,
-                  const MpBackendParametersVariant&    mpBackendParams,
-                  const TargetParametersVariant&       targetParams,
-                  const MemoryLayoutParametersVariant& memoryLayoutParams)
+      template<typename TransformParamsT,
+               typename MpBackendParamsT,
+               typename TargetParamsT,
+               typename MemoryLayoutT>
+      Description(const TransformParamsT& transformParams,
+                  const MpBackendParamsT& mpBackendParams,
+                  const TargetParamsT&    targetParams,
+                  const MemoryLayoutT&    memoryLayoutParams)
       : mDesc{transformParams, mpBackendParams, targetParams, memoryLayoutParams}
-      {}
+      {
+        static_assert(isTransformParameters<TransformParamsT>, "invalid transform parameters type");
+        static_assert(isMpBackendParameters<MpBackendParamsT>, "invalid multi-process backend parameters type");
+        static_assert(isTargetParameters<TargetParamsT>, "invalid target parameters type");
+        static_assert(isMemoryLayout<MemoryLayoutT>, "invalid memory layout type");
+      }
 
       /**
        * @brief Constructor. Internal use only.
