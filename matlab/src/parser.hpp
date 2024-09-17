@@ -700,7 +700,7 @@ class TargetParametersParser
 
       if (!targetArray)
       {
-        throw mx::Exception("afft:planCreate:invalidArgument", "missing target field");
+        return afft::cpu::Parameters{};
       }
 
       TargetParser targetParser{};
@@ -831,13 +831,11 @@ class BackendParametersParser
   private:
     /**
      * @brief Parse cpu thread limit.
-     * @param backendParamsStruct Backend parameters struct.
+     * @param threadLimitArray Thread limit array.
      * @return Cpu thread limit.
      */
-    [[nodiscard]] std::uint32_t parseCpuThreadLimit(matlabw::mx::StructArrayCref backendParamsStruct)
+    [[nodiscard]] std::uint32_t parseCpuThreadLimit(std::optional<matlabw::mx::ArrayCref> threadLimitArray)
     {
-      const auto threadLimitArray = backendParamsStruct.getField("threadLimit");
-
       if (!threadLimitArray)
       {
         return 0;
@@ -854,7 +852,7 @@ class BackendParametersParser
     [[nodiscard]] afft::cpu::BackendParameters parseCpuBackendParams(matlabw::mx::StructArrayCref backendParamsStruct)
     {
       afft::cpu::BackendParameters cpuBackendParams{};
-      cpuBackendParams.threadLimit = parseCpuThreadLimit(backendParamsStruct);
+      cpuBackendParams.threadLimit = parseCpuThreadLimit(backendParamsStruct.getField("threadLimit"));
 
       // TODO: Implement CPU backend parameters.
 
