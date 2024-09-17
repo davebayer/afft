@@ -160,10 +160,17 @@ class ShapeParser
 
         if constexpr (matlabw::mx::isRealNumeric<typename TypedArrayT::value_type>)
         {
-          for (std::size_t i = 0; i < shapeRank; ++i)
+          std::transform(typedArray.begin(), typedArray.end(), mShapeStorage, [](auto value)
           {
-            mShapeStorage[shapeRank - 1 - i] = static_cast<afft::Size>(typedArray[i]);
-          }
+            if (value <= typename TypedArrayT::value_type{})
+            {
+              throw mx::Exception("afft:planCreate:invalidArgument", "transform shape must be a positive number");
+            }
+
+            return static_cast<afft::Size>(value);
+          });
+
+          std::reverse(mShapeStorage, mShapeStorage + shapeRank);
         }
         else
         {
@@ -207,10 +214,17 @@ class AxesParser
 
         if constexpr (matlabw::mx::isRealNumeric<typename TypedArrayT::value_type>)
         {
-          for (std::size_t i = 0; i < transformRank; ++i)
+          std::transform(typedArray.begin(), typedArray.end(), mAxesStorage, [transformRank](auto value)
           {
-            mAxesStorage[transformRank - 1 - i] = static_cast<afft::Axis>(typedArray[i]);
-          }
+            if (value <= typename TypedArrayT::value_type{})
+            {
+              throw mx::Exception("afft:planCreate:invalidArgument", "transform axes must be a positive number");
+            }
+
+            return static_cast<afft::Axis>(transformRank) - static_cast<afft::Axis>(value) - 1;
+          });
+
+          std::reverse(mAxesStorage, mAxesStorage + transformRank);
         }
         else
         {
