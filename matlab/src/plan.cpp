@@ -181,59 +181,125 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   const auto [srcPrec, dstPrec] = plan->getSrcDstPrecision();
   const auto [srcCmpl, dstCmpl] = plan->getSrcDstComplexity();
 
-  switch (rhs[0].getClassId())
+  const auto& desc = plan->getDescription().get(afft::detail::DescToken::make());
+
+  auto checkSrcArray = [srcPrec, srcCmpl, desc](auto&& src)
   {
-  case mx::ClassId::single:
-    if (srcPrec != afft::Precision::f32)
+    switch (src.getClassId())
     {
-      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
+    case mx::ClassId::single:
+      if (srcPrec != afft::Precision::f32)
+      {
+        throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
+      }
+      if (src.isComplex() && srcCmpl != afft::Complexity::complex)
+      {
+        throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array complexity"};
+      }
+      break;
+    case mx::ClassId::_double:
+      if (srcPrec != afft::Precision::f64)
+      {
+        throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
+      }
+      if (src.isComplex() && srcCmpl != afft::Complexity::complex)
+      {
+        throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array complexity"};
+      }
+      break;
+    default:
+      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array type"};
     }
-    if (rhs[0].isComplex() && srcCmpl != afft::Complexity::complex)
-    {
-      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array complexity"};
-    }
-    break;
-  case mx::ClassId::_double:
-    if (srcPrec != afft::Precision::f64)
-    {
-      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array precision"};
-    }
-    if (rhs[0].isComplex() && srcCmpl != afft::Complexity::complex)
-    {
-      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array complexity"};
-    }
-    break;
-  default:
-    throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array type"};
-  }
 
-  mx::ClassId dstClassId{};
+    const auto shapeRank = desc.getShapeRank();
+    const auto srcShape  = desc.getSrcShape<std::size_t>();
+    const auto srcDims   = src.getDims();
 
-  switch (dstPrec)
+    if (!std::equal(srcDims.rbegin(), srcDims.rend(), srcShape.data, srcShape.data + shapeRank))
+    {
+      throw mx::Exception{"afft:Plan:execute:invalidArgument", "invalid input array size"};
+    }
+  };
+
+  auto makeDstArray = [dstPrec, dstCmpl, desc](auto&& makeDstArrayFn)
   {
-  case afft::Precision::f32:
-    dstClassId = mx::ClassId::single;
-    break;
-  case afft::Precision::f64:
-    dstClassId = mx::ClassId::_double;
-    break;
-  default:
-    throw mx::Exception{"afft:Plan:execute:internalError", "invalid destination precision"};
-  }
+    static_assert(std::is_invocable_v<decltype(makeDstArrayFn), mx::View<std::size_t>, mx::ClassId, mx::Complexity>);
 
-  lhs[0] = mx::makeUninitNumericArray({},
-                                      dstClassId,
-                                      (srcCmpl == afft::Complexity::complex) ? mx::Complexity::complex : mx::Complexity::real);
+    mx::ClassId dstClassId{};
 
-  // TODO: check input array type and size
+    switch (dstPrec)
+    {
+    case afft::Precision::f32:
+      dstClassId = mx::ClassId::single;
+      break;
+    case afft::Precision::f64:
+      dstClassId = mx::ClassId::_double;
+      break;
+    default:
+      throw mx::Exception{"afft:Plan:execute:internalError", "invalid destination precision"};
+    }
 
-  if (plan->isDestructive())
+    const mx::Complexity dstCmplMatlab = (dstCmpl == afft::Complexity::complex)
+                                           ? mx::Complexity::complex : mx::Complexity::real;
+
+    const auto shapeRank = desc.getShapeRank();
+
+    auto dstDims = desc.getDstShape<std::size_t>();
+
+    std::reverse(dstDims.data, dstDims.data + shapeRank);
+
+    return makeDstArrayFn(mx::View<std::size_t>{dstDims.data, shapeRank}, dstClassId, dstCmplMatlab);
+  };
+
+#ifdef MATLABW_ENABLE_GPU
+  if (rhs[1].isGpuArray())
   {
-    // TODO: make copy of the input array and execute the plan
+    mx::gpu::Array src{rhs[1]};
+
+    checkSrcArray(src);
+
+    mx::gpu::Array dst = makeDstArray([](auto&& dstDims, auto dstClassId, auto dstCmpl)
+    {
+      return mx::gpu::makeUninitNumericArray({dstDims}, dstClassId, dstCmpl);
+    });
+
+    if (plan->isDestructive())
+    {
+      mx::gpu::Array srcCopy{src};
+      
+      plan->executeUnsafe(srcCopy.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = dst.release();
   }
   else
+#endif
   {
-    // TODO: execute the plan
+    mx::ArrayCref src{rhs[1]};
+
+    checkSrcArray(src);
+
+    mx::Array dst = makeDstArray([](auto&& dstDims, auto dstClassId, auto dstCmpl)
+    {
+      return mx::makeUninitNumericArray({dstDims}, dstClassId, dstCmpl);
+    });
+
+    if (plan->isDestructive())
+    {
+      mx::Array srcCopy{src};
+      
+      plan->executeUnsafe(srcCopy.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = std::move(dst);
   }
 }
 
