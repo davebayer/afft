@@ -1,7 +1,7 @@
 % afft library for computing fft-related transformations
 % Version 0.0.1 27-Aug-2024
 %
-% Package management functions
+% Toolbox management functions
 %   clearPlanCache          - clear the plan cache releasing all created plans
 % 
 % Standalone Plan class

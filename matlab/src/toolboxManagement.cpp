@@ -22,7 +22,7 @@
   SOFTWARE.
 */
 
-#include "packageManagement.hpp"
+#include "toolboxManagement.hpp"
 #include "planCache.hpp"
 
 using namespace matlabw;

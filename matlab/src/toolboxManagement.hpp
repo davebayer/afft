@@ -22,8 +22,8 @@
   SOFTWARE.
 */
 
-#ifndef PACKAGE_MANAGEMENT_HPP
-#define PACKAGE_MANAGEMENT_HPP
+#ifndef TOOLBOX_MANAGEMENT_HPP
+#define TOOLBOX_MANAGEMENT_HPP
 
 #include <afft/afft.hpp>
 #include <matlabw/mx/mx.hpp>
@@ -35,4 +35,4 @@
  */
 void clearPlanCache(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
-#endif /* PACKAGE_MANAGEMENT_HPP */
+#endif /* TOOLBOX_MANAGEMENT_HPP */

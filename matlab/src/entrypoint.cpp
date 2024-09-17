@@ -26,7 +26,7 @@
 #include <matlabw/mex/mex.hpp>
 #include <matlabw/mex/Function.hpp>
 
-#include "packageManagement.hpp"
+#include "toolboxManagement.hpp"
 #include "plan.hpp"
 #include "planCache.hpp"
 #include "transform.hpp"
@@ -36,7 +36,7 @@ using namespace matlabw;
 /// @brief Enumeration of all available calls.
 enum class Call : std::uint32_t
 {
-  // Package management calls
+  // Toolbox management calls
   clearPlanCache = 0,
 
   // Plan calls
@@ -91,7 +91,7 @@ enum class Call : std::uint32_t
  */
 void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
-  // When the library is first loaded, lock the package.
+  // When the library is first loaded, lock the mex.
   if (!isLocked())
   {
     lock();
@@ -111,7 +111,7 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   // Dispatch the call.
   switch (static_cast<Call>(rhs[0].getScalarAs<std::uint32_t>()))
   {
-  // Package management calls
+  // Toolbox management calls
   case Call::clearPlanCache:
     clearPlanCache(lhs, rhsSubspan);
     break;

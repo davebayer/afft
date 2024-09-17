@@ -30,6 +30,7 @@ function(add_examples mpBackend target)
 
   set(EXAMPLES_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/${mpBackend}/${target}")
   file(GLOB EXAMPLES "${EXAMPLES_SRC_DIR}/*.cpp" "${EXAMPLES_SRC_DIR}/*.c")
+  
   foreach(EXAMPLE ${EXAMPLES})
     get_filename_component(EXAMPLE_NAME ${EXAMPLE} NAME_WE)
     get_filename_component(EXAMPLE_EXT  ${EXAMPLE} LAST_EXT)
