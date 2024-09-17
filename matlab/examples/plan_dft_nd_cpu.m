@@ -28,7 +28,7 @@ backendParams.fftw3.plannerFlag = 'estimate';
 selectParams.strategy = 'first';
 
 % create the plan
-dftPlan = afft.Plan(transformParams, targetParams, backendParams);
+dftPlan = afft.Plan(transformParams, targetParams, backendParams, selectParams);
 
 % create input data
 X = rand(dims, 'like', 1i);
