@@ -1,4 +1,4 @@
-classdef Plan
+classdef Plan < matlab.mixin.Copyable
   % afft.Plan Standalone class for transform plans
   % This class wraps the C++ afft::Plan object and enables to execute the transforms with minimum overhead.
   %
@@ -9,7 +9,11 @@ classdef Plan
   %   getTargetParameters    - Get the target parameters
 
   properties (Access = private)
-    data % oblique data property
+    mData            % oblique data property
+    mTransformParams % transform parameters
+    mTargetParams    % target parameters
+    mBackendParams   % backend parameters
+    mSelectParams    % select parameters
   end
   
   methods
@@ -20,18 +24,37 @@ classdef Plan
         backendParams   (1, 1) struct = struct()
         selectParams    (1, 1) struct = struct()
       end
-      obj.data = afft_matlab(uint32(1000), transformParams, targetParams, backendParams, selectParams);
+
+      % Create the plan
+      obj.mData = afft_matlab(uint32(1000), transformParams, targetParams, backendParams, selectParams);
+
+      % Store the parameters
+      obj.mTransformParams = transformParams;
+      obj.mTargetParams    = targetParams;
+      obj.mBackendParams   = backendParams;
+      obj.mSelectParams    = selectParams;
     end
+
     function Y = execute(obj, X)
       % execute Execute the transform plan
       %   Executes the plan on the input data X. The X must match the transform description provided in the constructor.
-      Y = afft_matlab(uint32(1001), obj.data, X);
+      Y = afft_matlab(uint32(1001), obj.mData, X);
     end
+
     function transformParams = getTransformParameters(obj)
-      transformParams = afft_matlab(uint32(1002), obj.data);
+      transformParams = obj.mTransformParams;
     end
+
     function targetParams = getTargetParameters(obj)
-      targetParams = afft_matlab(uint32(1003), obj.data);
+      targetParams = obj.mTargetParams;
+    end
+
+    function backendParams = getBackendParameters(obj)
+      backendParams = obj.mBackendParams;
+    end
+
+    function selectParams = getSelectParameters(obj)
+      selectParams = obj.mSelectParams;
     end
   end
 end
