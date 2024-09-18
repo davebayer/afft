@@ -199,6 +199,11 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     {
       throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
     }
+
+    if (srcArray.getRank() > afft::maxDimCount)
+    {
+      throw mx::Exception{"afft:fftn:invalidInputRank", "input array rank exceeds maximum dimension count"};
+    }
   };
 
   auto makeDftParams = [&, shapeConverter = ShapeConverter{}](auto&& srcArray) mutable
@@ -370,6 +375,11 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     {
       throw mx::Exception{"afft:ifftn:invalidInputComplexity", "input array must be complex"};
     }
+
+    if (srcArray.getRank() > afft::maxDimCount)
+    {
+      throw mx::Exception{"afft:ifftn:invalidInputRank", "input array rank exceeds maximum dimension count"};
+    }
   };
 
   auto makeDftParams = [&, shapeConverter = ShapeConverter{}](auto&& srcArray) mutable
@@ -511,7 +521,158 @@ void rfft2(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
  */
 void rfftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
-  throw mx::Exception{"afft:rfftn:unimplemented", "not yet implemented"};
+  if (rhs.size() < 1 || rhs.size() > 2)
+  {
+    throw mx::Exception{"afft:fftn:invalidInputCount", "invalid input argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:rfftn:invalidOutputCount", "invalid output argument count"};
+  }
+
+  // To be removed when resize parameter is implemented.
+  if (rhs.size() != 1)
+  {
+    throw mx::Exception{"afft:rfftn:unimplemented", "resize parameter not yet implemented"};
+  }
+
+  auto checkSrcArray = [&](auto&& srcArray)
+  {
+    if (!srcArray.isSingle() && !srcArray.isDouble())
+    {
+      throw mx::Exception{"afft:rfftn:invalidInputClass", "input array must be floating-point"};
+    }
+
+    if (srcArray.isComplex())
+    {
+      throw mx::Exception{"afft:rfftn:invalidInputComplexity", "input array must be real"};
+    }
+
+    if (srcArray.getRank() > afft::maxDimCount)
+    {
+      throw mx::Exception{"afft:rfftn:invalidInputRank", "input array rank exceeds maximum dimension count"};
+    }
+  };
+
+  auto makeDftParams = [&, shapeConverter = ShapeConverter{}](auto&& srcArray) mutable
+  {
+    afft::dft::Parameters dftParams{};
+    dftParams.direction     = afft::Direction::forward;
+    dftParams.precision     = getTransformPrecision(srcArray);
+    dftParams.shape         = shapeConverter(srcArray.getDims(), "afft:rfftn:invalidInputDims");
+    dftParams.axes          = afft::allAxes;
+    dftParams.normalization = afft::Normalization::none;
+    dftParams.placement     = afft::Placement::outOfPlace;
+    dftParams.type          = afft::dft::Type::realToComplex;
+
+    return dftParams;
+  };
+
+  auto makeDstArray = [&](auto&& srcArray, auto&& makeDstArrayFn)
+  {
+    static_assert(std::is_invocable_v<decltype(makeDstArrayFn), mx::View<std::size_t>>);
+
+    afft::detail::MaxDimBuffer<std::size_t> dstDims{};
+
+    std::copy(srcArray.getDims().begin(), srcArray.getDims().end(), dstDims.data);
+
+    dstDims[0] = dstDims[0] / 2 + 1;
+
+    return makeDstArrayFn(mx::View<std::size_t>{dstDims.data, srcArray.getRank()});
+  };
+
+#ifdef MATLABW_ENABLE_GPU
+  if (rhs[0].isGpuArray())
+  {
+    mx::gpu::init();
+
+    const auto cudaDevice = getCurrentGpuDevice("afft:rfftn:failedToGetGpuDevice");
+
+    mx::gpu::Array src{rhs[0]};
+
+    if (src.getSize() == 0)
+    {
+      lhs[0] = mx::gpu::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex).release();
+      return;
+    }
+
+    checkSrcArray(src);
+
+    afft::cuda::Parameters cudaParams{};
+    cudaParams.devices = afft::makeScalarView(cudaDevice);
+
+    const afft::Description desc{makeDftParams(src), cudaParams};
+
+    afft::cuda::BackendParameters backendParams{};
+    backendParams.allowDestructive = true;
+
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = gpuBackendOrder;
+
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
+
+    auto dst = makeDstArray(src, [&](auto&& dstDims)
+    {
+      return mx::gpu::makeUninitNumericArray(dstDims, src.getClassId(), mx::Complexity::complex);
+    });
+
+    if (plan->isDestructive())
+    {
+      mx::gpu::Array tmp{src};
+
+      plan->executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = dst.release();
+  }
+  else
+#endif
+  {
+    mx::ArrayCref src{rhs[0]};
+
+    if (src.getSize() == 0)
+    {
+      lhs[0] = mx::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex);
+      return;
+    }
+
+    checkSrcArray(src);
+
+    const afft::Description desc{makeDftParams(src), afft::cpu::Parameters{}};
+
+    afft::cpu::BackendParameters backendParams{};
+    backendParams.allowDestructive  = true;
+    backendParams.threadLimit       = 4;
+    backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
+
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = cpuBackendOrder;
+
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
+
+    auto dst = makeDstArray(src, [&](auto&& dstDims)
+    {
+      return mx::makeUninitNumericArray(dstDims, src.getClassId(), mx::Complexity::complex);
+    });
+
+    if (plan->isDestructive())
+    {
+      mx::Array tmp{src};
+
+      plan->executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = std::move(dst);
+  }
 }
 
 /**
