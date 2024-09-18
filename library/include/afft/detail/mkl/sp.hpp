@@ -157,9 +157,7 @@ namespace afft::detail::mkl::sp
           mDftiHandle.reset(dftiHandle);
         }
 
-        checkError(DftiSetValue(mDftiHandle.get(),
-                                DFTI_PLACEMENT,
-                                getPlacement()));
+        checkError(DftiSetValue(mDftiHandle.get(), DFTI_PLACEMENT, getPlacement()));
 
         if (getPrecision() == DFTI_DOUBLE)
         {
@@ -171,21 +169,6 @@ namespace afft::detail::mkl::sp
         }
 
         checkError(DftiSetValue(mDftiHandle.get(), DFTI_THREAD_LIMIT, Parent::mBackendParams.threadLimit));
-
-        if (!memDesc.hasDefaultSrcStrides())
-        {
-          throw Exception{Error::mkl, "custom src strides are not supported yet"};
-        }
-
-        if (!memDesc.hasDefaultDstStrides())
-        {
-          throw Exception{Error::mkl, "custom dst strides are not supported yet"};
-        }
-
-        if (const std::size_t howManyRank = mDesc.getTransformHowManyRank(); howManyRank > 0)
-        {
-          throw Exception{Error::mkl, "howManyRank is not supported yet"};
-        }
 
         switch (mDesc.getTransformDesc<Transform::dft>().type)
         {
@@ -210,6 +193,26 @@ namespace afft::detail::mkl::sp
           break;
         default:
           cxx::unreachable();
+        }
+
+        MKL_LONG srcStrides[maxDimCount + 1]{};
+        MKL_LONG dstStrides[maxDimCount + 1]{};
+
+        std::size_t i{1};
+
+        for (auto axis : mDesc.getTransformAxes())
+        {
+          srcStrides[i] = memDesc.getSrcStrides()[axis];
+          dstStrides[i] = memDesc.getDstStrides()[axis];
+          ++i;
+        }
+
+        checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
+        checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
+
+        if (const std::size_t howManyRank = mDesc.getTransformHowManyRank(); howManyRank > 0)
+        {
+          throw Exception{Error::mkl, "howManyRank is not supported yet"};
         }
 
         if (Parent::mBackendParams.mkl.avoidWorkspace)
