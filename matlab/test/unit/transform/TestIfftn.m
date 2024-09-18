@@ -1,18 +1,18 @@
 classdef TestIfftn < AbstractTestTransform
   properties (TestParameter)
-    precision     = ['single'; 'double'];
+    precision     = {'single', 'double'};
+    symmetricFlag = {'nonsymmetric'}; % todo: implement symmetric
     gridSize      = [AbstractTestTransform.GridSizes0D, ...
                      AbstractTestTransform.GridSizes1D, ...
                      AbstractTestTransform.GridSizes2D, ...
                      AbstractTestTransform.GridSizes3D];
-    symmetricFlag = ['nonsymmetric']; % todo: implement symmetric
-    normalization = ['none'; 'unitary'; 'orthogonal'];
+    normalization = {'none'}; % todo: add 'unitary', 'orthogonal' when implemented
   end
 
   methods (Static)
-    function src = generateSrcArray(gridSize, precision, complexity, target, symmetricFlag)
+    function src = generateSrcArray(gridSize, precision, symmetricFlag, target)
       % Generate a random array of the given size and precision.
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, complexity, target);
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'complex', target);
 
       % Modify the array to match the given symmetric flag.
       if strcmp(symmetricFlag, 'symmetric')
@@ -40,20 +40,20 @@ classdef TestIfftn < AbstractTestTransform
   end
 
   methods (Test)
-    function testCpu(testCase, precision, gridSize, symmetricFlag, normalization)
-      src = TestIfftn.generateSrcArray(gridSize, precision, 'complex', 'cpu', symmetricFlag);
+    function testCpu(testCase, precision, symmetricFlag, gridSize, normalization)
+      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag, 'cpu');
 
-      dstRef = TestIfftn.computeReference(src, normalization);
-      dst    = afft.ifftn(src); % todo: implement normalization
+      dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
+      dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag
 
       compareResults(testCase, precision, dstRef, dst);
     end
 
-    function testGpu(testCase, precision, gridSize, symmetricFlag, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'complex', 'gpu', symmetricFlag);
+    function testGpu(testCase, precision, symmetricFlag, gridSize, normalization)
+      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag, 'gpu');
 
-      dstRef = TestIfftn.computeReference(src, normalization);
-      dst    = afft.ifftn(src, symmetricFlag); % todo: implement normalization
+      dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
+      dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag
 
       compareResults(testCase, precision, dstRef, dst);
     end

@@ -1,12 +1,12 @@
 classdef TestFftn < AbstractTestTransform
   properties (TestParameter)
-    precision     = ['single'; 'double'];
-    complexity    = ['complex']; % todo: add 'real' when implemented
+    precision     = {'single', 'double'};
+    srcComplexity = {'complex'}; % todo: add 'real' when implemented
     gridSize      = [AbstractTestTransform.GridSizes0D, ...
                      AbstractTestTransform.GridSizes1D, ...
                      AbstractTestTransform.GridSizes2D, ...
                      AbstractTestTransform.GridSizes3D];
-    normalization = ['none'; 'unitary'; 'orthogonal'];
+    normalization = {'none'}; % todo: add 'unitary', 'orthogonal' when implemented
   end
 
   methods (Static)
@@ -27,8 +27,8 @@ classdef TestFftn < AbstractTestTransform
   end
 
   methods (Test)
-    function testCpu(testCase, precision, complexity, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, complexity, 'cpu');
+    function testCpu(testCase, precision, srcComplexity, gridSize, normalization)
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, srcComplexity, 'cpu');
 
       dstRef = TestFftn.computeReference(src, normalization);
       dst    = afft.fftn(src); % todo: implement normalization
@@ -36,8 +36,8 @@ classdef TestFftn < AbstractTestTransform
       compareResults(testCase, precision, dstRef, dst);
     end
 
-    function testGpu(testCase, precision, complexity, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, complexity, 'gpu');
+    function testGpu(testCase, precision, srcComplexity, gridSize, normalization)
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, srcComplexity, 'gpu');
 
       dstRef = TestFftn.computeReference(src, normalization);
       dst    = afft.fftn(src); % todo: implement normalization
