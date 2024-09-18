@@ -1,12 +1,12 @@
 classdef TestFftn < AbstractTestTransform
   properties (TestParameter)
-    precision     = {'single'; 'double'};
-    complexity    = {'complex'}; % todo: add 'real' when implemented
+    precision     = ['single'; 'double'];
+    complexity    = ['complex']; % todo: add 'real' when implemented
     gridSize      = [AbstractTestTransform.GridSizes0D, ...
                      AbstractTestTransform.GridSizes1D, ...
                      AbstractTestTransform.GridSizes2D, ...
                      AbstractTestTransform.GridSizes3D];
-    normalization = {'none'; 'unitary'; 'orthogonal'};
+    normalization = ['none'; 'unitary'; 'orthogonal'];
   end
 
   methods (Static)
