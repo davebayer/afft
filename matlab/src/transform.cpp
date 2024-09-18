@@ -187,14 +187,33 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     throw mx::Exception{"afft:fftn:unimplemented", "resize parameter not yet implemented"};
   }
 
-  ShapeConverter shapeConverter{};
+  auto checkSrcArray = [&](auto&& srcArray)
+  {
+    if (!srcArray.isSingle() && !srcArray.isDouble())
+    {
+      throw mx::Exception{"afft:fftn:invalidInputClass", "input array must be floating-point"};
+    }
 
-  afft::dft::Parameters dftParams{};
-  dftParams.direction     = afft::Direction::forward;
-  dftParams.axes          = afft::allAxes;
-  dftParams.normalization = afft::Normalization::none;
-  dftParams.placement     = afft::Placement::outOfPlace;
-  dftParams.type          = afft::dft::Type::complexToComplex;
+    // Should be removed when real-to-complex transforms are implemented.
+    if (!srcArray.isComplex())
+    {
+      throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
+    }
+  };
+
+  auto makeDftParams = [&, shapeConverter = ShapeConverter{}](auto&& srcArray) mutable
+  {
+    afft::dft::Parameters dftParams{};
+    dftParams.direction     = afft::Direction::forward;
+    dftParams.precision     = getTransformPrecision(srcArray);
+    dftParams.shape         = shapeConverter(srcArray.getDims(), "afft:fftn:invalidInputDims");
+    dftParams.axes          = afft::allAxes;
+    dftParams.normalization = afft::Normalization::none;
+    dftParams.placement     = afft::Placement::outOfPlace;
+    dftParams.type          = afft::dft::Type::complexToComplex;
+
+    return dftParams;
+  };
 
 #ifdef MATLABW_ENABLE_GPU
   if (rhs[0].isGpuArray())
@@ -207,55 +226,37 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     if (src.getSize() == 0)
     {
-      lhs[0] = mx::gpu::makeUninitNumericArray<std::complex<double>>(0, 0).release();
+      lhs[0] = mx::gpu::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex).release();
       return;
     }
 
-    if (!src.isSingle() && !src.isDouble())
-    {
-      throw mx::Exception{"afft:fftn:invalidInputClass", "input array must be floating-point"};
-    }
-
-    // Should be removed when real-to-complex transforms are implemented.
-    if (!src.isComplex())
-    {
-      throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
-    }
-    
-    dftParams.precision = getTransformPrecision(src);
-    dftParams.shape     = shapeConverter(src.getDims(), "afft:fftn:invalidInputDims");
+    checkSrcArray(src);
 
     afft::cuda::Parameters cudaParams{};
     cudaParams.devices = afft::makeScalarView(cudaDevice);
 
-    const afft::Description desc{dftParams, cudaParams};
+    const afft::Description desc{makeDftParams(src), cudaParams};
 
-    auto it = planCache.find(desc);
-    if (it == planCache.end())
-    {
-      afft::cuda::BackendParameters backendParams{};
-      backendParams.allowDestructive = true;
+    afft::cuda::BackendParameters backendParams{};
+    backendParams.allowDestructive = true;
 
-      afft::FirstSelectParameters selectParams{};
-      selectParams.order = gpuBackendOrder;
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = gpuBackendOrder;
 
-      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
-    }
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
 
     auto dst = mx::gpu::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    if (auto& plan = **it; plan.isDestructive())
+    if (plan->isDestructive())
     {
       mx::gpu::Array tmp{src};
 
-      plan.executeUnsafe(tmp.getData(), dst.getData());
+      plan->executeUnsafe(tmp.getData(), dst.getData());
     }
     else
     {
-      plan.executeUnsafe(src.getData(), dst.getData());
+      plan->executeUnsafe(src.getData(), dst.getData());
     }
-
-    mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
     lhs[0] = dst.release();
   }
@@ -266,54 +267,36 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     if (src.getSize() == 0)
     {
-      lhs[0] = src;
+      lhs[0] = mx::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex);
       return;
     }
 
-    if (!src.isSingle() && !src.isDouble())
-    {
-      throw mx::Exception{"afft:fftn:invalidInputClass", "input array must be floating-point"};
-    }
+    checkSrcArray(src);
 
-    // Should be removed when real-to-complex transforms are implemented.
-    if (!src.isComplex())
-    {
-      throw mx::Exception{"afft:fftn:invalidInputComplexity", "input array must be complex"};
-    }
+    const afft::Description desc{makeDftParams(src), afft::cpu::Parameters{}};
 
-    dftParams.precision = getTransformPrecision(src);
-    dftParams.shape     = shapeConverter(src.getDims(), "afft:fftn:invalidInputDims");
+    afft::cpu::BackendParameters backendParams{};
+    backendParams.allowDestructive  = true;
+    backendParams.threadLimit       = 4;
+    backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-    const afft::Description desc{dftParams, afft::cpu::Parameters{}};
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = cpuBackendOrder;
 
-    auto it = planCache.find(desc);
-    if (it == planCache.end())
-    {
-      afft::cpu::BackendParameters backendParams{};
-      backendParams.allowDestructive  = true;
-      backendParams.threadLimit       = 4;
-      backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
-
-      afft::FirstSelectParameters selectParams{};
-      selectParams.order = cpuBackendOrder;
-
-      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
-    }
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
 
     auto dst = mx::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    if (auto& plan = **it; plan.isDestructive())
+    if (plan->isDestructive())
     {
       mx::Array tmp{src};
 
-      plan.executeUnsafe(tmp.getData(), dst.getData());
+      plan->executeUnsafe(tmp.getData(), dst.getData());
     }
     else
     {
-      plan.executeUnsafe(src.getData(), dst.getData());
+      plan->executeUnsafe(src.getData(), dst.getData());
     }
-
-    mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
     lhs[0] = std::move(dst);
   }
@@ -376,74 +359,75 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     throw mx::Exception{"afft:ifftn:unimplemented", "resize parameter not yet implemented"};
   }
 
-  ShapeConverter shapeConverter{};
+  auto checkSrcArray = [&](auto&& srcArray)
+  {
+    if (!srcArray.isSingle() && !srcArray.isDouble())
+    {
+      throw mx::Exception{"afft:ifftn:invalidInputClass", "input array must be floating-point"};
+    }
 
-  afft::dft::Parameters dftParams{};
-  dftParams.direction     = afft::Direction::inverse;
-  dftParams.axes          = afft::allAxes;
-  dftParams.normalization = afft::Normalization::unitary;
-  dftParams.placement     = afft::Placement::outOfPlace;
-  dftParams.type          = afft::dft::Type::complexToComplex;
+    if (!srcArray.isComplex())
+    {
+      throw mx::Exception{"afft:ifftn:invalidInputComplexity", "input array must be complex"};
+    }
+  };
 
-#ifdef MATLABW_ENABLE_GPU
+  auto makeDftParams = [&, shapeConverter = ShapeConverter{}](auto&& srcArray) mutable
+  {
+    afft::dft::Parameters dftParams{};
+    dftParams.direction     = afft::Direction::inverse;
+    dftParams.precision     = getTransformPrecision(srcArray);
+    dftParams.shape         = shapeConverter(srcArray.getDims(), "afft:ifftn:invalidInputDims");
+    dftParams.axes          = afft::allAxes;
+    dftParams.normalization = afft::Normalization::none;
+    dftParams.placement     = afft::Placement::outOfPlace;
+    dftParams.type          = afft::dft::Type::complexToComplex;
+
+    return dftParams;
+  };
+
+  #ifdef MATLABW_ENABLE_GPU
   if (rhs[0].isGpuArray())
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:ifftn:failedToGetGpuDevice");
+    const auto cudaDevice = getCurrentGpuDevice("afft:fftn:failedToGetGpuDevice");
 
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
     {
-      lhs[0] = mx::gpu::makeUninitNumericArray<std::complex<double>>(0, 0).release();
+      lhs[0] = mx::gpu::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex).release();
       return;
     }
 
-    if (!src.isSingle() && !src.isDouble())
-    {
-      throw mx::Exception{"afft:ifftn:invalidInputClass", "input array must be floating-point"};
-    }
-
-    if (!src.isComplex())
-    {
-      throw mx::Exception{"afft:ifftn:invalidInputComplexity", "input array must be complex"};
-    }
-    
-    dftParams.precision = getTransformPrecision(src);
-    dftParams.shape     = shapeConverter(src.getDims(), "afft:ifftn:invalidInputDims");
+    checkSrcArray(src);
 
     afft::cuda::Parameters cudaParams{};
     cudaParams.devices = afft::makeScalarView(cudaDevice);
 
-    const afft::Description desc{dftParams, cudaParams};
+    const afft::Description desc{makeDftParams(src), cudaParams};
 
-    auto it = planCache.find(desc);
-    if (it == planCache.end())
-    {
-      afft::cuda::BackendParameters backendParams{};
-      backendParams.allowDestructive = true;
+    afft::cuda::BackendParameters backendParams{};
+    backendParams.allowDestructive = true;
 
-      afft::FirstSelectParameters selectParams{};
-      selectParams.order = gpuBackendOrder;
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = gpuBackendOrder;
 
-      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
-    }
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
 
     auto dst = mx::gpu::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    if (auto& plan = **it; plan.isDestructive())
+    if (plan->isDestructive())
     {
       mx::gpu::Array tmp{src};
 
-      plan.executeUnsafe(tmp.getData(), dst.getData());
+      plan->executeUnsafe(tmp.getData(), dst.getData());
     }
     else
     {
-      plan.executeUnsafe(src.getData(), dst.getData());
+      plan->executeUnsafe(src.getData(), dst.getData());
     }
-
-    mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
     lhs[0] = dst.release();
   }
@@ -454,53 +438,36 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     if (src.getSize() == 0)
     {
-      lhs[0] = src;
+      lhs[0] = mx::makeNumericArray(0, 0, src.getClassId(), mx::Complexity::complex);
       return;
     }
 
-    if (!src.isSingle() && !src.isDouble())
-    {
-      throw mx::Exception{"afft:ifftn:invalidInputClass", "input array must be floating-point"};
-    }
+    checkSrcArray(src);
 
-    if (!src.isComplex())
-    {
-      throw mx::Exception{"afft:ifftn:invalidInputComplexity", "input array must be complex"};
-    }
+    const afft::Description desc{makeDftParams(src), afft::cpu::Parameters{}};
 
-    dftParams.precision = getTransformPrecision(src);
-    dftParams.shape     = shapeConverter(src.getDims(), "afft:ifftn:invalidInputDims");
+    afft::cpu::BackendParameters backendParams{};
+    backendParams.allowDestructive  = true;
+    backendParams.threadLimit       = 4;
+    backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
 
-    const afft::Description desc{dftParams, afft::cpu::Parameters{}};
+    afft::FirstSelectParameters selectParams{};
+    selectParams.order = cpuBackendOrder;
 
-    auto it = planCache.find(desc);
-    if (it == planCache.end())
-    {
-      afft::cpu::BackendParameters backendParams{};
-      backendParams.allowDestructive  = true;
-      backendParams.threadLimit       = 4;
-      backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
-
-      afft::FirstSelectParameters selectParams{};
-      selectParams.order = cpuBackendOrder;
-
-      it = planCache.insert(afft::makePlan(desc, backendParams, selectParams));
-    }
+    auto plan = afft::makePlan(desc, backendParams, selectParams);
 
     auto dst = mx::makeUninitNumericArray(src.getDims(), src.getClassId(), mx::Complexity::complex);
 
-    if (auto& plan = **it; plan.isDestructive())
+    if (plan->isDestructive())
     {
       mx::Array tmp{src};
 
-      plan.executeUnsafe(tmp.getData(), dst.getData());
+      plan->executeUnsafe(tmp.getData(), dst.getData());
     }
     else
     {
-      plan.executeUnsafe(src.getData(), dst.getData());
+      plan->executeUnsafe(src.getData(), dst.getData());
     }
-
-    mex::printf("Used backend: %s", afft::getBackendName((*it)->getBackend()).data());
 
     lhs[0] = std::move(dst);
   }
