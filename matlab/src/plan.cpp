@@ -183,7 +183,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
   const auto& desc = plan->getDescription().get(afft::detail::DescToken::make());
 
-  auto checkSrcArray = [srcPrec, srcCmpl, desc](auto&& src)
+  auto checkSrcArray = [&](auto&& src)
   {
     switch (src.getClassId())
     {
@@ -221,7 +221,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
     }
   };
 
-  auto makeDstArray = [dstPrec, dstCmpl, desc](auto&& makeDstArrayFn)
+  auto makeDstArray = [&](auto&& makeDstArrayFn)
   {
     static_assert(std::is_invocable_v<decltype(makeDstArrayFn), mx::View<std::size_t>, mx::ClassId, mx::Complexity>);
 
@@ -260,7 +260,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     mx::gpu::Array dst = makeDstArray([](auto&& dstDims, auto dstClassId, auto dstCmpl)
     {
-      return mx::gpu::makeUninitNumericArray({dstDims}, dstClassId, dstCmpl);
+      return mx::gpu::makeUninitNumericArray(dstDims, dstClassId, dstCmpl);
     });
 
     if (plan->isDestructive())
@@ -285,7 +285,7 @@ void planExecute(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     mx::Array dst = makeDstArray([](auto&& dstDims, auto dstClassId, auto dstCmpl)
     {
-      return mx::makeUninitNumericArray({dstDims}, dstClassId, dstCmpl);
+      return mx::makeUninitNumericArray(dstDims, dstClassId, dstCmpl);
     });
 
     if (plan->isDestructive())
