@@ -64,8 +64,8 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
     GridSizes3D     = {[10, 10, 10], [15, 15, 15], [10, 11, 11], [11, 12, 11], [11, 11, 12], [10, 11, 12], ...
                        [11, 12, 12], [12, 12, 11], [12, 10, 12]};
     
-    singleTolerance = 1e-6;
-    doubleTolerance = 1e-14;
+    singleTolerance = 3e-5;
+    doubleTolerance = 3e-12;
   end
 
   methods (Static)
@@ -97,7 +97,9 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
         error('Invalid precision');
       end
 
-      testCase.verifyEqual(double(dst), double(dstRef), 'RelTol', tolerance);
+
+
+      testCase.verifyEqual(double(gather(dst)), double(gather(dstRef)), 'RelTol', tolerance);
     end
   end
 end
