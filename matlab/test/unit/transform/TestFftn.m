@@ -1,18 +1,20 @@
 classdef TestFftn < AbstractTestTransform
   properties (TestParameter)
+    precision     = {'single'; 'double'};
+    complexity    = {'complex'}; % todo: add 'real' when implemented
     gridSize      = [AbstractTestTransform.GridSizes0D, ...
                      AbstractTestTransform.GridSizes1D, ...
                      AbstractTestTransform.GridSizes2D, ...
                      AbstractTestTransform.GridSizes3D];
-    precision     = {'single'; 'double'};
-    complexity    = {'complex'}; % todo: add 'real' when implemented
     normalization = {'none'; 'unitary'; 'orthogonal'};
   end
 
   methods (Static)
     function dstRef = computeReference(src, normalization)
+      % Compute the reference using the built-in fftn function.
       dstRef = fftn(src);
 
+      % Modify the reference to match the given normalization.
       if strcmp(normalization, 'none')
       elseif strcmp(normalization, 'unitary')
         dstRef = dstRef / numel(src);
@@ -25,7 +27,7 @@ classdef TestFftn < AbstractTestTransform
   end
 
   methods (Test)
-    function testCpu(testCase, gridSize, precision, complexity, normalization)
+    function testCpu(testCase, precision, complexity, gridSize, normalization)
       src = AbstractTestTransform.generateSrcArray(gridSize, precision, complexity, 'cpu');
 
       dstRef = TestFftn.computeReference(src, normalization);
@@ -34,7 +36,7 @@ classdef TestFftn < AbstractTestTransform
       compareResults(testCase, precision, dstRef, dst);
     end
 
-    function testGpu(testCase, gridSize, precision, complexity, normalization)
+    function testGpu(testCase, precision, complexity, gridSize, normalization)
       src = AbstractTestTransform.generateSrcArray(gridSize, precision, complexity, 'gpu');
 
       dstRef = TestFftn.computeReference(src, normalization);
