@@ -376,38 +376,35 @@ namespace afft::detail::fftw3::sp::cpu
        * @param config The configuration.
        * @return The FFTW dimensions.
        */
-      [[nodiscard]] static constexpr std::tuple<MaxDimBuffer<typename Lib<library>::IoDim>, MaxDimBuffer<typename Lib<library>::IoDim>>
+      [[nodiscard]] static constexpr std::tuple<MaxDimBuffer<IoDim>, MaxDimBuffer<IoDim>>
       makeIoDims(const Desc& desc)
       {
-        MaxDimBuffer<typename Lib<library>::IoDim> dims{};
-        MaxDimBuffer<typename Lib<library>::IoDim> howManyDims{};
+        MaxDimBuffer<IoDim> dims{};
+        MaxDimBuffer<IoDim> howManyDims{};
 
         const auto& memDesc = desc.getMemDesc<MemoryLayout::centralized>();
 
         const auto shape      = desc.getShape();
-        const auto axes       = desc.getTransformAxes();
         const auto srcStrides = memDesc.getSrcStrides();
         const auto dstStrides = memDesc.getDstStrides();
 
         auto dimsIt     = dims.data;
         auto howManyIt  = howManyDims.data;
 
-        for (std::size_t i{}; i < desc.getShapeRank(); ++i)
+        for (auto axis : desc.getTransformAxes())
         {
-          if (std::find(axes.begin(), axes.end(), static_cast<Axis>(i)) != axes.end())
-          {
-            dimsIt->n  = safeIntCast<std::ptrdiff_t>(shape[i]);
-            dimsIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[i]);
-            dimsIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[i]);
-            ++dimsIt;
-          }
-          else
-          {
-            howManyIt->n  = safeIntCast<std::ptrdiff_t>(shape[i]);
-            howManyIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[i]);
-            howManyIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[i]);
-            ++howManyIt;
-          }
+          dimsIt->n  = safeIntCast<std::ptrdiff_t>(shape[axis]);
+          dimsIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[axis]);
+          dimsIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[axis]);
+          ++dimsIt;
+        }
+
+        for (auto axis : desc.getTransformHowManyAxes())
+        {
+          howManyIt->n  = safeIntCast<std::ptrdiff_t>(shape[axis]);
+          howManyIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[axis]);
+          howManyIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[axis]);
+          ++howManyIt;
         }
 
         return std::make_tuple(dims, howManyDims);
