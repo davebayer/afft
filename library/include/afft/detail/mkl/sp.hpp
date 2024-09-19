@@ -202,17 +202,27 @@ namespace afft::detail::mkl::sp
 
         for (auto axis : mDesc.getTransformAxes())
         {
-          srcStrides[i] = memDesc.getSrcStrides()[axis];
-          dstStrides[i] = memDesc.getDstStrides()[axis];
+          srcStrides[i] = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[axis]);
+          dstStrides[i] = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[axis]);
           ++i;
         }
 
         checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
         checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
 
-        if (const std::size_t howManyRank = mDesc.getTransformHowManyRank(); howManyRank > 0)
+        if (mDesc.getTransformHowManyRank() == 1)
         {
-          throw Exception{Error::mkl, "howManyRank is not supported yet"};
+          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+
+          const auto howMany = safeIntCast<MKL_LONG>(mDesc.getShape()[howManyAxis]);
+
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_NUMBER_OF_TRANSFORMS, howMany));
+
+          const auto srcDist = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[howManyAxis]);
+          const auto dstDist = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[howManyAxis]);
+
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_DISTANCE, srcDist));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_DISTANCE, dstDist));
         }
 
         if (Parent::mBackendParams.mkl.avoidWorkspace)
@@ -524,19 +534,11 @@ namespace afft::detail::mkl::sp
                 const afft::cpu::BackendParameters& backendParams)
   {
 # ifdef AFFT_ENABLE_CPU
-    // MKL DFTI for cpu supports up to 7 dimensions
-    static constexpr std::size_t dftiMaxDimCount{7};
-
     const auto& descImpl = desc.get(DescToken::make());
 
-    if (descImpl.getTransformRank() > dftiMaxDimCount)
+    if (descImpl.getTransformRank() > 7)
     {
       throw Exception{Error::mkl, "only up to 7 transformed dimensions are supported"};
-    }
-
-    if (!descImpl.hasUniformPrecision())
-    {
-      throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
     }
 
     return std::make_unique<Plan>(desc, backendParams);
@@ -557,12 +559,9 @@ namespace afft::detail::mkl::sp
   {
 # ifdef AFFT_ENABLE_OPENMP
 #   ifdef AFFT_MKL_HAS_OMP_OFFLOAD
-    // MKL DFTI for cpu supports up to 7 dimensions
-    static constexpr std::size_t dftiOmpOffloadMaxDimCount{3};
-
     const auto& descImpl = desc.get(DescToken::make());
 
-    if (descImpl.getTransformRank() > dftiOmpOffloadMaxDimCount)
+    if (descImpl.getTransformRank() > 3)
     {
       throw Exception{Error::mkl, "only up to 3 transformed dimensions are supported"};
     }
@@ -570,12 +569,7 @@ namespace afft::detail::mkl::sp
     if (descImpl.getTransform() != Transform::dft)
     {
       throw Exception{Error::mkl, "only DFT transform is supported"};
-    }
-
-    if (!descImpl.hasUniformPrecision())
-    {
-      throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
-    }
+    }    
 
     if (descImpl.getComplexFormat() != ComplexFormat::interleaved)
     {
@@ -602,6 +596,18 @@ namespace afft::detail::mkl::sp
   [[nodiscard]] std::unique_ptr<afft::Plan>
   makePlan(const Description& desc, const BackendParamsT& backendParams)
   {
+    const auto& descImpl = desc.get(DescToken::make());
+
+    if (descImpl.getTransformHowManyRank() > 1)
+    {
+      throw Exception{Error::mkl, "no more than one dimension can be omitted"};
+    }
+
+    if (!descImpl.hasUniformPrecision())
+    {
+      throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
+    }
+
     if constexpr (BackendParamsT::target == Target::cpu)
     {
       return cpu::makePlan(desc, backendParams);
