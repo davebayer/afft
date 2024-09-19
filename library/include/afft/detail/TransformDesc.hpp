@@ -779,16 +779,22 @@ namespace afft::detail
       [[nodiscard]] static TransformVariant
       makeTransformVariant(const dtt::Parameters& dttParams, std::size_t transformRank)
       {
-        if ((dttParams.types.size() != 1) && (dttParams.types.size() != transformRank))
-        {
-          throw Exception{Error::invalidArgument, "Invalid number of dtt types, must be 1 or equal to the number of axes"};
-        }
-
         DttDesc dttDesc{};
 
-        for (std::size_t i{}; i < transformRank; ++i)
+        if (dttParams.types.size() == 1)
         {
-          dttDesc.types[i] = validateAndReturn(dttParams.types[(transformRank == 1) ? 0 : i]);
+          dttDesc.types.fill(validateAndReturn(dttParams.types[0]));
+        }
+        else if (dttParams.types.size() == transformRank)
+        {
+          for (std::size_t i{}; i < transformRank; ++i)
+          {
+            dttDesc.types[i] = validateAndReturn(dttParams.types[i]);
+          }
+        }
+        else
+        {
+          throw Exception{Error::invalidArgument, "Invalid number of dtt types, must be 1 or equal to the number of axes"};
         }
 
         return dttDesc;
