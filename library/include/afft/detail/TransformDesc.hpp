@@ -783,7 +783,7 @@ namespace afft::detail
 
         if (dttParams.types.size() == 1)
         {
-          dttDesc.types.fill(validateAndReturn(dttParams.types[0]));
+          std::fill_n(dttDesc.types.begin(), transformRank, validateAndReturn(dttParams.types[0]));
         }
         else if (dttParams.types.size() == transformRank)
         {

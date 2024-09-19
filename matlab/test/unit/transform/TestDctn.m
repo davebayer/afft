@@ -33,7 +33,7 @@ classdef TestDctn < AbstractTestTransform
 
   methods (Test)
     function testCpu(testCase, precision, dctType, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real', 'cpu');
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real');
 
       dstRef = TestDctn.computeReference(src, dctType, normalization);
       
@@ -47,7 +47,7 @@ classdef TestDctn < AbstractTestTransform
     end
 
     function testGpu(testCase, precision, dctType, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real', 'gpu');
+      src = gpuArray(AbstractTestTransform.generateSrcArray(gridSize, precision, 'real'));
 
       dstRef = TestDctn.computeReference(src, dctType, normalization);
 

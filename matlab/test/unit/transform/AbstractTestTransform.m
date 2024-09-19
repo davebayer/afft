@@ -69,7 +69,7 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
   end
 
   methods (Static)
-    function src = generateSrcArray(gridSize, precision, complexity, target)
+    function src = generateSrcArray(gridSize, precision, complexity)
       src = rand(gridSize, precision);
 
       if strcmp(complexity, 'real')
@@ -77,13 +77,6 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
         src = src + 1i * rand(gridSize, precision);
       else
         error('Invalid complexity');
-      end
-
-      if strcmp(target, 'cpu')
-      elseif strcmp(target, 'gpu')
-        src = gpuArray(src);
-      else
-        error('Invalid target');
       end
     end
   end

@@ -10,9 +10,9 @@ classdef TestIfftn < AbstractTestTransform
   end
 
   methods (Static)
-    function src = generateSrcArray(gridSize, precision, symmetricFlag, target)
+    function src = generateSrcArray(gridSize, precision, symmetricFlag)
       % Generate a random array of the given size and precision.
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'complex', target);
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'complex');
 
       % Modify the array to match the given symmetric flag.
       if strcmp(symmetricFlag, 'symmetric')
@@ -41,7 +41,7 @@ classdef TestIfftn < AbstractTestTransform
 
   methods (Test)
     function testCpu(testCase, precision, symmetricFlag, gridSize, normalization)
-      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag, 'cpu');
+      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag);
 
       dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
       dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag
@@ -50,7 +50,7 @@ classdef TestIfftn < AbstractTestTransform
     end
 
     function testGpu(testCase, precision, symmetricFlag, gridSize, normalization)
-      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag, 'gpu');
+      src = gpuArray(TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag));
 
       dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
       dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag

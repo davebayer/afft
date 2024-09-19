@@ -33,7 +33,7 @@ classdef TestRfftn < AbstractTestTransform
 
   methods (Test)
     function testCpu(testCase, precision, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real', 'cpu');
+      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real');
 
       dstRef = TestRfftn.computeReference(src, normalization);
       dst    = afft.rfftn(src); % todo: implement normalization
@@ -42,7 +42,7 @@ classdef TestRfftn < AbstractTestTransform
     end
 
     function testGpu(testCase, precision, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real', 'gpu');
+      src = gpuArray(AbstractTestTransform.generateSrcArray(gridSize, precision, 'real'));
 
       dstRef = TestRfftn.computeReference(src, normalization);
       dst    = afft.rfftn(src); % todo: implement normalization
