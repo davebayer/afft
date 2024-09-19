@@ -55,7 +55,7 @@ namespace afft::detail::cufft::sp
    * @class PlanImpl
    * @brief Implementation of the sp plan interface for cuFFT.
    */
-  class Plan final : public cufft::Plan<MpBackend::none>
+  class SingleDevicePlan final : public cufft::Plan<MpBackend::none>
   {
     private:
       /// @brief Alias for the parent class.
@@ -70,9 +70,11 @@ namespace afft::detail::cufft::sp
        * @param desc The plan descriptor.
        * @param cufftParams The cuFFT parameters.
        */
-      Plan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
+      SingleDevicePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
       : Parent{desc, backendParams}
-      {        
+      {
+        cuda::ScopedDevice scopedDevice{Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices()[0]};
+
         if (Parent::mBackendParams.cufft.usePatientJit)
         {
 #       if CUFFT_VERSION >= 11200
@@ -85,8 +87,6 @@ namespace afft::detail::cufft::sp
         //   checkError(cufftSetAutoAllocation(mHandle, 0));
         // }
 
-
-        makeCufftPlan(mHandle, mDesc, mDesc, &mWorkspaceSize);
 //         if (dftDesc.type == dft::Type::complexToComplex && std::all_of(n.begin(), n.end(), [](auto size){ return size <= 4096}))
 //         {
 // #       if CUFFT_VERSION >= 9200
@@ -95,10 +95,48 @@ namespace afft::detail::cufft::sp
 //                                               &cufftParams.userWorkspaceSize);
 // #       endif
 //        }
+
+        const auto precision          = Parent::mDesc.getPrecision().execution;
+        const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
+
+        const auto& memDesc = Parent::mDesc.template getMemDesc<MemoryLayout::centralized>();
+
+        if (!memDesc.hasDefaultSrcStrides() || !memDesc.hasDefaultDstStrides())
+        {
+          throw Exception(Error::cufft, "only default strides are supported");
+        }
+
+        SizeT howMany{1};
+        SizeT srcDist{};
+        SizeT dstDist{};
+
+        if (Parent::mDesc.getTransformHowManyRank() == 1)
+        {
+          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+
+          howMany = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
+          srcDist = safeIntCast<SizeT>(memDesc.getSrcStrides()[howManyAxis]);
+          dstDist = safeIntCast<SizeT>(memDesc.getDstStrides()[howManyAxis]);
+        }
+
+        checkError(cufftXtMakePlanMany(mHandle,
+                                       static_cast<int>(Parent::mDesc.getTransformRank()),
+                                       Parent::mDesc.template getTransformDimsAs<SizeT>().data(),
+                                       nullptr,
+                                       1,
+                                       srcDist,
+                                       makeCudaDataType(precision, srcCmpl),
+                                       nullptr,
+                                       1,
+                                       dstDist,
+                                       makeCudaDataType(precision, dstCmpl),
+                                       howMany,
+                                       &mWorkspaceSize,
+                                       makeCudaDataType(precision, Complexity::complex)));
       }
 
       /// @brief Destructor.
-      ~Plan() override = default;
+      ~SingleDevicePlan() override = default;
 
       /// @brief Inherit assignment operator
       using Parent::operator=;
@@ -166,10 +204,7 @@ namespace afft::detail::cufft::sp
   {
     if (desc.getTargetCount() == 1)
     {
-      const auto& descImpl = desc.get(DescToken::make());
-
-      cuda::ScopedDevice scopedDevice{descImpl.getTargetDesc<Target::cuda>().getDevices()[0]};
-      return std::make_unique<Plan>(desc, backendParams);
+      return std::make_unique<SingleDevicePlan>(desc, backendParams);
     }
     else
     {

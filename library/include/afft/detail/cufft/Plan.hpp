@@ -57,30 +57,6 @@ namespace afft::detail::cufft
       using Parent::operator=;
 
     protected:
-      static void makeCufftPlan(cufftHandle          handle,
-                                const TransformDesc& transformDesc,
-                                const MemDesc&       ,
-                                std::size_t*         workspaceSize)
-      {
-        const auto rank  = static_cast<int>(transformDesc.getTransformRank());
-        auto       n     = transformDesc.getShapeAs<SizeT>();
-        const auto batch = (transformDesc.getTransformHowManyRank() == 1)
-                             ? transformDesc.getTransformHowManyDimsAs<SizeT>()[0] : 1;
-        checkError(cufftMakePlanMany64(handle,
-                                       rank, n.data,
-                                       nullptr, 1, 0,
-                                       nullptr, 1, 0,
-                                       CUFFT_C2C,
-                                       batch,
-                                       workspaceSize));
-
-        // checkError(cufftXtMakePlanMany(handle,
-        //                                rank, n.data(),
-        //                                inembed.data(), istride, idist, inputType,
-        //                                onembed.data(), ostride, odist, outputType,
-        //                                batch, &workspaceSize, executionType));
-      }
-
       /**
        * @brief Get the cuFFT direction from the plan description.
        * @return The cuFFT direction.

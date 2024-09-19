@@ -289,10 +289,10 @@ namespace afft::detail::vkfft::sp
       static void fillConfigTransform(VkFFTConfiguration& vkfftConfig, const TransformDesc& transformDesc)
       {
         // Set up transform axes
-        std::fill_n(vkfftConfig.omitDimension, maxDimCount, UInt{1});
+        std::fill_n(vkfftConfig.omitDimension, transformDesc.getShapeRank(), UInt{1});
         for (const auto axis : transformDesc.getTransformAxes())
         {
-          vkfftConfig.omitDimension[axis] = UInt{0};
+          vkfftConfig.omitDimension[transformDesc.getShapeRank() - axis - 1] = UInt{0};
         }
 
         // Set up VkFFT config transform type
@@ -362,8 +362,8 @@ namespace afft::detail::vkfft::sp
         }
 
         // Select which plan to make
-        vkfftConfig.makeForwardPlanOnly = (transformDesc.getDirection() != Direction::inverse);
-        vkfftConfig.makeInversePlanOnly = (transformDesc.getDirection() != Direction::forward);
+        vkfftConfig.makeForwardPlanOnly = (transformDesc.getDirection() == Direction::forward);
+        vkfftConfig.makeInversePlanOnly = (transformDesc.getDirection() == Direction::inverse);
       }
 
       static void fillConfigMemoryLayout(VkFFTConfiguration& vkfftConfig, const Desc& desc)
@@ -399,8 +399,6 @@ namespace afft::detail::vkfft::sp
           dstStrides[i] = safeIntCast<UInt>(memDesc.getDstStrides()[desc.getShapeRank() - i - 2]);
         }
       }
-
-
 
 #   if AFFT_VKFFT_BACKEND == 1
       /**

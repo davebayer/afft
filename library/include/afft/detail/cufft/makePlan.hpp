@@ -73,7 +73,7 @@ namespace afft::detail::cufft
       throw Exception{Error::cufft, "only DFT transforms are supported"};
     }
 
-    if (const auto& prec = descImpl.getPrecision(); prec.execution != prec.source || prec.execution != prec.destination)
+    if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::cufft, "execution, source and destination must precision match"};
     }

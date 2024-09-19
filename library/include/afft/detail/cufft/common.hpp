@@ -205,7 +205,7 @@ namespace afft::detail::cufft
    * @param comp The complexity of the data type.
    * @return The cuFFT data type.
    */
-  [[nodiscard]] inline constexpr cudaDataType makeCudaDatatype(const Precision prec, const Complexity comp)
+  [[nodiscard]] inline constexpr cudaDataType makeCudaDataType(const Precision prec, const Complexity comp)
   {
     auto pickType = [comp](cudaDataType realType, cudaDataType complexType) -> cudaDataType
     {
