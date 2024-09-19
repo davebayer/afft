@@ -331,6 +331,15 @@ namespace afft::detail
       }
 
       /**
+       * @brief Get the axes of the how many dimensions.
+       * @return Axes of the how many dimensions.
+       */
+      [[nodiscard]] constexpr View<Axis> getTransformHowManyAxes() const noexcept
+      {
+        return View<Axis>{mTransformAxes.data + getTransformRank(), getTransformHowManyRank()};
+      }
+
+      /**
        * @brief Get the dimensions of the transform.
        * @tparam I Integral type.
        * @return Dimensions of the transform.
@@ -720,6 +729,14 @@ namespace afft::detail
           }
 
           std::copy(axesView.begin(), axesView.end(), axes.data);
+
+          for (std::size_t i{}, j{}; i < shapeRank; ++i)
+          {
+            if (!seenAxes.test(i))
+            {
+              axes.data[axesView.size() + j++] = static_cast<Axis>(i);
+            }
+          }
         }
         else
         {
