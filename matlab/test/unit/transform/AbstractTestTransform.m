@@ -97,8 +97,6 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
         error('Invalid precision');
       end
 
-
-
       testCase.verifyEqual(double(gather(dst)), double(gather(dstRef)), 'RelTol', tolerance);
     end
   end
