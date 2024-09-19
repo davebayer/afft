@@ -710,7 +710,7 @@ namespace afft::detail
       {
         MaxDimBuffer<Axis> axes{};
 
-        if (axesView == afft::allAxes)
+        if (axesView.empty())
         {
           std::iota(axes.data, std::next(axes.data, static_cast<std::ptrdiff_t>(shapeRank)), 0);
         }
@@ -790,7 +790,7 @@ namespace afft::detail
       {
         DttDesc dttDesc{};
 
-        if (dttParams.data() == nullptr)
+        if (dttParams.types.data() == nullptr)
         {
           throw Exception{Error::invalidArgument, "invalid dtt types"};
         }
