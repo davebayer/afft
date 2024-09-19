@@ -37,27 +37,6 @@ static constexpr std::array cpuBackendOrder{afft::Backend::mkl, afft::Backend::f
 /// @brief Default gpu backend order.
 static constexpr std::array gpuBackendOrder{afft::Backend::cufft, afft::Backend::vkfft};
 
-#ifdef MATLABW_ENABLE_GPU
-/**
- * @brief Get the current GPU device.
- * @param[in] errorId Error identifier to throw.
- * @return Current GPU device.
- */
-[[nodiscard]] static inline int getCurrentGpuDevice(const char* errorId)
-{
-  mx::gpu::init();
-
-  int device{};
-
-  if (cudaGetDevice(&device) != cudaSuccess)
-  {
-    throw mx::Exception{errorId, "failed to get current CUDA device"};
-  }
-
-  return device;
-}
-#endif
-
 /// @brief Shape converter.
 class ShapeConverter
 {
@@ -244,8 +223,6 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:fftn:failedToGetGpuDevice");
-
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
@@ -256,10 +233,7 @@ void fftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     checkSrcArray(src);
 
-    afft::cuda::Parameters cudaParams{};
-    cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-    const afft::Description desc{makeDftParams(src), cudaParams};
+    const afft::Description desc{makeDftParams(src), afft::cuda::Parameters{}};
 
     afft::cuda::BackendParameters backendParams{};
     backendParams.allowDestructive = true;
@@ -420,8 +394,6 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:fftn:failedToGetGpuDevice");
-
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
@@ -432,10 +404,7 @@ void ifftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     checkSrcArray(src);
 
-    afft::cuda::Parameters cudaParams{};
-    cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-    const afft::Description desc{makeDftParams(src), cudaParams};
+    const afft::Description desc{makeDftParams(src), afft::cuda::Parameters{}};
 
     afft::cuda::BackendParameters backendParams{};
     backendParams.allowDestructive = true;
@@ -606,8 +575,6 @@ void rfftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:rfftn:failedToGetGpuDevice");
-
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
@@ -618,10 +585,7 @@ void rfftn(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 
     checkSrcArray(src);
 
-    afft::cuda::Parameters cudaParams{};
-    cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-    const afft::Description desc{makeDftParams(src), cudaParams};
+    const afft::Description desc{makeDftParams(src), afft::cuda::Parameters{}};
 
     afft::cuda::BackendParameters backendParams{};
     backendParams.allowDestructive = true;
@@ -921,8 +885,6 @@ void dctn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:dctn:failedToGetGpuDevice");
-
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
@@ -933,10 +895,7 @@ void dctn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::
 
     checkSrcArray(src);
 
-    afft::cuda::Parameters cudaParams{};
-    cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-    const afft::Description desc{makeDttParams(src), cudaParams};
+    const afft::Description desc{makeDttParams(src), afft::cuda::Parameters{}};
 
     afft::cuda::BackendParameters backendParams{};
     backendParams.allowDestructive = true;
@@ -1233,8 +1192,6 @@ void dstn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::
   {
     mx::gpu::init();
 
-    const auto cudaDevice = getCurrentGpuDevice("afft:dstn:failedToGetGpuDevice");
-
     mx::gpu::Array src{rhs[0]};
 
     if (src.getSize() == 0)
@@ -1245,10 +1202,7 @@ void dstn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::
 
     checkSrcArray(src);
 
-    afft::cuda::Parameters cudaParams{};
-    cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-    const afft::Description desc{makeDttParams(src), cudaParams};
+    const afft::Description desc{makeDttParams(src), afft::cuda::Parameters{}};
 
     afft::cuda::BackendParameters backendParams{};
     backendParams.allowDestructive = true;

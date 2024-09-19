@@ -611,7 +611,14 @@ namespace afft::detail
 #   ifdef AFFT_ENABLE_CUDA
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams)
       {
-        return CudaDesc{cudaParams.devices};
+        if (cudaParams.devices.empty()) // empty == use current device
+        {
+          return CudaDesc{{{cuda::getCurrentDevice()}}};
+        }
+        else
+        {
+          return CudaDesc{cudaParams.devices};
+        }
       }
 #   endif
 

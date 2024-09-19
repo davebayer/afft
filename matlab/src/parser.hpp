@@ -753,25 +753,9 @@ class TargetParametersParser
      */
     [[nodiscard]] afft::cuda::Parameters parseCudaTargetParameters(matlabw::mx::StructArrayCref)
     {
-      afft::cuda::Parameters cudaParams{};
-
-      if (cudaGetDevice(&cudaDevice) != cudaSuccess)
-      {
-        throw mx::Exception("afft:planCreate:invalidArgument", "failed to get current CUDA device");
-      }
-
-      cudaParams.devices = afft::makeScalarView(cudaDevice);
-
-      return cudaParams;
+      return afft::cuda::Parameters{};
     }
 # endif
-  
-    union
-    {
-#   ifdef MATLABW_ENABLE_GPU
-      int cudaDevice{}; ///< CUDA device.
-#   endif
-    };
 };
 
 /// @brief Cpu thread limit parser.

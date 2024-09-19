@@ -74,6 +74,9 @@ AFFT_EXPORT namespace afft
 
   namespace cuda
   {
+    /// @brief Represents the current cuda device. The current device is got when instantiating the Description object.
+    inline constexpr View<int> currentDevice{};
+
     /// @brief CUDA parameters
     struct Parameters;
 
@@ -83,6 +86,9 @@ AFFT_EXPORT namespace afft
 
   namespace hip
   {
+    /// @brief Represents the current hip device. The current device is got when instantiating the Description object.
+    inline constexpr View<int> currentDevice{};
+
     /// @brief HIP parameters
     struct Parameters;
 
@@ -123,7 +129,7 @@ AFFT_EXPORT namespace afft
   /// @brief CUDA parameters
   struct cuda::Parameters : TargetConstant<Target::cuda>
   {
-    View<int> devices{}; ///< CUDA devices
+    View<int> devices{currentDevice}; ///< CUDA devices
   };
 
   /// @brief CUDA execution parameters
@@ -138,7 +144,7 @@ AFFT_EXPORT namespace afft
   /// @brief HIP parameters
   struct hip::Parameters : TargetConstant<Target::hip>
   {
-    View<int> devices{}; ///< HIP devices
+    View<int> devices{currentDevice}; ///< HIP devices
   };
 
   /// @brief HIP execution parameters
