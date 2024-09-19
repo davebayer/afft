@@ -66,7 +66,7 @@ namespace helpers::cuda
 
     CALL_CUDART(cudaStreamCreateWithFlags(&stream, flags));
 
-    return Stream{std::move(stream)};
+    return Stream{stream};
   }
 } // namespace helpers::cuda
 

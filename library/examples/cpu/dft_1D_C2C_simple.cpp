@@ -24,15 +24,15 @@ int main(void)
   dftParams.axes          = {{1}}; // set up the axes
   dftParams.type          = afft::dft::Type::complexToComplex; // let's use complex-to-complex transform
   dftParams.normalization = afft::Normalization::orthogonal; // use orthogonal normalization
-  dftParams.destructive   = true; // allow to destroy source data
-
-  afft::cpu::Parameters cpuParams{}; // it will run on a cpu
-  cpuParams.threadLimit = 4;
 
   afft::CentralizedMemoryLayout memoryLayout{}; // set up memory layout
   memoryLayout.alignment = afft::alignmentOf(src.data(), dst.data());
 
-  auto plan = afft::makePlan({dftParams, cpuParams, memoryLayout}); // generate the plan of the transform
+  afft::cpu::BackendParameters cpuBackendParams{}; // set up parameters for the cpu backend
+  cpuBackendParams.allowDestructive = true; // allow destructive transform
+  cpuBackendParams.threadLimit      = 4; // we will use up to 4 threads
+
+  auto plan = afft::makePlan({dftParams, afft::cpu::Parameters{}, memoryLayout}, cpuBackendParams); // generate the plan of the transform
 
   plan->execute(src.data(), dst.data()); // execute the transform
 

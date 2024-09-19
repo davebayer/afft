@@ -142,7 +142,7 @@ namespace afft::detail
       CudaDesc(const View<int> devices)
       : mTargetCount{devices.size()}
       {
-        if (mTargetCount < Devices::maxLocDevices)
+        if (mTargetCount <= Devices::maxLocDevices)
         {
           std::copy(devices.begin(), devices.end(), mDevices.loc);
         }
@@ -191,7 +191,7 @@ namespace afft::detail
 
           mTargetCount = otherDevices.size();
 
-          if (mTargetCount < Devices::maxLocDevices)
+          if (mTargetCount <= Devices::maxLocDevices)
           {
             std::copy(otherDevices.begin(), otherDevices.end(), mDevices.loc);
           }
@@ -247,7 +247,7 @@ namespace afft::detail
        */
       [[nodiscard]] constexpr View<int> getDevices() const noexcept
       {
-        return View<int>{(mTargetCount < Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
+        return View<int>{(mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
       }
 
       /**
@@ -289,7 +289,7 @@ namespace afft::detail
       /// @brief Destroy the object.
       void destroy()
       {
-        if (mTargetCount >= Devices::maxLocDevices)
+        if (mTargetCount > Devices::maxLocDevices)
         {
           delete[] mDevices.ext;
         }

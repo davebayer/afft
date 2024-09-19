@@ -25,16 +25,15 @@ int main(void)
     .precision     = afft::makePrecision<PrecT>(), // set up precision of the transform
     .shape         = afft::makeScalarView(size), // set up the dimensions
     .normalization = afft::Normalization::none, // do not normalize
-    .destructive   = false, // do not allow to destroy source data
     .type          = afft::dft::Type::complexToComplex, // let's use complex-to-complex transform
   };
   
-  afft::cpu::Parameters cpuParams // it will run on a cpu
+  afft::cpu::BackendParameters cpuBackendParams // set up parameters for the CPU backend
   {
-    .threadLimit = 16, // we will use up to 16 threads
+    .threadLimit = 1, // we will use 1 thread
   };
 
-  auto plan = afft::makePlan({dftParams, cpuParams}); // generate the plan of the transform
+  auto plan = afft::makePlan({dftParams, afft::cpu::Parameters{}}, cpuBackendParams); // generate the plan of the transform
 
   plan->execute(src.data(), dst.data()); // execute the transform
 
