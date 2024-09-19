@@ -301,7 +301,176 @@ namespace afft::detail
 #endif /* AFFT_ENABLE_CUDA */
 
 #ifdef AFFT_ENABLE_HIP
-  // TODO: first test cuda, then copy and adapt for hip
+  /// @brief HIP descriptor
+  class HipDesc
+  {
+    public:
+      /// @brief Default constructor.
+      HipDesc() = default;
+
+      /**
+       * @brief Constructor from HIP devices.
+       * @param[in] devices HIP devices.
+       */
+      HipDesc(const View<int> devices)
+      : mTargetCount{devices.size()}
+      {
+        if (mTargetCount <= Devices::maxLocDevices)
+        {
+          std::copy(devices.begin(), devices.end(), mDevices.loc);
+        }
+        else
+        {
+          mDevices.ext = new int[mTargetCount];
+          std::copy(devices.begin(), devices.end(), mDevices.ext);
+        }
+      }
+
+      /**
+       * @brief Copy constructor.
+       * @param[in] other Other.
+       */
+      HipDesc(const HipDesc& other)
+      : HipDesc{other.getDevices()}
+      {}
+
+      /**
+       * @brief Move constructor.
+       * @param[in] other Other.
+       */
+      HipDesc(HipDesc&& other)
+      : mTargetCount{std::exchange(other.mTargetCount, 0)},
+        mDevices{std::exchange(other.mDevices, {})}
+      {}
+
+      /// @brief Destructor.
+      ~HipDesc()
+      {
+        destroy();
+      }
+
+      /**
+       * @brief Copy assignment operator.
+       * @param[in] other Other.
+       * @return Reference to this.
+       */
+      HipDesc& operator=(const HipDesc& other)
+      {
+        if (this != std::addressof(other))
+        {
+          destroy();
+
+          const auto otherDevices = other.getDevices();
+
+          mTargetCount = otherDevices.size();
+
+          if (mTargetCount <= Devices::maxLocDevices)
+          {
+            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.loc);
+          }
+          else
+          {
+            mDevices.ext = new int[mTargetCount];
+            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.ext);
+          }
+        }
+
+        return *this;
+      }
+
+      /**
+       * @brief Move assignment operator.
+       * @param[in] other Other.
+       * @return Reference to this.
+       */
+      HipDesc& operator=(HipDesc&& other)
+      {
+        if (this != std::addressof(other))
+        {
+          destroy();
+
+          mTargetCount = std::exchange(other.mTargetCount, 0);
+          mDevices     = std::exchange(other.mDevices, {});
+        }
+
+        return *this;
+      }
+
+      /**
+       * @brief Get the target.
+       * @return Target.
+       */
+      [[nodiscard]] constexpr Target getTarget() const noexcept
+      {
+        return Target::hip;
+      }
+
+      /**
+       * @brief Get the number of targets.
+       * @return Number of targets.
+       */
+      [[nodiscard]] constexpr std::size_t getTargetCount() const noexcept
+      {
+        return mTargetCount;
+      }
+
+      /**
+       * @brief Get the HIP devices.
+       * @return HIP devices.
+       */
+      [[nodiscard]] constexpr View<int> getDevices() const noexcept
+      {
+        return View<int>{(mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
+      }
+
+      /**
+       * @brief Equality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator==(const HipDesc& lhs, const HipDesc& rhs) noexcept
+      {
+        const auto lhsDevices = lhs.getDevices();
+        const auto rhsDevices = rhs.getDevices();
+
+        return std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin(), rhsDevices.end());
+      }
+
+      /**
+       * @brief Inequality operator.
+       * @param[in] lhs Left-hand side.
+       * @param[in] rhs Right-hand side.
+       * @return True if not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const HipDesc& lhs, const HipDesc& rhs) noexcept
+      {
+        return !(lhs == rhs);
+      }
+
+    private:
+      /// @brief Devices union. Enables small buffer optimization.
+      union Devices
+      {
+        /// @brief Maximum number of local devices
+        static constexpr std::size_t maxLocDevices{sizeof(void*) / sizeof(int)};
+
+        int  loc[maxLocDevices]; ///< Local devices
+        int* ext;                ///< External devices
+      };
+
+      /// @brief Destroy the object.
+      void destroy()
+      {
+        if (mTargetCount > Devices::maxLocDevices)
+        {
+          delete[] mDevices.ext;
+        }
+      }
+
+      std::size_t mTargetCount{}; ///< Number of targets
+      Devices     mDevices{};     ///< HIP devices
+  };
 #endif /* AFFT_ENABLE_HIP */
   
 #ifdef AFFT_ENABLE_OPENCL
@@ -601,41 +770,144 @@ namespace afft::detail
       >;
 
 #   ifdef AFFT_ENABLE_CPU
-      /// @brief Make a target variant from the given target parameters.
+      /**
+       * @brief Make a target variant from the cpu parameters.
+       * @param cpuParams CPU parameters
+       * @return Target variant
+       */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cpu::Parameters&)
+      {
+        return CpuDesc{};
+      }
+
+      /**
+       * @brief Make a target variant from the CPU parameters.
+       * @param cpuParams CPU parameters
+       * @return Target variant
+       */
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters&)
       {
         return CpuDesc{};
       }
 #   endif
 
 #   ifdef AFFT_ENABLE_CUDA
+      /**
+       * @brief Make a target variant from the CUDA parameters.
+       * @param cudaParams CUDA parameters
+       * @return Target variant
+       */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams)
       {
-        if (cudaParams.devices.empty()) // empty == use current device
+        if (cudaParams.devices.empty())
         {
           return CudaDesc{{{cuda::getCurrentDevice()}}};
         }
         else
         {
+          if (cudaParams.devices.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid CUDA devices"};
+          }
+
+          if (!std::all_of(cudaParams.devices.begin(), cudaParams.devices.end(), cuda::isValidDevice))
+          {
+            throw Exception{Error::invalidArgument, "invalid CUDA device"};
+          }
+
           return CudaDesc{cudaParams.devices};
+        }
+      }
+
+      /**
+       * @brief Make a target variant from the CUDA parameters.
+       * @param cudaParams CUDA parameters
+       * @return Target variant
+       */
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cuda_Parameters& cudaParams)
+      {
+        if (cudaParams.deviceCount == 0)
+        {
+          return CudaDesc{{{cuda::getCurrentDevice()}}};
+        }
+        else
+        {
+          if (cudaParams.devices == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid CUDA devices"};
+          }
+
+          if (!std::all_of(cudaParams.devices, cudaParams.devices + cudaParams.deviceCount, cuda::isValidDevice))
+          {
+            throw Exception{Error::invalidArgument, "invalid CUDA device"};
+          }
+
+          return CudaDesc{{cudaParams.devices, cudaParams.deviceCount}};
         }
       }
 #   endif
 
 #   ifdef AFFT_ENABLE_HIP
+      /**
+       * @brief Make a target variant from the HIP parameters.
+       * @param hipParams HIP parameters
+       * @return Target variant
+       */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::hip::Parameters& hipParams)
       {
-        HipDesc hipDesc{};
-        hipDesc.targetCount = hipParams.devices.size();
-        hipDesc.devices     = std::make_unique<int[]>(hipDesc.targetCount);
+        if (hipParams.devices.empty())
+        {
+          return HipDesc{{{hip::getCurrentDevice()}}};
+        }
+        else
+        {
+          if (hipParams.devices.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid HIP devices"};
+          }
 
-        std::copy(hipParams.devices.begin(), hipParams.devices.end(), hipDesc.devices.get());
+          if (!std::all_of(hipParams.devices.begin(), hipParams.devices.end(), hip::isValidDevice))
+          {
+            throw Exception{Error::invalidArgument, "invalid HIP device"};
+          }
 
-        return hipDesc;
+          return HipDesc{hipParams.devices};
+      }
+
+      /**
+       * @brief Make a target variant from the HIP parameters.
+       * @param hipParams HIP parameters
+       * @return Target variant
+       */
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_hip_Parameters& hipParams)
+      {
+        if (hipParams.deviceCount == 0)
+        {
+          return HipDesc{{{hip::getCurrentDevice()}}};
+        }
+        else
+        {
+          if (hipParams.devices == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid HIP devices"};
+          }
+
+          if (!std::all_of(hipParams.devices, hipParams.devices + hipParams.deviceCount, hip::isValidDevice))
+          {
+            throw Exception{Error::invalidArgument, "invalid HIP device"};
+          }
+
+          return HipDesc{{hipParams.devices, hipParams.deviceCount}};
+        }
       }
 #   endif
 
 #   ifdef AFFT_ENABLE_OPENCL
+      /**
+       * @brief Make a target variant from the OpenCL parameters.
+       * @param openclParams OpenCL parameters
+       * @return Target variant
+       */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::opencl::Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
@@ -648,47 +920,12 @@ namespace afft::detail
 
         return openclDesc;
       }
-#   endif
 
-#   ifdef AFFT_ENABLE_OPENMP
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::openmp::Parameters& openmpParams)
-      {
-        OpenmpDesc openmpDesc{};
-        openmpDesc.device = openmpParams.device;
-
-        return openmpDesc;
-      }
-#   endif
-
-#   ifdef AFFT_ENABLE_CPU
-      /// @brief Make a target variant from the given target parameters.
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cpu_Parameters&)
-      {
-        return CpuDesc{};
-      }
-#   endif
-
-#   ifdef AFFT_ENABLE_CUDA
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cuda_Parameters& cudaParams)
-      {
-        return CudaDesc{View<int>{cudaParams.devices, cudaParams.deviceCount}};
-      }
-#   endif
-
-#   ifdef AFFT_ENABLE_HIP
-      [[nodiscard]] static TargetVariant makeTargetVariant(const afft_hip_Parameters& hipParams)
-      {
-        HipDesc hipDesc{};
-        hipDesc.targetCount = hipParams.deviceCount;
-        hipDesc.devices     = std::make_unique<int[]>(hipDesc.targetCount);
-
-        std::copy_n(hipParams.devices, hipDesc.targetCount, hipDesc.devices.get());
-
-        return hipDesc;
-      }
-#   endif
-
-#   ifdef AFFT_ENABLE_OPENCL
+      /**
+       * @brief Make a target variant from the OpenCL parameters.
+       * @param openclParams OpenCL parameters
+       * @return Target variant
+       */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_opencl_Parameters& openclParams)
       {
         OpenclDesc openclDesc{};
@@ -704,6 +941,19 @@ namespace afft::detail
 #   endif
 
 #   ifdef AFFT_ENABLE_OPENMP
+      /**
+       * @brief Make a target variant from the OpenMP parameters.
+       * @param openmpParams OpenMP parameters
+       * @return Target variant
+       */
+      [[nodiscard]] static TargetVariant makeTargetVariant(const afft::openmp::Parameters& openmpParams)
+      {
+        OpenmpDesc openmpDesc{};
+        openmpDesc.device = openmpParams.device;
+
+        return openmpDesc;
+      }
+
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_openmp_Parameters& openmpParams)
       {
         OpenmpDesc openmpDesc{};
