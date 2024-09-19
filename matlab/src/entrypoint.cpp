@@ -82,6 +82,14 @@ enum class Call : std::uint32_t
   idst,
   idst2,
   idstn,
+
+  // Discrete trigonometric transform calls
+  dtt = 6000,
+  dtt2,
+  dttn,
+  idtt,
+  idtt2,
+  idttn,
 };
 
 /**
