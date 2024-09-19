@@ -681,6 +681,10 @@ namespace afft::detail
         {
           throw Exception{Error::invalidArgument, "empty shape"};
         }
+        else if (shapeView.data() == nullptr)
+        {
+          throw Exception{Error::invalidArgument, "invalid shape"};
+        }
 
         for (std::size_t i{}; i < shapeView.size(); ++i)
         {
@@ -706,23 +710,28 @@ namespace afft::detail
       {
         MaxDimBuffer<Axis> axes{};
 
-        if (axesView.empty())
+        if (axesView == afft::allAxes)
         {
           std::iota(axes.data, std::next(axes.data, static_cast<std::ptrdiff_t>(shapeRank)), 0);
         }
         else if (axesView.size() <= shapeRank)
         {
+          if (axesView.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid transform axes"};
+          }
+
           std::bitset<maxDimCount> seenAxes{};
           
           for (const auto& axis : axesView)
           {
             if (axis >= shapeRank)
             {
-              throw Exception{Error::invalidArgument, "Transform axis out of bounds"};
+              throw Exception{Error::invalidArgument, "transform axis out of bounds"};
             }
             else if (seenAxes.test(axis))
             {
-              throw Exception{Error::invalidArgument, "Transform axes must be unique"};
+              throw Exception{Error::invalidArgument, "transform axes must be unique"};
             }
 
             seenAxes.set(axis);
@@ -740,7 +749,7 @@ namespace afft::detail
         }
         else
         {
-          throw Exception{Error::invalidArgument, "Too many transform axes"};
+          throw Exception{Error::invalidArgument, "too many transform axes"};
         }
 
         return axes;
@@ -781,6 +790,11 @@ namespace afft::detail
       {
         DttDesc dttDesc{};
 
+        if (dttParams.data() == nullptr)
+        {
+          throw Exception{Error::invalidArgument, "invalid dtt types"};
+        }
+
         if (dttParams.types.size() == 1)
         {
           std::fill_n(dttDesc.types.begin(), transformRank, validateAndReturn(dttParams.types[0]));
@@ -794,7 +808,7 @@ namespace afft::detail
         }
         else
         {
-          throw Exception{Error::invalidArgument, "Invalid number of dtt types, must be 1 or equal to the number of axes"};
+          throw Exception{Error::invalidArgument, "invalid number of dtt types, must be 1 or equal to the number of axes"};
         }
 
         return dttDesc;
@@ -835,7 +849,7 @@ namespace afft::detail
       {
         if (dttParams.types == nullptr)
         {
-          throw Exception{Error::invalidArgument, "null dtt types"};
+          throw Exception{Error::invalidArgument, "invalid dtt types"};
         }
 
         DttDesc dttDesc{};
