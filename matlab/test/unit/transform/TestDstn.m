@@ -12,9 +12,9 @@ classdef TestDstn < AbstractTestTransform
   methods (Static)
     function dstRef = computeReference(src, dstType, normalization)
       if isempty(dstType)
-        dstRef = matlab.internal.math.transform.mldstn(src);
+        dstRef = matlab.internal.math.transform.mldstn(gather(src));
       else
-        dstRef = matlab.internal.math.transform.mldstn(src, 'Variant', dstType);
+        dstRef = matlab.internal.math.transform.mldstn(gather(src), 'Variant', dstType);
       end
 
       % todo: implement orthogonal normalization

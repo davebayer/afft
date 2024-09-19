@@ -59,7 +59,7 @@
 classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
   properties (Constant)
     GridSizes0D     = {[0, 0]};
-    GridSizes1D     = {[10, 1], [15, 1]};
+    GridSizes1D     = {[10], [15]};
     GridSizes2D     = {[10, 10], [15, 15], [10, 11], [11, 10], [12, 14], [13, 15]};
     GridSizes3D     = {[10, 10, 10], [15, 15, 15], [10, 11, 11], [11, 12, 11], [11, 11, 12], [10, 11, 12], ...
                        [11, 12, 12], [12, 12, 11], [12, 10, 12]};

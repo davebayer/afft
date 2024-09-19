@@ -159,4 +159,109 @@ void irfft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw
  */
 void irfftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
+/**
+ * @brief Perform a 1D discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ *            _ 'type' + value specifies the dct type.
+ */
+void dct(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 2D discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the optional M resize parameter as a scalar numeric array.
+ *            - rhs[2] holds the optional N resize parameter as a scalar numeric array.
+ *            _ 'type' + value specifies the dct type.
+ */
+void dct2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform an N-dimensional discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the optional resize parameter as a numeric array of size equal to input rank.
+ *            _ 'type' + value specifies the dct type.
+ */
+void dctn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 1D inverse discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ *            _ 'type' + value specifies the dct type.
+ */
+void idct(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 2D inverse discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output n size in transformed as a scalar numeric array.
+ *            - rhs[2] holds the output m size in transformed as a scalar numeric array.
+ *            _ 'type' + value specifies the dct type.
+ */
+void idct2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform an N-dimensional inverse discrete cosine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
+ *            _ 'type' + value specifies the dct type.
+ */
+void idctn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 1D discrete sine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a scalar numeric array.
+ *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
+ *            _ 'type' + value specifies the dst type.
+ */
+void dst(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform a 2D discrete sine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output n size in transformed as a scalar numeric array.
+ *            - rhs[2] holds the output m size in transformed as a scalar numeric array.
+ *            _ 'type' + value specifies the dst type.
+ */
+void dst2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
+ * @brief Perform an N-dimensional discrete sine transform.
+ * @param lhs Left-hand side array of size 1.
+ *            * lhs[0] holds the output array.
+ * @param rhs Right-hand side array of size 1.
+ *            * rhs[0] holds the input array. Must be a real floating-point array.
+ *            - rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
+ *            _ 'type' + value specifies the dst type.
+ */
+void dstn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
 #endif /* TRANSFORM_HPP */

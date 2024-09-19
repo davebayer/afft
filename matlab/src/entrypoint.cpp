@@ -177,6 +177,86 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   case Call::irfftn:
     irfftn(lhs, rhsSubspan);
     break;
+
+  // Discrete Hartley transform calls
+  // case Call::dht:
+  //   dht(lhs, rhsSubspan);
+  //   break;
+  // case Call::dht2:
+  //   dht2(lhs, rhsSubspan);
+  //   break;
+  // case Call::dhtn:
+  //   dhtn(lhs, rhsSubspan);
+  //   break;
+  // case Call::idht:
+  //   idht(lhs, rhsSubspan);
+  //   break;
+  // case Call::idht2:
+  //   idht2(lhs, rhsSubspan);
+  //   break;
+  // case Call::idhtn:
+  //   idhtn(lhs, rhsSubspan);
+  //   break;
+
+  // Discrete cosine transform calls
+  case Call::dct:
+    dct(lhs, rhsSubspan);
+    break;
+  case Call::dct2:
+    dct2(lhs, rhsSubspan);
+    break;
+  case Call::dctn:
+    dctn(lhs, rhsSubspan);
+    break;
+  case Call::idct:
+    idct(lhs, rhsSubspan);
+    break;
+  case Call::idct2:
+    idct2(lhs, rhsSubspan);
+    break;
+  case Call::idctn:
+    idctn(lhs, rhsSubspan);
+    break;
+
+  // Discrete sine transform calls
+  case Call::dst:
+    dst(lhs, rhsSubspan);
+    break;
+  case Call::dst2:
+    dst2(lhs, rhsSubspan);
+    break;
+  case Call::dstn:
+    dstn(lhs, rhsSubspan);
+    break;
+  // case Call::idst:
+  //   idst(lhs, rhsSubspan);
+  //   break;
+  // case Call::idst2:
+  //   idst2(lhs, rhsSubspan);
+  //   break;
+  // case Call::idstn:
+  //   idstn(lhs, rhsSubspan);
+  //   break;
+
+  // Discrete trigonometric transform calls
+  // case Call::dtt:
+  //   dtt(lhs, rhsSubspan);
+  //   break;
+  // case Call::dtt2:
+  //   dtt2(lhs, rhsSubspan);
+  //   break;
+  // case Call::dttn:
+  //   dttn(lhs, rhsSubspan);
+  //   break;
+  // case Call::idtt:
+  //   idtt(lhs, rhsSubspan);
+  //   break;
+  // case Call::idtt2:
+  //   idtt2(lhs, rhsSubspan);
+  //   break;
+  // case Call::idttn:
+  //   idttn(lhs, rhsSubspan);
+  //   break;
   
   default:
     throw mx::Exception{"afft:internal:invalidCall", "invalid call"};
