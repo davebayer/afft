@@ -355,7 +355,14 @@ namespace afft::detail::vkfft::sp
           vkfftConfig.normalize = 0;
           break;
         case Normalization::unitary:
-          vkfftConfig.normalize = 1;
+          if (transformDesc.getDirection() == Direction::inverse)
+          {
+            vkfftConfig.normalize = 1;
+          }
+          else
+          {
+            throw Exception{Error::vkfft, "unitary normalization is only supported for inverse transforms"};
+          }
           break;
         default:
           throw Exception{Error::vkfft, "unsupported normalization type"};
