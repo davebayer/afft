@@ -1,18 +1,12 @@
 classdef TestIfftn < AbstractTestTransform
   properties (TestParameter)
-    precision     = {'single', 'double'};
     symmetricFlag = {'nonsymmetric'}; % todo: implement symmetric
-    gridSize      = [AbstractTestTransform.GridSizes0D, ...
-                     AbstractTestTransform.GridSizes1D, ...
-                     AbstractTestTransform.GridSizes2D, ...
-                     AbstractTestTransform.GridSizes3D];
-    normalization = {'none'}; % todo: add 'unitary', 'orthogonal' when implemented
   end
 
   methods (Static)
-    function src = generateSrcArray(gridSize, precision, symmetricFlag)
+    function src = generateSrcArray(backend, gridSize, precision, symmetricFlag)
       % Generate a random array of the given size and precision.
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'complex');
+      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'complex');
 
       % Modify the array to match the given symmetric flag.
       if strcmp(symmetricFlag, 'symmetric')
@@ -39,23 +33,70 @@ classdef TestIfftn < AbstractTestTransform
     end
   end
 
-  methods (Test)
-    function testCpu(testCase, precision, symmetricFlag, gridSize, normalization)
-      src = TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag);
+  methods
+    function testSuccess(testCase, backend, precision, normalization, gridSize, symmetricFlag)
+      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'complex');
 
       dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
-      dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag
+      dst    = afft.ifftn(src, ...
+                          symmetricFlag, ...
+                          'backend',       backend, ...
+                          'normalization', normalization, ...
+                          'threadLimit',   AbstractTestTransform.cpuThreadLimit);
 
       compareResults(testCase, precision, dstRef, dst);
     end
 
-    function testGpu(testCase, precision, symmetricFlag, gridSize, normalization)
-      src = gpuArray(TestIfftn.generateSrcArray(gridSize, precision, symmetricFlag));
+    function testFailure(testCase, backend, precision, normalization, gridSize, symmetricFlag)
+      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'complex');
 
-      dstRef = TestIfftn.computeReference(src, normalization, symmetricFlag);
-      dst    = afft.ifftn(src); % todo: implement normalization and symmetric flag
+      try
+        dst = afft.ifftn(src, ...
+                         symmetricFlag, ...
+                         'backend',       backend, ...
+                         'normalization', normalization, ...
+                         'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+        testCase.verifyFail('Expected afft.ifftn to fail');
+      catch
+      end
+    end
+  end
 
-      compareResults(testCase, precision, dstRef, dst);
+  methods (Test)
+    function testCufft(testCase, precision, normalization, gridSize, symmetricFlag)
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || numel(gridSize) > 3
+        testFailure(testCase, 'cufft', precision, normalization, gridSize, symmetricFlag);
+      else
+        testSuccess(testCase, 'cufft', precision, normalization, gridSize, symmetricFlag);
+      end
+    end
+
+    function testFftw3(testCase, precision, normalization, gridSize, symmetricFlag)
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
+        testFailure(testCase, 'fftw3', precision, normalization, gridSize, symmetricFlag);
+      else
+        testSuccess(testCase, 'fftw3', precision, normalization, gridSize, symmetricFlag);
+      end
+    end
+
+    function testMkl(testCase, precision, normalization, gridSize, symmetricFlag)
+      if numel(gridSize) > 7
+        testFailure(testCase, 'mkl', precision, normalization, gridSize, symmetricFlag);
+      else
+        testSuccess(testCase, 'mkl', precision, normalization, gridSize, symmetricFlag);
+      end
+    end
+
+    function testPocketfft(testCase, precision, normalization, gridSize, symmetricFlag)
+      testSuccess(testCase, 'pocketfft', precision, normalization, gridSize, symmetricFlag);
+    end
+
+    function testVkfft(testCase, precision, normalization, gridSize, symmetricFlag)
+      if (strcmp(normalization, 'orthogonal') && sum(gridSize) > 0)
+        testFailure(testCase, 'vkfft', precision, normalization, gridSize, symmetricFlag);
+      else
+        testSuccess(testCase, 'vkfft', precision, normalization, gridSize, symmetricFlag);
+      end
     end
   end
 end

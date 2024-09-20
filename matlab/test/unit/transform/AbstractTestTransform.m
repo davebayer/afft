@@ -66,10 +66,24 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
     
     singleTolerance = 3e-5;
     doubleTolerance = 3e-12;
+    cpuThreadLimit  = 1;
+  end
+
+  properties (Constant, TestParameter)
+    precision     = {'single', 'double'};
+    normalization = {'none', 'unitary', 'orthogonal'};
+    gridSize      = [AbstractTestTransform.GridSizes0D, ...
+                     AbstractTestTransform.GridSizes1D, ...
+                     AbstractTestTransform.GridSizes2D, ...
+                     AbstractTestTransform.GridSizes3D];
   end
 
   methods (Static)
-    function src = generateSrcArray(gridSize, precision, complexity)
+    function result = isGpuBackend(backend)
+      result = strcmp(backend, 'cufft') || strcmp(backend, 'vkfft');
+    end
+
+    function src = generateSrcArray(backend, gridSize, precision, complexity)
       src = rand(gridSize, precision);
 
       if strcmp(complexity, 'real')
@@ -77,6 +91,10 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
         src = src + 1i * rand(gridSize, precision);
       else
         error('Invalid complexity');
+      end
+
+      if AbstractTestTransform.isGpuBackend(backend)
+        src = gpuArray(src);
       end
     end
   end

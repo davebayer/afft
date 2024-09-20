@@ -1,13 +1,4 @@
 classdef TestRfftn < AbstractTestTransform
-  properties (TestParameter)
-    precision     = {'single', 'double'};
-    gridSize      = [AbstractTestTransform.GridSizes0D, ...
-                     AbstractTestTransform.GridSizes1D, ...
-                     AbstractTestTransform.GridSizes2D, ...
-                     AbstractTestTransform.GridSizes3D];
-    normalization = {'none'}; % todo: add 'unitary', 'orthogonal' when implemented
-  end
-
   methods (Static)
     function dstRef = computeReference(src, normalization)
       % Compute the reference using the built-in fftn function.
@@ -31,23 +22,68 @@ classdef TestRfftn < AbstractTestTransform
     end
   end
 
-  methods (Test)
-    function testCpu(testCase, precision, gridSize, normalization)
-      src = AbstractTestTransform.generateSrcArray(gridSize, precision, 'real');
+  methods
+    function testSuccess(testCase, backend, precision, normalization, gridSize)
+      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
 
       dstRef = TestRfftn.computeReference(src, normalization);
-      dst    = afft.rfftn(src); % todo: implement normalization
+      dst    = afft.rfftn(src, ...
+                          'backend',       backend, ...
+                          'normalization', normalization, ...
+                          'threadLimit',   AbstractTestTransform.cpuThreadLimit);
 
       compareResults(testCase, precision, dstRef, dst);
     end
 
-    function testGpu(testCase, precision, gridSize, normalization)
-      src = gpuArray(AbstractTestTransform.generateSrcArray(gridSize, precision, 'real'));
+    function testFailure(testCase, backend, precision, normalization, gridSize)
+      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
 
-      dstRef = TestRfftn.computeReference(src, normalization);
-      dst    = afft.rfftn(src); % todo: implement normalization
+      try
+        dst = afft.rfftn(src, ...
+                         'backend',       backend, ...
+                         'normalization', normalization, ...
+                         'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+        testCase.verifyFail('Expected afft.rfftn to fail');
+      catch
+      end
+    end
+  end
 
-      compareResults(testCase, precision, dstRef, dst);
+  methods (Test)
+    function testCufft(testCase, precision, normalization, gridSize)
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || numel(gridSize) > 3
+        testFailure(testCase, 'cufft', precision, normalization, gridSize);
+      else
+        testSuccess(testCase, 'cufft', precision, normalization, gridSize);
+      end
+    end
+
+    function testFftw3(testCase, precision, normalization, gridSize)
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
+        testFailure(testCase, 'fftw3', precision, normalization, gridSize);
+      else
+        testSuccess(testCase, 'fftw3', precision, normalization, gridSize);
+      end
+    end
+
+    function testMkl(testCase, precision, normalization, gridSize)
+      if numel(gridSize) > 7
+        testFailure(testCase, 'mkl', precision, normalization, gridSize);
+      else
+        testSuccess(testCase, 'mkl', precision, normalization, gridSize);
+      end
+    end
+
+    function testPocketfft(testCase, precision, normalization, gridSize)
+      testSuccess(testCase, 'pocketfft', precision, normalization, gridSize);
+    end
+
+    function testVkfft(testCase, precision, normalization, gridSize)
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
+        testFailure(testCase, 'vkfft', precision, normalization, gridSize);
+      else
+        testSuccess(testCase, 'vkfft', precision, normalization, gridSize);
+      end
     end
   end
 end
