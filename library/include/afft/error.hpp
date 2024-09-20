@@ -102,10 +102,10 @@ AFFT_EXPORT namespace afft
       }
 
       /// @brief Copy constructor (default)
-      constexpr Exception(const Exception&) noexcept = default;
+      Exception(const Exception&) noexcept = default;
 
       /// @brief Move constructor (default)
-      constexpr Exception(Exception&&) noexcept = default;
+      Exception(Exception&&) noexcept = default;
 
       /// @brief Destructor (default)
       virtual ~Exception() noexcept = default;
