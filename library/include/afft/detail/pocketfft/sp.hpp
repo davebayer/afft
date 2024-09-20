@@ -201,20 +201,6 @@ namespace afft::detail::pocketfft::sp::cpu
         case dft::Type::realToComplex:
           safeCall([&, this]
           {
-            ::pocketfft::c2r(mShape,
-                             mSrcStrides,
-                             mDstStrides,
-                             mAxes,
-                             direction,
-                             static_cast<C*>(src),
-                             static_cast<R*>(dst),
-                             normFactor,
-                             nthreads);
-          });
-          break;
-        case dft::Type::complexToReal:
-          safeCall([&, this]
-          {
             ::pocketfft::r2c(mShape,
                              mSrcStrides,
                              mDstStrides,
@@ -222,6 +208,20 @@ namespace afft::detail::pocketfft::sp::cpu
                              direction,
                              static_cast<R*>(src),
                              static_cast<C*>(dst),
+                             normFactor,
+                             nthreads);
+          });
+          break;
+        case dft::Type::complexToReal:
+          safeCall([&, this]
+          {
+            ::pocketfft::c2r(mShape,
+                             mSrcStrides,
+                             mDstStrides,
+                             mAxes,
+                             direction,
+                             static_cast<C*>(src),
+                             static_cast<R*>(dst),
                              normFactor,
                              nthreads);
           });
