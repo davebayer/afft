@@ -89,8 +89,8 @@ namespace afft::detail::fftw3::sp::cpu
                                   Parent::mDesc.getPlacement() == Placement::inPlace);
         Parent::mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
 
-        std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> src{};
-        std::array<std::unique_ptr<R[], AlignedDeleter<R[]>>, 2> dst{};
+        std::array<AlignedUniquePtr<R[]>, 2> src{};
+        std::array<AlignedUniquePtr<R[]>, 2> dst{};
 
         if (Parent::mDesc.getComplexFormat() == ComplexFormat::interleaved)
         {
