@@ -37,7 +37,8 @@ using namespace matlabw;
 enum class Call : std::uint32_t
 {
   // Toolbox management calls
-  clearPlanCache = 0,
+  maxDimCount = 0,
+  clearPlanCache,
 
   // Plan calls
   planCreate = 1000,
@@ -120,6 +121,9 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   switch (static_cast<Call>(rhs[0].getScalarAs<std::uint32_t>()))
   {
   // Toolbox management calls
+  case Call::maxDimCount:
+    maxDimCount(lhs, rhsSubspan);
+    break;
   case Call::clearPlanCache:
     clearPlanCache(lhs, rhsSubspan);
     break;

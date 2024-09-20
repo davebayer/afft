@@ -29,6 +29,13 @@
 #include <matlabw/mx/mx.hpp>
 
 /**
+ * @brief Get the maximum number of dimensions supported by the backend.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 0.
+ */
+void maxDimCount(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
  * @brief Clear the plan cache.
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.

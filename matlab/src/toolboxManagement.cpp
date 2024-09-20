@@ -28,6 +28,26 @@
 using namespace matlabw;
 
 /**
+ * @brief Get the maximum number of dimensions supported by the backend.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 0.
+ */
+void maxDimCount(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  if (rhs.size() != 0)
+  {
+    throw mx::Exception{"afft:maxDimCount:invalidArgumentCount", "invalid argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:maxDimCount:invalidOutputCount", "invalid output count"};
+  }
+
+  lhs[0] = mx::makeNumericScalar<std::uint64_t>(static_cast<std::uint64_t>(afft::maxDimCount));
+}
+
+/**
  * @brief Clear the plan cache.
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.
@@ -37,7 +57,7 @@ void clearPlanCache(mx::Span<mx::Array>, mx::View<mx::ArrayCref>)
   // If the plan cache epoch overflows, throw an exception. This should probably never happen.
   if (planCacheEpoch == std::numeric_limits<std::uint64_t>::max())
   {
-    throw mx::Exception{"afft:clearPlanCache:epochOverflow", "Plan cache epoch overflow."};
+    throw mx::Exception{"afft:clearPlanCache:epochOverflow", "plan cache epoch overflow"};
   }
 
   planCache.clear();
