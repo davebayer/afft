@@ -453,7 +453,15 @@ class DttTypesParser
 };
 
 /// @brief Transform parameters parser.
-class TransformParametersParser
+class TransformParametersParser : private TransformParser,
+                                  private DirectionParser,
+                                  private PrecisionParser,
+                                  private ShapeParser,
+                                  private AxesParser,
+                                  private NormalizationParser,
+                                  private DftTypeParser,
+                                  private DhtTypeParser,
+                                  private DttTypesParser
 {
   public:
     /**
@@ -477,9 +485,7 @@ class TransformParametersParser
         throw mx::Exception("afft:planCreate:invalidArgument", "missing transform field");
       }
 
-      TransformParser transfromParser{};
-
-      switch (transfromParser(*transformArray))
+      switch (TransformParser::operator()(*transformArray))
       {
       case afft::Transform::dft:
         return parseDftTransformParameters(transformParamsStruct);
@@ -505,7 +511,7 @@ class TransformParametersParser
         throw mx::Exception("afft:planCreate:invalidArgument", "missing direction field");
       }
 
-      return mDirectionParser(*directionArray);
+      return DirectionParser::operator()(*directionArray);
     }
 
     /**
@@ -520,7 +526,7 @@ class TransformParametersParser
         return afft::makePrecision<double>();
       }
 
-      return mPrecisionParser(*precisionArray);
+      return PrecisionParser::operator()(*precisionArray);
     }
 
     /**
@@ -535,7 +541,7 @@ class TransformParametersParser
         throw mx::Exception("afft:planCreate:invalidArgument", "missing shape field");
       }
 
-      return mShapeParser(*shapeArray);
+      return ShapeParser::operator()(*shapeArray);
     }
 
     /**
@@ -550,7 +556,7 @@ class TransformParametersParser
         return afft::allAxes;
       }
 
-      return mAxesParser(*axesArray);
+      return AxesParser::operator()(*axesArray);
     }
 
     /**
@@ -565,7 +571,7 @@ class TransformParametersParser
         return afft::Normalization::none;
       }
 
-      return mNormalizationParser(*normalizationArray);
+      return NormalizationParser::operator()(*normalizationArray);
     }
 
     /**
@@ -584,7 +590,7 @@ class TransformParametersParser
 
       if (const auto dftTypeArray = transformParamsStruct.getField("type"))
       {
-        dftParams.type = mDftTypeParser(*dftTypeArray);
+        dftParams.type = DftTypeParser::operator()(*dftTypeArray);
       }
       else
       {
@@ -610,7 +616,7 @@ class TransformParametersParser
 
       if (const auto dhtTypeArray = transformParamsStruct.getField("type"))
       {
-        dhtParams.type = mDhtTypeParser(*dhtTypeArray);
+        dhtParams.type = DhtTypeParser::operator()(*dhtTypeArray);
       }
       else
       {
@@ -636,7 +642,7 @@ class TransformParametersParser
 
       if (const auto dttTypesArray = transformParamsStruct.getField("type"))
       {
-        dttParams.types = mDttTypesParser(*dttTypesArray);
+        dttParams.types = DttTypesParser::operator()(*dttTypesArray);
       }
       else
       {
@@ -645,18 +651,6 @@ class TransformParametersParser
 
       return dttParams;
     }
-
-    DirectionParser     mDirectionParser;     ///< Direction parser.
-    PrecisionParser     mPrecisionParser;     ///< Precision parser.
-    ShapeParser         mShapeParser;         ///< Shape parser.
-    AxesParser          mAxesParser;          ///< Axes parser.
-    NormalizationParser mNormalizationParser; ///< Normalization parser.
-    union
-    {
-      DftTypeParser     mDftTypeParser;       ///< DFT type parser.
-      DhtTypeParser     mDhtTypeParser;       ///< DHT type parser.
-      DttTypesParser    mDttTypesParser;      ///< DTT types parser;
-    };
 };
 
 /// @brief Target parser.
@@ -693,7 +687,7 @@ class TargetParser
 };
 
 /// @brief Target parameters parser.
-class TargetParametersParser
+class TargetParametersParser : private TargetParser
 {
   public:
     /**
@@ -716,10 +710,8 @@ class TargetParametersParser
       {
         return afft::cpu::Parameters{};
       }
-
-      TargetParser targetParser{};
       
-      switch (targetParser(*targetArray))
+      switch (TargetParser::operator()(*targetArray))
       {
       case afft::Target::cpu:
         return parseCpuTargetParameters(targetParamsStruct);
@@ -821,7 +813,11 @@ class BackendParametersParser
       case afft::Target::cpu:
         return parseCpuBackendParams(backendParamsStruct);
       case afft::Target::cuda:
+#     ifdef MATLABW_ENABLE_GPU
         return parseCudaBackendParams(backendParamsStruct);
+#     else
+        throw mx::Exception("afft:planCreate:invalidArgument", "GPU target is disabled");
+#     endif
       default:
         throw mx::Exception{"afft:planCreate:internal", "invalid backend parameters target"};
       }
@@ -857,6 +853,7 @@ class BackendParametersParser
       return cpuBackendParams;
     }
 
+# ifdef MATLABW_ENABLE_GPU
     /**
      * @brief Parse cuda backend parameters.
      * @param backendParamsStruct Backend parameters struct.
@@ -867,6 +864,7 @@ class BackendParametersParser
       // TODO: Implement CUDA backend parameters.
       return afft::cuda::BackendParameters{};
     }
+# endif
 };
 
 /// @brief Select strategy parser.
@@ -899,6 +897,91 @@ class SelectStrategyParser
       {
         throw mx::Exception("afft:planCreate:invalidArgument", "invalid select strategy");
       }
+    }
+};
+
+/// @brief Backend parser.
+class BackendParser
+{
+  public:
+    /**
+     * @brief Parse backend.
+     * @param array The array to parse.
+     * @return Backend.
+     */
+    [[nodiscard]] afft::Backend operator()(matlabw::mx::ArrayCref array)
+    {
+      if (!array.isChar())
+      {
+        throw mx::Exception("afft:planCreate:invalidArgument", "backend must be a char array");
+      }
+
+      std::u16string_view strView{mx::CharArrayCref{array}};
+
+      if (strView == u"cufft")
+      {
+        return afft::Backend::cufft;
+      }
+      else if (strView == u"fftw3")
+      {
+        return afft::Backend::fftw3;
+      }
+      else if (strView == u"mkl")
+      {
+        return afft::Backend::mkl;
+      }
+      else if (strView == u"pocketfft")
+      {
+        return afft::Backend::pocketfft;
+      }
+      else if (strView == u"vkfft")
+      {
+        return afft::Backend::vkfft;
+      }
+      else
+      {
+        throw mx::Exception("afft:planCreate:invalidArgument", "invalid backend");
+      }
+    }
+};
+
+/// @brief Backend mask parser.
+class BackendMaskParser : private BackendParser
+{
+  public:
+    /**
+     * @brief Parse backend mask.
+     * @param array The array to parse.
+     * @return Backend mask.
+     */
+    [[nodiscard]] afft::BackendMask operator()(matlabw::mx::ArrayCref array)
+    {
+      afft::BackendMask backendMask{afft::BackendMask::empty};
+
+      if (array.isCell())
+      {
+        matlabw::mx::CellArrayCref backendMaskArray{array};
+
+        for (const auto& backendArray : backendMaskArray)
+        {
+          if (!backendArray.isChar())
+          {
+            throw mx::Exception("afft:planCreate:invalidArgument", "backend mask must contain char arrays");
+          }
+
+          backendMask = backendMask | afft::makeBackendMask(BackendParser::operator()(backendArray));
+        }
+      }
+      else if (array.isChar())
+      {
+        backendMask = afft::makeBackendMask(BackendParser::operator()(array));
+      }
+      else if (!array.isEmpty())
+      {
+        throw mx::Exception("afft:planCreate:invalidArgument", "backend mask must be a cell array");
+      }
+
+      return backendMask;
     }
 };
 
