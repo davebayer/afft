@@ -348,7 +348,7 @@ namespace afft::detail::pocketfft::sp::cpu
               cxx::unreachable();
             }
 
-            normFactor = R{1.0};
+            normFactor = R{1};
           }
         }
       }
