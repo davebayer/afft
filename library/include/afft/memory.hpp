@@ -279,8 +279,9 @@ AFFT_EXPORT namespace afft
   {
     const std::size_t alignment = std::max(static_cast<std::size_t>(minAlignment), alignof(T));
 
-    return AlignedUniquePtr<T>{new(std::align_val_t{alignment}) T{std::forward<Args>(args)...},
-                               AlignedDeleter<T>{Alignment{alignment}}};
+    T* ptr = static_cast<T*>(::operator new(sizeof(T), std::align_val_t{alignment}));
+
+    return AlignedUniquePtr<T>{::new(ptr) T{std::forward<Args>(args)...};, AlignedDeleter<T>{Alignment{alignment}}};
   }
   
   /**
@@ -312,7 +313,9 @@ AFFT_EXPORT namespace afft
 
     const std::size_t alignment = std::max(static_cast<std::size_t>(minAlignment), alignof(U));
 
-    return AlignedUniquePtr<T>{new(std::align_val_t{alignment}) U[n]{}, AlignedDeleter<T>{Alignment{alignment}}};
+    U* ptr = static_cast<U*>(::operator new[](n * sizeof(U), std::align_val_t{alignment}));
+
+    return AlignedUniquePtr<T>{::new(ptr) U[n]{};, AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
@@ -329,6 +332,17 @@ AFFT_EXPORT namespace afft
   }
 
   /**
+   * @brief Make aligned unique pointer for bounded arrays (deleted)
+   * @tparam T Type of the memory
+   * @tparam Args Types of the arguments
+   * @param args Arguments for the constructor
+   * @return Aligned unique pointer
+   */
+  template<typename T, typename... Args>
+  [[nodiscard]] auto makeAlignedUnique(Args&&... args)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_bounded_array_v<T>) = delete;
+
+  /**
    * @brief Make aligned unique pointer to be overwritten
    * @tparam T Type of the memory
    * @param minAlignment Minimal alignment for memory allocation
@@ -340,7 +354,9 @@ AFFT_EXPORT namespace afft
   {
     const std::size_t alignment = std::max(static_cast<std::size_t>(minAlignment), alignof(T));
 
-    return AlignedUniquePtr<T>{new(std::align_val_t{alignment}) T, AlignedDeleter<T>{Alignment{alignment}}};
+    T* ptr = static_cast<T*>(::operator new(sizeof(T), std::align_val_t{alignment}));
+
+    return AlignedUniquePtr<T>{::new(ptr) T;, AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
@@ -370,7 +386,9 @@ AFFT_EXPORT namespace afft
 
     const std::size_t alignment = std::max(static_cast<std::size_t>(minAlignment), alignof(U));
 
-    return AlignedUniquePtr<T>{new(std::align_val_t{alignment}) U[n], AlignedDeleter<T>{Alignment{alignment}}};
+    U* ptr = static_cast<U*>(::operator new[](n * sizeof(U), std::align_val_t{alignment}));
+
+    return AlignedUniquePtr<T>{::new(ptr) U[n];, AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
@@ -385,6 +403,17 @@ AFFT_EXPORT namespace afft
   {
     return makeAlignedUniqueForOverwrite<T>(Alignment::defaultNew, n);
   }
+
+  /**
+   * @brief Make aligned unique pointer for bounded arrays to be overwritten (deleted)
+   * @tparam T Type of the memory
+   * @param minAlignment Minimal alignment for memory allocation
+   * @param n Number of elements
+   * @return Aligned unique pointer
+   */
+  template<typename T>
+  [[nodiscard]] auto makeAlignedUniqueForOverwrite(Alignment minAlignment, std::size_t n)
+    -> AFFT_RET_REQUIRES(AlignedUniquePtr<T>, detail::cxx::is_bounded_array_v<T>) = delete;
 
   /**
    * @class AlignedAllocator
