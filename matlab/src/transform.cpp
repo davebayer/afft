@@ -80,10 +80,12 @@ static constexpr void checkShapeRank(const std::size_t shapeRank, const char* er
 
 /**
  * @brief Get the transform precision from the input array.
+ * @tparam ArrayT Array type. Must have a getClassId method.
  * @param[in] array Input array to get the precision from.
  * @return Transform precision.
  */
-[[nodiscard]] static inline afft::PrecisionTriad getTransformPrecision(const mx::ArrayCref array)
+template<typename ArrayT, typename = std::void_t<decltype(std::declval<ArrayT>().getClassId())>>
+[[nodiscard]] static inline afft::PrecisionTriad getTransformPrecision(const ArrayT& array)
 {
   switch (array.getClassId())
   {
@@ -93,29 +95,11 @@ static constexpr void checkShapeRank(const std::size_t shapeRank, const char* er
     return afft::makePrecision<double>();
   }
 }
-
-#ifdef MATLABW_ENABLE_GPU
-/**
- * @brief Get the transform precision from the input array.
- * @param[in] array Input array to get the precision from.
- * @return Transform precision.
- */
-[[nodiscard]] static inline afft::PrecisionTriad getTransformPrecision(const mx::gpu::ArrayCref array)
-{
-  switch (array.getClassId())
-  {
-  case mx::ClassId::single:
-    return afft::makePrecision<float>();
-  default:
-    return afft::makePrecision<double>();
-  }
-}
-#endif
 
 /**
  * @brief Split the right-hand side arguments into the args and the name-value pair arguments.
  * @param[in] rhs Right-hand side arguments to split.
- * @return Tuple of the args and the name-value pair arguments.
+ * @return Tuple of the args and the named arguments.
  */
 [[nodiscard]] static inline std::tuple<mx::View<mx::ArrayCref>, mx::View<mx::ArrayCref>>
 splitRhsArgs(const mx::View<mx::ArrayCref> rhs)
