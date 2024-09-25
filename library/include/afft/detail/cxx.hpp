@@ -48,6 +48,24 @@ inline namespace cxx20
   using remove_cvref_t = typename remove_cvref<T>::type;
 
   /**
+   * @brief Is bounded array type.
+   * @tparam T The type.
+   */
+  template<typename T>
+  struct is_bounded_array : std::false_type {};
+
+  /// @brief Specialization for bounded array type.
+  template<typename T, std::size_t size>
+  struct is_bounded_array<T[size]> : std::true_type {};
+
+  /**
+   * @brief Shortcut for is_bounded_array value.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool is_bounded_array_v = is_bounded_array<T>::value;
+
+  /**
    * @brief Is unbounded array type.
    * @tparam T The type.
    */
