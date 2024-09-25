@@ -281,7 +281,7 @@ AFFT_EXPORT namespace afft
 
     T* ptr = static_cast<T*>(::operator new(sizeof(T), std::align_val_t{alignment}));
 
-    return AlignedUniquePtr<T>{::new(ptr) T{std::forward<Args>(args)...};, AlignedDeleter<T>{Alignment{alignment}}};
+    return AlignedUniquePtr<T>{::new(ptr) T{std::forward<Args>(args)...}, AlignedDeleter<T>{Alignment{alignment}}};
   }
   
   /**
@@ -315,7 +315,7 @@ AFFT_EXPORT namespace afft
 
     U* ptr = static_cast<U*>(::operator new[](n * sizeof(U), std::align_val_t{alignment}));
 
-    return AlignedUniquePtr<T>{::new(ptr) U[n]{};, AlignedDeleter<T>{Alignment{alignment}}};
+    return AlignedUniquePtr<T>{::new(ptr) U[n]{}, AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
@@ -356,7 +356,7 @@ AFFT_EXPORT namespace afft
 
     T* ptr = static_cast<T*>(::operator new(sizeof(T), std::align_val_t{alignment}));
 
-    return AlignedUniquePtr<T>{::new(ptr) T;, AlignedDeleter<T>{Alignment{alignment}}};
+    return AlignedUniquePtr<T>{::new(ptr) T, AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
@@ -388,7 +388,7 @@ AFFT_EXPORT namespace afft
 
     U* ptr = static_cast<U*>(::operator new[](n * sizeof(U), std::align_val_t{alignment}));
 
-    return AlignedUniquePtr<T>{::new(ptr) U[n];, AlignedDeleter<T>{Alignment{alignment}}};
+    return AlignedUniquePtr<T>{::new(ptr) U[n], AlignedDeleter<T>{Alignment{alignment}}};
   }
 
   /**
