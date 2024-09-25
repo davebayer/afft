@@ -38,7 +38,9 @@ enum class Call : std::uint32_t
 {
   // Toolbox management calls
   maxDimCount = 0,
-  clearPlanCache,
+  hasGpuSupport,
+
+  // clearPlanCache = 100,
 
   // Plan calls
   planCreate = 1000,
@@ -124,9 +126,12 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   case Call::maxDimCount:
     maxDimCount(lhs, rhsSubspan);
     break;
-  case Call::clearPlanCache:
-    clearPlanCache(lhs, rhsSubspan);
+  case Call::hasGpuSupport:
+    hasGpuSupport(lhs, rhsSubspan);
     break;
+  // case Call::clearPlanCache:
+  //   clearPlanCache(lhs, rhsSubspan);
+  //   break;
 
   // Plan calls
   case Call::planCreate:
