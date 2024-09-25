@@ -181,6 +181,26 @@ class ShapeParser
       return afft::View<afft::Size>{mShapeStorage, shapeRank};
     }
 
+    /**
+     * @brief Parse shape from array shape.
+     * @param arrayShape The array shape to parse.
+     * @return Shape.
+     */
+    [[nodiscard]] afft::View<afft::Size> operator()(matlabw::mx::View<std::size_t> arrayShape)
+    {
+      if (arrayShape.size() > afft::maxDimCount)
+      {
+        throw mx::Exception{"afft:planCreate:invalidArgument", "input array rank exceeds maximum dimension count"};
+      }
+
+      std::transform(arrayShape.rbegin(),
+                     arrayShape.rend(),
+                     mShapeStorage,
+                     [](const auto dim) { return static_cast<afft::Size>(dim); });
+
+      return {mShapeStorage, arrayShape.size()};
+    }
+
   private:
     afft::Size mShapeStorage[afft::maxDimCount]; ///< Shape of the transform.
 };
