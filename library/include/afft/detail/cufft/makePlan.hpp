@@ -78,11 +78,6 @@ namespace afft::detail::cufft
       throw Exception{Error::cufft, "execution, source and destination must precision match"};
     }
 
-    if (descImpl.getNormalization() != Normalization::none)
-    {
-      throw Exception{Error::cufft, "normalization is not supported"};
-    }
-
     if constexpr (BackendParamsT::target == Target::cuda)
     {
       if constexpr (BackendParamsT::mpBackend == MpBackend::none)

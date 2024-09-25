@@ -119,6 +119,39 @@ namespace afft::detail::cufft::sp
           dstDist = safeIntCast<SizeT>(memDesc.getDstStrides()[howManyAxis]);
         }
 
+#     ifdef AFFT_CUFFT_IS_LTO_EA
+        if (const auto normalization = Parent::mDesc.getNormalization();
+            normalization == Normalization::unitary || normalization == Normalization::orthogonal)
+        {
+          const auto precision  = Parent::mDesc.getPrecision().execution;
+          const auto complexity = dstCmpl;
+          const auto normFactor = Parent::mDesc.template getNormalizationFactor<double>();
+
+          cuda::rtc::Program program{normalizationCallbackSrcCode, "cufftNormCallback.cu"};
+
+          const auto precisionDef  = cuda::rtc::makeDefinitionOption("PREC", precision == Precision::f32 ? "PREC_F32" : "PREC_F64");
+          const auto complexityDef = cuda::rtc::makeDefinitionOption("CMPL", complexity == Complexity::real ? "CMPL_R" : "CMPL_C");
+          const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", std::to_string(normFactor).data());
+
+          if (!program.compile({{precisionDef.c_str(),
+                                 complexityDef.c_str(),
+                                 normFactorDef.c_str(),
+                                 "--relocatable-device-code=true",
+                                 "-dlto"}}))
+          {
+            throw Exception{Error::cufft, "failed to compile the normalization callback"};
+          }
+
+          const auto callbackCode = program.getCode(cuda::rtc::CodeType::LTOIR);
+
+          checkError(cufftXtSetJITCallback(mHandle,
+                                           callbackCode.data(),
+                                           callbackCode.size(),
+                                           makeStoreCallbackType(precision, complexity),
+                                           nullptr));
+        }
+#     endif
+
         checkError(cufftXtMakePlanMany(mHandle,
                                        static_cast<int>(Parent::mDesc.getTransformRank()),
                                        Parent::mDesc.template getTransformDimsAs<SizeT>().data(),
@@ -202,12 +235,31 @@ namespace afft::detail::cufft::sp
   [[nodiscard]] AFFT_HEADER_ONLY_INLINE std::unique_ptr<afft::Plan>
   makePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
   {
+    const auto& descImpl = desc.get(DescToken::make());
+
     if (desc.getTargetCount() == 1)
     {
+#   ifdef AFFT_CUFFT_IS_LTO_EA
+      if (const auto prec = descImp.getPrecision().execution; prec != Precision::f32 && prec != Precision::f64)
+      {
+        throw Exception{Error::cufft, "normalization is supported only fo f32 and f64 precisions"};
+      }
+#   else
+      if (descImpl.getNormalization() != Normalization::none)
+      {
+        throw Exception{Error::cufft, "normalization is not supported"};
+      }
+#   endif
+
       return std::make_unique<SingleDevicePlan>(desc, backendParams);
     }
     else
     {
+      if (descImpl.getNormalization() != Normalization::none)
+      {
+        throw Exception{Error::cufft, "normalization is not supported"};
+      }
+      
       throw Exception(Error::cufft, "multi-GPU transforms are not yet supported");
     }
   }
