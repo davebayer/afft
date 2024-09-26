@@ -49,6 +49,8 @@ classdef TestFftn < AbstractTestTransform
 
   methods (Test)
     function testCufft(testCase, precision, normalization, gridSize, srcComplexity)
+      testCase.assumeTrue(afft.hasGpuSupport && afft.hasBackend('cufft'));
+
       if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || numel(gridSize) > 3
         testFailure(testCase, 'cufft', precision, normalization, gridSize, srcComplexity);
       else
@@ -57,6 +59,8 @@ classdef TestFftn < AbstractTestTransform
     end
 
     function testFftw3(testCase, precision, normalization, gridSize, srcComplexity)
+      testCase.assumeTrue(afft.hasBackend('fftw3'));
+
       if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
         testFailure(testCase, 'fftw3', precision, normalization, gridSize, srcComplexity);
       else
@@ -65,6 +69,8 @@ classdef TestFftn < AbstractTestTransform
     end
 
     function testMkl(testCase, precision, normalization, gridSize, srcComplexity)
+      testCase.assumeTrue(afft.hasBackend('mkl'));
+
       if numel(gridSize) > 7
         testFailure(testCase, 'mkl', precision, normalization, gridSize, srcComplexity);
       else
@@ -73,10 +79,14 @@ classdef TestFftn < AbstractTestTransform
     end
 
     function testPocketfft(testCase, precision, normalization, gridSize, srcComplexity)
+      testCase.assumeTrue(afft.hasBackend('pocketfft'));
+
       testSuccess(testCase, 'pocketfft', precision, normalization, gridSize, srcComplexity);
     end
 
     function testVkfft(testCase, precision, normalization, gridSize, srcComplexity)
+      testCase.assumeTrue(afft.hasGpuSupport && afft.hasBackend('vkfft'));
+
       if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
         testFailure(testCase, 'vkfft', precision, normalization, gridSize, srcComplexity);
       else
