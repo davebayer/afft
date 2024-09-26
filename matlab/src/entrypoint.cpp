@@ -104,10 +104,10 @@ enum class Call : std::uint32_t
 void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
   // When the library is first loaded, lock the mex.
-  if (!isLocked())
-  {
-    lock();
-  }
+  // if (!isLocked())
+  // {
+  //   lock();
+  // }
 
   // Initialize the afft library.
   afft::init();
