@@ -375,6 +375,8 @@ namespace afft::detail::vkfft::sp
 
       static void fillConfigMemoryLayout(VkFFTConfiguration& vkfftConfig, const Desc& desc)
       {
+        const auto direction = desc.getDirection();
+
         // Set up VkFFT config complex format
         const UInt separateComplexComponents = (desc.getComplexFormat() == ComplexFormat::planar) ? 1 : 0;
         vkfftConfig.bufferSeparateComplexComponents       = separateComplexComponents;
@@ -382,11 +384,12 @@ namespace afft::detail::vkfft::sp
         vkfftConfig.outputBufferSeparateComplexComponents = separateComplexComponents;
 
         // Set up VkFFT config buffer strides
-        vkfftConfig.isInputFormatted  = 1;
-        vkfftConfig.isOutputFormatted = 1;
+        vkfftConfig.isInputFormatted  = direction == Direction::forward && desc.getPlacement() == Placement::outOfPlace;
+        vkfftConfig.isOutputFormatted = direction == Direction::inverse && desc.getPlacement() == Placement::outOfPlace;
 
-        UInt* srcStrides = (desc.getDirection() == Direction::forward) ? vkfftConfig.inputBufferStride : vkfftConfig.bufferStride;
-        UInt* dstStrides = (desc.getDirection() == Direction::forward) ? vkfftConfig.bufferStride : vkfftConfig.outputBufferStride;
+        // TODO: fix inplace
+        UInt* srcStrides = (direction == Direction::forward) ? vkfftConfig.inputBufferStride : vkfftConfig.bufferStride;
+        UInt* dstStrides = (direction == Direction::forward) ? vkfftConfig.bufferStride : vkfftConfig.outputBufferStride;
 
         const auto& memDesc = desc.getMemDesc<MemoryLayout::centralized>();
 
@@ -405,6 +408,9 @@ namespace afft::detail::vkfft::sp
           srcStrides[i] = safeIntCast<UInt>(memDesc.getSrcStrides()[desc.getShapeRank() - i - 2]);
           dstStrides[i] = safeIntCast<UInt>(memDesc.getDstStrides()[desc.getShapeRank() - i - 2]);
         }
+
+        srcStrides[desc.getShapeRank() - 1] = safeIntCast<UInt>(memDesc.getSrcStrides().front()) * vkfftConfig.size[desc.getShapeRank() - 1];
+        dstStrides[desc.getShapeRank() - 1] = safeIntCast<UInt>(memDesc.getDstStrides().front()) * vkfftConfig.size[desc.getShapeRank() - 1];
       }
 
 #   if AFFT_VKFFT_BACKEND == 1
