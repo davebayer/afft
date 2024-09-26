@@ -168,7 +168,7 @@ namespace afft::detail::mkl::sp
           checkError(DftiSetValue(mDftiHandle.get(), getScaleConfigParam(), mDesc.getNormalizationFactor<float>()));
         }
 
-        checkError(DftiSetValue(mDftiHandle.get(), DFTI_THREAD_LIMIT, Parent::mBackendParams.threadLimit));
+        checkError(DftiSetValue(mDftiHandle.get(), DFTI_THREAD_LIMIT, static_cast<MKL_LONG>(Parent::mBackendParams.threadLimit)));
 
         switch (mDesc.getTransformDesc<Transform::dft>().type)
         {
@@ -206,10 +206,10 @@ namespace afft::detail::mkl::sp
           dstStrides[i] = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[axis]);
           ++i;
         }
-
+        
         checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
         checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
-
+        
         if (mDesc.getTransformHowManyRank() == 1)
         {
           const auto howManyAxis = mDesc.getTransformHowManyAxes().front();

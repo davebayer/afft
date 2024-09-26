@@ -133,7 +133,7 @@ void rfftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw:
  *            * lhs[0] holds the output array.
  * @param rhs Right-hand side array of size 1-3.
  *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
- *            - rhs[1] holds the output size in transformed axis as a scalar numeric array.
+ *            * rhs[1] holds the output size in transformed axis as a scalar numeric array.
  *            - rhs[2] holds the optional axis parameter as a scalar numeric array.
  */
 void irfft(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
@@ -144,8 +144,8 @@ void irfft(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw:
  *            * lhs[0] holds the output array.
  * @param rhs Right-hand side array of size 1-3.
  *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
- *            - rhs[1] holds the output n size in transformed as a scalar numeric array.
- *            - rhs[2] holds the output m size in transformed as a scalar numeric array.
+ *            * rhs[1] holds the output n size in transformed as a scalar numeric array.
+ *            * rhs[2] holds the output m size in transformed as a scalar numeric array.
  */
 void irfft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
@@ -155,7 +155,7 @@ void irfft2(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw
  *            * lhs[0] holds the output array.
  * @param rhs Right-hand side array of size 1-3.
  *            * rhs[0] holds the input array. Must be a real or complex floating-point array.
- *            - rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
+ *            * rhs[1] holds the output size in transformed axis as a numeric array of size equal to input rank.
  */
 void irfftn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 

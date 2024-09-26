@@ -162,7 +162,7 @@ class ShapeParser
         {
           std::transform(typedArray.begin(), typedArray.end(), mShapeStorage, [](auto value)
           {
-            if (value <= typename TypedArrayT::value_type{})
+            if (value < typename TypedArrayT::value_type{})
             {
               throw mx::Exception("afft:planCreate:invalidArgument", "transform shape must be a positive number");
             }
