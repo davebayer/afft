@@ -1,3 +1,3 @@
 function result = hasGpuSupport()
-  result = afft_matlab(uint32(1));
+  result = internal.afft_matlab(uint32(1));
 end

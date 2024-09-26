@@ -26,7 +26,7 @@ classdef Plan < matlab.mixin.Copyable
       end
 
       % Create the plan
-      obj.mData = afft_matlab(uint32(1000), transformParams, targetParams, backendParams, selectParams);
+      obj.mData = internal.afft_matlab(uint32(1000), transformParams, targetParams, backendParams, selectParams);
 
       % Store the parameters
       obj.mTransformParams = transformParams;
@@ -38,7 +38,7 @@ classdef Plan < matlab.mixin.Copyable
     function Y = execute(obj, X)
       % execute Execute the transform plan
       %   Executes the plan on the input data X. The X must match the transform description provided in the constructor.
-      Y = afft_matlab(uint32(1001), obj.mData, X);
+      Y = internal.afft_matlab(uint32(1001), obj.mData, X);
     end
 
     function transformParams = getTransformParameters(obj)
