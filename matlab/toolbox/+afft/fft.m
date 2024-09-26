@@ -60,5 +60,5 @@ function Y = fft(X, varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
-  Y = internal.afft_matlab(uint32(2000), X, varargin{:});
+  Y = afft.internal.afft_matlab(uint32(2000), X, varargin{:});
 end

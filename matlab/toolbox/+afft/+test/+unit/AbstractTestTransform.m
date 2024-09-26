@@ -56,7 +56,7 @@
 % * |matlab.unittest.TestCase|
 % * |matlab.unittest.parameters.TestParameter|
 
-classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
+classdef (Abstract, Hidden) AbstractTestTransform < matlab.unittest.TestCase
   properties (Constant)
     GridSizes0D     = {[0, 0]};
     GridSizes1D     = {[10], [15]};
@@ -72,10 +72,10 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
   properties (Constant, TestParameter)
     precision     = {'single', 'double'};
     normalization = {'none', 'unitary', 'orthogonal'};
-    gridSize      = [AbstractTestTransform.GridSizes0D, ...
-                     AbstractTestTransform.GridSizes1D, ...
-                     AbstractTestTransform.GridSizes2D, ...
-                     AbstractTestTransform.GridSizes3D];
+    gridSize      = [afft.test.unit.AbstractTestTransform.GridSizes0D, ...
+                     afft.test.unit.AbstractTestTransform.GridSizes1D, ...
+                     afft.test.unit.AbstractTestTransform.GridSizes2D, ...
+                     afft.test.unit.AbstractTestTransform.GridSizes3D];
   end
 
   methods (Static)
@@ -93,7 +93,7 @@ classdef (Abstract) AbstractTestTransform < matlab.unittest.TestCase
         error('Invalid complexity');
       end
 
-      if AbstractTestTransform.isGpuBackend(backend)
+      if afft.test.unit.AbstractTestTransform.isGpuBackend(backend)
         src = gpuArray(src);
       end
     end

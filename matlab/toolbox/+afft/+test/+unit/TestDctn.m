@@ -1,4 +1,4 @@
-classdef TestDctn < AbstractTestTransform
+classdef TestDctn < afft.test.unit.AbstractTestTransform
   properties (TestParameter)
     dctType = {[], 1, 2, 3, 4};
   end
@@ -75,6 +75,8 @@ classdef TestDctn < AbstractTestTransform
 
   methods (Test)
     function testCufft(testCase, precision, normalization, gridSize, dctType)
+      testCase.assumeTrue(afft.hasGpuSupport)
+
       testFailure(testCase, 'cufft', precision, normalization, gridSize, dctType);
     end
 
@@ -95,6 +97,8 @@ classdef TestDctn < AbstractTestTransform
     end
 
     function testVkfft(testCase, precision, normalization, gridSize, dctType)
+      testCase.assumeTrue(afft.hasGpuSupport)
+      
       if (strcmp(normalization, 'orthogonal') && sum(gridSize) > 0)
         testFailure(testCase, 'vkfft', precision, normalization, gridSize, dctType);
       else

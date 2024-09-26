@@ -23,6 +23,7 @@
 */
 
 #include "toolboxManagement.hpp"
+#include "parser.hpp"
 #include "planCache.hpp"
 
 using namespace matlabw;
@@ -69,6 +70,67 @@ void hasGpuSupport(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 #else
   lhs[0] = mx::makeLogicalScalar(false);
 #endif
+}
+
+/**
+ * @brief Check if the backend is available.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 1.
+ */
+void hasBackend(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  if (rhs.size() != 1)
+  {
+    throw mx::Exception{"afft:hasBackend:invalidArgumentCount", "invalid argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:hasBackend:invalidOutputCount", "invalid output count"};
+  }
+
+  BackendParser backendParser{};
+
+  switch (backendParser(rhs[0]))
+  {
+  case afft::Backend::cufft:
+# ifdef AFFT_ENABLE_CUFFT
+    lhs[0] = mx::makeLogicalScalar(true);
+# else
+    lhs[0] = mx::makeLogicalScalar(false);
+# endif
+    break;
+  case afft::Backend::fftw3:
+# ifdef AFFT_ENABLE_FFTW3
+    lhs[0] = mx::makeLogicalScalar(true);
+# else
+    lhs[0] = mx::makeLogicalScalar(false);
+# endif
+    break;
+  case afft::Backend::mkl:
+# ifdef AFFT_ENABLE_MKL
+    lhs[0] = mx::makeLogicalScalar(true);
+# else
+    lhs[0] = mx::makeLogicalScalar(false);
+# endif
+    break;
+  case afft::Backend::pocketfft:
+# ifdef AFFT_ENABLE_POCKETFFT
+    lhs[0] = mx::makeLogicalScalar(true);
+# else
+    lhs[0] = mx::makeLogicalScalar(false);
+# endif
+    break;
+  case afft::Backend::vkfft:
+# ifdef AFFT_ENABLE_VKFFT
+    lhs[0] = mx::makeLogicalScalar(true);
+# else
+    lhs[0] = mx::makeLogicalScalar(false);
+# endif
+    break;
+  default:
+    throw mx::Exception{"afft:hasBackend:invalidBackend", "invalid backend"};
+  }
 }
 
 /**

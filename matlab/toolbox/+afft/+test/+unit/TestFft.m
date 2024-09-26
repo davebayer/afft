@@ -1,4 +1,4 @@
-classdef TestFft < AbstractTestTransform
+classdef TestFft < afft.test.unit.AbstractTestTransform
   properties (Constant, TestParameter)
     srcComplexity = {'complex'}; % todo: add 'real' when implemented
     dim           = {1};

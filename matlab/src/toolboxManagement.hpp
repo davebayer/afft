@@ -43,6 +43,13 @@ void maxDimCount(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<ma
 void hasGpuSupport(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
 
 /**
+ * @brief Check if the backend is available.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 1.
+ */
+void hasBackend(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs);
+
+/**
  * @brief Clear the plan cache.
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.

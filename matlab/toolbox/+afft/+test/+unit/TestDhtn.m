@@ -1,4 +1,4 @@
-classdef TestDhtn < AbstractTestTransform
+classdef TestDhtn < afft.test.unit.AbstractTestTransform
   properties (TestParameter)
     precision     = {'single', 'double'};
     dhtType       = {'separable'};

@@ -1,4 +1,4 @@
-classdef TestDstn < AbstractTestTransform
+classdef TestDstn < afft.test.unit.AbstractTestTransform
   properties (TestParameter)
     precision     = {'single', 'double'};
     dstType       = {[], 1, 2, 3, 4};

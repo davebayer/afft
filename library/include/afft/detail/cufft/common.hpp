@@ -234,7 +234,7 @@ extern "C" __device__ void
     case Precision::f64:
       return (comp == Complexity::real) ? CUFFT_CB_ST_REAL_DOUBLE : CUFFT_CB_ST_COMPLEX_DOUBLE;
     default:
-      throw BackendError{Backend::cufft, "unsupported precision for callback"};
+      throw Exception{Error::cufft, "unsupported precision for callback"};
     }
   }
 } // namespace afft::detail::cufft

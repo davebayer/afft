@@ -1,4 +1,4 @@
-classdef TestFftn < AbstractTestTransform
+classdef TestFftn < afft.test.unit.AbstractTestTransform
   properties (TestParameter)
     srcComplexity = {'complex'}; % todo: add 'real' when implemented
   end
@@ -22,25 +22,25 @@ classdef TestFftn < AbstractTestTransform
 
   methods
     function testSuccess(testCase, backend, precision, normalization, gridSize, srcComplexity)
-      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, srcComplexity);
+      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, srcComplexity);
 
-      dstRef = TestFftn.computeReference(src, normalization);
+      dstRef = afft.test.unit.TestFftn.computeReference(src, normalization);
       dst    = afft.fftn(src, ...
                          'backend',       backend, ...
                          'normalization', normalization, ...
-                         'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+                         'threadLimit',   afft.test.unit.AbstractTestTransform.cpuThreadLimit);
 
       compareResults(testCase, precision, dstRef, dst);
     end
 
     function testFailure(testCase, backend, precision, normalization, gridSize, srcComplexity)
-      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, srcComplexity);
+      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, srcComplexity);
 
       try
         dst = afft.fftn(src, ...
                         'backend',       backend, ...
                         'normalization', normalization, ...
-                        'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+                        'threadLimit',   afft.test.unit.AbstractTestTransform.cpuThreadLimit);
         testCase.verifyFail('Expected afft.fftn to fail');
       catch
       end

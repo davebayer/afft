@@ -1,4 +1,4 @@
-classdef TestRfftn < AbstractTestTransform
+classdef TestRfftn < afft.test.unit.AbstractTestTransform
   methods (Static)
     function dstRef = computeReference(src, normalization)
       % Compute the reference using the built-in fftn function.
@@ -24,25 +24,25 @@ classdef TestRfftn < AbstractTestTransform
 
   methods
     function testSuccess(testCase, backend, precision, normalization, gridSize)
-      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
+      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
 
-      dstRef = TestRfftn.computeReference(src, normalization);
+      dstRef = afft.test.unit.TestRfftn.computeReference(src, normalization);
       dst    = afft.rfftn(src, ...
                           'backend',       backend, ...
                           'normalization', normalization, ...
-                          'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+                          'threadLimit',   afft.test.unit.AbstractTestTransform.cpuThreadLimit);
 
       compareResults(testCase, precision, dstRef, dst);
     end
 
     function testFailure(testCase, backend, precision, normalization, gridSize)
-      src = AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
+      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'real');
 
       try
         dst = afft.rfftn(src, ...
                          'backend',       backend, ...
                          'normalization', normalization, ...
-                         'threadLimit',   AbstractTestTransform.cpuThreadLimit);
+                         'threadLimit',   afft.test.unit.AbstractTestTransform.cpuThreadLimit);
         testCase.verifyFail('Expected afft.rfftn to fail');
       catch
       end
@@ -51,6 +51,8 @@ classdef TestRfftn < AbstractTestTransform
 
   methods (Test)
     function testCufft(testCase, precision, normalization, gridSize)
+      testCase.assumeTrue(afft.hasGpuSupport)
+
       if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || numel(gridSize) > 3
         testFailure(testCase, 'cufft', precision, normalization, gridSize);
       else
@@ -79,6 +81,8 @@ classdef TestRfftn < AbstractTestTransform
     end
 
     function testVkfft(testCase, precision, normalization, gridSize)
+      testCase.assumeTrue(afft.hasGpuSupport)
+      
       if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
         testFailure(testCase, 'vkfft', precision, normalization, gridSize);
       else
