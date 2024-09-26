@@ -48,6 +48,30 @@ void maxDimCount(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 }
 
 /**
+ * @brief Check if the backend has GPU support.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 0.
+ */
+void hasGpuSupport(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  if (rhs.size() != 0)
+  {
+    throw mx::Exception{"afft:hasGpuSupport:invalidArgumentCount", "invalid argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:hasGpuSupport:invalidOutputCount", "invalid output count"};
+  }
+
+#ifdef MATLABW_ENABLE_GPU
+  lhs[0] = mx::makeLogicalScalar(true);
+#else
+  lhs[0] = mx::makeLogicalScalar(false);
+#endif
+}
+
+/**
  * @brief Clear the plan cache.
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.
