@@ -112,35 +112,31 @@ using cufftDoubleReal    = double;
 using cufftComplex       = float2;
 using cufftDoubleComplex = double2;
 
-// Normalization factor
 #if PREC == PREC_F32
-inline constexpr cufftReal normFactor = static_cast<cufftReal>(NORM_FACT);
+using Real    = cufftReal;
+using Complex = cufftComplex;
 #elif PREC == PREC_F64
-inline constexpr cufftDoubleReal normFactor = static_cast<cufftDoubleReal>(NORM_FACT);
+using Real    = cufftDoubleReal;
+using Complex = cufftDoubleComplex;
 #endif
+
+// Normalization factor
+inline constexpr Real normFactor = static_cast<Real>(NORM_FACT);
 
 // cuFFT callback function to store normalized data
-extern "C" __device__ void
-#if CMPL == CMPL_R && PREC == PREC_F32
-  cufftJITCallbackStoreReal(void* dataOut, size_t offset, cufftReal element, void*, void*)
-#elif CMPL == CMPL_R && PREC == PREC_F64
-  cufftJITCallbackStoreDoubleReal(void* dataOut, size_t offset, cufftDoubleReal element, void*, void*)
-#elif CMPL == CMPL_C && PREC == PREC_F32
-  cufftJITCallbackStoreComplex(void* dataOut, size_t offset, cufftComplex element, void*, void*)
-#elif CMPL == CMPL_C && PREC == PREC_F64
-  cufftJITCallbackStoreDoubleComplex(void* dataOut, size_t offset, cufftDoubleComplex element, void*, void*)
-#endif
+extern "C" __device__ void storeReal(void* dataOut, size_t offset, Real element, void*, void*)
 {
-  using T = decltype(element);
-
-#if CMPL == CMPL_R
   element *= normFactor;
-#else
+
+  reinterpret_cast<Real*>(dataOut)[offset] = element;
+}
+
+extern "C" __device__ void storeComplex(void* dataOut, size_t offset, Complex element, void*, void*)
+{
   element.x *= normFactor;
   element.y *= normFactor;
-#endif
 
-  reinterpret_cast<T*>(dataOut)[offset] = element;
+  reinterpret_cast<Complex*>(dataOut)[offset] = element;
 }
   )"};
 

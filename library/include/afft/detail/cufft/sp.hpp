@@ -119,7 +119,7 @@ namespace afft::detail::cufft::sp
           dstDist = safeIntCast<SizeT>(memDesc.getDstStrides()[howManyAxis]);
         }
 
-#     ifdef AFFT_CUFFT_IS_LTO_EA
+#     if CUFFT_VERSION >= 11300
         if (const auto normalization = Parent::mDesc.getNormalization();
             normalization == Normalization::unitary || normalization == Normalization::orthogonal)
         {
@@ -133,11 +133,9 @@ namespace afft::detail::cufft::sp
           const auto complexityDef = cuda::rtc::makeDefinitionOption("CMPL", complexity == Complexity::real ? "CMPL_R" : "CMPL_C");
           const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", std::to_string(normFactor).data());
 
-          if (!program.compile({{precisionDef.c_str(),
-                                 complexityDef.c_str(),
-                                 normFactorDef.c_str(),
-                                 "--relocatable-device-code=true",
-                                 "-dlto"}}))
+          const char* options[]{precisionDef.c_str(), complexityDef.c_str(), normFactorDef.c_str(), "--relocatable-device-code=true", "-dlto"};
+
+          if (!program.compile(options))
           {
             throw Exception{Error::cufft, "failed to compile the normalization callback"};
           }
@@ -145,6 +143,7 @@ namespace afft::detail::cufft::sp
           const auto callbackCode = program.getCode(cuda::rtc::CodeType::LTOIR);
 
           checkError(cufftXtSetJITCallback(mHandle,
+                                           (complexity == Complexity::real) ? "storeReal" : "storeComplex",
                                            callbackCode.data(),
                                            callbackCode.size(),
                                            makeStoreCallbackType(precision, complexity),
@@ -239,8 +238,8 @@ namespace afft::detail::cufft::sp
 
     if (desc.getTargetCount() == 1)
     {
-#   ifdef AFFT_CUFFT_IS_LTO_EA
-      if (const auto prec = descImp.getPrecision().execution; prec != Precision::f32 && prec != Precision::f64)
+#   if CUFFT_VERSION >= 11300
+      if (const auto prec = descImpl.getPrecision().execution; prec != Precision::f32 && prec != Precision::f64)
       {
         throw Exception{Error::cufft, "normalization is supported only fo f32 and f64 precisions"};
       }
