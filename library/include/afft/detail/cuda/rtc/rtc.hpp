@@ -52,10 +52,13 @@ namespace afft::detail::cuda::rtc
     : std::string_view(std::forward<Args>(args)...)
     {}
 
-    /// @brief Make all operators explicit.
+    // @brief Inherit all operators.
     using std::string_view::operator=;
     using std::string_view::operator[];
   };
+
+  // Forward declaration.
+  struct CppLoweredSymbolName;
 
   /**
    * @struct CppSymbolName
@@ -73,7 +76,10 @@ namespace afft::detail::cuda::rtc
     : std::string_view(std::forward<Args>(args)...)
     {}
 
-    /// @brief Make all operators explicit.
+    /// @brief Disable construction from a CppLoweredSymbolName.
+    CppSymbolName(const CppLoweredSymbolName&) = delete;
+
+    /// @brief Inherit all operators.
     using std::string_view::operator=;
     using std::string_view::operator[];
   };
@@ -82,49 +88,24 @@ namespace afft::detail::cuda::rtc
    * @class CppLoweredSymbolName
    * @brief A wrapper around a C++ lowered symbol name. This class can be created only by the Program class.
    */
-  class CppLoweredSymbolName : public std::string_view
+  struct CppLoweredSymbolName : public std::string_view
   {
-    public:
-      /**
-       * @class PriviledgeToken
-       * @brief A token to allow the creation of the CppLoweredSymbolName class.
-       */
-      class PriviledgeToken
-      {
-        friend class Program;
-      };
+    /**
+     * @brief Make all constructors explicit.
+     * @tparam Args Argument types.
+     * @param args Arguments to forward to the std::string_view constructor.
+     */
+    template<typename... Args>
+    explicit constexpr CppLoweredSymbolName(Args&&... args)
+    : std::string_view(std::forward<Args>(args)...)
+    {}
 
-      /// @brief Default constructor.
-      CppLoweredSymbolName() = default;
+    /// @brief Disable construction from a CppSymbolName.
+    CppLoweredSymbolName(const CppSymbolName&) = delete;
 
-      /**
-       * @brief Constructor.
-       * @param name The name of the symbol.
-       * @param program The program that contains the symbol.
-       * @param token The privilidge token.
-       */
-      CppLoweredSymbolName(std::string_view                                     name,
-                           std::shared_ptr<std::remove_pointer_t<nvrtcProgram>> program,
-                           PriviledgeToken)
-      : std::string_view(name), mProgram(std::move(program))
-      {}
-
-      /// @brief Copy constructor.
-      CppLoweredSymbolName(const CppLoweredSymbolName&) = default;
-
-      /// @brief Move constructor.
-      CppLoweredSymbolName(CppLoweredSymbolName&&) = default;
-
-      /// @brief Destructor.
-      ~CppLoweredSymbolName() = default;
-
-      /// @brief Copy assignment operator.
-      CppLoweredSymbolName& operator=(const CppLoweredSymbolName&) = default;
-
-      /// @brief Move assignment operator.
-      CppLoweredSymbolName& operator=(CppLoweredSymbolName&&) = default;
-    private:
-      std::shared_ptr<std::remove_pointer_t<nvrtcProgram>> mProgram{}; ///< The program that contains the symbol.
+    // @brief Inherit all operators.
+    using std::string_view::operator=;
+    using std::string_view::operator[];
   };
 
   /// @brief NVRTC code types.
@@ -143,15 +124,6 @@ namespace afft::detail::cuda::rtc
   class Code
   {
     public:
-      /**
-       * @class PrivilegedToken
-       * @brief A token to allow the creation of the Code class.
-       */
-      class PrivilegedToken
-      {
-        friend class Program;
-      };
-
       /// @brief Default constructor.
       Code() = delete;
 
@@ -160,7 +132,7 @@ namespace afft::detail::cuda::rtc
        * @param type The code type.
        * @param size The code size.
        */
-      Code(CodeType type, std::size_t size, PrivilegedToken)
+      Code(CodeType type, std::size_t size)
       : mType(type), mCode(size, '\0')
       {}
 
@@ -209,16 +181,6 @@ namespace afft::detail::cuda::rtc
   };
 
   /**
-   * @struct Header
-   * @brief A header for the program.
-   */
-  struct Header
-  {
-    std::string_view srcCode{};     ///< The source code of the header.
-    std::string_view includeName{}; ///< The include name of the header.
-  };
-
-  /**
    * @class Program
    * @brief A program for the CUDA runtime compilation.
    */
@@ -235,38 +197,16 @@ namespace afft::detail::cuda::rtc
        * @param programName The name of the program.
        * @param headers The headers of the program.
        */
-      template<std::size_t n = 0>
-      Program(std::string_view srcCode, std::string_view programName, Span<Header, n> headers = {})
+      Program(std::string_view srcCode, std::string_view programName)
+      : mProgram{[&]()
       {
-        using CharPtrContainer = std::conditional_t<(n != dynamicExtent),
-                                                    std::array<const char*, n>, std::vector<const char*>>;
-
-        CharPtrContainer headerSrcCodePtrs{};
-        CharPtrContainer headerIncludeNamePtrs{};
-
-        if constexpr (n == dynamicExtent)
-        {
-          headerSrcCodePtrs.resize(headers.size());
-          headerIncludeNamePtrs.resize(headers.size());
-        }
-
-        for (std::size_t i{}; i < headers.size(); ++i)
-        {
-          headerSrcCodePtrs[i]     = headers[i].srcCode.data();
-          headerIncludeNamePtrs[i] = headers[i].includeName.data();
-        }
-
         nvrtcProgram program{};
 
-        checkError(nvrtcCreateProgram(&program,
-                                       srcCode.data(),
-                                       programName.data(),
-                                       static_cast<int>(headers.size()),
-                                       headerSrcCodePtrs.data(),
-                                       headerIncludeNamePtrs.data()));
+        checkError(nvrtcCreateProgram(&program, srcCode.data(), programName.data(), 0, nullptr, nullptr));
 
-        mProgram.reset(program, Deleter{});
-      }
+        return program;
+      }()}
+      {}
 
       /// @brief Copy constructor.
       Program(const Program&) = delete;
@@ -285,20 +225,16 @@ namespace afft::detail::cuda::rtc
 
       /**
        * @brief Add a name expression.
-       * @param cSymbolName The name of the symbol.
-       */
-      void addNameExpression(CSymbolName cSymbolName)
-      {
-        addNameExpression(std::string_view{cSymbolName});
-      }
-
-      /**
-       * @brief Add a name expression.
        * @param cppSymbolName The name of the symbol.
        */
       void addNameExpression(CppSymbolName cppSymbolName)
       {
-        addNameExpression(std::string_view{cppSymbolName});
+        if (mIsCompiled)
+        {
+          throw std::runtime_error{"The program is already compiled"};
+        }
+
+        checkError(nvrtcAddNameExpression(mProgram.get(), cppSymbolName.data()));
       }
 
       /**
@@ -342,7 +278,7 @@ namespace afft::detail::cuda::rtc
 
         checkError(nvrtcGetLoweredName(mProgram.get(), cppSymbolName.data(), &loweredName));
 
-        return CppLoweredSymbolName(loweredName, mProgram, CppLoweredSymbolName::PriviledgeToken{});
+        return CppLoweredSymbolName{loweredName};
       }
 
       /**
@@ -368,7 +304,7 @@ namespace afft::detail::cuda::rtc
           throw std::runtime_error{"Invalid code type"};
         }
 
-        Code code(codeType, size, Code::PrivilegedToken{});
+        Code code{codeType, size};
         switch (codeType)
         {
         case CodeType::PTX:     checkError(nvrtcGetPTX(mProgram.get(), code.data()));     break;
@@ -389,20 +325,6 @@ namespace afft::detail::cuda::rtc
     protected:
     private:
       /**
-       * @brief Add a name expression.
-       * @param symbolName The name of the symbol.
-       */
-      void addNameExpression(std::string_view symbolName)
-      {
-        if (mIsCompiled)
-        {
-          throw std::runtime_error{"The program is already compiled"};
-        }
-
-        checkError(nvrtcAddNameExpression(mProgram.get(), symbolName.data()));
-      }
-
-      /**
        * @struct Deleter
        * @brief A deleter for the nvrtcProgram.
        */
@@ -414,16 +336,13 @@ namespace afft::detail::cuda::rtc
          */
         void operator()(nvrtcProgram program) const
         {
-          if (program != nullptr)
-          {
-            nvrtcDestroyProgram(&program);
-          }
+          nvrtcDestroyProgram(&program);
         }
       };
 
-      std::shared_ptr<std::remove_pointer_t<nvrtcProgram>> mProgram{};        ///< The program.
-      bool                                                 mIsCompiled{};     ///< Program is compiled.
-      std::string                                          mCompilationLog{}; ///< The compilation log.
+      std::unique_ptr<std::remove_pointer_t<nvrtcProgram>, Deleter> mProgram{};        ///< The program.
+      bool                                                          mIsCompiled{};     ///< Program is compiled.
+      std::string                                                   mCompilationLog{}; ///< The compilation log.
   };
 
   /**
@@ -461,7 +380,7 @@ namespace afft::detail::cuda::rtc
     int ccMinor{};
     cuda::checkError(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
 
-    return cformat("-arch=sm_%d%d", ccMajor, ccMinor);
+    return cformat("-arch=compute_%d%d", ccMajor, ccMinor);
   }
 
   /**
