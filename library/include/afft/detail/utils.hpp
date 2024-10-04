@@ -309,64 +309,7 @@ namespace afft::detail
   {
     static_assert(std::is_integral_v<I>, "div() can only be used with integral types.");
 
-    return DivResult<I>{/* .quotient  = */ a / b,
-                        /* .remainder = */ a % b};
-  }
-
-  /**
-   * @brief Struct that contains the NEmbed and stride format.
-   * @tparam I Integral type.
-   */
-  template<typename I>
-  struct NEmbedAndStride
-  {
-    static_assert(std::is_integral_v<I>, "I must be an integral type");
-    
-    MaxDimBuffer<I> nembed; ///< NEmbed buffer.
-    I               stride; ///< Stride.
-  };
-
-  /**
-   * @brief Creates an NEmbed and stride object from shape and strides.
-   * @tparam I Integral type.
-   * @tparam shapeExt Size of the shape view.
-   * @tparam strideExt Size of the strides view.
-   * @param shape Shape view.
-   * @param strides Strides view.
-   * @return NEmbed and stride object.
-   * @throw std::runtime_error if the shape and strides have different sizes.
-   */
-  template<typename I, std::size_t shapeExt, std::size_t strideExt>
-  [[nodiscard]] constexpr NEmbedAndStride<I> makeNEmbedAndStride(View<Size, shapeExt> shape, View<I, strideExt> strides)
-  {
-    static_assert((shapeExt == dynamicExtent) ||
-                  (strideExt == dynamicExtent) ||
-                  (shapeExt == strideExt), "Shape and strides must have the same size");
-
-    if (shape.size() != strides.size())
-    {
-      throw std::runtime_error{"Shape and strides must have the same size"};
-    }
-
-    NEmbedAndStride<I> nembedAndStride{};
-
-    const std::size_t rank = shape.size();
-
-    nembedAndStride.stride = safeIntCast<I>(strides.back());
-
-    for (std::size_t i{rank - 1}; i > 0; --i)
-    {
-      const auto [nembed, remainder] = div(strides[i - 1], strides[i]);
-
-      if (nembed < strides[i] || remainder != 0)
-      {
-        throw std::runtime_error{"Strides cannot be converted to nembed and stride"};
-      }
-
-      nembedAndStride.nembed[i] = safeIntCast<I>(nembed);
-    }
-
-    return nembedAndStride;
+    return DivResult<I>{a / b, a % b};
   }
 } // namespace afft::detail
 

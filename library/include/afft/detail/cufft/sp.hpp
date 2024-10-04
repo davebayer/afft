@@ -73,7 +73,9 @@ namespace afft::detail::cufft::sp
       SingleDevicePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
       : Parent{desc, backendParams}
       {
-        cuda::ScopedDevice scopedDevice{Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices()[0]};
+        const int device = Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices()[0];
+
+        cuda::ScopedDevice scopedDevice{device};
 
         if (Parent::mBackendParams.cufft.usePatientJit)
         {
@@ -101,20 +103,35 @@ namespace afft::detail::cufft::sp
 
         const auto& memDesc = Parent::mDesc.template getMemDesc<MemoryLayout::centralized>();
 
-        if (!memDesc.hasDefaultSrcStrides() || !memDesc.hasDefaultDstStrides())
-        {
-          throw Exception(Error::cufft, "only default strides are supported");
-        }
+        const auto shapeRank     = Parent::mDesc.getShapeRank();
+        const auto transformRank = Parent::mDesc.getTransformRank();
+        const auto transformAxes = Parent::mDesc.getTransformAxes();
+        const auto srcShape      = Parent::mDesc.getSrcShape();
+        const auto dstShape      = Parent::mDesc.getDstShape();
 
-        SizeT howMany{1};
-        SizeT srcDist{};
-        SizeT dstDist{};
+        auto n                  = Parent::mDesc.template getTransformDimsAs<SizeT>();
+        auto srcNEmbedAndStride = makeNEmbedAndStride<SizeT>({srcShape.data, shapeRank},
+                                                             transformAxes,
+                                                             memDesc.getSrcStrides());
+        auto dstNEmbedAndStride = makeNEmbedAndStride<SizeT>({dstShape.data, shapeRank},
+                                                             transformAxes,
+                                                             memDesc.getDstStrides());
+
+        SizeT batch{1};
+        SizeT srcDist = srcNEmbedAndStride.stride * std::accumulate(srcNEmbedAndStride.nEmbed.data,
+                                                                    srcNEmbedAndStride.nEmbed.data + transformRank,
+                                                                    SizeT{1},
+                                                                    std::multiplies<>{});
+        SizeT dstDist = dstNEmbedAndStride.stride * std::accumulate(dstNEmbedAndStride.nEmbed.data,
+                                                                    dstNEmbedAndStride.nEmbed.data + transformRank,
+                                                                    SizeT{1},
+                                                                    std::multiplies<>{});
 
         if (Parent::mDesc.getTransformHowManyRank() == 1)
         {
           const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
 
-          howMany = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
+          batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
           srcDist = safeIntCast<SizeT>(memDesc.getSrcStrides()[howManyAxis]);
           dstDist = safeIntCast<SizeT>(memDesc.getDstStrides()[howManyAxis]);
         }
@@ -123,46 +140,32 @@ namespace afft::detail::cufft::sp
         if (const auto normalization = Parent::mDesc.getNormalization();
             normalization == Normalization::unitary || normalization == Normalization::orthogonal)
         {
-          const auto precision  = Parent::mDesc.getPrecision().execution;
           const auto complexity = dstCmpl;
           const auto normFactor = Parent::mDesc.template getNormalizationFactor<double>();
 
-          cuda::rtc::Program program{normalizationCallbackSrcCode, "cufftNormCallback.cu"};
-
-          const auto precisionDef  = cuda::rtc::makeDefinitionOption("PREC", precision == Precision::f32 ? "PREC_F32" : "PREC_F64");
-          const auto complexityDef = cuda::rtc::makeDefinitionOption("CMPL", complexity == Complexity::real ? "CMPL_R" : "CMPL_C");
-          const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", std::to_string(normFactor).data());
-
-          const char* options[]{precisionDef.c_str(), complexityDef.c_str(), normFactorDef.c_str(), "--relocatable-device-code=true", "-dlto"};
-
-          if (!program.compile(options))
-          {
-            throw Exception{Error::cufft, "failed to compile the normalization callback"};
-          }
-
-          const auto callbackCode = program.getCode(cuda::rtc::CodeType::LTOIR);
+          const auto ltoirCode = makeNormalizationStoreCallbackCode(device, precision, complexity, normFactor);
 
           checkError(cufftXtSetJITCallback(mHandle,
                                            (complexity == Complexity::real) ? "storeReal" : "storeComplex",
-                                           callbackCode.data(),
-                                           callbackCode.size(),
+                                           ltoirCode.data(),
+                                           ltoirCode.size(),
                                            makeStoreCallbackType(precision, complexity),
                                            nullptr));
         }
 #     endif
 
         checkError(cufftXtMakePlanMany(mHandle,
-                                       static_cast<int>(Parent::mDesc.getTransformRank()),
-                                       Parent::mDesc.template getTransformDimsAs<SizeT>().data(),
-                                       nullptr,
-                                       1,
+                                       static_cast<int>(transformRank),
+                                       n.data(),
+                                       srcNEmbedAndStride.nEmbed.data,
+                                       srcNEmbedAndStride.stride,
                                        srcDist,
                                        makeCudaDataType(precision, srcCmpl),
-                                       nullptr,
-                                       1,
+                                       dstNEmbedAndStride.nEmbed.data,
+                                       dstNEmbedAndStride.stride,
                                        dstDist,
                                        makeCudaDataType(precision, dstCmpl),
-                                       howMany,
+                                       batch,
                                        &mWorkspaceSize,
                                        makeCudaDataType(precision, Complexity::complex)));
       }

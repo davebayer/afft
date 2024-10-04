@@ -40,6 +40,56 @@
 
 namespace afft::detail
 {
+  /**
+   * @breif NEmbed and stride structure.
+   * @tparam T Type of the result elements.
+   */
+  template<typename T>
+  struct NEmbedAndStride
+  {
+    static_assert(std::is_integral_v<T>, "T must be an integral type");
+
+    MaxDimBuffer<T> nEmbed; ///< NEmbed.
+    T               stride; ///< Stride.
+  };
+
+  /**
+   * @brief Makes nEmbed and stride from shape and strides.
+   * @tparam T Type of the result elements.
+   * @param shape Shape.
+   * @param axes Axes.
+   * @param strides Strides.
+   * @return NEmbed and stride or std::nullopt if the shape and strides do not have the NEmbed and stride format.
+   */
+  template<typename T = Size>
+  [[nodiscard]] constexpr NEmbedAndStride<T>
+  makeNEmbedAndStride(View<Size> shape, View<Axis> axes, View<Size> strides)
+  {
+    if (shape.size() != strides.size())
+    {
+      throw Exception{Error::internal, "shape and strides must have the same size"};
+    }
+
+    NEmbedAndStride<T> nEmbedAndStride{};
+    nEmbedAndStride.stride = strides.back();
+
+    for (std::size_t i = axes.size() - 1; i > 0; --i)
+    {
+      auto [quot, rem] = div(strides[axes[i - 1]], strides[axes[i]]);
+
+      if (quot < shape[axes[i]] || rem != 0)
+      {
+        throw Exception{Error::invalidArgument, "strides cannot be converted to nEmbed and stride"};
+      }
+
+      nEmbedAndStride.nEmbed.data[i] = safeIntCast<T>(quot);
+    }
+
+    nEmbedAndStride.nEmbed.data[0] = safeIntCast<T>(shape[axes.front()]);
+
+    return nEmbedAndStride;
+  }
+
   /// @brief Centralized memory layout descriptor
   class CentralMemDesc
   {

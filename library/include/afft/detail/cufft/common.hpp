@@ -77,9 +77,12 @@ namespace afft::detail::cufft
       cufftHandle mHandle{}; ///< cuFFT handle.
   };
 
-  /// @brief cuFFT normalization callback source code
-  inline constexpr std::string_view normalizationCallbackSrcCode
-  {R"(
+  [[nodiscard]] inline cuda::rtc::Code makeNormalizationStoreCallbackCode(const int        device,
+                                                                          const Precision  prec,
+                                                                          const Complexity cmpl,
+                                                                          const double     normFactor)
+  {
+    static constexpr std::string_view srcCode{R"(
 #define PREC_F32 (0) // single precision
 #define PREC_F64 (1) // double precision
 
@@ -124,21 +127,61 @@ using Complex = cufftDoubleComplex;
 inline constexpr Real normFactor = static_cast<Real>(NORM_FACT);
 
 // cuFFT callback function to store normalized data
-extern "C" __device__ void storeReal(void* dataOut, size_t offset, Real element, void*, void*)
+extern "C" void storeReal(void* dataOut, size_t offset, Real element, void*, void*)
 {
   element *= normFactor;
 
   reinterpret_cast<Real*>(dataOut)[offset] = element;
 }
 
-extern "C" __device__ void storeComplex(void* dataOut, size_t offset, Complex element, void*, void*)
+extern "C" void storeComplex(void* dataOut, size_t offset, Complex element, void*, void*)
 {
   element.x *= normFactor;
   element.y *= normFactor;
 
   reinterpret_cast<Complex*>(dataOut)[offset] = element;
-}
-  )"};
+})"};
+
+    if (prec != Precision::f32 && prec != Precision::f64)
+    {
+      throw Exception{Error::cufft, "unsupported precision for normalization callback"};
+    }
+
+    cuda::rtc::Program program{srcCode, "cufftNormCallback.cu"};
+
+    const auto precisionDef  = cuda::rtc::makeDefinitionOption("PREC", prec == Precision::f32 ? "PREC_F32" : "PREC_F64");
+    const auto complexityDef = cuda::rtc::makeDefinitionOption("CMPL", cmpl == Complexity::real ? "CMPL_R" : "CMPL_C");
+
+    std::array<char, 32> normFactorStr{};
+    const auto [ptr, ec] = std::to_chars(normFactorStr.data(),
+                                          normFactorStr.data() + normFactorStr.size(),
+                                          normFactor,
+                                          std::chars_format::general, 
+                                          16);
+
+    if (ec != std::errc{})
+    {
+      throw Exception{Error::cufft, "failed to convert normalization factor to string"};
+    }
+    
+    const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", {normFactorStr.data(), static_cast<std::size_t>(ptr - normFactorStr.data())});
+    const auto archOption    = cuda::rtc::makeArchOption(device);
+
+    const char* options[]{precisionDef.c_str(),
+                          complexityDef.c_str(),
+                          normFactorDef.c_str(),
+                          archOption.c_str(),
+                          "-default-device",
+                          "-dc",
+                          "-dlto"};
+
+    if (!program.compile(options))
+    {
+      throw Exception{Error::cufft, "failed to compile the normalization callback"};
+    }
+
+    return program.getCode(cuda::rtc::CodeType::LTOIR);
+  }
 
   /**
    * @brief Make the cuFFT direction.

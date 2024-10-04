@@ -63,7 +63,6 @@
 #ifdef AFFT_ENABLE_CUDA
 # cmakedefine AFFT_ENABLE_CUFFT
 # ifdef AFFT_ENABLE_CUFFT
-#   cmakedefine AFFT_CUFFT_IS_LTO_EA
 #   ifdef AFFT_ENABLE_MPI
 #     cmakedefine AFFT_CUFFT_HAS_MP
 #   endif
