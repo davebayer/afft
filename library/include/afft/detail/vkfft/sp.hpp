@@ -383,34 +383,38 @@ namespace afft::detail::vkfft::sp
         vkfftConfig.inputBufferSeparateComplexComponents  = separateComplexComponents;
         vkfftConfig.outputBufferSeparateComplexComponents = separateComplexComponents;
 
-        // Set up VkFFT config buffer strides
-        vkfftConfig.isInputFormatted  = direction == Direction::forward && desc.getPlacement() == Placement::outOfPlace;
-        vkfftConfig.isOutputFormatted = direction == Direction::inverse && desc.getPlacement() == Placement::outOfPlace;
+        const auto  shapeRank     = desc.getShapeRank();
+        const auto& memDesc       = desc.getMemDesc<MemoryLayout::centralized>();
+        const auto  ioStrides     = (direction == Direction::forward) ? memDesc.getSrcStrides() : memDesc.getDstStrides();
+        const auto  bufferStrides = (direction == Direction::forward) ? memDesc.getDstStrides() : memDesc.getSrcStrides();
 
         // TODO: fix inplace
-        UInt* srcStrides = (direction == Direction::forward) ? vkfftConfig.inputBufferStride : vkfftConfig.bufferStride;
-        UInt* dstStrides = (direction == Direction::forward) ? vkfftConfig.bufferStride : vkfftConfig.outputBufferStride;
-
-        const auto& memDesc = desc.getMemDesc<MemoryLayout::centralized>();
-
-        if (memDesc.getSrcStrides().back() != 1)
+        if (desc.getPlacement() == Placement::outOfPlace)
         {
-          throw Exception{Error::vkfft, "source fastest axis stride must be 1"};
-        }
+          vkfftConfig.isInputFormatted  = (direction == Direction::forward);
+          vkfftConfig.isOutputFormatted = (direction == Direction::inverse);
 
-        if (memDesc.getDstStrides().back() != 1)
+          if (memDesc.getSrcStrides().back() != 1)
+          {
+            throw Exception{Error::vkfft, "source fastest axis stride must be 1"};
+          }
+
+          if (memDesc.getDstStrides().back() != 1)
+          {
+            throw Exception{Error::vkfft, "destination fastest axis stride must be 1"};
+          }
+
+          for (std::size_t i{}; i < shapeRank - 1; ++i)
+          {
+            vkfftConfig.bufferStride[i]       = safeIntCast<UInt>(bufferStrides[shapeRank - i - 2]);
+            vkfftConfig.inputBufferStride[i]  = safeIntCast<UInt>(ioStrides[shapeRank - i - 2]);
+            vkfftConfig.outputBufferStride[i] = safeIntCast<UInt>(ioStrides[shapeRank - i - 2]);
+          }
+        }
+        else
         {
-          throw Exception{Error::vkfft, "destination fastest axis stride must be 1"};
+          throw Exception{Error::vkfft, "inplace is not implemented yet"};
         }
-
-        for (std::size_t i{}; i < desc.getShapeRank() - 1; ++i)
-        {
-          srcStrides[i] = safeIntCast<UInt>(memDesc.getSrcStrides()[desc.getShapeRank() - i - 2]);
-          dstStrides[i] = safeIntCast<UInt>(memDesc.getDstStrides()[desc.getShapeRank() - i - 2]);
-        }
-
-        srcStrides[desc.getShapeRank() - 1] = safeIntCast<UInt>(memDesc.getSrcStrides().front()) * vkfftConfig.size[desc.getShapeRank() - 1];
-        dstStrides[desc.getShapeRank() - 1] = safeIntCast<UInt>(memDesc.getDstStrides().front()) * vkfftConfig.size[desc.getShapeRank() - 1];
       }
 
 #   if AFFT_VKFFT_BACKEND == 1
@@ -427,12 +431,12 @@ namespace afft::detail::vkfft::sp
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-          launchParams.inputBuffer = const_cast<void**>(src.data());
-          launchParams.buffer      = const_cast<void**>(dst.data());
+          launchParams.inputBuffer = src.data();
+          launchParams.buffer      = dst.data();
           break;
         case Direction::inverse:
-          launchParams.buffer       = const_cast<void**>(src.data());
-          launchParams.outputBuffer = const_cast<void**>(dst.data());
+          launchParams.buffer       = src.data();
+          launchParams.outputBuffer = dst.data();
           break;
         default:
           cxx::unreachable();
@@ -461,12 +465,12 @@ namespace afft::detail::vkfft::sp
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-          launchParams.inputBuffer = const_cast<void**>(src.data());
-          launchParams.buffer      = const_cast<void**>(dst.data());
+          launchParams.inputBuffer = csrc.data();
+          launchParams.buffer      = cdst.data();
           break;
         case Direction::backward:
-          launchParams.buffer       = const_cast<void**>(src.data());
-          launchParams.outputBuffer = const_cast<void**>(dst.data());
+          launchParams.buffer       = src.data();
+          launchParams.outputBuffer = dst.data();
           break;
         default:
           cxx::unreachable();
