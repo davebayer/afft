@@ -47,11 +47,6 @@ namespace afft::detail::cufft
   {
     const auto& descImpl = desc.get(DescToken::make());
 
-    if (descImpl.getTransformHowManyRank() > 1)
-    {
-      throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
-    }
-
     if (descImpl.getComplexFormat() != ComplexFormat::interleaved)
     {
       throw Exception{Error::cufft, "only interleaved complex format is supported"};

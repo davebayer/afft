@@ -108,32 +108,70 @@ namespace afft::detail::cufft::sp
         const auto transformAxes = Parent::mDesc.getTransformAxes();
         const auto srcShape      = Parent::mDesc.getSrcShape();
         const auto dstShape      = Parent::mDesc.getDstShape();
+        const auto srcStrides    = memDesc.getSrcStrides();
+        const auto dstStrides    = memDesc.getDstStrides();
 
         auto n                  = Parent::mDesc.template getTransformDimsAs<SizeT>();
         auto srcNEmbedAndStride = makeNEmbedAndStride<SizeT>({srcShape.data, shapeRank},
                                                              transformAxes,
-                                                             memDesc.getSrcStrides());
+                                                             srcStrides);
         auto dstNEmbedAndStride = makeNEmbedAndStride<SizeT>({dstShape.data, shapeRank},
                                                              transformAxes,
-                                                             memDesc.getDstStrides());
+                                                             dstStrides);
 
-        SizeT batch{1};
-        SizeT srcDist = srcNEmbedAndStride.stride * std::accumulate(srcNEmbedAndStride.nEmbed.data,
-                                                                    srcNEmbedAndStride.nEmbed.data + transformRank,
-                                                                    SizeT{1},
-                                                                    std::multiplies<>{});
-        SizeT dstDist = dstNEmbedAndStride.stride * std::accumulate(dstNEmbedAndStride.nEmbed.data,
-                                                                    dstNEmbedAndStride.nEmbed.data + transformRank,
-                                                                    SizeT{1},
-                                                                    std::multiplies<>{});
+        SizeT batch{};
+        SizeT srcDist{};
+        SizeT dstDist{};
 
-        if (Parent::mDesc.getTransformHowManyRank() == 1)
+        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 0)
+        {
+          batch   = 1;
+          srcDist = srcNEmbedAndStride.stride * std::accumulate(srcNEmbedAndStride.nEmbed.data,
+                                                                srcNEmbedAndStride.nEmbed.data + transformRank,
+                                                                SizeT{1},
+                                                                std::multiplies<>{});
+          dstDist = dstNEmbedAndStride.stride * std::accumulate(dstNEmbedAndStride.nEmbed.data,
+                                                                dstNEmbedAndStride.nEmbed.data + transformRank,
+                                                                SizeT{1},
+                                                                std::multiplies<>{});
+        }
+        else if (howManyRank == 1)
         {
           const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
 
           batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
-          srcDist = safeIntCast<SizeT>(memDesc.getSrcStrides()[howManyAxis]);
-          dstDist = safeIntCast<SizeT>(memDesc.getDstStrides()[howManyAxis]);
+          srcDist = safeIntCast<SizeT>(srcStrides[howManyAxis]);
+          dstDist = safeIntCast<SizeT>(dstStrides[howManyAxis]);
+        }
+        else
+        {
+          const auto shape       = Parent::mDesc.getShape();
+          const auto howManyAxes = mDesc.getTransformHowManyAxes();
+          const auto howManyDims = mDesc.getTransformHowManyDimsAs<Size>();
+
+          batch   = shape[howManyAxes.front()];
+          srcDist = safeIntCast<SizeT>(srcStrides[howManyAxes.back()]);
+          dstDist = safeIntCast<SizeT>(dstStrides[howManyAxes.back()]);
+
+          for (std::size_t i = howManyAxes.size() - 1; i > 0; --i)
+          {
+            if (howManyAxes[i] != howManyAxes[i - 1] + 1)
+            {
+              throw Exception{Error::cufft, "unsupported how many axes"};
+            }
+
+            if (srcStrides[howManyAxes[i]] * srcShape[howManyAxes[i]] != srcStrides[howManyAxes[i - 1]])
+            {
+              throw Exception{Error::cufft, "unsupported how many strides"};
+            }
+
+            if (dstStrides[howManyAxes[i]] * dstShape[howManyAxes[i]] != dstStrides[howManyAxes[i - 1]])
+            {
+              throw Exception{Error::cufft, "unsupported how many strides"};
+            }
+
+            batch *= shape[howManyAxes[i]];
+          }
         }
 
 #     if CUFFT_VERSION >= 11300
@@ -260,6 +298,11 @@ namespace afft::detail::cufft::sp
       if (descImpl.getNormalization() != Normalization::none)
       {
         throw Exception{Error::cufft, "normalization is not supported"};
+      }
+
+      if (descImpl.getTransformHowManyRank() > 1)
+      {
+        throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
       }
       
       throw Exception(Error::cufft, "multi-GPU transforms are not yet supported");
