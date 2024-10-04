@@ -35,7 +35,7 @@ classdef TestIfftn < afft.test.unit.AbstractTestTransform
 
   methods
     function testSuccess(testCase, backend, precision, normalization, gridSize, symmetricFlag)
-      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'complex');
+      src = afft.test.unit.TestIfftn.generateSrcArray(backend, gridSize, precision, symmetricFlag);
 
       dstRef = afft.test.unit.TestIfftn.computeReference(src, normalization, symmetricFlag);
       dst    = afft.ifftn(src, ...
@@ -48,7 +48,7 @@ classdef TestIfftn < afft.test.unit.AbstractTestTransform
     end
 
     function testFailure(testCase, backend, precision, normalization, gridSize, symmetricFlag)
-      src = afft.test.unit.AbstractTestTransform.generateSrcArray(backend, gridSize, precision, 'complex');
+      src = afft.test.unit.TestIfftn.generateSrcArray(backend, gridSize, precision, symmetricFlag);
 
       try
         dst = afft.ifftn(src, ...
