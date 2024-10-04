@@ -40,6 +40,7 @@ enum class Call : std::uint32_t
   maxDimCount = 0,
   hasGpuSupport,
   hasBackend,
+  hasCufftCallbacks,
 
   // clearPlanCache = 100,
 
@@ -132,6 +133,9 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
     break;
   case Call::hasBackend:
     hasBackend(lhs, rhsSubspan);
+    break;
+  case Call::hasCufftCallbacks:
+    hasCufftCallbacks(lhs, rhsSubspan);
     break;
   // case Call::clearPlanCache:
   //   clearPlanCache(lhs, rhsSubspan);

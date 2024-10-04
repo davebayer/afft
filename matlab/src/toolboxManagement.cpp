@@ -134,6 +134,30 @@ void hasBackend(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 }
 
 /**
+ * @brief Check if the cufft backend has callbacks.
+ * @param lhs Left-hand side array of size 1.
+ * @param rhs Right-hand side array of size 0.
+ */
+void hasCufftCallbacks(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+{
+  if (rhs.size() != 0)
+  {
+    throw mx::Exception{"afft:hasCufftCallbacks:invalidArgumentCount", "invalid argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:hasCufftCallbacks:invalidOutputCount", "invalid output count"};
+  }
+
+#if defined(AFFT_ENABLE_CUFFT) && CUFFT_VERSION >= 11300
+  lhs[0] = mx::makeLogicalScalar(true);
+#else
+  lhs[0] = mx::makeLogicalScalar(false);
+#endif
+}
+
+/**
  * @brief Clear the plan cache.
  * @param lhs Left-hand side array of size 0.
  * @param rhs Right-hand side array of size 0.
