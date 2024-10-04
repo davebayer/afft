@@ -195,32 +195,72 @@ namespace afft::detail::mkl::sp
           cxx::unreachable();
         }
 
-        MKL_LONG srcStrides[maxDimCount + 1]{};
-        MKL_LONG dstStrides[maxDimCount + 1]{};
-
-        std::size_t i{1};
-
-        for (auto axis : mDesc.getTransformAxes())
         {
-          srcStrides[i] = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[axis]);
-          dstStrides[i] = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[axis]);
-          ++i;
+          MKL_LONG srcStrides[maxDimCount + 1]{};
+          MKL_LONG dstStrides[maxDimCount + 1]{};
+
+          std::size_t i{1};
+
+          for (auto axis : mDesc.getTransformAxes())
+          {
+            srcStrides[i] = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[axis]);
+            dstStrides[i] = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[axis]);
+            ++i;
+          }
+          
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
         }
         
-        checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
-        checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
-        
-        if (mDesc.getTransformHowManyRank() == 1)
         {
-          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+          const auto srcStrides = memDesc.getSrcStrides();
+          const auto dstStrides = memDesc.getDstStrides();
 
-          const auto howMany = safeIntCast<MKL_LONG>(mDesc.getShape()[howManyAxis]);
+          MKL_LONG numberOfTransforms{1};
+          MKL_LONG srcDist{1};
+          MKL_LONG dstDist{1};
 
-          checkError(DftiSetValue(mDftiHandle.get(), DFTI_NUMBER_OF_TRANSFORMS, howMany));
+          if (const auto howManyRank = mDesc.getTransformHowManyRank(); howManyRank == 1)
+          {
+            const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
 
-          const auto srcDist = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[howManyAxis]);
-          const auto dstDist = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[howManyAxis]);
+            numberOfTransforms = safeIntCast<MKL_LONG>(Parent::mDesc.getShape()[howManyAxis]);
+            srcDist            = safeIntCast<MKL_LONG>(srcStrides[howManyAxis]);
+            dstDist            = safeIntCast<MKL_LONG>(dstStrides[howManyAxis]);
+          }
+          else if (howManyRank > 1)
+          {
+            const auto shape       = Parent::mDesc.getShape();
+            const auto srcShape    = Parent::mDesc.getSrcShape();
+            const auto dstShape    = Parent::mDesc.getDstShape();
+            const auto howManyAxes = mDesc.getTransformHowManyAxes();
 
+            numberOfTransforms = shape[howManyAxes.front()];
+            srcDist            = safeIntCast<MKL_LONG>(srcStrides[howManyAxes.back()]);
+            dstDist            = safeIntCast<MKL_LONG>(dstStrides[howManyAxes.back()]);
+
+            for (std::size_t i = howManyAxes.size() - 1; i > 0; --i)
+            {
+              if (howManyAxes[i] != howManyAxes[i - 1] + 1)
+              {
+                throw Exception{Error::cufft, "unsupported how many axes"};
+              }
+
+              if (srcStrides[howManyAxes[i]] * srcShape[howManyAxes[i]] != srcStrides[howManyAxes[i - 1]])
+              {
+                throw Exception{Error::cufft, "unsupported how many strides"};
+              }
+
+              if (dstStrides[howManyAxes[i]] * dstShape[howManyAxes[i]] != dstStrides[howManyAxes[i - 1]])
+              {
+                throw Exception{Error::cufft, "unsupported how many strides"};
+              }
+
+              numberOfTransforms *= safeIntCast<MKL_LONG>(shape[howManyAxes[i]]);
+            }
+          }
+
+          checkError(DftiSetValue(mDftiHandle.get(), DFTI_NUMBER_OF_TRANSFORMS, numberOfTransforms));
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_DISTANCE, srcDist));
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_DISTANCE, dstDist));
         }
@@ -598,11 +638,6 @@ namespace afft::detail::mkl::sp
   {
     const auto& descImpl = desc.get(DescToken::make());
 
-    if (descImpl.getTransformHowManyRank() > 1)
-    {
-      throw Exception{Error::mkl, "no more than one dimension can be omitted"};
-    }
-
     if (!descImpl.hasUniformPrecision())
     {
       throw Exception{Error::mkl, "only same precision for execution, source and destination is supported"};
@@ -614,6 +649,11 @@ namespace afft::detail::mkl::sp
     }
     else if constexpr (BackendParamsT::target == Target::openmp)
     {
+      if (descImpl.getTransformHowManyRank() > 1)
+      {
+        throw Exception{Error::mkl, "no more than one dimension can be omitted"};
+      }
+
       return openmp::makePlan(desc, backendParams);
     }
     else

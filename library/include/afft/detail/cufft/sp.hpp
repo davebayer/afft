@@ -119,23 +119,11 @@ namespace afft::detail::cufft::sp
                                                              transformAxes,
                                                              dstStrides);
 
-        SizeT batch{};
-        SizeT srcDist{};
-        SizeT dstDist{};
+        SizeT batch{1};
+        SizeT srcDist{1};
+        SizeT dstDist{1};
 
-        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 0)
-        {
-          batch   = 1;
-          srcDist = srcNEmbedAndStride.stride * std::accumulate(srcNEmbedAndStride.nEmbed.data,
-                                                                srcNEmbedAndStride.nEmbed.data + transformRank,
-                                                                SizeT{1},
-                                                                std::multiplies<>{});
-          dstDist = dstNEmbedAndStride.stride * std::accumulate(dstNEmbedAndStride.nEmbed.data,
-                                                                dstNEmbedAndStride.nEmbed.data + transformRank,
-                                                                SizeT{1},
-                                                                std::multiplies<>{});
-        }
-        else if (howManyRank == 1)
+        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 1)
         {
           const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
 
@@ -143,11 +131,10 @@ namespace afft::detail::cufft::sp
           srcDist = safeIntCast<SizeT>(srcStrides[howManyAxis]);
           dstDist = safeIntCast<SizeT>(dstStrides[howManyAxis]);
         }
-        else
+        else if (howManyRank > 1)
         {
           const auto shape       = Parent::mDesc.getShape();
           const auto howManyAxes = mDesc.getTransformHowManyAxes();
-          const auto howManyDims = mDesc.getTransformHowManyDimsAs<Size>();
 
           batch   = shape[howManyAxes.front()];
           srcDist = safeIntCast<SizeT>(srcStrides[howManyAxes.back()]);
@@ -170,7 +157,7 @@ namespace afft::detail::cufft::sp
               throw Exception{Error::cufft, "unsupported how many strides"};
             }
 
-            batch *= shape[howManyAxes[i]];
+            batch *= safeIntCast<SizeT>(shape[howManyAxes[i]]);
           }
         }
 
