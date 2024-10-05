@@ -1991,7 +1991,163 @@ void dctn(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::
  */
 void idct(matlabw::mx::Span<matlabw::mx::Array> lhs, matlabw::mx::View<matlabw::mx::ArrayCref> rhs)
 {
-  throw mx::Exception{"afft:idct:unimplemented", "not yet implemented"};
+  auto [args, namedArgs] = splitRhsArgs(rhs);
+
+  if (args.size() < 1 || args.size() > 3)
+  {
+    throw mx::Exception{"afft:idct:invalidInputCount", "invalid input argument count"};
+  }
+
+  if (lhs.size() > 1)
+  {
+    throw mx::Exception{"afft:idct:invalidOutputCount", "invalid output argument count"};
+  }
+
+  // To be removed when resize parameter is implemented.
+  if (args.size() > 1 && !args[1].isEmpty())
+  {
+    throw mx::Exception{"afft:idct:unimplemented", "resize parameter not yet implemented, therefore must be empty"};
+  }
+
+  CommonNamedArgsParser commonNamedArgsParser{};
+
+  const auto commonArgs = commonNamedArgsParser(namedArgs);
+
+  auto checkSrcArray = [&](auto&& srcArray)
+  {
+    if (!srcArray.isSingle() && !srcArray.isDouble())
+    {
+      throw mx::Exception{"afft:idct:invalidInputClass", "input array must be floating-point"};
+    }
+
+    if (srcArray.isComplex())
+    {
+      throw mx::Exception{"afft:idct:invalidInputComplexity", "input array must be real"};
+    }
+
+    if (srcArray.getRank() > afft::maxDimCount)
+    {
+      throw mx::Exception{"afft:idct:invalidInputRank", "input array rank exceeds maximum dimension count"};
+    }
+  };
+
+  auto makePlan = [&,
+                   shapeParser      = ShapeParser{},
+                   dctTypeConverter = DctTypeConverter{}]
+                  (auto&&      srcArray,
+                   const auto& targetParams,
+                   const auto& backendParams) mutable
+  {
+    using TargetParamsT = std::decay_t<decltype(targetParams)>;
+
+    static constexpr afft::Target target{TargetParamsT::target};
+
+    const afft::Axis axes[1]{static_cast<afft::Axis>(srcArray.getRank() - 1)};
+
+    afft::dtt::Parameters dttParams{};
+    dttParams.direction     = afft::Direction::inverse;
+    dttParams.precision     = getTransformPrecision(srcArray);
+    dttParams.shape         = shapeParser(srcArray.getDims());
+    dttParams.axes          = axes;
+    dttParams.normalization = commonArgs.normalization;
+    dttParams.placement     = afft::Placement::outOfPlace;
+    dttParams.types         = dctTypeConverter(namedArgs, 1, "afft:idct:invalidDctType");
+
+    const afft::Description desc{dttParams, targetParams};
+
+    switch (commonArgs.selectStrategy)
+    {
+    case afft::SelectStrategy::first:
+    {
+      afft::FirstSelectParameters selectParams{};
+      selectParams.mask  = commonArgs.backendMask;
+      selectParams.order = (target == afft::Target::cpu)
+        ? afft::View<afft::Backend>{cpuBackendOrder} : afft::View<afft::Backend>{gpuBackendOrder};
+
+      return afft::makePlan(desc, backendParams, selectParams);
+    }
+    case afft::SelectStrategy::best:
+    {
+      afft::BestSelectParameters selectParams{};
+      selectParams.mask = commonArgs.backendMask;
+
+      return afft::makePlan(desc, backendParams, selectParams);
+    }
+    default:
+      throw mx::Exception{"afft:idct:invalidSelectStrategy", "invalid select strategy"};
+    }
+  };
+
+#ifdef MATLABW_ENABLE_GPU
+  if (args[0].isGpuArray())
+  {
+    mx::gpu::init();
+
+    mx::gpu::Array src{args[0]};
+
+    if (src.getSize() == 0)
+    {
+      lhs[0] = mx::gpu::makeNumericArray(0, 0, src.getClassId()).release();
+      return;
+    }
+
+    checkSrcArray(src);
+    
+    afft::cuda::BackendParameters backendParams{};
+    backendParams.allowDestructive = true;
+
+    auto plan = makePlan(src, afft::cuda::Parameters{}, backendParams);
+
+    auto dst = mx::gpu::makeUninitNumericArray(src.getDims(), src.getClassId());
+
+    if (plan->isDestructive())
+    {
+      mx::gpu::Array tmp{src};
+
+      plan->executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = dst.release();
+  }
+  else
+#endif
+  {
+    mx::ArrayCref src{args[0]};
+
+    if (src.getSize() == 0)
+    {
+      lhs[0] = mx::makeNumericArray(0, 0, src.getClassId());
+      return;
+    }
+
+    checkSrcArray(src);
+
+    afft::cpu::BackendParameters backendParams{};
+    backendParams.allowDestructive  = true;
+    backendParams.threadLimit       = commonArgs.cpuThreadLimit;
+    backendParams.fftw3.plannerFlag = afft::fftw3::PlannerFlag::estimate;
+
+    auto plan = makePlan(src, afft::cpu::Parameters{}, backendParams);
+
+    auto dst = mx::makeUninitNumericArray(src.getDims(), src.getClassId());
+
+    if (plan->isDestructive())
+    {
+      mx::Array tmp{src};
+
+      plan->executeUnsafe(tmp.getData(), dst.getData());
+    }
+    else
+    {
+      plan->executeUnsafe(src.getData(), dst.getData());
+    }
+
+    lhs[0] = std::move(dst);
+  }
 }
 
 /**
