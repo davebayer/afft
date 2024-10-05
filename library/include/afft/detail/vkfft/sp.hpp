@@ -320,13 +320,14 @@ namespace afft::detail::vkfft::sp
         }
         case Transform::dtt:
         {
+          const auto shapeRank     = transformDesc.getShapeRank();
           const auto transformAxes = transformDesc.getTransformAxes();
           const auto dttAxisTypes  = transformDesc.getTransformDesc<Transform::dtt>().types;
 
           for (std::size_t i{}; i < transformDesc.getTransformRank(); ++i)
           {
             // VkFFT uses reverse order of axes
-            const auto vkfftAxis = transformAxes[transformDesc.getTransformRank() - i - 1];
+            const auto vkfftAxis = shapeRank - static_cast<std::size_t>(transformAxes[i]) - 1;
 
             switch (dttAxisTypes[i])
             {
