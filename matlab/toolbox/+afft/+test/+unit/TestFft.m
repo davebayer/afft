@@ -58,7 +58,7 @@ classdef TestFft < afft.test.unit.AbstractTestTransform
     function testCufft(testCase, precision, normalization, gridSize, srcComplexity, dim)
       testCase.assumeTrue(afft.hasGpuSupport && afft.hasBackend('cufft'));
 
-      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || numel(gridSize) > 3
+      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0) || (dim ~= 1 && dim ~= ndims(gridSize))
         testFailure(testCase, 'cufft', precision, normalization, gridSize, srcComplexity, dim);
       else
         testSuccess(testCase, 'cufft', precision, normalization, gridSize, srcComplexity, dim);
@@ -78,7 +78,7 @@ classdef TestFft < afft.test.unit.AbstractTestTransform
     function testMkl(testCase, precision, normalization, gridSize, srcComplexity, dim)
       testCase.assumeTrue(afft.hasBackend('mkl'));
 
-      if numel(gridSize) > 7
+      if dim ~= 1 && dim ~= ndims(gridSize)
         testFailure(testCase, 'mkl', precision, normalization, gridSize, srcComplexity, dim);
       else
         testSuccess(testCase, 'mkl', precision, normalization, gridSize, srcComplexity, dim);
