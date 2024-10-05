@@ -18,7 +18,7 @@ classdef TestIfft < afft.test.unit.AbstractTestTransform
       end
     end
 
-    function dstRef = computeReference(src, dim, normalization)
+    function dstRef = computeReference(src, dim, normalization, symmetricFlag)
       % Compute the reference using the built-in fft2 function.
       dstRef = ifft(src, [], dim, symmetricFlag);
 
@@ -26,10 +26,10 @@ classdef TestIfft < afft.test.unit.AbstractTestTransform
 
       % Modify the reference to match the given normalization.
       if strcmp(normalization, 'none')
+        dstRef = dstRef * transformSize;
       elseif strcmp(normalization, 'unitary')
-        dstRef = dstRef / transformSize;
       elseif strcmp(normalization, 'orthogonal')
-        dstRef = dstRef / sqrt(transformSize);
+        dstRef = dstRef * sqrt(transformSize);
       else
         error('Invalid normalization');
       end
@@ -61,7 +61,7 @@ classdef TestIfft < afft.test.unit.AbstractTestTransform
                         'backend',       backend, ...
                         'normalization', normalization, ...
                         'threadLimit',   afft.test.unit.AbstractTestTransform.cpuThreadLimit);
-        testCase.verifyFail('Expected afft.fft to fail');
+        testCase.verifyFail('Expected afft.ifft to fail');
       catch
       end
     end
@@ -107,10 +107,10 @@ classdef TestIfft < afft.test.unit.AbstractTestTransform
     function testVkfft(testCase, precision, normalization, gridSize, symmetricFlag, dim)
       testCase.assumeTrue(afft.hasGpuSupport && afft.hasBackend('vkfft'));
 
-      if (not(strcmp(normalization, 'none')) && sum(gridSize) > 0)
+      if strcmp(normalization, 'orthogonal') && sum(gridSize) > 0
         testFailure(testCase, 'vkfft', precision, normalization, gridSize, symmetricFlag, dim);
       else
-        testSuccess(testCase, 'vkfft', precision, normalization, gridSize, srcComplexity, dim);
+        testSuccess(testCase, 'vkfft', precision, normalization, gridSize, symmetricFlag, dim);
       end
     end
   end
