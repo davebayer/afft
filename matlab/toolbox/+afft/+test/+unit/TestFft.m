@@ -6,7 +6,7 @@ classdef TestFft < afft.test.unit.AbstractTestTransform
 
   methods (Static)
     function dstRef = computeReference(src, dim, normalization)
-      % Compute the reference using the built-in fft2 function.
+      % Compute the reference using the built-in fft function.
       dstRef = fft(src, [], dim);
 
       transformSize = size(src, dim);

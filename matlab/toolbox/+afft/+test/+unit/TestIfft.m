@@ -19,7 +19,7 @@ classdef TestIfft < afft.test.unit.AbstractTestTransform
     end
 
     function dstRef = computeReference(src, dim, normalization, symmetricFlag)
-      % Compute the reference using the built-in fft2 function.
+      % Compute the reference using the built-in ifft function.
       dstRef = ifft(src, [], dim, symmetricFlag);
 
       transformSize = size(src, dim);
