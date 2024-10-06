@@ -377,6 +377,12 @@ namespace afft::detail::cufft::sp
        */
       void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cuda::ExecutionParameters& execParams) override
       {
+#     if CUFFT_VERSION < 10400
+        if (execParams.stream != cudaStream_t{0})
+        {
+          throw Exception{Error::cufft, "until cuFFT 10.4, the default stream must be used"};
+        }
+#     endif
         checkError(cufftSetStream(mHandle, execParams.stream));
 
         // if (getDesc().useExternalWorkspace())
@@ -440,7 +446,39 @@ namespace afft::detail::cufft::sp
     }
     else if (targetCount > 1 && targetCount <= maxTargetCount)
     {
+      const auto cudaDevices   = descImpl.template getTargetDesc<Target::cuda>().getDevices();
+      const auto shape         = descImpl.getShape();
+      const auto transformAxes = descImpl.getTransformAxes();
+      const auto isRealDataDft = (descImpl.getTransformDesc<Transform::dft>().type != dft::Type::complexToComplex);
 
+      // check if all devices have the same compute capability
+      const auto ccRef = cuda::getComputeCapability(cudaDevices.front());
+      if (std::any_of(std::next(cudaDevices.begin()),
+                      cudaDevices.end(),
+                      [&](auto device){ return cuda::getComputeCapability(device) != ccRef; }))
+      {
+        throw Exception{Error::cufft, "all devices must have the same compute capability"};
+      }
+
+      // check if all devices support UVA
+      if (std::any_of(cudaDevices.begin(), cudaDevices.end(), [&](auto device){ return !cuda::hasUva(device); }))
+      {
+        throw Exception{Error::cufft, "all devices must support UVA"};
+      }
+
+      // check if each transformed dimension is greater than 32
+      if (std::any_of(transformAxes.begin(), transformAxes.end(), [&](auto axis){ return shape[axis] < 32; }))
+      {
+        throw Exception{Error::cufft, "transformed dimensions must be less than 32"};
+      }
+
+      // check if the fastest dimension is even for real data ffts
+      if (isRealDataDft && shape[transformAxes.back()] % 2 != 0)
+      {
+        throw Exception{Error::cufft, "the fastest dimension must be even for real data ffts"};
+      }
+
+      // check if the precision is f32 or f64
       switch (descImpl.getPrecision().execution)
       {
       case Precision::f32:
@@ -450,6 +488,7 @@ namespace afft::detail::cufft::sp
         throw Exception{Error::cufft, "unsupported precision"};
       }
 
+      // check if the transform rank is 2 or 3
       if (const auto rank = descImpl.getTransformRank(); rank != 2 && rank != 3)
       {
         throw Exception{Error::cufft, "only 2D and 3D transforms are supported"};
@@ -457,6 +496,11 @@ namespace afft::detail::cufft::sp
 
       if (const auto howManyRank = descImpl.getTransformHowManyRank(); howManyRank == 0)
       {
+        if (descImpl.getPlacement() != Placement::inPlace)
+        {
+          throw Exception{Error::cufft, "non-batched transforms must be inplace"};
+        }
+
         // TODO: check if src and dst distrib axes are the same
       }
       else if (howManyRank == 1)
