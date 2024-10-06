@@ -31,7 +31,14 @@
 
 // #include "mpst.hpp"
 // #include "spmt.hpp"
-#include "sp.hpp"
+#ifdef AFFT_ENABLE_CUDA
+#  include "sp.hpp"
+#  ifdef AFFT_ENABLE_MPI
+#    ifdef AFFT_CUFFT_HAS_MP
+#      include "mpi.hpp"
+#    endif
+#  endif
+#endif
 
 namespace afft::detail::cufft
 {
@@ -75,14 +82,26 @@ namespace afft::detail::cufft
 
     if constexpr (BackendParamsT::target == Target::cuda)
     {
+#   ifdef AFFT_ENABLE_CUDA
       if constexpr (BackendParamsT::mpBackend == MpBackend::none)
       {
         return sp::makePlan(desc, backendParams);
       }
-      else
+      else if constexpr (BackendParamsT::mpBackend == MpBackend::mpi)
       {
-        throw Exception{Error::cufft, "only none backend is supported"};
+#     ifdef AFFT_ENABLE_MPI
+#       ifdef AFFT_CUFFT_HAS_MP
+        return mpi::makePlan(desc, backendParams);
+#       else
+        throw Exception{Error::cufft, "multi-process cuFFT is not enabled"};
+#       endif
+#     else
+        throw Exception{Error::cufft, "MPI backend is not enabled"};
+#     endif
       }
+#   else
+      throw Exception{Error::cufft, "CUDA backend is not enabled"};
+#   endif
     }
     else
     {

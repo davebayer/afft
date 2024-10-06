@@ -440,15 +440,6 @@ namespace afft::detail::cufft::sp
     }
     else if (targetCount > 1 && targetCount <= maxTargetCount)
     {
-      if (descImpl.getNormalization() != Normalization::none)
-      {
-        throw Exception{Error::cufft, "normalization is not supported"};
-      }
-
-      if (descImpl.getTransformHowManyRank() > 1)
-      {
-        throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
-      }
 
       switch (descImpl.getPrecision().execution)
       {
@@ -457,6 +448,29 @@ namespace afft::detail::cufft::sp
         break;
       default:
         throw Exception{Error::cufft, "unsupported precision"};
+      }
+
+      if (const auto rank = descImpl.getTransformRank(); rank != 2 && rank != 3)
+      {
+        throw Exception{Error::cufft, "only 2D and 3D transforms are supported"};
+      }
+
+      if (const auto howManyRank = descImpl.getTransformHowManyRank(); howManyRank == 0)
+      {
+        // TODO: check if src and dst distrib axes are the same
+      }
+      else if (howManyRank == 1)
+      {
+        // TODO: check if src and dst distrib axes are the same
+      }
+      else
+      {
+        throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
+      }
+
+      if (descImpl.getNormalization() != Normalization::none)
+      {
+        throw Exception{Error::cufft, "normalization is not supported"};
       }
       
       return std::make_unique<MultiDevicePlan>(desc, backendParams);
