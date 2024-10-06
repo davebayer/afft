@@ -534,7 +534,7 @@ AFFT_EXPORT namespace afft
         
         const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
         {
-          return reinterpret_cast<std::uintptr_t>(s) == reinterpret_cast<std::uintptr_t>(d);
+          return reinterpret_cast<detail::cxx::uintptr_t>(s) == reinterpret_cast<detail::cxx::uintptr_t>(d);
         });
         checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
 

@@ -40,11 +40,6 @@
 #include "detail/include.hpp"
 #define AFFT_TOP_LEVEL_INCLUDE
 
-// Check for std::uintptr_t.
-#ifndef UINTPTR_MAX
-# error "afft C++ library requires std::uintptr_t. Please use standard C++ library implementing std::uintptr_t."
-#endif
-
 // Include all public headers.
 #include "backend.hpp"
 #include "common.hpp"

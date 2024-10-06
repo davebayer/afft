@@ -31,6 +31,23 @@
 
 namespace afft::detail::cxx
 {
+// implementation of optinal c++11 features
+inline namespace cxx11
+{
+#ifdef UINTPTR_MAX
+  using ::std::uintptr_t;
+#else
+  static_assert((sizeof(void*) > 0 &&                             // void* is greater than 0
+                 ((sizeof(void*) & (sizeof(void*) - 1)) == 0) &&  // void* is a power of 2
+                 sizeof(void*) <= sizeof(std::uint64_t)),         // void* is not greater than 64 bits
+                "uintptr_t is not defined and cannot be implemented");
+
+  using uintptr_t = std::conditional_t<sizeof(void*) == sizeof(std::uint16_t), std::uint16_t,
+                    std::conditional_t<sizeof(void*) == sizeof(std::uint32_t), std::uint32_t,
+                    std::conditional_t<sizeof(void*) == sizeof(std::uint64_t), std::uint64_t, void>>>;
+#endif
+} // namespace cxx11
+
 inline namespace cxx20
 {
   /**

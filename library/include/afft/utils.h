@@ -44,24 +44,7 @@ extern "C"
  * @param ... Pointers.
  * @return Alignment.
  */
-static inline afft_Alignment afft_alignmentOf(size_t count, ...)
-{
-  va_list args;
-  va_start(args, count);
-
-  uintptr_t bitOredPtrs = 0;
-
-  for (size_t i = 0; i < count; ++i)
-  {
-    bitOredPtrs |= va_arg(args, uintptr_t);
-  }
-
-  const afft_Alignment alignment = (afft_Alignment)(bitOredPtrs & ~(bitOredPtrs - 1));
-
-  va_end(args);
-
-  return alignment;
-}
+afft_Alignment afft_alignmentOf(size_t count, ...);
 
 /**
  * @brief Make strides.
