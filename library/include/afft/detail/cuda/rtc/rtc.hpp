@@ -369,16 +369,7 @@ namespace afft::detail::cuda::rtc
    */
   [[nodiscard]] inline std::string makeArchOption(int device)
   {
-    if (!cuda::isValidDevice(device))
-    {
-      throw std::runtime_error{"Invalid device"};
-    }
-
-    int ccMajor{};
-    cuda::checkError(cudaDeviceGetAttribute(&ccMajor, cudaDevAttrComputeCapabilityMajor, device));
-
-    int ccMinor{};
-    cuda::checkError(cudaDeviceGetAttribute(&ccMinor, cudaDevAttrComputeCapabilityMinor, device));
+    const auto [ccMajor, ccMinor] = cuda::getComputeCapability(device);
 
     return cformat("-arch=compute_%d%d", ccMajor, ccMinor);
   }

@@ -65,6 +65,72 @@ namespace afft::detail::cuda
     return device;
   }
 
+  /// @brief Compute capability.
+  struct ComputeCapability
+  {
+    int major{}; ///< Major version.
+    int minor{}; ///< Minor version.
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the compute capabilities are equal, false otherwise.
+     */
+    [[nodiscard]] friend bool operator==(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return lhs.major == rhs.major && lhs.minor == rhs.minor;
+    }
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the compute capabilities are not equal, false otherwise.
+     */
+    [[nodiscard]] friend bool operator!=(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return !(lhs == rhs);
+    }
+  };
+
+  /**
+   * @brief Get the compute capability of a device.
+   * @param device The device.
+   * @return The compute capability.
+   */
+  [[nodiscard]] inline ComputeCapability getComputeCapability(int device)
+  {
+    if (!cuda::isValidDevice(device))
+    {
+      throw Exception{Error::invalidArgument, "invalid device"};
+    }
+
+    ComputeCapability cc{};
+
+    checkError(cudaDeviceGetAttribute(&cc.major, cudaDevAttrComputeCapabilityMajor, device));
+    checkError(cudaDeviceGetAttribute(&cc.minor, cudaDevAttrComputeCapabilityMinor, device));
+
+    return cc;
+  }
+
+  /**
+   * @brief Check if a device supports UVA.
+   * @param device The device.
+   * @return True if the device supports UVA, false otherwise.
+   */
+  [[nodiscard]] inline bool hasUva(int device)
+  {
+    if (!cuda::isValidDevice(device))
+    {
+      throw Exception{Error::invalidArgument, "invalid device"};
+    }
+
+    int hasUva{};
+    checkError(cudaDeviceGetAttribute(&hasUva, cudaDevAttrUnifiedAddressing, device));
+    return (hasUva != 0);
+  }
+
   /**
    * @brief Scoped device sets the current device to the specified device and
    *        restores the previous device when the object goes out of scope.
