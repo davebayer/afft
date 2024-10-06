@@ -51,6 +51,9 @@ namespace afft::detail::cufft::sp
 
 namespace afft::detail::cufft::sp
 {
+  /// @brief The maximum number of targets for sp cufft transforms.
+  inline constexpr std::size_t maxTargetCount = 16;
+
   /**
    * @class PlanImpl
    * @brief Implementation of the sp plan interface for cuFFT.
@@ -241,7 +244,7 @@ namespace afft::detail::cufft::sp
 
         // if (getDesc().useExternalWorkspace())
         // {
-        //   checkError(cufftSetWorkArea(mHandle, execParams.workspace)); 
+        //   checkError(cufftSetWorkArea(mHandle, execParams.externalWorkspaces.front())); 
         // }
 
         checkError(cufftXtExec(mHandle, src.front(), dst.front(), getDirection()));
@@ -251,6 +254,161 @@ namespace afft::detail::cufft::sp
       std::size_t mWorkspaceSize{}; ///< The size of the workspace
       std::size_t mSrcElemCount{};  ///< The number of elements in the source buffer
       std::size_t mDstElemCount{};  ///< The number of elements in the destination buffer
+  };
+
+  /// @brief Plan for multi-GPU cuFFT transforms.
+  class MultiDevicePlan final : public cufft::Plan<MpBackend::none>
+  {
+    private:
+      /// @brief Alias for the parent class.
+      using Parent = cufft::Plan<MpBackend::none>;
+
+    public:
+      /// @brief inherit constructors
+      using Parent::Parent;
+
+      /**
+       * @brief Constructor.
+       * @param desc The plan descriptor.
+       * @param cufftParams The cuFFT parameters.
+       */
+      MultiDevicePlan(const Description& desc, const afft::cuda::BackendParameters& backendParams)
+      : Parent{desc, backendParams}
+      {
+        throw Exception(Error::cufft, "multi-GPU transforms are not yet supported");
+
+        const auto cudaDevices = Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices();
+        const auto targetCount = cudaDevices.size();
+
+        checkError(cufftXtSetGPUs(mHandle, static_cast<int>(targetCount), const_cast<int*>(cudaDevices.data())));
+
+        // // if (desc.useExternalWorkspace())
+        // // {
+        // //   checkError(cufftSetAutoAllocation(mHandle, 0));
+        // // }
+
+        // const auto precision          = Parent::mDesc.getPrecision().execution;
+        // const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
+
+        // const auto shapeRank     = Parent::mDesc.getShapeRank();
+        // const auto transformRank = Parent::mDesc.getTransformRank();
+        // const auto transformAxes = Parent::mDesc.getTransformAxes();
+        // const auto srcShape      = Parent::mDesc.getSrcShape();
+        // const auto dstShape      = Parent::mDesc.getDstShape();
+
+        // checkError(cufftXtMakePlanMany(mHandle,
+        //                                static_cast<int>(transformRank),
+        //                                n.data(),
+        //                                srcNEmbedAndStride.nEmbed.data,
+        //                                srcNEmbedAndStride.stride,
+        //                                srcDist,
+        //                                makeCudaDataType(precision, srcCmpl),
+        //                                dstNEmbedAndStride.nEmbed.data,
+        //                                dstNEmbedAndStride.stride,
+        //                                dstDist,
+        //                                makeCudaDataType(precision, dstCmpl),
+        //                                batch,
+        //                                mWorkspaceSizes.data(),
+        //                                makeCudaDataType(precision, Complexity::complex)));
+
+        // // TODO: set the src and dst target counts
+    
+        const auto srcElemSizeOf = Parent::mDesc.sizeOfSrcElem();
+        const auto dstElemSizeOf = Parent::mDesc.sizeOfDstElem();
+
+        mSrcDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
+        mSrcDesc.nGPUs   = static_cast<int>(targetCount);
+        std::copy_n(cudaDevices.begin(), targetCount, mSrcDesc.GPUs);
+        std::transform(mSrcElemCounts.begin(),
+                       mSrcElemCounts.begin() + targetCount,
+                       mSrcDesc.size,
+                       [&](auto elemCount){ return elemCount * srcElemSizeOf; });
+
+        mDstDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
+        mDstDesc.nGPUs   = static_cast<int>(targetCount);
+        std::copy_n(cudaDevices.begin(), targetCount, mDstDesc.GPUs);
+        std::transform(mDstElemCounts.begin(),
+                       mDstElemCounts.begin() + targetCount,
+                       mDstDesc.size,
+                       [&](auto elemCount){ return elemCount * dstElemSizeOf; });
+
+        // TODO: set the src and dst sub-formats
+      }
+
+      /// @brief Destructor.
+      ~MultiDevicePlan() override = default;
+
+      /// @brief Inherit assignment operator
+      using Parent::operator=;
+
+      /**
+       * @brief Get element count of the source buffers.
+       * @return Element count of the source buffers.
+       */
+      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      {
+        return {mSrcElemCounts.data(), Parent::mDesc.getTargetCount()};
+      }
+
+      /**
+       * @brief Get element count of the destination buffers.
+       * @return Element count of the destination buffers.
+       */
+      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      {
+        return {mDstElemCounts.data(), Parent::mDesc.getTargetCount()};
+      }
+
+      /**
+       * @brief Get the external workspace sizes
+       * @return The workspace sizes
+       */
+      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
+      {
+        return {mWorkspaceSizes.data(), Parent::mDesc.getTargetCount()};
+      }
+
+    private:
+      /**
+       * @brief Implementation of the executeImpl method.
+       * @param src View of the source data pointers.
+       * @param dst View of the destination data pointers.
+       * @param execParams The execution parameters.
+       */
+      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cuda::ExecutionParameters& execParams) override
+      {
+        checkError(cufftSetStream(mHandle, execParams.stream));
+
+        // if (getDesc().useExternalWorkspace())
+        // {
+        //   checkError(cufftXtSetWorkArea(mHandle, execParams.externalWorkspaces.data()));
+        // }
+
+        std::copy(src.begin(), src.end(), mSrcDesc.data);
+        std::copy(dst.begin(), dst.end(), mDstDesc.data);
+
+        cudaLibXtDesc srcLibDesc{};
+        srcLibDesc.descriptor = &mSrcDesc;
+        srcLibDesc.library    = LIB_FORMAT_CUFFT;
+        srcLibDesc.subFormat  = mSrcSubFormat;
+
+        cudaLibXtDesc dstLibDesc{};
+        dstLibDesc.descriptor = &mDstDesc;
+        dstLibDesc.library    = LIB_FORMAT_CUFFT;
+        dstLibDesc.subFormat  = mDstSubFormat;
+
+        // Execute the transform
+        checkError(cufftXtExecDescriptor(mHandle, &srcLibDesc, &dstLibDesc, getDirection()));        
+      }
+
+      Handle                                  mHandle{};         ///< The cuFFT plan handle.
+      std::array<std::size_t, maxTargetCount> mWorkspaceSizes{}; ///< The size of the workspace
+      std::array<std::size_t, maxTargetCount> mSrcElemCounts{};  ///< The number of elements in the source buffer
+      std::array<std::size_t, maxTargetCount> mDstElemCounts{};  ///< The number of elements in the destination buffer
+      cudaXtDesc                              mSrcDesc{};        ///< The source descriptor
+      cudaXtDesc                              mDstDesc{};        ///< The destination descriptor
+      int                                     mSrcSubFormat{};   ///< The source sub-format
+      int                                     mDstSubFormat{};   ///< The destination sub-format
   };
 
   /**
@@ -264,7 +422,7 @@ namespace afft::detail::cufft::sp
   {
     const auto& descImpl = desc.get(DescToken::make());
 
-    if (desc.getTargetCount() == 1)
+    if (const auto targetCount = desc.getTargetCount(); targetCount == 1)
     {
 #   if CUFFT_VERSION >= 11300
       if (const auto prec = descImpl.getPrecision().execution; prec != Precision::f32 && prec != Precision::f64)
@@ -280,7 +438,7 @@ namespace afft::detail::cufft::sp
 
       return std::make_unique<SingleDevicePlan>(desc, backendParams);
     }
-    else
+    else if (targetCount > 1 && targetCount <= maxTargetCount)
     {
       if (descImpl.getNormalization() != Normalization::none)
       {
@@ -291,8 +449,21 @@ namespace afft::detail::cufft::sp
       {
         throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
       }
+
+      switch (descImpl.getPrecision().execution)
+      {
+      case Precision::f32:
+      case Precision::f64:
+        break;
+      default:
+        throw Exception{Error::cufft, "unsupported precision"};
+      }
       
-      throw Exception(Error::cufft, "multi-GPU transforms are not yet supported");
+      return std::make_unique<MultiDevicePlan>(desc, backendParams);
+    }
+    else
+    {
+      throw Exception(Error::cufft, "unsupported target count");
     }
   }
 } // namespace afft::detail::cufft::sp
