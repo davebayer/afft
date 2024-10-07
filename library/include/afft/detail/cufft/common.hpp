@@ -238,6 +238,32 @@ extern "C" void storeComplex(void* dataOut, unsigned long long offset, Complex e
   }
 
   /**
+   * @brief Make the cuFFT type.
+   * @param prec The precision of the data type.
+   * @param dftType The DFT type.
+   * @return The cuFFT type.
+   */
+  [[nodiscard]] inline constexpr cufftType makeCufftType(const Precision prec, dft::Type dftType)
+  {
+    if (prec != Precision::f32 && prec != Precision::f64)
+    {
+      throw Exception{Error::cufft, "unsupported precision for cuFFT type"};
+    }
+
+    switch (dftType)
+    {
+    case dft::Type::complexToComplex:
+      return (prec == Precision::f32) ? CUFFT_C2C : CUFFT_Z2Z;
+    case dft::Type::realToComplex:
+      return (prec == Precision::f32) ? CUFFT_R2C : CUFFT_D2Z;
+    case dft::Type::complexToReal:
+      return (prec == Precision::f32) ? CUFFT_C2R : CUFFT_Z2D;
+    default:
+      throw Exception{Error::cufft, "unsupported DFT type"};
+    }
+  }
+
+  /**
    * @brief Make the cuFFT workspace policy.
    * @param policy The workspace policy.
    * @return The cuFFT workspace policy.
