@@ -428,10 +428,116 @@ namespace afft::detail::cufft::sp
   {
     const auto& descImpl = desc.get(DescToken::make());
 
+    const auto cudaDevices   = descImpl.template getTargetDesc<Target::cuda>().getDevices();
+    const auto precision     = descImpl.getPrecision().execution;
+    const auto shape         = descImpl.getShape();
+    const auto transformAxes = descImpl.getTransformAxes();
+    const auto isRealDataDft = (descImpl.getTransformDesc<Transform::dft>().type != dft::Type::complexToComplex);
+
     if (const auto targetCount = desc.getTargetCount(); targetCount == 1)
     {
+      const auto& memLayout = descImpl.template getMemDesc<MemoryLayout::centralized>();
+      const auto  dftType   = descImpl.getTransformDesc<Transform::dft>().type;
+
+      switch (precision)
+      {
+      case Precision::f16:
+        // compute capability 5.3 or higher
+        if (cuda::getComputeCapability(cudaDevices.front()) < cuda::ComputeCapability{5, 3})
+        {
+          throw Exception{Error::cufft, "f16 precision requires compute capability 5.3 or higher"};
+        }
+
+        // transformed dimensions must be powers of two
+        if (std::any_of(transformAxes.begin(),
+                        transformAxes.end(),
+                        [&](auto axis){ return !isPowerOfTwo(shape[axis]); }))
+        {
+          throw Exception{Error::cufft, "transformed dimensions must be powers of two"};
+        }
+
+        // the fastest dimension must have unit stride for real part of the real data dft
+        switch (dftType)
+        {
+        case dft::Type::realToComplex:
+          if (memLayout.getSrcStrides()[transformAxes.back()] != 1)
+          {
+            throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
+          }
+          break;
+        case dft::Type::complexToReal:
+          if (memLayout.getDstStrides()[transformAxes.back()] != 1)
+          {
+            throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
+          }
+          break;
+        default:
+          break;
+        }
+
+        // the total number of elements must be less than 2^32
+        if (std::accumulate(shape.begin(),
+                            shape.end(),
+                            Size{1},
+                            std::multiplies<>{}) > std::numeric_limits<std::uint32_t>::max())
+        {
+          throw Exception{Error::cufft, "the total number of elements must be less than 2^32"};
+        }
+
+        break;
+      case Precision::bf16:
+        // compute capability 8.0 or higher
+        if (cuda::getComputeCapability(cudaDevices.front()) < cuda::ComputeCapability{8, 0})
+        {
+          throw Exception{Error::cufft, "bf16 precision requires compute capability 8.0 or higher"};
+        }
+
+        // transformed dimensions must be powers of two
+        if (std::any_of(transformAxes.begin(),
+                        transformAxes.end(),
+                        [&](auto axis){ return !isPowerOfTwo(shape[axis]); }))
+        {
+          throw Exception{Error::cufft, "transformed dimensions must be powers of two"};
+        }
+
+        // the fastest dimension must have unit stride for real part of the real data dft
+        switch (dftType)
+        {
+        case dft::Type::realToComplex:
+          if (memLayout.getSrcStrides()[transformAxes.back()] != 1)
+          {
+            throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
+          }
+          break;
+        case dft::Type::complexToReal:
+          if (memLayout.getDstStrides()[transformAxes.back()] != 1)
+          {
+            throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
+          }
+          break;
+        default:
+          break;
+        }
+
+        // the total number of elements must be less than 2^32
+        if (std::accumulate(shape.begin(),
+                            shape.end(),
+                            Size{1},
+                            std::multiplies<>{}) > std::numeric_limits<std::uint32_t>::max())
+        {
+          throw Exception{Error::cufft, "the total number of elements must be less than 2^32"};
+        }
+
+        break;
+      case Precision::f32:
+      case Precision::f64:
+        break;
+      default:
+        throw Exception{Error::cufft, "unsupported precision"};
+      }
+
 #   if CUFFT_VERSION >= 11300
-      if (const auto prec = descImpl.getPrecision().execution; prec != Precision::f32 && prec != Precision::f64)
+      if (precision != Precision::f32 && precision != Precision::f64)
       {
         throw Exception{Error::cufft, "normalization is supported only fo f32 and f64 precisions"};
       }
@@ -446,11 +552,6 @@ namespace afft::detail::cufft::sp
     }
     else if (targetCount > 1 && targetCount <= maxTargetCount)
     {
-      const auto cudaDevices   = descImpl.template getTargetDesc<Target::cuda>().getDevices();
-      const auto shape         = descImpl.getShape();
-      const auto transformAxes = descImpl.getTransformAxes();
-      const auto isRealDataDft = (descImpl.getTransformDesc<Transform::dft>().type != dft::Type::complexToComplex);
-
       // check if all devices have the same compute capability
       const auto ccRef = cuda::getComputeCapability(cudaDevices.front());
       if (std::any_of(std::next(cudaDevices.begin()),
@@ -498,13 +599,18 @@ namespace afft::detail::cufft::sp
       {
         if (descImpl.getPlacement() != Placement::inPlace)
         {
-          throw Exception{Error::cufft, "non-batched transforms must be inplace"};
+          throw Exception{Error::cufft, "non-batched transforms must be in-place"};
         }
 
         // TODO: check if src and dst distrib axes are the same
       }
       else if (howManyRank == 1)
       {
+        if (descImpl.getTransformHowManyAxes().front() != 0)
+        {
+          throw Exception{Error::cufft, "only the first axis can be omitted"};
+        }
+
         // TODO: check if src and dst distrib axes are the same
       }
       else

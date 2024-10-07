@@ -321,10 +321,10 @@ namespace afft::detail
   template<typename U>
   [[nodiscard]] constexpr bool isPowerOfTwo(U value)
   {
-    static_assert(std::is_integral_v<U> && std::is_unsigned_v<U>,
-                  "isPowerOfTwo can only be used with unsignede integral types.");
+    static_assert(std::is_integral_v<U> && std::is_unsigned_v<U> && !std::is_same_v<U, bool>,
+                  "isPowerOfTwo can only be used with unsigned integral types.");
 
-    return (value > 0) && ((value & (value - 1)) == 0);
+    return cxx::has_single_bit(value);
   }
 } // namespace afft::detail
 
