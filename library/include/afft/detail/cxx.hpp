@@ -31,7 +31,7 @@
 
 namespace afft::detail::cxx
 {
-// implementation of optinal c++11 features
+// implementation of optional c++11 features
 inline namespace cxx11
 {
 #ifdef UINTPTR_MAX
@@ -50,6 +50,10 @@ inline namespace cxx11
 
 inline namespace cxx20
 {
+#ifdef __cpp_lib_remove_cvref
+  using ::std::remove_cvref;
+  using ::std::remove_cvref_t;
+#else
   /**
    * @brief TypeProperties helper. Removes const and volatile from Complex template parameter type.
    * @tparam T The type.
@@ -63,7 +67,14 @@ inline namespace cxx20
   /// @brief Shortcut for remove_cvref type.
   template<typename T>
   using remove_cvref_t = typename remove_cvref<T>::type;
+#endif
 
+#ifdef __cpp_lib_bounded_array_traits
+  using ::std::is_bounded_array;
+  using ::std::is_unbounded_array;
+  using ::std::is_bounded_array_v;
+  using ::std::is_unbounded_array_v;
+#else
   /**
    * @brief Is bounded array type.
    * @tparam T The type.
@@ -99,7 +110,16 @@ inline namespace cxx20
    */
   template<typename T>
   inline constexpr bool is_unbounded_array_v = is_unbounded_array<T>::value;
+#endif
 
+#ifdef __cpp_lib_integer_comparison_functions
+  using ::std::cmp_equal;
+  using ::std::cmp_not_equal;
+  using ::std::cmp_less;
+  using ::std::cmp_greater;
+  using ::std::cmp_less_equal;
+  using ::std::cmp_greater_equal;
+#else
   /**
    * @brief Compares two values for equality. Taken from https://en.cppreference.com/w/cpp/utility/intcmp
    * @tparam T First value type.
@@ -217,7 +237,11 @@ inline namespace cxx20
 
     return !cmp_less(t, u);
   }
+#endif
 
+#ifdef __cpp_lib_int_pow2
+  using ::std::has_single_bit;
+#else
   /**
    * @brief Checks if the given value is a power of two. Taken from https://en.cppreference.com/w/cpp/numeric/has_single_bit
    * @tparam T Type of the value.
@@ -236,6 +260,7 @@ inline namespace cxx20
 
     return x && !(x & (x - 1));
   }
+#endif
 
   /**
    * @brief Finds the first element in the range [first, last) for which the predicate p returns true. Taken from https://en.cppreference.com/w/cpp/algorithm/find
@@ -332,6 +357,9 @@ inline namespace cxx20
 // C++23 backport
 inline namespace cxx23
 {
+#ifdef __cpp_lib_to_underlying
+  using ::std::to_underlying;
+#else
   /**
    * @brief Backport of the C++23 std::to_underlying() function.
    * @tparam E Enum type.
@@ -345,7 +373,11 @@ inline namespace cxx23
 
     return static_cast<std::underlying_type_t<E>>(value);
   }
+#endif
 
+#ifdef __cpp_lib_unreachable
+  using ::std::unreachable;
+#else
   /**
    * @brief Backport of the C++23 std::unreachable() function.
    * @throw if AFFT_DEBUG is defined, otherwise calls __builtin_unreachable() or __assume(false).
@@ -361,6 +393,7 @@ inline namespace cxx23
 //       __builtin_unreachable();
 // #   endif
   }
+#endif
 } // inline namespace cxx23
 } // namespace afft::detail::cxx
 
