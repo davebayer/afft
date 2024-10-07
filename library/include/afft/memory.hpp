@@ -79,24 +79,25 @@ AFFT_EXPORT namespace afft
   {
     Alignment     alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    const Size*   srcStrides{};                              ///< strides of the source memory, nullptr for default strides
-    const Size*   dstStrides{};                              ///< strides of the destination memory, nullptr for default strides
+    View<Size>    srcStrides{};                              ///< strides of the source memory, nullptr for default strides
+    View<Size>    dstStrides{};                              ///< strides of the destination memory, nullptr for default strides
   };
-
-  /// @brief Memory block of the distributed transform
-  using MemoryBlock = ::afft_MemoryBlock;
 
   /// @brief Memory layout of the distributed transform
   struct DistributedMemoryLayout
   {
     Alignment          alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    const MemoryBlock* srcBlocks{};                               ///< source memory blocks
+    View<const Size*>  srcStarts{};                               ///< starting indices of the source memory
+    View<const Size*>  srcSizes{};                                ///< sizes of the source memory
+    View<const Size*>  srcStrides{};                              ///< strides of the source memory
     View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
-    const Axis*        srcAxesOrder{};                            ///< order of the source axes
-    const MemoryBlock* dstBlocks{};                               ///< destination memory blocks
+    View<Axis>         srcAxesOrder{};                            ///< order of the source axes
+    View<const Size*>  dstStarts{};                               ///< starting indices of the destination memory
+    View<const Size*>  dstSizes{};                                ///< sizes of the destination memory
+    View<const Size*>  dstStrides{};                              ///< strides of the destination memory
     View<Axis>         dstDistribAxes{};                          ///< axes along which the destination data are distributed
-    const Axis*        dstAxesOrder{};                            ///< order of the destination axes
+    View<Axis>         dstAxesOrder{};                            ///< order of the destination axes
   };
 
   /// @brief Memory layout variant

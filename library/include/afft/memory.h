@@ -117,23 +117,19 @@ struct afft_CentralizedMemoryLayout
   const afft_Size*   dstStrides;    ///< Destination strides (null for default or array of size shapeRank)
 };
 
-/// @brief Memory block structure
-struct afft_MemoryBlock
-{
-  const afft_Size* starts; ///< Start indices (null for default or array of size shapeRank)
-  const afft_Size* sizes;  ///< Sizes (null for default or array of size shapeRank)
-  const afft_Size* strides;///< Strides (null for default or array of size shapeRank)
-};
-
 /// @brief Distributed memory layout structure
 struct afft_DistributedMemoryLayout
 {
   afft_Alignment          alignment;      ///< Memory alignment
   afft_ComplexFormat      complexFormat;  ///< Complex format
-  const afft_MemoryBlock* srcBlocks;      ///< Source blocks (null for default or array of size targetCount)
+  const afft_Size* const* srcStarts;      ///< Source starts (array of size targetCount)
+  const afft_Size* const* srcSizes;       ///< Source sizes (array of size targetCount)
+  const afft_Size* const* srcStrides;     ///< Source strides (array of size targetCount)
   const afft_Axis*        srcDistribAxes; ///< Source distribution axes (null for default or array of size targetCount)
   const afft_Axis*        srcAxesOrder;   ///< Source axes order (null for default or array of size shapeRank)
-  const afft_MemoryBlock* dstBlocks;      ///< Destination blocks (null for default or array of size targetCount)
+  const afft_Size* const* dstStarts;      ///< Destination starts (array of size targetCount)
+  const afft_Size* const* dstSizes;       ///< Destination sizes (array of size targetCount)
+  const afft_Size* const* dstStrides;     ///< Destination strides (array of size targetCount)
   const afft_Axis*        dstDistribAxes; ///< Destination distribution axes (null for default or array of size targetCount)
   const afft_Axis*        dstAxesOrder;   ///< Destination axes order (null for default or array of size shapeRank)
 };

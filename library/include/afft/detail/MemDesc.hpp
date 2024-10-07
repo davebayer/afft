@@ -246,14 +246,6 @@ namespace afft::detail
       bool               mHasDefaultDstStrides{}; ///< Has default destination strides.
   };
 
-  /// @brief Memory block descriptor.
-  struct MemBlockDesc
-  {
-    MaxDimBuffer<Size> starts{};  ///< Starts.
-    MaxDimBuffer<Size> sizes{};   ///< Sizes.
-    MaxDimBuffer<Size> strides{}; ///< Strides.
-  };
-
   /// @brief Distributed memory layout descriptor.
   class DistribMemDesc
   {
@@ -597,15 +589,55 @@ namespace afft::detail
         else if constexpr (memoryLayout == MemoryLayout::distributed)
         {
           const DistribMemDesc& memDesc = std::get<DistribMemDesc>(mMemVariant);
+          memLayout.srcStarts      = memDesc.getSrcStarts();
+          memLayout.srcSizes       = memDesc.getSrcSizes();
+          memLayout.srcStrides     = memDesc.getSrcStrides();
+          memLayout.srcDistribAxes = memDesc.getSrcDistribAxes();
+          memLayout.srcAxesOrder   = memDesc.getSrcAxesOrder();
+          memLayout.dstStarts      = memDesc.getDstStarts();
+          memLayout.dstSizes       = memDesc.getDstSizes();
+          memLayout.dstStrides     = memDesc.getDstStrides();
+          memLayout.dstDistribAxes = memDesc.getDstDistribAxes();
+          memLayout.dstAxesOrder   = memDesc.getDstAxesOrder();
+        }
 
-          if (!memDesc.hasDefaultSrcMemoryBlocks())
-          {
-            memLayout.srcMemoryBlocks = memDesc.getSrcMemoryBlocks();
-          }
-          if (!memDesc.hasDefaultDstMemoryBlocks())
-          {
-            memLayout.dstMemoryBlocks = memDesc.getDstMemoryBlocks();
-          }
+        return memLayout;
+      }
+
+      /**
+       * @brief Reconstruct the C memory layout parameters.
+       * @tparam memoryLayout Memory layout.
+       * @return Memory layout parameters.
+       */
+      template<MemoryLayout memoryLayout>
+      [[nodiscard]] constexpr typename MemoryLayoutParametersSelect<memoryLayout>::CType
+      getCMemoryLayoutParameters() const noexcept
+      {
+        static_assert(isValid(memoryLayout), "invalid memory layout");
+
+        typename MemoryLayoutParametersSelect<memoryLayout>::CType memLayout{};
+        memLayout.alignment     = static_cast<afft_Alignment>(getAlignment());
+        memLayout.complexFormat = static_cast<afft_ComplexFormat>(getComplexFormat());
+
+        if constexpr (memoryLayout == MemoryLayout::centralized)
+        {
+          const CentralMemDesc& memDesc = std::get<CentralMemDesc>(mMemVariant);
+          memLayout.srcStrides = memDesc.getSrcStrides().data();
+          memLayout.dstStrides = memDesc.getDstStrides().data();
+        }
+        else if constexpr (memoryLayout == MemoryLayout::distributed)
+        {
+          const DistribMemDesc& memDesc = std::get<DistribMemDesc>(mMemVariant);
+          memLayout.srcStarts      = memDesc.getSrcStarts().data();
+          memLayout.srcSizes       = memDesc.getSrcSizes().data();
+          memLayout.srcStrides     = memDesc.getSrcStrides().data();
+          memLayout.srcDistribAxes = memDesc.getSrcDistribAxes().data();
+          memLayout.srcAxesOrder   = memDesc.getSrcAxesOrder().data();
+          memLayout.dstStarts      = memDesc.getDstStarts().data();
+          memLayout.dstSizes       = memDesc.getDstSizes().data();
+          memLayout.dstStrides     = memDesc.getDstStrides().data();
+          memLayout.dstDistribAxes = memDesc.getDstDistribAxes().data();
+          memLayout.dstAxesOrder   = memDesc.getDstAxesOrder().data();
         }
 
         return memLayout;
@@ -652,7 +684,39 @@ namespace afft::detail
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
       {
-        return CentralMemDesc{memLayout.srcStrides, memLayout.dstStrides, transformDesc, mpDesc, targetDesc};
+        const auto shapeRank = transformDesc.getShapeRank();
+
+        if (!memLayout.srcStrides.empty())
+        {
+          if (memLayout.srcStrides.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "destination strides must have the same size as the shape rank"};
+          }
+
+          if (memLayout.srcStrides.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid destination strides"};
+          }
+        }
+
+        if (!memLayout.dstStrides.empty())
+        {
+          if (memLayout.dstStrides.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "destination strides must have the same size as the shape rank"};
+          }
+
+          if (memLayout.dstStrides.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid destination strides"};
+          }
+        }
+
+        return CentralMemDesc{memLayout.srcStrides.data(),
+                              memLayout.dstStrides.data(),
+                              transformDesc,
+                              mpDesc,
+                              targetDesc};
       }
 
       /**
@@ -668,7 +732,169 @@ namespace afft::detail
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
       {
-        return DistribMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+        auto isValidPtr = [](const auto* ptr) { return ptr != nullptr; };
+
+        const auto shapeRank = transformDesc.getShapeRank();
+        const auto targetCount = targetDesc.getTargetCount();
+
+        if (!memLayout.srcStarts.empty())
+        {
+          if (memLayout.srcStarts.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "source starts must have the same size as the target count"};
+          }
+
+          if (memLayout.srcStarts.data() == nullptr || std::any_of(memLayout.srcStarts.begin(),
+                                                                   memLayout.srcStarts.end(),
+                                                                   std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid source starts"};
+          }
+          {
+            throw Exception{Error::invalidArgument, "invalid source starts"};
+          }
+        }
+
+        if (!memLayout.srcSizes.empty())
+        {
+          if (memLayout.srcSizes.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "source sizes must have the same size as the target count"};
+          }
+
+          if (memLayout.srcSizes.data() == nullptr || std::any_of(memLayout.srcSizes.begin(),
+                                                                  memLayout.srcSizes.end(),
+                                                                  std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid source sizes"};
+          }
+        }
+
+        if (!memLayout.srcStrides.empty())
+        {
+          if (memLayout.srcStrides.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "source strides must have the same size as the target count"};
+          }
+
+          if (memLayout.srcStrides.data() == nullptr || std::any_of(memLayout.srcStrides.begin(),
+                                                                    memLayout.srcStrides.end(),
+                                                                    std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid source strides"};
+          }
+        }
+
+        if (!memLayout.srcDistribAxes.empty())
+        {
+          if (memLayout.srcDistribAxes.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "source distributed axes must have the same size as the shape rank"};
+          }
+
+          if (memLayout.srcDistribAxes.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid source distributed axes"};
+          }
+        }
+
+        if (!memLayout.srcAxesOrder.empty())
+        {
+          if (memLayout.srcAxesOrder.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "source axes order must have the same size as the shape rank"};
+          }
+
+          if (memLayout.srcAxesOrder.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid source axes order"};
+          }
+        }
+
+        if (!memLayout.dstStarts.empty())
+        {
+          if (memLayout.dstStarts.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "destination starts must have the same size as the target count"};
+          }
+
+          if (memLayout.dstStarts.data() == nullptr || std::any_of(memLayout.dstStarts.begin(),
+                                                                   memLayout.dstStarts.end(),
+                                                                   std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid destination starts"};
+          }
+        }
+
+        if (!memLayout.dstSizes.empty())
+        {
+          if (memLayout.dstSizes.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "destination sizes must have the same size as the target count"};
+          }
+
+          if (memLayout.dstSizes.data() == nullptr || std::any_of(memLayout.dstSizes.begin(),
+                                                                  memLayout.dstSizes.end(),
+                                                                  std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid destination sizes"};
+          }
+        }
+
+        if (!memLayout.dstStrides.empty())
+        {
+          if (memLayout.dstStrides.size() != targetCount)
+          {
+            throw Exception{Error::invalidArgument, "destination strides must have the same size as the target count"};
+          }
+
+          if (memLayout.dstStrides.data() == nullptr || std::any_of(memLayout.dstStrides.begin(),
+                                                                    memLayout.dstStrides.end(),
+                                                                    std::not_fn(isValidPtr)))
+          {
+            throw Exception{Error::invalidArgument, "invalid destination strides"};
+          }
+        }
+
+        if (!memLayout.dstDistribAxes.empty())
+        {
+          if (memLayout.dstDistribAxes.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "destination distributed axes must have the same size as the shape rank"};
+          }
+
+          if (memLayout.dstDistribAxes.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid destination distributed axes"};
+          }
+        }
+
+        if (!memLayout.dstAxesOrder.empty())
+        {
+          if (memLayout.dstAxesOrder.size() != shapeRank)
+          {
+            throw Exception{Error::invalidArgument, "destination axes order must have the same size as the shape rank"};
+          }
+
+          if (memLayout.dstAxesOrder.data() == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid destination axes order"};
+          }
+        }
+
+        return DistribMemDesc{memLayout.srcStarts.data(),
+                              memLayout.srcSizes.data(),
+                              memLayout.srcStrides.data(),
+                              memLayout.srcDistribAxes.data(),
+                              memLayout.srcAxesOrder.data(),
+                              memLayout.dstStarts.data(),
+                              memLayout.dstSizes.data(),
+                              memLayout.dstStrides.data(),
+                              memLayout.dstDistribAxes.data(),
+                              memLayout.dstAxesOrder.data(),
+                              transformDesc,
+                              mpDesc,
+                              targetDesc};
       }
 
       /**
@@ -700,7 +926,19 @@ namespace afft::detail
                                                          const MpDesc&                       mpDesc,
                                                          const TargetDesc&                   targetDesc)
       {
-        return DistribMemDesc{memLayout, transformDesc, mpDesc, targetDesc};
+        return DistribMemDesc{memLayout.srcStarts,
+                              memLayout.srcSizes,
+                              memLayout.srcStrides,
+                              memLayout.srcDistribAxes,
+                              memLayout.srcAxesOrder,
+                              memLayout.dstStarts,
+                              memLayout.dstSizes,
+                              memLayout.dstStrides,
+                              memLayout.dstDistribAxes,
+                              memLayout.dstAxesOrder,
+                              transformDesc,
+                              mpDesc,
+                              targetDesc};
       }
 
       Alignment     mAlignment{};     ///< Memory alignment.
