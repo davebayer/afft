@@ -311,6 +311,21 @@ namespace afft::detail
 
     return DivResult<I>{a / b, a % b};
   }
+
+  /**
+   * @brief Checks if a value is a power of two.
+   * @tparam I Integral type.
+   * @param value Value to check.
+   * @return True if the value is a power of two, false otherwise.
+   */
+  template<typename U>
+  [[nodiscard]] constexpr bool isPowerOfTwo(U value)
+  {
+    static_assert(std::is_integral_v<U> && std::is_unsigned_v<U>,
+                  "isPowerOfTwo can only be used with unsignede integral types.");
+
+    return (value > 0) && ((value & (value - 1)) == 0);
+  }
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_UTILS_HPP */
