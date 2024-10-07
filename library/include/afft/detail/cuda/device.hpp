@@ -92,6 +92,50 @@ namespace afft::detail::cuda
     {
       return !(lhs == rhs);
     }
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the left-hand side is less than the right-hand side, false otherwise.
+     */
+    [[nodiscard]] friend bool operator<(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return (lhs.major < rhs.major) || (lhs.major == rhs.major && lhs.minor < rhs.minor);
+    }
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the left-hand side is less than or equal to the right-hand side, false otherwise.
+     */
+    [[nodiscard]] friend bool operator<=(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return (lhs < rhs) || (lhs == rhs);
+    }
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the left-hand side is greater than the right-hand side, false otherwise.
+     */
+    [[nodiscard]] friend bool operator>(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return !(lhs <= rhs);
+    }
+
+    /**
+     * @brief Compare two compute capabilities.
+     * @param lhs Left-hand side.
+     * @param rhs Right-hand side.
+     * @return True if the left-hand side is greater than or equal to the right-hand side, false otherwise.
+     */
+    [[nodiscard]] friend bool operator>=(const ComputeCapability& lhs, const ComputeCapability& rhs) noexcept
+    {
+      return !(lhs < rhs);
+    }
   };
 
   /**
