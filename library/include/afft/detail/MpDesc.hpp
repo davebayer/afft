@@ -249,6 +249,11 @@ namespace afft::detail
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const afft::mpi::Parameters& mpiParams)
       {
+        if (mpiParams.comm == nullptr || mpiParams.comm == MPI_COMM_NULL)
+        {
+          throw Exception{Error::invalidArgument, "invalid MPI communicator"};
+        }
+
         return MpiDesc{mpiParams.comm};
       }
 #   endif
@@ -261,6 +266,11 @@ namespace afft::detail
        */
       [[nodiscard]] static constexpr MpVariant makeMpVariant(const afft_mpi_Parameters& mpiParams)
       {
+        if (mpiParams.comm == nullptr || mpiParams.comm == MPI_COMM_NULL)
+        {
+          throw Exception{Error::invalidArgument, "invalid MPI communicator"};
+        }
+
         return MpiDesc{mpiParams.comm};
       }
 #   endif

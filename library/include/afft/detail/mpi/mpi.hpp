@@ -27,4 +27,6 @@
 
 #include "error.hpp"
 
+static_assert(std::is_pointer_v<MPI_Comm>, "MPI_Comm must be a pointer");
+
 #endif /* AFFT_DETAIL_MPI_MPI_HPP */
