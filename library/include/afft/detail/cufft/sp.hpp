@@ -184,7 +184,7 @@ namespace afft::detail::cufft::sp
 
         checkError(cufftXtMakePlanMany(mHandle,
                                        static_cast<int>(transformRank),
-                                       n.data(),
+                                       n.data,
                                        srcNEmbedAndStride.nEmbed.data,
                                        srcNEmbedAndStride.stride,
                                        srcDist,
@@ -287,29 +287,45 @@ namespace afft::detail::cufft::sp
         // //   checkError(cufftSetAutoAllocation(mHandle, 0));
         // // }
 
-        // const auto precision          = Parent::mDesc.getPrecision().execution;
-        // const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
+        const auto precision          = Parent::mDesc.getPrecision().execution;
+        const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
 
-        // const auto shapeRank     = Parent::mDesc.getShapeRank();
-        // const auto transformRank = Parent::mDesc.getTransformRank();
-        // const auto transformAxes = Parent::mDesc.getTransformAxes();
-        // const auto srcShape      = Parent::mDesc.getSrcShape();
-        // const auto dstShape      = Parent::mDesc.getDstShape();
+        const auto shapeRank     = Parent::mDesc.getShapeRank();
+        const auto transformRank = Parent::mDesc.getTransformRank();
+        const auto howManyRank   = Parent::mDesc.getTransformHowManyRank();
+        const auto transformAxes = Parent::mDesc.getTransformAxes();
+        const auto srcShape      = Parent::mDesc.getSrcShape<SizeT>();
+        const auto dstShape      = Parent::mDesc.getDstShape<SizeT>();
 
-        // checkError(cufftXtMakePlanMany(mHandle,
-        //                                static_cast<int>(transformRank),
-        //                                n.data(),
-        //                                srcNEmbedAndStride.nEmbed.data,
-        //                                srcNEmbedAndStride.stride,
-        //                                srcDist,
-        //                                makeCudaDataType(precision, srcCmpl),
-        //                                dstNEmbedAndStride.nEmbed.data,
-        //                                dstNEmbedAndStride.stride,
-        //                                dstDist,
-        //                                makeCudaDataType(precision, dstCmpl),
-        //                                batch,
-        //                                mWorkspaceSizes.data(),
-        //                                makeCudaDataType(precision, Complexity::complex)));
+        auto n = Parent::mDesc.template getTransformDimsAs<SizeT>();
+
+        SizeT batch{1};
+        SizeT srcDist{1};
+        SizeT dstDist{1};
+
+        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 1)
+        {
+          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+
+          batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
+          srcDist = std::accumulate(srcShape.data, srcShape.data + transformRank, SizeT{1}, std::multiplies<>{});
+          dstDist = std::accumulate(dstShape.data, dstShape.data + transformRank, SizeT{1}, std::multiplies<>{});
+        }
+
+        checkError(cufftXtMakePlanMany(mHandle,
+                                       static_cast<int>(transformRank),
+                                       n.data,
+                                       nullptr,
+                                       1,
+                                       srcDist,
+                                       makeCudaDataType(precision, srcCmpl),
+                                       nullptr,
+                                       1,
+                                       dstDist,
+                                       makeCudaDataType(precision, dstCmpl),
+                                       batch,
+                                       mWorkspaceSizes.data(),
+                                       makeCudaDataType(precision, Complexity::complex)));
 
         // // TODO: set the src and dst target counts
     

@@ -345,11 +345,11 @@ namespace afft::detail
        * @return Dimensions of the transform.
        */
       template<typename I>
-      [[nodiscard]] constexpr MaxDimArray<I> getTransformDimsAs() const
+      [[nodiscard]] constexpr MaxDimBuffer<I> getTransformDimsAs() const
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        MaxDimArray<I> dims{};
+        MaxDimBuffer<I> dims{};
 
         for (std::size_t i{}; i < getTransformRank(); ++i)
         {
@@ -365,11 +365,11 @@ namespace afft::detail
        * @return Axes of the transform as a different integral type. Only first getTransformRank() elements are valid.
        */
       template<typename I>
-      [[nodiscard]] constexpr MaxDimArray<I> getTransformHowManyDimsAs() const
+      [[nodiscard]] constexpr MaxDimBuffer<I> getTransformHowManyDimsAs() const
       {
         static_assert(std::is_integral_v<I>, "Integral type required");
 
-        MaxDimArray<I> dims{};
+        MaxDimBuffer<I> dims{};
 
         const auto axes = getTransformAxes();
 

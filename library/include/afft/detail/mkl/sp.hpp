@@ -151,7 +151,7 @@ namespace afft::detail::mkl::sp
                                             getPrecision(),
                                             getForwardDomain(),
                                             static_cast<MKL_LONG>(transformRank),
-                                            transformDims.data()));
+                                            transformDims.data));
           }
 
           mDftiHandle.reset(dftiHandle);
