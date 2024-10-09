@@ -88,15 +88,15 @@ AFFT_EXPORT namespace afft
   {
     Alignment          alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
     View<const Size*>  srcStarts{};                               ///< starting indices of the source memory
     View<const Size*>  srcSizes{};                                ///< sizes of the source memory
     View<const Size*>  srcStrides{};                              ///< strides of the source memory
-    View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
     View<Axis>         srcAxesOrder{};                            ///< order of the source axes
+    View<Axis>         dstDistribAxes{};                          ///< axes along which the destination data are distributed
     View<const Size*>  dstStarts{};                               ///< starting indices of the destination memory
     View<const Size*>  dstSizes{};                                ///< sizes of the destination memory
     View<const Size*>  dstStrides{};                              ///< strides of the destination memory
-    View<Axis>         dstDistribAxes{};                          ///< axes along which the destination data are distributed
     View<Axis>         dstAxesOrder{};                            ///< order of the destination axes
   };
 
