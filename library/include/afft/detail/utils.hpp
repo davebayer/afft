@@ -326,6 +326,23 @@ namespace afft::detail
 
     return cxx::has_single_bit(value);
   }
+
+  /// @brief Function object that checks if a pointer is null.
+  struct IsNullPtr
+  {
+    /**
+     * @brief Checks if a pointer is null.
+     * @tparam T Type of the pointer.
+     * @param ptr Pointer to check.
+     * @return True if the pointer is null, false otherwise.
+     */
+    template<typename T>
+    [[nodiscard]] constexpr auto operator()(T ptr) const noexcept
+      -> AFFT_RET_REQUIRES(bool, std::is_pointer_v<T>)
+    {
+      return (ptr == nullptr);
+    }
+  };
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_UTILS_HPP */
