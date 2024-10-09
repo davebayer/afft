@@ -127,14 +127,14 @@ using Complex = cufftDoubleComplex;
 inline constexpr Real normFactor = static_cast<Real>(NORM_FACT);
 
 // cuFFT callback function to store normalized data
-extern "C" void storeReal(void* dataOut, unsigned long long offset, Real element, void*, void*)
+void storeReal(void* dataOut, unsigned long long offset, Real element, void*, void*)
 {
   element *= normFactor;
 
   reinterpret_cast<Real*>(dataOut)[offset] = element;
 }
 
-extern "C" void storeComplex(void* dataOut, unsigned long long offset, Complex element, void*, void*)
+void storeComplex(void* dataOut, unsigned long long offset, Complex element, void*, void*)
 {
   element.x *= normFactor;
   element.y *= normFactor;
