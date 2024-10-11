@@ -133,7 +133,7 @@ namespace afft::detail::cuda::rtc
        * @param size The code size.
        */
       Code(CodeType type, std::size_t size)
-      : mType(type), mCode(size, '\0')
+      : mType(type), mCode(size)
       {}
 
       /// @brief Copy constructor.
@@ -176,8 +176,8 @@ namespace afft::detail::cuda::rtc
       }
     protected:
     private:
-      CodeType    mType{}; ///< The code type.
-      std::string mCode{}; ///< The code.
+      CodeType          mType{}; ///< The code type.
+      std::vector<char> mCode{}; ///< The code.
   };
 
   /**
@@ -363,25 +363,61 @@ namespace afft::detail::cuda::rtc
   }
 
   /**
-   * @brief Make an architecture option.
+   * @brief Make a real architecture option (e. g. sm_50).
    * @param device The CUDA device.
-   * @return The architecture option.
+   * @return The real architecture option.
    */
-  [[nodiscard]] inline std::string makeArchOption(int device)
+  [[nodiscard]] inline std::string makeRealArchOption(int device)
   {
     const auto [ccMajor, ccMinor] = cuda::getComputeCapability(device);
 
-    return cformat("-arch=compute_%d%d", ccMajor, ccMinor);
+    return cformat("-arch=sm_%d%d", ccMajor, ccMinor);
   }
 
   /**
-   * @brief Make an include path option.
-   * @param includePath The include path.
-   * @return The include path option.
+   * @brief Make a relocatable device code option.
+   * @param enable Enable the relocatable device code.
+   * @return The relocatable device code option.
    */
-  [[nodiscard]] inline std::string makeIncludePathOption(std::string_view includePath)
+  [[nodiscard]] inline std::string makeRelocatableDeviceCodeOption(bool enable)
   {
-    return cformat("-I%s", includePath.data());
+    return cformat("-rdc=%s", (enable ? "true" : "false"));
+  }
+
+  /**
+   * @brief Make a debug option.
+   * @return The debug option.
+   */
+  [[nodiscard]] inline std::string makeDebugOption()
+  {
+    return "-G";
+  }
+
+  /**
+   * @brief Make a line info option.
+   * @return The line info option.
+   */
+  [[nodiscard]] inline std::string makeLineInfoOption()
+  {
+    return "-lineinfo";
+  }
+
+  /**
+   * @brief Make a fast math option.
+   * @return The fast math option.
+   */
+  [[nodiscard]] inline std::string makeFastMathOption()
+  {
+    return "-use_fast_math";
+  }
+  
+  /**
+   * @brief Make a link time optimization option.
+   * @return The link time optimization option.
+   */
+  [[nodiscard]] inline std::string makeLinkTimeOptimizationOption()
+  {
+    return "-dlto";
   }
 
   /**
@@ -405,14 +441,25 @@ namespace afft::detail::cuda::rtc
   {
     return cformat("-D%s", name.data());
   }
-  
+
   /**
-   * @brief Make a debug option.
-   * @return The debug option.
+   * @brief Make an include path option.
+   * @param includePath The include path.
+   * @return The include path option.
    */
-  [[nodiscard]] inline std::string makeDebugOption()
+  [[nodiscard]] inline std::string makeIncludePathOption(std::string_view includePath)
   {
-    return "-G";
+    return cformat("-I%s", includePath.data());
+  }
+
+  /**
+   * @brief Make a C++ standard option.
+   * @param version The C++ version.
+   * @return The C++ standard option.
+   */
+  [[nodiscard]] inline std::string makeCppStandardOption(int version)
+  {
+    return cformat("-std=c++%d", version);
   }
 } // namespace afft::detail::cuda::rtc
 
