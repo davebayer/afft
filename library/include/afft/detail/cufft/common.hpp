@@ -111,8 +111,8 @@ namespace afft::detail::cufft
 
 // cuFFT data types
 using cufftReal          = float;
-using cufftDoubleReal    = double;
 using cufftComplex       = float2;
+using cufftDoubleReal    = double;
 using cufftDoubleComplex = double2;
 
 #if PREC == PREC_F32
@@ -126,21 +126,25 @@ using Complex = cufftDoubleComplex;
 // Normalization factor
 inline constexpr Real normFactor = static_cast<Real>(NORM_FACT);
 
-// cuFFT callback function to store normalized data
-void storeReal(void* dataOut, unsigned long long offset, Real element, void*, void*)
+#if CMPL == CMPL_R
+// cuFFT callback function to store real normalized data
+__device__ void normStoreCallback(void* dataOut, unsigned long long offset, Real element, void*, void*)
 {
   element *= normFactor;
 
   reinterpret_cast<Real*>(dataOut)[offset] = element;
 }
-
-void storeComplex(void* dataOut, unsigned long long offset, Complex element, void*, void*)
+#else
+// cuFFT callback function to store complex normalized data
+__device__ void normStoreCallback(void* dataOut, unsigned long long offset, Complex element, void*, void*)
 {
   element.x *= normFactor;
   element.y *= normFactor;
 
   reinterpret_cast<Complex*>(dataOut)[offset] = element;
-})"};
+}
+#endif
+    )"};
 
     if (prec != Precision::f32 && prec != Precision::f64)
     {
@@ -153,27 +157,30 @@ void storeComplex(void* dataOut, unsigned long long offset, Complex element, voi
     const auto complexityDef = cuda::rtc::makeDefinitionOption("CMPL", cmpl == Complexity::real ? "CMPL_R" : "CMPL_C");
 
     std::array<char, 32> normFactorStr{};
-    const auto [ptr, ec] = std::to_chars(normFactorStr.data(),
-                                          normFactorStr.data() + normFactorStr.size(),
-                                          normFactor,
-                                          std::chars_format::general, 
-                                          16);
+    const auto [normFactorStrEnd, ec] = std::to_chars(normFactorStr.data(),
+                                                      normFactorStr.data() + normFactorStr.size(),
+                                                      normFactor,
+                                                      std::chars_format::general, 
+                                                      16);
 
     if (ec != std::errc{})
     {
       throw Exception{Error::cufft, "failed to convert normalization factor to string"};
     }
     
-    const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", {normFactorStr.data(), static_cast<std::size_t>(ptr - normFactorStr.data())});
-    const auto archOption    = cuda::rtc::makeArchOption(device);
+    const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", {normFactorStr.data(), normFactorStrEnd});
+    const auto archOption    = cuda::rtc::makeRealArchOption(device);
+    const auto rdcOption     = cuda::rtc::makeRelocatableDeviceCodeOption(true);
+    const auto dltoOption    = cuda::rtc::makeLinkTimeOptimizationOption();
+    const auto cpp17Option   = cuda::rtc::makeCppStandardOption(17);
 
     const char* options[]{precisionDef.c_str(),
                           complexityDef.c_str(),
                           normFactorDef.c_str(),
                           archOption.c_str(),
-                          "-default-device",
-                          "-dc",
-                          "-dlto"};
+                          rdcOption.c_str(),
+                          dltoOption.c_str(),
+                          cpp17Option.c_str()};
 
     if (!program.compile(options))
     {
