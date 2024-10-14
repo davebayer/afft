@@ -116,19 +116,31 @@ namespace afft::detail::cufft::sp
 
         auto n                  = Parent::mDesc.template getTransformDimsAs<SizeT>();
         auto srcNEmbedAndStride = makeNEmbedAndStride<SizeT>({srcShape.data, shapeRank},
-                                                             transformAxes,
+                                                             {transformAxes, transformRank},
                                                              srcStrides);
         auto dstNEmbedAndStride = makeNEmbedAndStride<SizeT>({dstShape.data, shapeRank},
-                                                             transformAxes,
+                                                             {transformAxes, transformRank},
                                                              dstStrides);
 
         SizeT batch{1};
         SizeT srcDist{1};
         SizeT dstDist{1};
 
-        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 1)
+        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 0)
         {
-          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+          batch   = 1;
+          srcDist = srcNEmbedAndStride.stride * std::accumulate(srcNEmbedAndStride.nEmbed.data,
+                                                                srcNEmbedAndStride.nEmbed.data + transformRank,
+                                                                SizeT{1},
+                                                                std::multiplies<>{});
+          dstDist = dstNEmbedAndStride.stride * std::accumulate(dstNEmbedAndStride.nEmbed.data,
+                                                                dstNEmbedAndStride.nEmbed.data + transformRank,
+                                                                SizeT{1},
+                                                                std::multiplies<>{});
+        }
+        else if (howManyRank == 1)
+        {
+          const auto howManyAxis = *mDesc.getTransformHowManyAxes();
 
           batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
           srcDist = safeIntCast<SizeT>(srcStrides[howManyAxis]);
@@ -139,11 +151,11 @@ namespace afft::detail::cufft::sp
           const auto shape       = Parent::mDesc.getShape();
           const auto howManyAxes = mDesc.getTransformHowManyAxes();
 
-          batch   = shape[howManyAxes.front()];
-          srcDist = safeIntCast<SizeT>(srcStrides[howManyAxes.back()]);
-          dstDist = safeIntCast<SizeT>(dstStrides[howManyAxes.back()]);
+          batch   = shape[*howManyAxes];
+          srcDist = safeIntCast<SizeT>(srcStrides[howManyAxes[howManyRank - 1]]);
+          dstDist = safeIntCast<SizeT>(dstStrides[howManyAxes[howManyRank - 1]]);
 
-          for (std::size_t i = howManyAxes.size() - 1; i > 0; --i)
+          for (std::size_t i = howManyRank - 1; i > 0; --i)
           {
             if (howManyAxes[i] != howManyAxes[i - 1] + 1)
             {
@@ -171,16 +183,21 @@ namespace afft::detail::cufft::sp
           const auto complexity = dstCmpl;
           const auto normFactor = Parent::mDesc.template getNormalizationFactor<double>();
 
-          const auto ltoirCode = makeNormalizationStoreCallbackCode(device, precision, complexity, normFactor);
+          const auto ltoirCode    = makeNormalizationStoreCallbackCode(device, precision, complexity, normFactor);
+          const auto callbackType = makeStoreCallbackType(precision, complexity);
 
           checkError(cufftXtSetJITCallback(mHandle,
-                                           (complexity == Complexity::real) ? "storeReal" : "storeComplex",
+                                           "normStoreCallback",
                                            ltoirCode.data(),
                                            ltoirCode.size(),
-                                           makeStoreCallbackType(precision, complexity),
+                                           callbackType,
                                            nullptr));
         }
 #     endif
+
+        const auto srcType  = makeCudaDataType(precision, srcCmpl);
+        const auto dstType  = makeCudaDataType(precision, dstCmpl);
+        const auto execType = makeCudaDataType(precision, Complexity::complex);
 
         checkError(cufftXtMakePlanMany(mHandle,
                                        static_cast<int>(transformRank),
@@ -188,14 +205,14 @@ namespace afft::detail::cufft::sp
                                        srcNEmbedAndStride.nEmbed.data,
                                        srcNEmbedAndStride.stride,
                                        srcDist,
-                                       makeCudaDataType(precision, srcCmpl),
+                                       srcType,
                                        dstNEmbedAndStride.nEmbed.data,
                                        dstNEmbedAndStride.stride,
                                        dstDist,
-                                       makeCudaDataType(precision, dstCmpl),
+                                       dstType,
                                        batch,
                                        &mWorkspaceSize,
-                                       makeCudaDataType(precision, Complexity::complex)));
+                                       execType));
       }
 
       /// @brief Destructor.
@@ -447,13 +464,15 @@ namespace afft::detail::cufft::sp
     const auto cudaDevices   = descImpl.template getTargetDesc<Target::cuda>().getDevices();
     const auto precision     = descImpl.getPrecision().execution;
     const auto shape         = descImpl.getShape();
+    const auto shapeRank     = descImpl.getShapeRank();
     const auto transformAxes = descImpl.getTransformAxes();
-    const auto isRealDataDft = (descImpl.getTransformDesc<Transform::dft>().type != dft::Type::complexToComplex);
+    const auto transformRank = descImpl.getTransformRank();
+    const auto dftType       = descImpl.getTransformDesc<Transform::dft>().type;
+    const auto isRealDataDft = (dftType != dft::Type::complexToComplex);
 
     if (const auto targetCount = desc.getTargetCount(); targetCount == 1)
     {
       const auto& memLayout = descImpl.template getMemDesc<MemoryLayout::centralized>();
-      const auto  dftType   = descImpl.getTransformDesc<Transform::dft>().type;
 
       switch (precision)
       {
@@ -465,8 +484,8 @@ namespace afft::detail::cufft::sp
         }
 
         // transformed dimensions must be powers of two
-        if (std::any_of(transformAxes.begin(),
-                        transformAxes.end(),
+        if (std::any_of(transformAxes,
+                        transformAxes + transformRank,
                         [&](auto axis){ return !isPowerOfTwo(shape[axis]); }))
         {
           throw Exception{Error::cufft, "transformed dimensions must be powers of two"};
@@ -476,13 +495,13 @@ namespace afft::detail::cufft::sp
         switch (dftType)
         {
         case dft::Type::realToComplex:
-          if (memLayout.getSrcStrides()[transformAxes.back()] != 1)
+          if (memLayout.getSrcStrides()[transformAxes[transformRank - 1]] != 1)
           {
             throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
           }
           break;
         case dft::Type::complexToReal:
-          if (memLayout.getDstStrides()[transformAxes.back()] != 1)
+          if (memLayout.getDstStrides()[transformAxes[transformRank - 1]] != 1)
           {
             throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
           }
@@ -492,8 +511,8 @@ namespace afft::detail::cufft::sp
         }
 
         // the total number of elements must be less than 2^32
-        if (std::accumulate(shape.begin(),
-                            shape.end(),
+        if (std::accumulate(shape,
+                            shape + shapeRank,
                             Size{1},
                             std::multiplies<>{}) > std::numeric_limits<std::uint32_t>::max())
         {
@@ -509,8 +528,8 @@ namespace afft::detail::cufft::sp
         }
 
         // transformed dimensions must be powers of two
-        if (std::any_of(transformAxes.begin(),
-                        transformAxes.end(),
+        if (std::any_of(transformAxes,
+                        transformAxes + transformRank,
                         [&](auto axis){ return !isPowerOfTwo(shape[axis]); }))
         {
           throw Exception{Error::cufft, "transformed dimensions must be powers of two"};
@@ -520,13 +539,13 @@ namespace afft::detail::cufft::sp
         switch (dftType)
         {
         case dft::Type::realToComplex:
-          if (memLayout.getSrcStrides()[transformAxes.back()] != 1)
+          if (memLayout.getSrcStrides()[transformAxes[transformRank - 1]] != 1)
           {
             throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
           }
           break;
         case dft::Type::complexToReal:
-          if (memLayout.getDstStrides()[transformAxes.back()] != 1)
+          if (memLayout.getDstStrides()[transformAxes[transformRank - 1]] != 1)
           {
             throw Exception{Error::cufft, "the fastest dimension must have unit stride for real part of the real data dft"};
           }
@@ -536,8 +555,8 @@ namespace afft::detail::cufft::sp
         }
 
         // the total number of elements must be less than 2^32
-        if (std::accumulate(shape.begin(),
-                            shape.end(),
+        if (std::accumulate(shape,
+                            shape + shapeRank,
                             Size{1},
                             std::multiplies<>{}) > std::numeric_limits<std::uint32_t>::max())
         {

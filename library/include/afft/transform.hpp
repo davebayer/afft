@@ -105,8 +105,10 @@ AFFT_EXPORT namespace afft
   {
     Direction      direction{};                        ///< direction of the transform
     PrecisionTriad precision{};                        ///< precision triad
-    View<Size>     shape{};                            ///< shape of the transform
-    View<Axis>     axes{};                             ///< axes of the transform
+    const Size*    shape{};                            ///< shape of the transform
+    std::size_t    shapeRank{};                        ///< rank of the shape
+    const Axis*    axes{};                             ///< axes of the transform
+    std::size_t    axesRank{};                         ///< rank of the axes
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
     Type           type{Type::complexToComplex};       ///< type of the transform
@@ -132,8 +134,10 @@ AFFT_EXPORT namespace afft
   {
     Direction      direction{};                        ///< direction of the transform
     PrecisionTriad precision{};                        ///< precision triad
-    View<Size>     shape{};                            ///< shape of the transform
-    View<Axis>     axes{};                             ///< axes of the transform
+    const Size*    shape{};                            ///< shape of the transform
+    std::size_t    shapeRank{};                        ///< rank of the shape
+    const Axis*    axes{};                             ///< axes of the transform
+    std::size_t    axesRank{};                         ///< rank of the axes
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
     Type           type{Type::separable};              ///< type of the transform
@@ -176,11 +180,13 @@ AFFT_EXPORT namespace afft
   {
     Direction      direction{};                        ///< direction of the transform
     PrecisionTriad precision{};                        ///< precision triad
-    View<Size>     shape{};                            ///< shape of the transform
-    View<Axis>     axes{};                             ///< axes of the transform
+    const Size*    shape{};                            ///< shape of the transform
+    std::size_t    shapeRank{};                        ///< rank of the shape
+    const Axis*    axes{};                             ///< axes of the transform
+    std::size_t    axesRank{};                         ///< rank of the axes
     Normalization  normalization{Normalization::none}; ///< normalization
     Placement      placement{Placement::outOfPlace};   ///< placement of the transform
-    View<Type>     types{};                            ///< types of the transform, must have size of transform rank or 1
+    const Type*    types{};                            ///< types of the transform, must have size of transform rank
   };
 
 /**********************************************************************************************************************/

@@ -84,16 +84,16 @@ namespace afft::detail::pocketfft::sp::cpu
       {
         Parent::mBackendParams.threadLimit = std::thread::hardware_concurrency();
 
-        std::transform(mDesc.getShape().begin(),
-                       mDesc.getShape().end(),
+        std::transform(mDesc.getShape(),
+                       mDesc.getShape() + mDesc.getShapeRank(),
                        mShape.begin(),
                        [](const auto dim)
         {
           return safeIntCast<std::size_t>(dim);
         });
 
-        std::transform(mDesc.getTransformAxes().begin(),
-                       mDesc.getTransformAxes().end(),
+        std::transform(mDesc.getTransformAxes(),
+                       mDesc.getTransformAxes() + mDesc.getTransformRank(),
                        mAxes.begin(),
                        [](const auto axis)
         {

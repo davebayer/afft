@@ -201,12 +201,12 @@ namespace afft::detail::mkl::sp
 
           std::size_t i{1};
 
-          for (auto axis : mDesc.getTransformAxes())
+          std::for_each_n(mDesc.getTransformAxes(), mDesc.getTransformRank(), [&](auto axis)
           {
             srcStrides[i] = safeIntCast<MKL_LONG>(memDesc.getSrcStrides()[axis]);
             dstStrides[i] = safeIntCast<MKL_LONG>(memDesc.getDstStrides()[axis]);
             ++i;
-          }
+          });
           
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_INPUT_STRIDES, srcStrides));
           checkError(DftiSetValue(mDftiHandle.get(), DFTI_OUTPUT_STRIDES, dstStrides));
@@ -222,7 +222,7 @@ namespace afft::detail::mkl::sp
 
           if (const auto howManyRank = mDesc.getTransformHowManyRank(); howManyRank == 1)
           {
-            const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+            const auto howManyAxis = *mDesc.getTransformHowManyAxes();
 
             numberOfTransforms = safeIntCast<MKL_LONG>(Parent::mDesc.getShape()[howManyAxis]);
             srcDist            = safeIntCast<MKL_LONG>(srcStrides[howManyAxis]);
@@ -235,11 +235,11 @@ namespace afft::detail::mkl::sp
             const auto dstShape    = Parent::mDesc.getDstShape();
             const auto howManyAxes = mDesc.getTransformHowManyAxes();
 
-            numberOfTransforms = shape[howManyAxes.front()];
-            srcDist            = safeIntCast<MKL_LONG>(srcStrides[howManyAxes.back()]);
-            dstDist            = safeIntCast<MKL_LONG>(dstStrides[howManyAxes.back()]);
+            numberOfTransforms = shape[howManyAxes[0]];
+            srcDist            = safeIntCast<MKL_LONG>(srcStrides[howManyAxes[howManyRank - 1]]);
+            dstDist            = safeIntCast<MKL_LONG>(dstStrides[howManyAxes[howManyRank - 1]]);
 
-            for (std::size_t i = howManyAxes.size() - 1; i > 0; --i)
+            for (std::size_t i = howManyRank - 1; i > 0; --i)
             {
               if (howManyAxes[i] != howManyAxes[i - 1] + 1)
               {

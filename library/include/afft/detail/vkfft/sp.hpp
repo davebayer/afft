@@ -83,7 +83,7 @@ namespace afft::detail::vkfft::sp
         VkFFTConfiguration vkfftConfig{};
         fillConfigTarget(vkfftConfig, mTargetData);
         fillConfigPrecision(vkfftConfig, mDesc.getPrecision());
-        fillConfigShape(vkfftConfig, mDesc.getShape());
+        fillConfigShape(vkfftConfig, mDesc.getShape(), mDesc.getShapeRank());
         fillConfigTransform(vkfftConfig, mDesc);
         fillConfigMemoryLayout(vkfftConfig, mDesc);
 
@@ -276,24 +276,27 @@ namespace afft::detail::vkfft::sp
         }
       }
 
-      static void fillConfigShape(VkFFTConfiguration& vkfftConfig, View<Size> shape)
+      static void fillConfigShape(VkFFTConfiguration& vkfftConfig, const Size* shape, const std::size_t shapeRank)
       {
-        vkfftConfig.FFTdim = safeIntCast<UInt>(shape.size());
+        vkfftConfig.FFTdim = safeIntCast<UInt>(shapeRank);
 
-        std::transform(shape.rbegin(), shape.rend(), vkfftConfig.size, [](const auto dim)
+        for (std::size_t i{}; i < shapeRank; ++i)
         {
-          return safeIntCast<UInt>(dim);
-        });
+          vkfftConfig.size[i] = safeIntCast<UInt>(shape[shapeRank - i - 1]);
+        }
       }
 
       static void fillConfigTransform(VkFFTConfiguration& vkfftConfig, const TransformDesc& transformDesc)
       {
+        const auto shapeRank     = transformDesc.getShapeRank();
+        const auto transformRank = transformDesc.getTransformRank();
+
         // Set up transform axes
-        std::fill_n(vkfftConfig.omitDimension, transformDesc.getShapeRank(), UInt{1});
-        for (const auto axis : transformDesc.getTransformAxes())
+        std::fill_n(vkfftConfig.omitDimension, shapeRank, UInt{1});
+        std::for_each_n(transformDesc.getTransformAxes(), transformRank, [&](auto axis)
         {
-          vkfftConfig.omitDimension[transformDesc.getShapeRank() - axis - 1] = UInt{0};
-        }
+          vkfftConfig.omitDimension[shapeRank - axis - 1] = UInt{0};
+        });
 
         // Set up VkFFT config transform type
         switch (transformDesc.getTransform())
@@ -306,7 +309,7 @@ namespace afft::detail::vkfft::sp
           {
           case dft::Type::realToComplex:
           case dft::Type::complexToReal:
-            if (transformDesc.getTransformAxes().back() != (transformDesc.getTransformRank() - 1))
+            if (transformDesc.getTransformAxes()[transformRank - 1] != (shapeRank - 1))
             {
               throw Exception{Error::vkfft, "when performing real data FFT, the last axis cannot be omited"};
             }
@@ -320,11 +323,10 @@ namespace afft::detail::vkfft::sp
         }
         case Transform::dtt:
         {
-          const auto shapeRank     = transformDesc.getShapeRank();
           const auto transformAxes = transformDesc.getTransformAxes();
           const auto dttAxisTypes  = transformDesc.getTransformDesc<Transform::dtt>().types;
 
-          for (std::size_t i{}; i < transformDesc.getTransformRank(); ++i)
+          for (std::size_t i{}; i < transformRank; ++i)
           {
             // VkFFT uses reverse order of axes
             const auto vkfftAxis = shapeRank - static_cast<std::size_t>(transformAxes[i]) - 1;

@@ -391,21 +391,21 @@ namespace afft::detail::fftw3::sp::cpu
         auto dimsIt     = dims.data;
         auto howManyIt  = howManyDims.data;
 
-        for (auto axis : desc.getTransformAxes())
+        std::for_each_n(desc.getTransformAxes(), desc.getTransformRank(), [&](auto axis)
         {
           dimsIt->n  = safeIntCast<std::ptrdiff_t>(shape[axis]);
           dimsIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[axis]);
           dimsIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[axis]);
           ++dimsIt;
-        }
+        });
 
-        for (auto axis : desc.getTransformHowManyAxes())
+        std::for_each_n(desc.getTransformHowManyAxes(), desc.getTransformHowManyRank(), [&](auto axis)
         {
           howManyIt->n  = safeIntCast<std::ptrdiff_t>(shape[axis]);
           howManyIt->is = safeIntCast<std::ptrdiff_t>(srcStrides[axis]);
           howManyIt->os = safeIntCast<std::ptrdiff_t>(dstStrides[axis]);
           ++howManyIt;
-        }
+        });
 
         return std::make_tuple(dims, howManyDims);
       }
