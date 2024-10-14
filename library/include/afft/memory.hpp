@@ -535,14 +535,14 @@ AFFT_EXPORT namespace afft
    * @param fastestAxisStride Stride of the fastest axis
    * @param strides Strides
    */
-  template<typename StrideT = Stride, typename SizeT>
-  constexpr void makeStrides(const SizeT*      shape,
+  template<typename StrideT = Stride, typename ShapeT>
+  constexpr void makeStrides(const ShapeT*     shape,
                              const std::size_t shapeRank,
                              StrideT*          strides,
                              const StrideT     fastestAxisStride = 1)
   {
     static_assert(std::is_integral_v<StrideT>, "StrideT must be an integral type");
-    static_assert(std::is_integral_v<SizeT>, "SizeT must be an integral type");
+    static_assert(std::is_integral_v<ShapeT>, "ShapeT must be an integral type");
 
     if (shapeRank == 0)
     {
@@ -564,7 +564,7 @@ AFFT_EXPORT namespace afft
       throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
     }
 
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<SizeT>{}))
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<ShapeT>{}))
     {
       throw Exception{Error::invalidArgument, "shape must not contain zeros"};
     }
@@ -573,7 +573,7 @@ AFFT_EXPORT namespace afft
 
     for (std::size_t i = shapeRank - 1; i > 0; --i)
     {
-      strides[i - 1] = static_cast<StrideT>(shape[i]) * strides[i];
+      strides[i - 1] = detail::safeIntCast<StrideT>(shape[i]) * strides[i];
     }
   }
 
@@ -585,15 +585,15 @@ AFFT_EXPORT namespace afft
    * @param strides Strides
    * @param fastestAxisStride Stride of the fastest axis
    */
-  template<typename StrideT = Stride, typename SizeT, typename AxisT>
-  inline void makeTransposedStrides(const SizeT*      shape,
+  template<typename StrideT = Stride, typename ShapeT, typename AxisT>
+  inline void makeTransposedStrides(const ShapeT*     shape,
                                     const std::size_t shapeRank,
                                     const AxisT*      orgAxesOrder,
-                                    SizeT*            strides,
-                                    const SizeT       fastestAxisStride = 1)
+                                    StrideT*          strides,
+                                    const StrideT     fastestAxisStride = 1)
   {
     static_assert(std::is_integral_v<StrideT>, "StrideT must be an integral type");
-    static_assert(std::is_integral_v<SizeT>, "SizeT must be an integral type");
+    static_assert(std::is_integral_v<ShapeT>, "ShapeT must be an integral type");
     static_assert(std::is_integral_v<AxisT>, "AxisT must be an integral type");
 
     if (shapeRank == 0)
@@ -621,7 +621,7 @@ AFFT_EXPORT namespace afft
       throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
     }
 
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<SizeT>{}))
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<ShapeT>{}))
     {
       throw Exception{Error::invalidArgument, "shape must not contain zeros"};
     }
@@ -650,7 +650,7 @@ AFFT_EXPORT namespace afft
 
     for (std::size_t i = shapeRank - 1; i > 0; --i)
     {
-      strides[orgAxesOrder[i - 1]] = static_cast<StrideT>(shape[i]) * strides[orgAxesOrder[i]];
+      strides[orgAxesOrder[i - 1]] = detail::safeIntCast<StrideT>(shape[i]) * strides[orgAxesOrder[i]];
     }
   }
 } // namespace afft
