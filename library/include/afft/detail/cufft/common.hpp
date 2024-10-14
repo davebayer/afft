@@ -168,11 +168,12 @@ __device__ void normStoreCallback(void* dataOut, unsigned long long offset, Comp
       throw Exception{Error::cufft, "failed to convert normalization factor to string"};
     }
     
-    const auto normFactorDef = cuda::rtc::makeDefinitionOption("NORM_FACT", {normFactorStr.data(), normFactorStrEnd});
-    const auto archOption    = cuda::rtc::makeRealArchOption(device);
-    const auto rdcOption     = cuda::rtc::makeRelocatableDeviceCodeOption(true);
-    const auto dltoOption    = cuda::rtc::makeLinkTimeOptimizationOption();
-    const auto cpp17Option   = cuda::rtc::makeCppStandardOption(17);
+    const auto normFactorDef  = cuda::rtc::makeDefinitionOption("NORM_FACT", {normFactorStr.data(), normFactorStrEnd});
+    const auto archOption     = cuda::rtc::makeRealArchOption(device);
+    const auto rdcOption      = cuda::rtc::makeRelocatableDeviceCodeOption(true);
+    const auto dltoOption     = cuda::rtc::makeLinkTimeOptimizationOption();
+    const auto cpp17Option    = cuda::rtc::makeCppStandardOption(17);
+    const auto fastMathOption = cuda::rtc::makeFastMathOption();
 
     const char* options[]{precisionDef.c_str(),
                           complexityDef.c_str(),
@@ -180,7 +181,8 @@ __device__ void normStoreCallback(void* dataOut, unsigned long long offset, Comp
                           archOption.c_str(),
                           rdcOption.c_str(),
                           dltoOption.c_str(),
-                          cpp17Option.c_str()};
+                          cpp17Option.c_str(),
+                          fastMathOption.c_str()};
 
     if (!program.compile(options))
     {
@@ -216,29 +218,18 @@ __device__ void normStoreCallback(void* dataOut, unsigned long long offset, Comp
    */
   [[nodiscard]] inline constexpr cudaDataType makeCudaDataType(const Precision prec, const Complexity comp)
   {
-    auto pickType = [comp](cudaDataType realType, cudaDataType complexType) -> cudaDataType
-    {
-      switch (comp)
-      {
-      case Complexity::real:
-        return realType;
-      case Complexity::complex:
-        return complexType;
-      default:
-        cxx::unreachable();
-      }
-    };
+    validate(comp);
 
     switch (prec)
     {
     case Precision::bf16:
-      return pickType(CUDA_R_16BF, CUDA_C_16BF);
+      return (comp == Complexity::real) ? CUDA_R_16BF : CUDA_C_16BF;
     case Precision::f16:
-      return pickType(CUDA_R_16F,  CUDA_C_16F);
+      return (comp == Complexity::real) ? CUDA_R_16F : CUDA_C_16F;
     case Precision::f32:
-      return pickType(CUDA_R_32F,  CUDA_C_32F);
+      return (comp == Complexity::real) ? CUDA_R_32F : CUDA_C_32F;
     case Precision::f64:
-      return pickType(CUDA_R_64F,  CUDA_C_64F);
+      return (comp == Complexity::real) ? CUDA_R_64F : CUDA_C_64F;
     default:
       throw Exception{Error::cufft, "unsupported precision"};
     }
