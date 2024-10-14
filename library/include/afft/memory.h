@@ -122,18 +122,18 @@ struct afft_DistributedMemoryLayout
 {
   afft_Alignment          alignment;          ///< Memory alignment
   afft_ComplexFormat      complexFormat;      ///< Complex format
-  size_t                  srcDistribAxesRank; ///< Source distributed axes rank
   const afft_Axis*        srcDistribAxes;     ///< Source distribution axes (null for default or array of size srcDistribAxesRank)
+  size_t                  srcDistribAxesRank; ///< Source distributed axes rank
+  const afft_Axis*        srcAxesOrder;       ///< Source axes order (null for default or array of size shapeRank)
   const afft_Size* const* srcStarts;          ///< Source starts (array of size targetCount)
   const afft_Size* const* srcSizes;           ///< Source sizes (array of size targetCount)
   const afft_Size* const* srcStrides;         ///< Source strides (array of size targetCount)
-  const afft_Axis*        srcAxesOrder;       ///< Source axes order (null for default or array of size shapeRank)
-  size_t                  dstDistribAxesRank; ///< Destination distributed axes rank
   const afft_Axis*        dstDistribAxes;     ///< Destination distribution axes (null for default or array of size dstDistribAxesRank)
+  size_t                  dstDistribAxesRank; ///< Destination distributed axes rank
+  const afft_Axis*        dstAxesOrder;       ///< Destination axes order (null for default or array of size shapeRank)
   const afft_Size* const* dstStarts;          ///< Destination starts (array of size targetCount)
   const afft_Size* const* dstSizes;           ///< Destination sizes (array of size targetCount)
   const afft_Size* const* dstStrides;         ///< Destination strides (array of size targetCount)
-  const afft_Axis*        dstAxesOrder;       ///< Destination axes order (null for default or array of size shapeRank)
 };
 
 /// @brief Memory layout parameters variant
@@ -164,6 +164,46 @@ void* afft_alignedAlloc(size_t sizeInBytes, afft_Alignment alignment);
  * @param alignment Alignment of the memory block.
  */
 void afft_alignedFree(void* ptr, afft_Alignment alignment);
+
+/**
+ * @brief Get the alignment of the pointers.
+ * @param count Number of pointers.
+ * @param ... Pointers.
+ * @return Alignment.
+ */
+afft_Alignment afft_alignmentOf(size_t count, ...);
+
+/**
+ * @brief Make strides.
+ * @param shapeRank Rank of the shape.
+ * @param shape Shape of the array.
+ * @param strides Strides of the array.
+ * @param fastestAxisStride Stride of the fastest axis.
+ * @param errorDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_makeStrides(const size_t       shapeRank,
+                            const afft_Size*   shape,
+                            afft_Size*         strides,
+                            const afft_Size    fastestAxisStride,
+                            afft_ErrorDetails* errDetails);
+
+/**
+ * @brief Make transposed strides.
+ * @param shapeRank Rank of the shape.
+ * @param resultShape Shape of the result array.
+ * @param orgAxesOrder Original axes order.
+ * @param strides Strides of the array.
+ * @param fastestAxisStride Stride of the fastest axis.
+ * @param errorDetails Error details.
+ * @return Error code.
+ */
+afft_Error afft_makeTransposedStrides(const size_t       shapeRank,
+                                      const afft_Size*   resultShape,
+                                      const afft_Axis*   orgAxesOrder,
+                                      afft_Size*         strides,
+                                      const afft_Size    fastestAxisStride,
+                                      afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus
 }

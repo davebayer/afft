@@ -82,10 +82,12 @@ namespace afft::detail::pocketfft::sp::cpu
         mDstStrides(mDesc.getShapeRank()),
         mAxes(mDesc.getTransformRank())
       {
+        const auto shapeRank = mDesc.getShapeRank();
+
         Parent::mBackendParams.threadLimit = std::thread::hardware_concurrency();
 
         std::transform(mDesc.getShape(),
-                       mDesc.getShape() + mDesc.getShapeRank(),
+                       mDesc.getShape() + shapeRank,
                        mShape.begin(),
                        [](const auto dim)
         {
@@ -102,16 +104,16 @@ namespace afft::detail::pocketfft::sp::cpu
 
         const auto& memDesc = mDesc.getMemDesc<MemoryLayout::centralized>();
 
-        std::transform(memDesc.getSrcStrides().begin(),
-                       memDesc.getSrcStrides().end(),
+        std::transform(memDesc.getSrcStrides(),
+                       memDesc.getSrcStrides() + shapeRank,
                        mSrcStrides.begin(),
                        [sizeOfSrcElem = mDesc.sizeOfSrcElem()](const auto stride)
         {
           return safeIntCast<std::ptrdiff_t>(stride * sizeOfSrcElem);
         });
 
-        std::transform(memDesc.getDstStrides().begin(),
-                       memDesc.getDstStrides().end(),
+        std::transform(memDesc.getDstStrides(),
+                       memDesc.getDstStrides() + shapeRank,
                        mDstStrides.begin(),
                        [sizeOfDstElem = mDesc.sizeOfDstElem()](const auto stride)
         {

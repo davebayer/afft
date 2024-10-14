@@ -397,12 +397,12 @@ namespace afft::detail::vkfft::sp
           vkfftConfig.isInputFormatted  = (direction == Direction::forward);
           vkfftConfig.isOutputFormatted = (direction == Direction::inverse);
 
-          if (memDesc.getSrcStrides().back() != 1)
+          if (memDesc.getSrcStrides()[shapeRank - 1] != 1)
           {
             throw Exception{Error::vkfft, "source fastest axis stride must be 1"};
           }
 
-          if (memDesc.getDstStrides().back() != 1)
+          if (memDesc.getDstStrides()[shapeRank - 1] != 1)
           {
             throw Exception{Error::vkfft, "destination fastest axis stride must be 1"};
           }

@@ -74,21 +74,7 @@ AFFT_EXPORT namespace afft
     return View<T>{&scalar, 1};
   }
 
-  /**
-   * @brief Get the alignment of the pointers
-   * @tparam PtrTs Pointer types
-   * @param ptrs Pointers
-   * @return Alignment
-   */
-  template<typename... PtrTs>
-  [[nodiscard]] Alignment alignmentOf(const PtrTs*... ptrs) noexcept
-  {
-    static_assert(sizeof...(ptrs) > 0, "At least one pointer must be provided");
-
-    const auto bitOredPtrs = (0 | ... | reinterpret_cast<detail::cxx::uintptr_t>(ptrs));
-
-    return static_cast<Alignment>(bitOredPtrs & ~(bitOredPtrs - 1));
-  }
+  
 
   /**
    * @brief Make a precision triad
@@ -139,123 +125,6 @@ AFFT_EXPORT namespace afft
     return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>,
                           /* .source      = */ typePrecision<SrcT>,
                           /* .destination = */ typePrecision<DstT>};
-  }
-
-  /**
-   * @brief Make strides.
-   * @param shapeRank Shape rank
-   * @param shape Shape
-   * @param fastestAxisStride Stride of the fastest axis
-   * @param strides Strides
-   */
-  constexpr void makeStrides(const std::size_t shapeRank,
-                             const Size*       shape,
-                             Size*             strides,
-                             const Size        fastestAxisStride = 1)
-  {
-    if (shapeRank == 0)
-    {
-      throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
-    }
-
-    if (shape == nullptr)
-    {
-      throw Exception{Error::invalidArgument, "invalid shape"};
-    }
-
-    if (strides == nullptr)
-    {
-      throw Exception{Error::invalidArgument, "invalid strides"};
-    }
-
-    if (fastestAxisStride == 0)
-    {
-      throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
-    }
-
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
-    {
-      throw Exception{Error::invalidArgument, "shape must not contain zeros"};
-    }
-
-    strides[shapeRank - 1] = fastestAxisStride;
-
-    for (std::size_t i = shapeRank - 1; i > 0; --i)
-    {
-      strides[i - 1] = shape[i] * strides[i];
-    }
-  }
-
-  /**
-   * @brief Make transposed strides.
-   * @param shapeRank Shape rank
-   * @param shape Shape
-   * @param orgAxesOrder Original axes order
-   * @param strides Strides
-   * @param fastestAxisStride Stride of the fastest axis
-   */
-  inline void makeTransposedStrides(const std::size_t shapeRank,
-                                    const Size*       shape,
-                                    const Axis*       orgAxesOrder,
-                                    Size*             strides,
-                                    const Size        fastestAxisStride = 1)
-  {
-    if (shapeRank == 0)
-    {
-      throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
-    }
-
-    if (shape == nullptr)
-    {
-      throw Exception{Error::invalidArgument, "invalid shape"};
-    }
-
-    if (orgAxesOrder == nullptr)
-    {
-      throw Exception{Error::invalidArgument, "invalid axes order"};
-    }
-
-    if (strides == nullptr)
-    {
-      throw Exception{Error::invalidArgument, "invalid strides"};
-    }
-
-    if (fastestAxisStride == 0)
-    {
-      throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
-    }
-
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
-    {
-      throw Exception{Error::invalidArgument, "shape must not contain zeros"};
-    }
-
-    // Check if axes order is valid
-    {
-      std::bitset<maxDimCount> seenAxes{};
-
-      for (std::size_t i{}; i < shapeRank; ++i)
-      {
-        if (orgAxesOrder[i] >= shapeRank)
-        {
-          throw Exception{Error::invalidArgument, "axes order must not contain out-of-range values"};
-        }
-
-        if (seenAxes.test(orgAxesOrder[i]))
-        {
-          throw Exception{Error::invalidArgument, "axes order must not contain duplicates"};
-        }
-
-        seenAxes.set(orgAxesOrder[i]);
-      }
-    }
-
-    strides[orgAxesOrder[shapeRank - 1]] = fastestAxisStride;
-
-    for (std::size_t i = shapeRank - 1; i > 0; --i)
-    {
-      strides[orgAxesOrder[i - 1]] = shape[i] * strides[orgAxesOrder[i]];
-    }
   }
 } // namespace afft
 

@@ -115,11 +115,15 @@ namespace afft::detail::cufft::sp
         const auto dstStrides    = memDesc.getDstStrides();
 
         auto n                  = Parent::mDesc.template getTransformDimsAs<SizeT>();
-        auto srcNEmbedAndStride = makeNEmbedAndStride<SizeT>({srcShape.data, shapeRank},
-                                                             {transformAxes, transformRank},
+        auto srcNEmbedAndStride = makeNEmbedAndStride<SizeT>(srcShape.data,
+                                                             shapeRank,
+                                                             transformAxes,
+                                                             transformRank,
                                                              srcStrides);
-        auto dstNEmbedAndStride = makeNEmbedAndStride<SizeT>({dstShape.data, shapeRank},
-                                                             {transformAxes, transformRank},
+        auto dstNEmbedAndStride = makeNEmbedAndStride<SizeT>(dstShape.data,
+                                                             shapeRank,
+                                                             transformAxes,
+                                                             transformRank,
                                                              dstStrides);
 
         SizeT batch{1};

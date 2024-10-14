@@ -79,8 +79,8 @@ AFFT_EXPORT namespace afft
   {
     Alignment     alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    View<Size>    srcStrides{};                              ///< strides of the source memory, nullptr for default strides
-    View<Size>    dstStrides{};                              ///< strides of the destination memory, nullptr for default strides
+    const Size*   srcStrides{};                              ///< Source strides (null for default or array of size shapeRank)
+    const Size*   dstStrides{};                              ///< Destination strides (null for default or array of size shapeRank)
   };
 
   /// @brief Memory layout of the distributed transform
@@ -88,16 +88,18 @@ AFFT_EXPORT namespace afft
   {
     Alignment          alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    View<Axis>         srcDistribAxes{};                          ///< axes along which the source data are distributed
-    View<const Size*>  srcStarts{};                               ///< starting indices of the source memory
-    View<const Size*>  srcSizes{};                                ///< sizes of the source memory
-    View<const Size*>  srcStrides{};                              ///< strides of the source memory
-    View<Axis>         srcAxesOrder{};                            ///< order of the source axes
-    View<Axis>         dstDistribAxes{};                          ///< axes along which the destination data are distributed
-    View<const Size*>  dstStarts{};                               ///< starting indices of the destination memory
-    View<const Size*>  dstSizes{};                                ///< sizes of the destination memory
-    View<const Size*>  dstStrides{};                              ///< strides of the destination memory
-    View<Axis>         dstAxesOrder{};                            ///< order of the destination axes
+    const Axis*        srcDistribAxes{};                          ///< axes along which the source data are distributed
+    std::size_t        srcDistribAxesRank{};                      ///< rank of the source distributed axes
+    const Axis*        srcAxesOrder{};                            ///< order of the source axes
+    const Size* const* srcStarts{};                               ///< starting indices of the source memory
+    const Size* const* srcSizes{};                                ///< sizes of the source memory
+    const Size* const* srcStrides{};                              ///< strides of the source memory
+    const Axis*        dstDistribAxes{};                          ///< axes along which the destination data are distributed
+    std::size_t        dstDistribAxesRank{};                      ///< rank of the destination distributed axes
+    const Axis*        dstAxesOrder{};                            ///< order of the destination axes
+    const Size* const* dstStarts{};                               ///< starting indices of the destination memory
+    const Size* const* dstSizes{};                                ///< sizes of the destination memory
+    const Size* const* dstStrides{};                              ///< strides of the destination memory
   };
 
   /// @brief Memory layout variant
@@ -509,6 +511,139 @@ AFFT_EXPORT namespace afft
     private:
       Alignment mAlignment{Alignment::defaultNew}; ///< Alignment for memory allocation
   };
+
+  /**
+   * @brief Get the alignment of the pointers
+   * @tparam PtrTs Pointer types
+   * @param ptrs Pointers
+   * @return Alignment
+   */
+  template<typename... PtrTs>
+  [[nodiscard]] Alignment alignmentOf(const PtrTs*... ptrs) noexcept
+  {
+    static_assert(sizeof...(ptrs) > 0, "At least one pointer must be provided");
+
+    const auto bitOredPtrs = (0 | ... | reinterpret_cast<detail::cxx::uintptr_t>(ptrs));
+
+    return static_cast<Alignment>(bitOredPtrs & ~(bitOredPtrs - 1));
+  }
+
+  /**
+   * @brief Make strides.
+   * @param shapeRank Shape rank
+   * @param shape Shape
+   * @param fastestAxisStride Stride of the fastest axis
+   * @param strides Strides
+   */
+  constexpr void makeStrides(const std::size_t shapeRank,
+                             const Size*       shape,
+                             Size*             strides,
+                             const Size        fastestAxisStride = 1)
+  {
+    if (shapeRank == 0)
+    {
+      throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
+    }
+
+    if (shape == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid shape"};
+    }
+
+    if (strides == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid strides"};
+    }
+
+    if (fastestAxisStride == 0)
+    {
+      throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
+    }
+
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
+    {
+      throw Exception{Error::invalidArgument, "shape must not contain zeros"};
+    }
+
+    strides[shapeRank - 1] = fastestAxisStride;
+
+    for (std::size_t i = shapeRank - 1; i > 0; --i)
+    {
+      strides[i - 1] = shape[i] * strides[i];
+    }
+  }
+
+  /**
+   * @brief Make transposed strides.
+   * @param shapeRank Shape rank
+   * @param shape Shape
+   * @param orgAxesOrder Original axes order
+   * @param strides Strides
+   * @param fastestAxisStride Stride of the fastest axis
+   */
+  inline void makeTransposedStrides(const std::size_t shapeRank,
+                                    const Size*       shape,
+                                    const Axis*       orgAxesOrder,
+                                    Size*             strides,
+                                    const Size        fastestAxisStride = 1)
+  {
+    if (shapeRank == 0)
+    {
+      throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
+    }
+
+    if (shape == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid shape"};
+    }
+
+    if (orgAxesOrder == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid axes order"};
+    }
+
+    if (strides == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid strides"};
+    }
+
+    if (fastestAxisStride == 0)
+    {
+      throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
+    }
+
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
+    {
+      throw Exception{Error::invalidArgument, "shape must not contain zeros"};
+    }
+
+    // Check if axes order is valid
+    {
+      std::bitset<maxDimCount> seenAxes{};
+
+      for (std::size_t i{}; i < shapeRank; ++i)
+      {
+        if (orgAxesOrder[i] >= shapeRank)
+        {
+          throw Exception{Error::invalidArgument, "axes order must not contain out-of-range values"};
+        }
+
+        if (seenAxes.test(orgAxesOrder[i]))
+        {
+          throw Exception{Error::invalidArgument, "axes order must not contain duplicates"};
+        }
+
+        seenAxes.set(orgAxesOrder[i]);
+      }
+    }
+
+    strides[orgAxesOrder[shapeRank - 1]] = fastestAxisStride;
+
+    for (std::size_t i = shapeRank - 1; i > 0; --i)
+    {
+      strides[orgAxesOrder[i - 1]] = shape[i] * strides[orgAxesOrder[i]];
+    }
+  }
 } // namespace afft
 
 #endif /* AFFT_MEMORY_HPP */

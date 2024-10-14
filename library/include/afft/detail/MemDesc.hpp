@@ -63,17 +63,16 @@ namespace afft::detail
    */
   template<typename T = Size>
   [[nodiscard]] constexpr NEmbedAndStride<T>
-  makeNEmbedAndStride(View<Size> shape, View<Axis> axes, View<Size> strides)
+  makeNEmbedAndStride(const Size*       shape,
+                      const std::size_t shapeRank,
+                      const Axis*       axes,
+                      const std::size_t axesRank,
+                      const Size*       strides)
   {
-    if (shape.size() != strides.size())
-    {
-      throw Exception{Error::internal, "shape and strides must have the same size"};
-    }
-
     NEmbedAndStride<T> nEmbedAndStride{};
-    nEmbedAndStride.stride = strides.back();
+    nEmbedAndStride.stride = strides[shapeRank - 1];
 
-    for (std::size_t i = axes.size() - 1; i > 0; --i)
+    for (std::size_t i = axesRank - 1; i > 0; --i)
     {
       auto [quot, rem] = div(strides[axes[i - 1]], strides[axes[i]]);
 
@@ -85,7 +84,7 @@ namespace afft::detail
       nEmbedAndStride.nEmbed.data[i] = safeIntCast<T>(quot);
     }
 
-    nEmbedAndStride.nEmbed.data[0] = safeIntCast<T>(shape[axes.front()]);
+    nEmbedAndStride.nEmbed.data[0] = safeIntCast<T>(shape[axes[0]]);
 
     return nEmbedAndStride;
   }
@@ -177,18 +176,18 @@ namespace afft::detail
        * @brief Get the source strides.
        * @return Source strides.
        */
-      [[nodiscard]] constexpr View<Size> getSrcStrides() const noexcept
+      [[nodiscard]] constexpr const Size* getSrcStrides() const noexcept
       {
-        return View<Size>{mSrcStrides.data, mShapeRank};
+        return mSrcStrides.data;
       }
 
       /**
        * @brief Get the destination strides.
        * @return Destination strides.
        */
-      [[nodiscard]] constexpr View<Size> getDstStrides() const noexcept
+      [[nodiscard]] constexpr const Size* getDstStrides() const noexcept
       {
-        return View<Size>{mDstStrides.data, mShapeRank};
+        return mDstStrides.data;
       }
 
       /**
@@ -223,8 +222,8 @@ namespace afft::detail
         const auto lhsDstStrides = lhs.getDstStrides();
         const auto rhsDstStrides = rhs.getDstStrides();
 
-        return std::equal(lhsSrcStrides.begin(), lhsSrcStrides.end(), rhsSrcStrides.begin(), rhsSrcStrides.end()) &&
-               std::equal(lhsDstStrides.begin(), lhsDstStrides.end(), rhsDstStrides.begin(), rhsDstStrides.end());
+        return std::equal(lhsSrcStrides, lhsSrcStrides + lhs.mShapeRank, rhsSrcStrides, rhsSrcStrides + rhs.mShapeRank) &&
+               std::equal(lhsDstStrides, lhsDstStrides + lhs.mShapeRank, rhsDstStrides, rhsDstStrides + rhs.mShapeRank);
       }
 
       /**
@@ -260,211 +259,541 @@ namespace afft::detail
        * @param[in] mpDesc MPI descriptor.
        * @param[in] targetDesc Target descriptor.
        */
-      DistribMemDesc(const DistributedMemoryLayout& memLayout,
-                     const TransformDesc&           transformDesc,
-                     const MpDesc&                  ,
-                     const TargetDesc&              targetDesc)
+      DistribMemDesc(const std::size_t    srcDistribAxesRank,
+                     const Axis*          srcDistribAxes,
+                     const Size* const*   srcStarts,
+                     const Size* const*   srcSizes,
+                     const Size* const*   srcStrides,
+                     const Axis*          srcAxesOrder,
+                     const std::size_t    dstDistribAxesRank,
+                     const Axis*          dstDistribAxes,
+                     const Size* const*   dstStarts,
+                     const Size* const*   dstSizes,
+                     const Size* const*   dstStrides,
+                     const Axis*          dstAxesOrder,
+                     const TransformDesc& transformDesc,
+                     const MpDesc&        ,
+                     const TargetDesc&    targetDesc)
       : mShapeRank{transformDesc.getShapeRank()},
         mTargetCount{targetDesc.getTargetCount()},
-        mMemBlockDescs{std::make_unique<MemBlockDesc[]>(mTargetCount * 2)},
-        mMemoryBlocks{std::make_unique<MemoryBlock[]>(mTargetCount * 2)},
-        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder == nullptr},
-        mHasDefaultDstAxesOrder{memLayout.dstAxesOrder == nullptr},
-        mHasDefaultSrcMemoryBlocks{memLayout.srcBlocks == nullptr},
-        mHasDefaultDstMemoryBlocks{memLayout.dstBlocks == nullptr}
+        mData{std::make_unique<Size[]>(mShapeRank * mTargetCount * DataPos::_count)},
+        mDataPtrs{std::make_unique<Size*[]>(mTargetCount * DataPos::_count)},
+        mSrcDistribAxesRank{srcDistribAxesRank},
+        mDstDistribAxesRank{dstDistribAxesRank}
       {
-        
+        // const auto srcShape = transformDesc.getSrcShape();
+        // const auto dstShape = transformDesc.getDstShape();
+
+        updateDataPtrs();
+
+        if (srcStarts != nullptr && srcSizes != nullptr)
+        {
+          for (std::size_t i{}; i < mTargetCount; ++i)
+          {
+            if (srcStarts[i] == nullptr)
+            {
+              throw Exception{Error::invalidArgument, "invalid source starts"};
+            }
+
+            if (srcSizes[i] == nullptr)
+            {
+              throw Exception{Error::invalidArgument, "invalid source sizes"};
+            }
+
+            std::copy_n(srcStarts[i], mShapeRank, getSrcStarts()[i]);
+            std::copy_n(srcSizes[i], mShapeRank, getSrcSizes()[i]);
+          }
+        }
+        else if (srcStarts == nullptr && srcSizes == nullptr)
+        {
+          mHasDefaultSrcBlocks = true;
+        }
+        else
+        {
+          throw Exception{Error::invalidArgument, "either both source starts and sizes must be provided or none"};
+        }
+
+        if (srcStrides != nullptr)
+        {
+          if (std::any_of(srcStrides, srcStrides + mTargetCount, IsNullPtr{}))
+          {
+            throw Exception{Error::invalidArgument, "invalid source strides"};
+          }
+
+          for (std::size_t i{}; i < mTargetCount; ++i)
+          {
+            std::copy_n(srcStrides[i], mShapeRank, getSrcStrides()[i]);
+          }
+        }
+        else
+        {
+          mHasDefaultSrcStrides = true;
+        }
+
+        if (mSrcDistribAxesRank > 0)
+        {
+          if (srcDistribAxes == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid source distributed axes"};
+          }
+
+          std::copy_n(srcDistribAxes, mSrcDistribAxesRank, mSrcDistribAxes.data);
+        }
+
+        if (srcAxesOrder != nullptr)
+        {
+          std::copy_n(srcAxesOrder, mShapeRank, mSrcAxesOrder.data);
+        }
+        else
+        {
+          mHasDefaultSrcAxesOrder = true;
+          std::iota(mSrcAxesOrder.data, mSrcAxesOrder.data + mShapeRank, 0);
+        }
+
+        if (dstStarts != nullptr && dstSizes != nullptr)
+        {
+          for (std::size_t i{}; i < mTargetCount; ++i)
+          {
+            if (dstStarts[i] == nullptr)
+            {
+              throw Exception{Error::invalidArgument, "invalid destination starts"};
+            }
+
+            if (dstSizes[i] == nullptr)
+            {
+              throw Exception{Error::invalidArgument, "invalid destination sizes"};
+            }
+
+            std::copy_n(dstStarts[i], mShapeRank, getDstStarts()[i]);
+            std::copy_n(dstSizes[i], mShapeRank, getDstSizes()[i]);
+          }
+        }
+        else if (dstStarts == nullptr && dstSizes == nullptr)
+        {
+          mHasDefaultDstBlocks = true;
+        }
+        else
+        {
+          throw Exception{Error::invalidArgument, "either both destination starts and sizes must be provided or none"};
+        }
+
+        if (dstStrides != nullptr)
+        {
+          if (std::any_of(dstStrides, dstStrides + mTargetCount, IsNullPtr{}))
+          {
+            throw Exception{Error::invalidArgument, "invalid destination strides"};
+          }
+
+          for (std::size_t i{}; i < mTargetCount; ++i)
+          {
+            std::copy_n(dstStrides[i], mShapeRank, getDstStrides()[i]);
+          }
+        }
+        else
+        {
+          mHasDefaultDstStrides = true;
+        }
+
+        if (mDstDistribAxesRank > 0)
+        {
+          if (srcDistribAxes == nullptr)
+          {
+            throw Exception{Error::invalidArgument, "invalid destination distributed axes"};
+          }
+
+          std::copy_n(dstDistribAxes, mDstDistribAxesRank, mDstDistribAxes.data);
+        }
+
+        if (dstAxesOrder != nullptr)
+        {
+          std::copy_n(dstAxesOrder, mShapeRank, mDstAxesOrder.data);
+        }
+        else
+        {
+          mHasDefaultDstAxesOrder = true;
+          std::iota(mDstAxesOrder.data, mDstAxesOrder.data + mShapeRank, 0);
+        }
       }
 
-      DistribMemDesc(const afft_DistributedMemoryLayout& memLayout,
-                     const TransformDesc&                transformDesc,
-                     const MpDesc&                       ,
-                     const TargetDesc&                   targetDesc)
-      : mShapeRank{transformDesc.getShapeRank()},
-        mTargetCount{targetDesc.getTargetCount()},
-        mMemBlockDescs{std::make_unique<MemBlockDesc[]>(mTargetCount * 2)},
-        mMemoryBlocks{std::make_unique<MemoryBlock[]>(mTargetCount * 2)},
-        mHasDefaultSrcAxesOrder{memLayout.srcAxesOrder == nullptr},
-        mHasDefaultDstAxesOrder{memLayout.dstAxesOrder == nullptr},
-        mHasDefaultSrcMemoryBlocks{memLayout.srcBlocks == nullptr},
-        mHasDefaultDstMemoryBlocks{memLayout.dstBlocks == nullptr}
-      {
-        
-      }
-
+      /**
+       * @brief Copy constructor.
+       * @param other Other.
+       */
       DistribMemDesc(const DistribMemDesc& other)
       : mShapeRank{other.mShapeRank},
         mTargetCount{other.mTargetCount},
-        mMemBlockDescs{std::make_unique<MemBlockDesc[]>(mTargetCount * 2)},
-        mMemoryBlocks{std::make_unique<MemoryBlock[]>(mTargetCount * 2)},
+        mData{std::make_unique<Size[]>(mShapeRank * mTargetCount * DataPos::_count)},
+        mDataPtrs{std::make_unique<Size*[]>(mTargetCount * DataPos::_count)},
         mSrcDistribAxes{other.mSrcDistribAxes},
         mDstDistribAxes{other.mDstDistribAxes},
         mSrcAxesOrder{other.mSrcAxesOrder},
-        mDstAxesOrder{other.mDstAxesOrder},
-        mHasDefaultSrcAxesOrder{other.mHasDefaultSrcAxesOrder},
-        mHasDefaultDstAxesOrder{other.mHasDefaultDstAxesOrder},
-        mHasDefaultSrcMemoryBlocks{other.mHasDefaultSrcMemoryBlocks},
-        mHasDefaultDstMemoryBlocks{other.mHasDefaultDstMemoryBlocks},
-        mHasDefaultSrcStrides{other.mHasDefaultSrcStrides},
-        mHasDefaultDstStrides{other.mHasDefaultDstStrides}
+        mDstAxesOrder{other.mDstAxesOrder}
       {
-        std::copy_n(other.mMemBlockDescs.get(), mTargetCount * 2, mMemBlockDescs.get());
-        
-        // TODO: set memory blocks
+        std::copy_n(other.mData.get(), mShapeRank * mTargetCount * DataPos::_count, mData.get());
+        updateDataPtrs();
       }
 
+      /// @brief Move constructor.
       DistribMemDesc(DistribMemDesc&&) = default;
 
+      /// @brief Destructor.
       ~DistribMemDesc() = default;
 
+      /**
+       * @brief Copy assignment operator.
+       * @param other Other.
+       * @return Reference to this.
+       */
       DistribMemDesc& operator=(const DistribMemDesc& other)
       {
-        if (this != &other)
+        if (this != std::addressof(other))
         {
-          const auto oldTargetCount = mTargetCount;
-
-          mShapeRank   = other.mShapeRank;
-          mTargetCount = other.mTargetCount;
-          if (oldTargetCount < mTargetCount)
+          if (mShapeRank != other.mShapeRank || mTargetCount != other.mTargetCount)
           {
-            mMemBlockDescs = std::make_unique<MemBlockDesc[]>(mTargetCount * 2);
-            mMemoryBlocks  = std::make_unique<MemoryBlock[]>(mTargetCount * 2);
+            mData     = std::make_unique<Size[]>(other.mShapeRank * other.mTargetCount * DataPos::_count);
+            mDataPtrs = std::make_unique<Size*[]>(other.mTargetCount * DataPos::_count);
           }
-          std::copy_n(other.mMemBlockDescs.get(), mTargetCount * 2, mMemBlockDescs.get());
-          mSrcDistribAxes            = other.mSrcDistribAxes;
-          mDstDistribAxes            = other.mDstDistribAxes;
-          mSrcAxesOrder              = other.mSrcAxesOrder;
-          mDstAxesOrder              = other.mDstAxesOrder;
-          mHasDefaultSrcAxesOrder    = other.mHasDefaultSrcAxesOrder;
-          mHasDefaultDstAxesOrder    = other.mHasDefaultDstAxesOrder;
-          mHasDefaultSrcMemoryBlocks = other.mHasDefaultSrcMemoryBlocks;
-          mHasDefaultDstMemoryBlocks = other.mHasDefaultDstMemoryBlocks;
-          mHasDefaultSrcStrides      = other.mHasDefaultSrcStrides;
-          mHasDefaultDstStrides      = other.mHasDefaultDstStrides;
 
-          // TODO: set memory blocks
+          mShapeRank      = other.mShapeRank;
+          mTargetCount    = other.mTargetCount;
+          mSrcDistribAxes = other.mSrcDistribAxes;
+          mDstDistribAxes = other.mDstDistribAxes;
+          mSrcAxesOrder   = other.mSrcAxesOrder;
+          mDstAxesOrder   = other.mDstAxesOrder;
+
+          std::copy_n(other.mData.get(), mShapeRank * mTargetCount * DataPos::_count, mData.get());
+          updateDataPtrs();
         }
 
         return *this;
       }
 
+      /// @brief Move assignment operator.
       DistribMemDesc& operator=(DistribMemDesc&&) = default;
 
-      [[nodiscard]] View<MemoryBlock> getSrcMemoryBlocks() const noexcept
+      /**
+       * @brief Get the source starts.
+       * @return Source starts.
+       */
+      [[nodiscard]] const Size* const* getSrcStarts() const noexcept
       {
-        return View<MemoryBlock>{mMemoryBlocks.get(), mShapeRank};
+        return mDataPtrs.get() + DataPos::srcStarts * mTargetCount;
       }
 
-      [[nodiscard]] const MemoryBlock& getSrcMemoryBlock(std::size_t targetIndex) const
+      /**
+       * @brief Get the source starts.
+       * @return Source starts.
+       */
+      [[nodiscard]] Size* const* getSrcStarts() noexcept
       {
-        if (targetIndex >= mTargetCount)
-        {
-          throw std::out_of_range{"The target index is out of range"};
-        }
-
-        return mMemoryBlocks[targetIndex];
+        return mDataPtrs.get() + DataPos::srcStarts * mTargetCount;
       }
 
-      [[nodiscard]] View<MemoryBlock> getDstMemoryBlocks() const noexcept
+      /**
+       * @brief Get the source sizes.
+       * @return Source sizes.
+       */
+      [[nodiscard]] const Size* const* getSrcSizes() const noexcept
       {
-        return View<MemoryBlock>{mMemoryBlocks.get() + mTargetCount, mShapeRank};
+        return mDataPtrs.get() + DataPos::srcSizes * mTargetCount;
       }
 
-      [[nodiscard]] const MemoryBlock& getDstMemoryBlock(std::size_t targetIndex) const
+      /**
+       * @brief Get the source sizes.
+       * @return Source sizes.
+       */
+      [[nodiscard]] Size* const* getSrcSizes() noexcept
       {
-        if (targetIndex >= mTargetCount)
-        {
-          throw std::out_of_range{"The target index is out of range"};
-        }
-
-        return mMemoryBlocks[mTargetCount + targetIndex];
-      }
-    
-      [[nodiscard]] constexpr View<Axis> getSrcDistribAxes() const noexcept
-      {
-        return View<Axis>{mSrcDistribAxes.data, mShapeRank};
+        return mDataPtrs.get() + DataPos::srcSizes * mTargetCount;
       }
 
-      [[nodiscard]] constexpr View<Axis> getDstDistribAxes() const noexcept
+      /**
+       * @brief Get the source strides.
+       * @return Source strides.
+       */
+      [[nodiscard]] const Size* const* getSrcStrides() const noexcept
       {
-        return View<Axis>{mDstDistribAxes.data, mShapeRank};
+        return mDataPtrs.get() + DataPos::srcStrides * mTargetCount;
       }
 
-      [[nodiscard]] constexpr View<Axis> getSrcAxesOrder() const noexcept
+      /**
+       * @brief Get the source strides.
+       * @return Source strides.
+       */
+      [[nodiscard]] Size* const* getSrcStrides() noexcept
       {
-        return View<Axis>{mSrcAxesOrder.data, mShapeRank};
+        return mDataPtrs.get() + DataPos::srcStrides * mTargetCount;
       }
 
-      [[nodiscard]] constexpr View<Axis> getDstAxesOrder() const noexcept
+      /**
+       * @brief Get the source distributed axes.
+       * @return Source distributed axes.
+       */
+      [[nodiscard]] const Axis* getSrcDistribAxes() const noexcept
       {
-        return View<Axis>{mDstAxesOrder.data, mShapeRank};
+        return mSrcDistribAxes.data;
       }
 
-      [[nodiscard]] constexpr bool hasDefaultSrcAxesOrder() const noexcept
+      /**
+       * @brief Set the source distributed axes.
+       * @param srcDistribAxes Source distributed axes.
+       * @return Source distributed axes.
+       */
+      void setSrcDistribAxes(const Axis* srcDistribAxes, const std::size_t srcDistribAxesRank) noexcept
       {
-        return mHasDefaultSrcAxesOrder;
+        mSrcDistribAxesRank = srcDistribAxesRank;
+        std::copy_n(srcDistribAxes, srcDistribAxesRank, mSrcDistribAxes.data);
       }
 
-      [[nodiscard]] constexpr bool hasDefaultDstAxesOrder() const noexcept
+      /**
+       * @brief Get the source axes order.
+       * @return Source axes order.
+       */
+      [[nodiscard]] const Axis* getSrcAxesOrder() const noexcept
       {
-        return mHasDefaultDstAxesOrder;
+        return mSrcAxesOrder.data;
       }
 
-      [[nodiscard]] constexpr bool hasDefaultSrcMemoryBlocks() const noexcept
+      /**
+       * @brief Get the destination starts.
+       * @return Destination starts.
+       */
+      [[nodiscard]] const Size* const* getDstStarts() const noexcept
       {
-        return mHasDefaultSrcMemoryBlocks;
+        return mDataPtrs.get() + DataPos::dstStarts * mTargetCount;
+      }
+      
+      /**
+       * @brief Get the destination starts.
+       * @return Destination starts.
+       */
+      [[nodiscard]] Size* const* getDstStarts() noexcept
+      {
+        return mDataPtrs.get() + DataPos::dstStarts * mTargetCount;
       }
 
-      [[nodiscard]] constexpr bool hasDefaultDstMemoryBlocks() const noexcept
+      /**
+       * @brief Get the destination sizes.
+       * @return Destination sizes.
+       */
+      [[nodiscard]] const Size* const* getDstSizes() const noexcept
       {
-        return mHasDefaultDstMemoryBlocks;
+        return mDataPtrs.get() + DataPos::dstSizes * mTargetCount;
       }
 
+      /**
+       * @brief Get the destination sizes.
+       * @return Destination sizes.
+       */
+      [[nodiscard]] Size* const* getDstSizes() noexcept
+      {
+        return mDataPtrs.get() + DataPos::dstSizes * mTargetCount;
+      }
+
+      /**
+       * @brief Get the destination strides.
+       * @return Destination strides.
+       */
+      [[nodiscard]] const Size* const* getDstStrides() const noexcept
+      {
+        return mDataPtrs.get() + DataPos::dstStrides * mTargetCount;
+      }
+
+      /**
+       * @brief Get the destination strides.
+       * @return Destination strides.
+       */
+      [[nodiscard]] Size* const* getDstStrides() noexcept
+      {
+        return mDataPtrs.get() + DataPos::dstStrides * mTargetCount;
+      }
+
+      /**
+       * @brief Get the destination distributed axes.
+       * @return Destination distributed axes.
+       */
+      [[nodiscard]] constexpr const Axis* getDstDistribAxes() const noexcept
+      {
+        return mDstDistribAxes.data;
+      }
+
+      /**
+       * @brief Set the destination distributed axes.
+       * @param dstDistribAxes Destination distributed axes.
+       * @return Destination distributed axes.
+       */
+      void setDstDistribAxes(const Axis* dstDistribAxes, const std::size_t dstDistribAxesRank) noexcept
+      {
+        mDstDistribAxesRank = dstDistribAxesRank;
+        std::copy_n(dstDistribAxes, dstDistribAxesRank, mDstDistribAxes.data);
+      }
+
+      /**
+       * @brief Get the destination axes order.
+       * @return Destination axes order.
+       */
+      [[nodiscard]] constexpr const Axis* getDstAxesOrder() const noexcept
+      {
+        return mDstAxesOrder.data;
+      }
+
+      /**
+       * @brief Get the destination axes order.
+       * @return Destination axes order.
+       */
+      [[nodiscard]] constexpr const Axis* getDstAxesOrder() noexcept
+      {
+        return mDstAxesOrder.data;
+      }
+
+      /**
+       * @brief Check if the source starts and sizes are default.
+       * @return True if the source starts and sizes are default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultSrcBlocks() const noexcept
+      {
+        return mHasDefaultSrcBlocks;
+      }
+
+      /**
+       * @brief Check if the destination starts and sizes are default.
+       * @return True if the destination starts and sizes are default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultDstBlocks() const noexcept
+      {
+        return mHasDefaultDstBlocks;
+      }
+
+      /**
+       * @brief Check if the source strides are default.
+       * @return True if the source strides are default, false otherwise.
+       */
       [[nodiscard]] constexpr bool hasDefaultSrcStrides() const noexcept
       {
         return mHasDefaultSrcStrides;
       }
 
+      /**
+       * @brief Check if the destination strides are default.
+       * @return True if the destination strides are default, false otherwise.
+       */
       [[nodiscard]] constexpr bool hasDefaultDstStrides() const noexcept
       {
         return mHasDefaultDstStrides;
       }
 
+      /**
+       * @brief Check if the source distributed axes are default.
+       * @return True if the source distributed axes are default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultSrcDistribAxes() const noexcept
+      {
+        return mSrcDistribAxesRank == 0;
+      }
+
+      /**
+       * @brief Check if the destination distributed axes are default.
+       * @return True if the destination distributed axes are default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultDstDistribAxes() const noexcept
+      {
+        return mDstDistribAxesRank == 0;
+      }
+
+      /**
+       * @brief Check if the source axes order is default.
+       * @return True if the source axes order is default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultSrcAxesOrder() const noexcept
+      {
+        return mHasDefaultSrcAxesOrder;
+      }
+
+      /**
+       * @brief Check if the destination axes order is default.
+       * @return True if the destination axes order is default, false otherwise.
+       */
+      [[nodiscard]] constexpr bool hasDefaultDstAxesOrder() const noexcept
+      {
+        return mHasDefaultDstAxesOrder;
+      }
+
+      /**
+       * @brief Equality operator.
+       * @param lhs Left-hand side.
+       * @param rhs Right-hand side.
+       * @return True if the memory descriptors are equal, false otherwise.
+       */
       [[nodiscard]] friend bool operator==(const DistribMemDesc& lhs, const DistribMemDesc& rhs) noexcept
       {
-        // TODO: fixme
-        return true;
-      //   return lhs.mShapeRank == rhs.mShapeRank &&
-      //          lhs.mTargetCount == rhs.mTargetCount &&
-      //          (lhs.hasDefaultSrcAxesOrder() ||
-      //            rhs.hasDefaultSrcAxesOrder() ||
-      //            std::equal(lhs.getSrcAxesOrder().begin(), lhs.getSrcAxesOrder().end(), rhs.getSrcAxesOrder().begin())) &&
-      //          (lhs.hasDefaultDstAxesOrder() ||
-      //            rhs.hasDefaultDstAxesOrder() ||
-      //            std::equal(lhs.getDstAxesOrder().begin(), lhs.getDstAxesOrder().end(), rhs.getDstAxesOrder().begin())) &&
-      //          (lhs.hasDefaultSrcMemoryBlocks() ||
-      //            rhs.hasDefaultSrcMemoryBlocks() ||
-      //            std::equal(lhs.getSrcMemoryBlocks().begin(), lhs.getSrcMemoryBlocks().end(), rhs.getSrcMemoryBlocks().begin())) &&
-      //          (lhs.hasDefaultDstMemoryBlocks() ||
-      //            rhs.hasDefaultDstMemoryBlocks() ||
-      //            std::equal(lhs.getDstMemoryBlocks().begin(), lhs.getDstMemoryBlocks().end(), rhs.getDstMemoryBlocks().begin()));
+        const auto shapeRank     = lhs.mShapeRank;
+        const auto targetCount   = lhs.mTargetCount;
+        const auto dataElemCount = shapeRank * targetCount * DataPos::_count;
+
+        return (lhs.mShapeRank == rhs.mShapeRank) &&
+               (lhs.mTargetCount == rhs.mTargetCount) &&
+               std::equal(lhs.mSrcDistribAxes.data, lhs.mSrcDistribAxes.data + shapeRank, rhs.mSrcDistribAxes.data) &&
+               std::equal(lhs.mDstDistribAxes.data, lhs.mDstDistribAxes.data + shapeRank, rhs.mDstDistribAxes.data) &&
+               std::equal(lhs.mSrcAxesOrder.data, lhs.mSrcAxesOrder.data + shapeRank, rhs.mSrcAxesOrder.data) &&
+               std::equal(lhs.mDstAxesOrder.data, lhs.mDstAxesOrder.data + shapeRank, rhs.mDstAxesOrder.data) &&
+               std::equal(lhs.mData.get(), lhs.mData.get() + dataElemCount, rhs.mData.get());
+      }
+
+      /**
+       * @brief Inequality operator.
+       * @param lhs Left-hand side.
+       * @param rhs Right-hand side.
+       * @return True if the memory descriptors are not equal, false otherwise.
+       */
+      [[nodiscard]] friend bool operator!=(const DistribMemDesc& lhs, const DistribMemDesc& rhs) noexcept
+      {
+        return !(lhs == rhs);
       }
 
     private:
-      std::size_t                     mShapeRank{};                 ///< Shape rank.
-      std::size_t                     mTargetCount{};               ///< Target count.
-      std::unique_ptr<MemBlockDesc[]> mMemBlockDescs{};             ///< Source and destination memory block descriptors.
-      std::unique_ptr<MemoryBlock[]>  mMemoryBlocks{};              ///< View over memory blocks.
-      MaxDimBuffer<Axis>              mSrcDistribAxes{};            ///< Source distributed axes.
-      MaxDimBuffer<Axis>              mDstDistribAxes{};            ///< Destination distributed axes.
-      MaxDimBuffer<Axis>              mSrcAxesOrder{};              ///< Source axes order.
-      MaxDimBuffer<Axis>              mDstAxesOrder{};              ///< Destination axes order.
-      bool                            mHasDefaultSrcAxesOrder{};    ///< Has default source axes order.
-      bool                            mHasDefaultDstAxesOrder{};    ///< Has default destination axes order.
-      bool                            mHasDefaultSrcMemoryBlocks{}; ///< Has default source memory blocks.
-      bool                            mHasDefaultDstMemoryBlocks{}; ///< Has default destination memory blocks.
-      bool                            mHasDefaultSrcStrides{};      ///< Has default source strides.
-      bool                            mHasDefaultDstStrides{};      ///< Has default destination strides.
+      /// @brief Data position names, replaces enum class to allow implict cast to std::size_t.
+      struct DataPos
+      {
+        enum : std::size_t
+        {
+          srcStarts,  ///< Source starts.
+          srcSizes,   ///< Source sizes.
+          srcStrides, ///< Source strides.
+          dstStarts,  ///< Destination starts.
+          dstSizes,   ///< Destination sizes.
+          dstStrides, ///< Destination strides.
+          _count,     ///< Count of the enumeration.
+        };
+      };
+
+      /// @brief Update data pointers.
+      void updateDataPtrs()
+      {
+        for (std::size_t i{}; i < DataPos::_count; ++i)
+        {
+          for (std::size_t j{}; j < mTargetCount; ++j)
+          {
+            mDataPtrs[i * mTargetCount + j] = mData.get() + (i * mTargetCount + j) * mShapeRank;
+          }
+        }
+      }
+
+      std::size_t              mShapeRank{};                ///< Shape rank.
+      std::size_t              mTargetCount{};              ///< Target count.
+      std::unique_ptr<Size[]>  mData{};                     ///< Data.
+      std::unique_ptr<Size*[]> mDataPtrs{};                 ///< Pointers.
+      std::size_t              mSrcDistribAxesRank{};       ///< Source distributed axes rank.
+      MaxDimBuffer<Axis>       mSrcDistribAxes{};           ///< Source distributed axes.
+      std::size_t              mDstDistribAxesRank{};       ///< Destination distributed axes rank.
+      MaxDimBuffer<Axis>       mDstDistribAxes{};           ///< Destination distributed axes.
+      MaxDimBuffer<Axis>       mSrcAxesOrder{};             ///< Source axes order.
+      MaxDimBuffer<Axis>       mDstAxesOrder{};             ///< Destination axes order.
+      bool                     mHasDefaultSrcBlocks{};      ///< Has default source blocks.
+      bool                     mHasDefaultDstBlocks{};      ///< Has default destination blocks.
+      bool                     mHasDefaultSrcStrides{};     ///< Has default source strides.
+      bool                     mHasDefaultDstStrides{};     ///< Has default destination strides;
+      bool                     mHasDefaultSrcAxesOrder{};   ///< Has default source axes order.
+      bool                     mHasDefaultDstAxesOrder{};   ///< Has default destination axes order;
   };
 
   /// @brief Memory descriptor.
@@ -622,22 +951,22 @@ namespace afft::detail
         if constexpr (memoryLayout == MemoryLayout::centralized)
         {
           const CentralMemDesc& memDesc = std::get<CentralMemDesc>(mMemVariant);
-          memLayout.srcStrides = memDesc.getSrcStrides().data();
-          memLayout.dstStrides = memDesc.getDstStrides().data();
+          memLayout.srcStrides = memDesc.getSrcStrides();
+          memLayout.dstStrides = memDesc.getDstStrides();
         }
         else if constexpr (memoryLayout == MemoryLayout::distributed)
         {
           const DistribMemDesc& memDesc = std::get<DistribMemDesc>(mMemVariant);
-          memLayout.srcStarts      = memDesc.getSrcStarts().data();
-          memLayout.srcSizes       = memDesc.getSrcSizes().data();
-          memLayout.srcStrides     = memDesc.getSrcStrides().data();
-          memLayout.srcDistribAxes = memDesc.getSrcDistribAxes().data();
-          memLayout.srcAxesOrder   = memDesc.getSrcAxesOrder().data();
-          memLayout.dstStarts      = memDesc.getDstStarts().data();
-          memLayout.dstSizes       = memDesc.getDstSizes().data();
-          memLayout.dstStrides     = memDesc.getDstStrides().data();
-          memLayout.dstDistribAxes = memDesc.getDstDistribAxes().data();
-          memLayout.dstAxesOrder   = memDesc.getDstAxesOrder().data();
+          memLayout.srcStarts      = memDesc.getSrcStarts();
+          memLayout.srcSizes       = memDesc.getSrcSizes();
+          memLayout.srcStrides     = memDesc.getSrcStrides();
+          memLayout.srcDistribAxes = memDesc.getSrcDistribAxes();
+          memLayout.srcAxesOrder   = memDesc.getSrcAxesOrder();
+          memLayout.dstStarts      = memDesc.getDstStarts();
+          memLayout.dstSizes       = memDesc.getDstSizes();
+          memLayout.dstStrides     = memDesc.getDstStrides();
+          memLayout.dstDistribAxes = memDesc.getDstDistribAxes();
+          memLayout.dstAxesOrder   = memDesc.getDstAxesOrder();
         }
 
         return memLayout;
@@ -684,36 +1013,8 @@ namespace afft::detail
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
       {
-        const auto shapeRank = transformDesc.getShapeRank();
-
-        if (!memLayout.srcStrides.empty())
-        {
-          if (memLayout.srcStrides.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "destination strides must have the same size as the shape rank"};
-          }
-
-          if (memLayout.srcStrides.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid destination strides"};
-          }
-        }
-
-        if (!memLayout.dstStrides.empty())
-        {
-          if (memLayout.dstStrides.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "destination strides must have the same size as the shape rank"};
-          }
-
-          if (memLayout.dstStrides.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid destination strides"};
-          }
-        }
-
-        return CentralMemDesc{memLayout.srcStrides.data(),
-                              memLayout.dstStrides.data(),
+        return CentralMemDesc{memLayout.srcStrides,
+                              memLayout.dstStrides,
                               transformDesc,
                               mpDesc,
                               targetDesc};
@@ -732,166 +1033,88 @@ namespace afft::detail
                                                          const MpDesc&                  mpDesc,
                                                          const TargetDesc&              targetDesc)
       {
-        auto isValidPtr = [](const auto* ptr) { return ptr != nullptr; };
-
-        const auto shapeRank = transformDesc.getShapeRank();
         const auto targetCount = targetDesc.getTargetCount();
 
-        if (!memLayout.srcStarts.empty())
+        if (memLayout.srcStarts != nullptr)
         {
-          if (memLayout.srcStarts.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "source starts must have the same size as the target count"};
-          }
-
-          if (memLayout.srcStarts.data() == nullptr || std::any_of(memLayout.srcStarts.begin(),
-                                                                   memLayout.srcStarts.end(),
-                                                                   std::not_fn(isValidPtr)))
-          {
-            throw Exception{Error::invalidArgument, "invalid source starts"};
-          }
+          if (std::any_of(memLayout.srcStarts, memLayout.srcStarts + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid source starts"};
           }
         }
 
-        if (!memLayout.srcSizes.empty())
+        if (memLayout.srcSizes != nullptr)
         {
-          if (memLayout.srcSizes.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "source sizes must have the same size as the target count"};
-          }
-
-          if (memLayout.srcSizes.data() == nullptr || std::any_of(memLayout.srcSizes.begin(),
-                                                                  memLayout.srcSizes.end(),
-                                                                  std::not_fn(isValidPtr)))
+          if (std::any_of(memLayout.srcSizes, memLayout.srcSizes + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid source sizes"};
           }
         }
 
-        if (!memLayout.srcStrides.empty())
+        if (memLayout.srcStrides != nullptr)
         {
-          if (memLayout.srcStrides.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "source strides must have the same size as the target count"};
-          }
-
-          if (memLayout.srcStrides.data() == nullptr || std::any_of(memLayout.srcStrides.begin(),
-                                                                    memLayout.srcStrides.end(),
-                                                                    std::not_fn(isValidPtr)))
+          if (std::any_of(memLayout.srcStrides, memLayout.srcStrides + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid source strides"};
           }
         }
 
-        if (!memLayout.srcDistribAxes.empty())
+        if (memLayout.srcDistribAxes == nullptr)
         {
-          if (memLayout.srcDistribAxes.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "source distributed axes must have the same size as the shape rank"};
-          }
-
-          if (memLayout.srcDistribAxes.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid source distributed axes"};
-          }
+          throw Exception{Error::invalidArgument, "invalid source distributed axes"};
         }
 
-        if (!memLayout.srcAxesOrder.empty())
+        if (memLayout.srcAxesOrder != nullptr)
         {
-          if (memLayout.srcAxesOrder.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "source axes order must have the same size as the shape rank"};
-          }
-
-          if (memLayout.srcAxesOrder.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid source axes order"};
-          }
+          // todo: check if the source axes order is valid
         }
-
-        if (!memLayout.dstStarts.empty())
+        
+        if (memLayout.dstStarts != nullptr)
         {
-          if (memLayout.dstStarts.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "destination starts must have the same size as the target count"};
-          }
-
-          if (memLayout.dstStarts.data() == nullptr || std::any_of(memLayout.dstStarts.begin(),
-                                                                   memLayout.dstStarts.end(),
-                                                                   std::not_fn(isValidPtr)))
+          if (std::any_of(memLayout.dstStarts, memLayout.dstStarts + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid destination starts"};
           }
         }
 
-        if (!memLayout.dstSizes.empty())
+        if (memLayout.dstSizes != nullptr)
         {
-          if (memLayout.dstSizes.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "destination sizes must have the same size as the target count"};
-          }
-
-          if (memLayout.dstSizes.data() == nullptr || std::any_of(memLayout.dstSizes.begin(),
-                                                                  memLayout.dstSizes.end(),
-                                                                  std::not_fn(isValidPtr)))
+          if (std::any_of(memLayout.dstSizes, memLayout.dstSizes + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid destination sizes"};
           }
         }
 
-        if (!memLayout.dstStrides.empty())
+        if (memLayout.dstStrides != nullptr)
         {
-          if (memLayout.dstStrides.size() != targetCount)
-          {
-            throw Exception{Error::invalidArgument, "destination strides must have the same size as the target count"};
-          }
-
-          if (memLayout.dstStrides.data() == nullptr || std::any_of(memLayout.dstStrides.begin(),
-                                                                    memLayout.dstStrides.end(),
-                                                                    std::not_fn(isValidPtr)))
+          if (std::any_of(memLayout.dstStrides, memLayout.dstStrides + targetCount, IsNullPtr{}))
           {
             throw Exception{Error::invalidArgument, "invalid destination strides"};
           }
         }
 
-        if (!memLayout.dstDistribAxes.empty())
+        if (memLayout.dstDistribAxes == nullptr)
         {
-          if (memLayout.dstDistribAxes.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "destination distributed axes must have the same size as the shape rank"};
-          }
-
-          if (memLayout.dstDistribAxes.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid destination distributed axes"};
-          }
+          throw Exception{Error::invalidArgument, "invalid destination distributed axes"};
         }
 
-        if (!memLayout.dstAxesOrder.empty())
+        if (memLayout.dstAxesOrder != nullptr)
         {
-          if (memLayout.dstAxesOrder.size() != shapeRank)
-          {
-            throw Exception{Error::invalidArgument, "destination axes order must have the same size as the shape rank"};
-          }
-
-          if (memLayout.dstAxesOrder.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid destination axes order"};
-          }
+          // todo: check if the destination axes order is valid
         }
 
-        return DistribMemDesc{memLayout.srcStarts.data(),
-                              memLayout.srcSizes.data(),
-                              memLayout.srcStrides.data(),
-                              memLayout.srcDistribAxes.data(),
-                              memLayout.srcAxesOrder.data(),
-                              memLayout.dstStarts.data(),
-                              memLayout.dstSizes.data(),
-                              memLayout.dstStrides.data(),
-                              memLayout.dstDistribAxes.data(),
-                              memLayout.dstAxesOrder.data(),
+        return DistribMemDesc{memLayout.srcDistribAxesRank,
+                              memLayout.srcDistribAxes,
+                              memLayout.srcStarts,
+                              memLayout.srcSizes,
+                              memLayout.srcStrides,
+                              memLayout.srcAxesOrder,
+                              memLayout.dstDistribAxesRank,
+                              memLayout.dstDistribAxes,
+                              memLayout.dstStarts,
+                              memLayout.dstSizes,
+                              memLayout.dstStrides,
+                              memLayout.dstAxesOrder,
                               transformDesc,
                               mpDesc,
                               targetDesc};
@@ -926,19 +1149,21 @@ namespace afft::detail
                                                          const MpDesc&                       mpDesc,
                                                          const TargetDesc&                   targetDesc)
       {
-        return DistribMemDesc{memLayout.srcStarts,
-                              memLayout.srcSizes,
-                              memLayout.srcStrides,
-                              memLayout.srcDistribAxes,
-                              memLayout.srcAxesOrder,
-                              memLayout.dstStarts,
-                              memLayout.dstSizes,
-                              memLayout.dstStrides,
-                              memLayout.dstDistribAxes,
-                              memLayout.dstAxesOrder,
-                              transformDesc,
-                              mpDesc,
-                              targetDesc};
+        DistributedMemoryLayout cxxDistributedMemLayout{};
+        cxxDistributedMemLayout.srcDistribAxesRank = memLayout.srcDistribAxesRank;
+        cxxDistributedMemLayout.srcDistribAxes     = memLayout.srcDistribAxes;
+        cxxDistributedMemLayout.srcStarts          = memLayout.srcStarts;
+        cxxDistributedMemLayout.srcSizes           = memLayout.srcSizes;
+        cxxDistributedMemLayout.srcStrides         = memLayout.srcStrides;
+        cxxDistributedMemLayout.srcAxesOrder       = memLayout.srcAxesOrder;
+        cxxDistributedMemLayout.dstDistribAxesRank = memLayout.dstDistribAxesRank;
+        cxxDistributedMemLayout.dstDistribAxes     = memLayout.dstDistribAxes;
+        cxxDistributedMemLayout.dstStarts          = memLayout.dstStarts;
+        cxxDistributedMemLayout.dstSizes           = memLayout.dstSizes;
+        cxxDistributedMemLayout.dstStrides         = memLayout.dstStrides;
+        cxxDistributedMemLayout.dstAxesOrder       = memLayout.dstAxesOrder;
+
+        return makeMemVariant(cxxDistributedMemLayout, transformDesc, mpDesc, targetDesc);
       }
 
       Alignment     mAlignment{};     ///< Memory alignment.

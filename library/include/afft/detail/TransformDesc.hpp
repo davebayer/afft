@@ -102,10 +102,10 @@ namespace afft::detail
       TransformDesc(const TransformParamsT& transformParams)
       : mDirection{validateAndReturn(transformParams.direction)},
         mPrecision{validateAndReturn(transformParams.precision)},
-        mShapeRank{transformParams.shape.size()},
-        mShape(makeShape(transformParams.shape)),
-        mTransformRank{transformParams.axes.empty() ? mShapeRank : transformParams.axes.size()},
-        mTransformAxes(makeTransformAxes(transformParams.axes, mShapeRank)),
+        mShapeRank{transformParams.shapeRank},
+        mShape(makeShape(transformParams.shape, mShapeRank)),
+        mTransformRank{transformParams.axesRank},
+        mTransformAxes(makeAxes(transformParams.axes, mTransformRank, mShapeRank)),
         mNormalization{validateAndReturn(transformParams.normalization)},
         mPlacement{validateAndReturn(transformParams.placement)},
         mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
@@ -124,9 +124,9 @@ namespace afft::detail
                    validateAndReturn(static_cast<afft::Precision>(transformParams.precision.source)),
                    validateAndReturn(static_cast<afft::Precision>(transformParams.precision.destination))},
         mShapeRank{transformParams.shapeRank},
-        mShape(makeShape(afft::View<afft::Size>{transformParams.shape, transformParams.shapeRank})),
+        mShape(makeShape(transformParams.shape, mShapeRank)),
         mTransformRank{transformParams.transformRank},
-        mTransformAxes(makeTransformAxes(afft::View<afft::Axis>{transformParams.axes, mTransformRank}, mShapeRank)),
+        mTransformAxes(makeAxes(transformParams.axes, mTransformRank, mShapeRank)),
         mNormalization{validateAndReturn(static_cast<afft::Normalization>(transformParams.normalization))},
         mPlacement{validateAndReturn(static_cast<afft::Placement>(transformParams.placement))},
         mTransformVariant{makeTransformVariant(transformParams, mTransformRank)}
@@ -215,9 +215,9 @@ namespace afft::detail
        * @brief Get the shape of the transform.
        * @return Shape of the transform.
        */
-      [[nodiscard]] constexpr View<Size> getShape() const noexcept
+      [[nodiscard]] constexpr const Size* getShape() const noexcept
       {
-        return View<Size>{mShape.data, mShapeRank};
+        return mShape.data;
       }
 
       /**
@@ -232,7 +232,7 @@ namespace afft::detail
 
         MaxDimBuffer<I> shape{};
 
-        cast(getShape().begin(), getShape().end(), shape.data, SafeIntCaster<I>{});
+        cast(getShape(), getShape() + getShapeRank(), shape.data, SafeIntCaster<I>{});
 
         return shape;
       }
@@ -254,7 +254,7 @@ namespace afft::detail
           {
           case dft::Type::complexToReal:
           {
-            auto& reducedElem = srcShape[getTransformAxes().back()];
+            auto& reducedElem = srcShape[getTransformAxes()[getTransformRank() - 1]];
 
             reducedElem = reducedElem / 2 + 1;
             break;
@@ -287,7 +287,7 @@ namespace afft::detail
           {
           case dft::Type::realToComplex:
           {
-            auto& reducedElem = dstShape[getTransformAxes().back()];
+            auto& reducedElem = dstShape[getTransformAxes()[getTransformRank() - 1]];
 
             reducedElem = reducedElem / 2 + 1;
             break;
@@ -325,18 +325,18 @@ namespace afft::detail
        * @brief Get the axes of the transform.
        * @return Axes of the transform.
        */
-      [[nodiscard]] constexpr View<Axis> getTransformAxes() const noexcept
+      [[nodiscard]] constexpr const Axis* getTransformAxes() const noexcept
       {
-        return View<Axis>{mTransformAxes.data, mTransformRank};
+        return mTransformAxes.data;
       }
 
       /**
        * @brief Get the axes of the how many dimensions.
        * @return Axes of the how many dimensions.
        */
-      [[nodiscard]] constexpr View<Axis> getTransformHowManyAxes() const noexcept
+      [[nodiscard]] constexpr const Axis* getTransformHowManyAxes() const noexcept
       {
-        return View<Axis>{mTransformAxes.data + getTransformRank(), getTransformHowManyRank()};
+        return mTransformAxes.data + getTransformRank();
       }
 
       /**
@@ -446,30 +446,34 @@ namespace afft::detail
       {
         static_assert(std::is_floating_point_v<T>, "Floating-point type required");
 
+        const auto shape         = getShape();
+        const auto transformAxes = getTransformAxes();
+        const auto transformRank = getTransformRank();
+
         std::size_t logicalSize{1};
 
         switch (getTransform())
         {
           case Transform::dft:
           case Transform::dht:
-            for (const auto& axis : getTransformAxes())
+            std::for_each_n(transformAxes, transformRank, [&logicalSize, this, shape](const auto axis)
             {
-              logicalSize *= getShape()[axis];
-            }
+              logicalSize *= shape[axis];
+            });
             break;
           case Transform::dtt:
           {
             const auto& dttDesc = getTransformDesc<Transform::dtt>();
 
-            for (std::size_t i{}; i < getTransformRank(); ++i)
+            for (std::size_t i{}; i < transformRank; ++i)
             {
               switch (dttDesc.types[i])
               {
                 case dtt::Type::dct1:
-                  logicalSize *= 2 * (getShape()[getTransformAxes()[i]] - 1);
+                  logicalSize *= 2 * (shape[transformAxes[i]] - 1);
                   break;
                 case dtt::Type::dst1:
-                  logicalSize *= 2 * (getShape()[getTransformAxes()[i]] + 1);
+                  logicalSize *= 2 * (shape[transformAxes[i]] + 1);
                   break;
                 case dtt::Type::dct2:
                 case dtt::Type::dct3:
@@ -477,7 +481,7 @@ namespace afft::detail
                 case dtt::Type::dst2:
                 case dtt::Type::dst3:
                 case dtt::Type::dst4:
-                  logicalSize *= 2 * getShape()[getTransformAxes()[i]];
+                  logicalSize *= 2 * shape[transformAxes[i]];
                   break;
                 default:
                   cxx::unreachable();
@@ -545,7 +549,9 @@ namespace afft::detail
         transformParams.direction     = getDirection();
         transformParams.precision     = getPrecision();
         transformParams.shape         = getShape();
+        transformParams.shapeRank     = getShapeRank();
         transformParams.axes          = getTransformAxes();
+        transformParams.axesRank      = getTransformRank();
         transformParams.normalization = getNormalization();
         transformParams.placement     = getPlacement();
 
@@ -559,7 +565,7 @@ namespace afft::detail
         }
         else if constexpr (transform == Transform::dtt)
         {
-          transformParams.types = View<dtt::Type>{getTransformDesc<Transform::dtt>().types.data(), getTransformRank()};
+          transformParams.types = getTransformDesc<Transform::dtt>().types.data();
         }
         
         return transformParams;
@@ -582,9 +588,9 @@ namespace afft::detail
         transformParams.precision.source      = static_cast<afft_Precision>(getPrecision().source);
         transformParams.precision.destination = static_cast<afft_Precision>(getPrecision().destination);
         transformParams.shapeRank             = getShapeRank();
-        transformParams.shape                 = getShape().data();
+        transformParams.shape                 = getShape();
         transformParams.transformRank         = getTransformRank();
-        transformParams.axes                  = getTransformAxes().data();
+        transformParams.axes                  = getTransformAxes();
         transformParams.normalization         = static_cast<afft_Normalization>(getNormalization());
         transformParams.placement             = static_cast<afft_Placement>(getPlacement());
 
@@ -634,16 +640,23 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const TransformDesc& lhs, const TransformDesc& rhs) noexcept
       {
-        const auto lhsShape = lhs.getShape();
-        const auto rhsShape = rhs.getShape();
+        const auto lhsShape     = lhs.getShape();
+        const auto rhsShape     = rhs.getShape();
+        const auto lhsShapeRank = lhs.getShapeRank();
+        const auto rhsShapeRank = rhs.getShapeRank();
 
-        const auto lhsAxes = lhs.getTransformAxes();
-        const auto rhsAxes = rhs.getTransformAxes();
+        const auto lhsTransformAxes = lhs.getTransformAxes();
+        const auto rhsTransformAxes = rhs.getTransformAxes();
+        const auto lhsTransformRank = lhs.getTransformRank();
+        const auto rhsTransformRank = rhs.getTransformRank();
 
         return (lhs.mDirection == rhs.mDirection) &&
                (lhs.mPrecision == rhs.mPrecision) &&
-               std::equal(lhsShape.begin(), lhsShape.end(), rhsShape.begin(), rhsShape.end()) &&
-               std::equal(lhsAxes.begin(), lhsAxes.end(), rhsAxes.begin(), rhsAxes.end()) &&
+               std::equal(lhsShape, lhsShape + lhsShapeRank, rhsShape, rhsShape + rhsShapeRank) &&
+               std::equal(lhsTransformAxes,
+                          lhsTransformAxes + lhsTransformRank,
+                          rhsTransformAxes,
+                          rhsTransformAxes + rhsTransformRank) &&
                (lhs.mNormalization == rhs.mNormalization) &&
                (lhs.mPlacement == rhs.mPlacement) &&
                (lhs.mTransformVariant == rhs.mTransformVariant);
@@ -666,64 +679,78 @@ namespace afft::detail
 
       /**
        * @brief Make the shape of the transform.
-       * @param shapeView Shape view.
+       * @param shape Shape.
+       * @param shapeRank Rank of the shape.
        * @return Shape of the transform.
        */
-      [[nodiscard]] constexpr static MaxDimBuffer<Size> makeShape(View<Size> shapeView)
+      [[nodiscard]] constexpr static MaxDimBuffer<Size> makeShape(const Size* shape, const std::size_t shapeRank)
       {
-        MaxDimBuffer<Size> shape{};
+        MaxDimBuffer<Size> ret{};
 
-        if (shapeView.size() > maxDimCount)
-        {
-          throw Exception{Error::invalidArgument, "too many shape dimensions"};
-        }
-        else if (shapeView.empty())
+        if (shapeRank == 0)
         {
           throw Exception{Error::invalidArgument, "empty shape"};
         }
-        else if (shapeView.data() == nullptr)
+        else if (shapeRank > maxDimCount)
+        {
+          throw Exception{Error::invalidArgument, "too many shape dimensions"};
+        }
+
+        if (shape == nullptr)
         {
           throw Exception{Error::invalidArgument, "invalid shape"};
         }
 
-        for (std::size_t i{}; i < shapeView.size(); ++i)
+        for (std::size_t i{}; i < shapeRank; ++i)
         {
-          if (shapeView[i] == 0)
+          if (shape[i] == 0)
           {
-            throw Exception{Error::invalidArgument, "envalid shape dimension size"};
+            throw Exception{Error::invalidArgument, "invalid shape dimension size"};
           }
 
-          shape[i] = shapeView[i];
+          ret[i] = shape[i];
         }
 
-        return shape;
+        return ret;
       }
 
       /**
-       * @brief Make the transform axes.
-       * @param axesView Axes view.
+       * @brief Make the axes.
+       * @param axes Transform axes.
+       * @param axesRank Rank of the axes.
        * @param shapeRank Rank of the shape.
        * @return Transform axes.
        */
       [[nodiscard]] static MaxDimBuffer<Axis>
-      makeTransformAxes(View<Axis> axesView, std::size_t shapeRank)
+      makeAxes(const Axis* transformAxes, const std::size_t transformAxesRank, std::size_t shapeRank)
       {
-        MaxDimBuffer<Axis> axes{};
+        MaxDimBuffer<Axis> ret{};
 
-        if (axesView.empty())
+        if (transformAxesRank == 0)
         {
-          std::iota(axes.data, std::next(axes.data, static_cast<std::ptrdiff_t>(shapeRank)), 0);
+          throw Exception{Error::invalidArgument, "axes rank must be greater than zero"};
         }
-        else if (axesView.size() <= shapeRank)
+        else if (transformAxesRank > shapeRank)
         {
-          if (axesView.data() == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid transform axes"};
-          }
+          throw Exception{Error::invalidArgument, "axes rank exceeds shape rank"};
+        }
 
-          std::bitset<maxDimCount> seenAxes{};
-          
-          for (const auto& axis : axesView)
+        std::bitset<maxDimCount> seenAxes{};
+
+        if (transformAxes == nullptr)
+        {
+          for (std::size_t i{}; i < transformAxesRank; ++i)
+          {
+            const Axis axis = static_cast<Axis>(i + shapeRank - transformAxesRank);
+
+            seenAxes.set(axis);
+            ret.data[i] = axis;
+          }
+        }
+        else
+        {
+          // Check if the axes are unique and within bounds.
+          std::for_each_n(transformAxes, transformAxesRank, [&seenAxes, shapeRank](const auto axis)
           {
             if (axis >= shapeRank)
             {
@@ -735,24 +762,22 @@ namespace afft::detail
             }
 
             seenAxes.set(axis);
-          }
+          });
 
-          std::copy(axesView.begin(), axesView.end(), axes.data);
-
-          for (std::size_t i{}, j{}; i < shapeRank; ++i)
-          {
-            if (!seenAxes.test(i))
-            {
-              axes.data[axesView.size() + j++] = static_cast<Axis>(i);
-            }
-          }
+          // Copy the axes to the internal buffer.
+          std::copy_n(transformAxes, transformAxesRank, ret.data);
         }
-        else
+
+        // Fill how many axes. The how many axes are stored in the same buffer right after the transform axes.
+        for (std::size_t i{}, j{}; i < shapeRank; ++i)
         {
-          throw Exception{Error::invalidArgument, "too many transform axes"};
+          if (!seenAxes.test(i))
+          {
+            ret.data[transformAxesRank + j++] = static_cast<Axis>(i);
+          }
         }
 
-        return axes;
+        return ret;
       }
 
       /**
@@ -790,25 +815,14 @@ namespace afft::detail
       {
         DttDesc dttDesc{};
 
-        if (dttParams.types.data() == nullptr)
+        if (dttParams.types == nullptr)
         {
           throw Exception{Error::invalidArgument, "invalid dtt types"};
         }
 
-        if (dttParams.types.size() == 1)
+        for (std::size_t i{}; i < transformRank; ++i)
         {
-          std::fill_n(dttDesc.types.begin(), transformRank, validateAndReturn(dttParams.types[0]));
-        }
-        else if (dttParams.types.size() == transformRank)
-        {
-          for (std::size_t i{}; i < transformRank; ++i)
-          {
-            dttDesc.types[i] = validateAndReturn(dttParams.types[i]);
-          }
-        }
-        else
-        {
-          throw Exception{Error::invalidArgument, "invalid number of dtt types, must be 1 or equal to the number of axes"};
+          dttDesc.types[i] = validateAndReturn(dttParams.types[i]);
         }
 
         return dttDesc;

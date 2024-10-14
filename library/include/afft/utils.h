@@ -38,45 +38,7 @@ extern "C"
 {
 #endif
 
-/**
- * @brief Get the alignment of the pointers.
- * @param count Number of pointers.
- * @param ... Pointers.
- * @return Alignment.
- */
-afft_Alignment afft_alignmentOf(size_t count, ...);
 
-/**
- * @brief Make strides.
- * @param shapeRank Rank of the shape.
- * @param shape Shape of the array.
- * @param strides Strides of the array.
- * @param fastestAxisStride Stride of the fastest axis.
- * @param errorDetails Error details.
- * @return Error code.
- */
-afft_Error afft_makeStrides(const size_t       shapeRank,
-                            const afft_Size*   shape,
-                            afft_Size*         strides,
-                            const afft_Size    fastestAxisStride,
-                            afft_ErrorDetails* errDetails);
-
-/**
- * @brief Make transposed strides.
- * @param shapeRank Rank of the shape.
- * @param resultShape Shape of the result array.
- * @param orgAxesOrder Original axes order.
- * @param strides Strides of the array.
- * @param fastestAxisStride Stride of the fastest axis.
- * @param errorDetails Error details.
- * @return Error code.
- */
-afft_Error afft_makeTransposedStrides(const size_t       shapeRank,
-                                      const afft_Size*   resultShape,
-                                      const afft_Axis*   orgAxesOrder,
-                                      afft_Size*         strides,
-                                      const afft_Size    fastestAxisStride,
-                                      afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus
 }
