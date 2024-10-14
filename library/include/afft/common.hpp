@@ -40,6 +40,9 @@ AFFT_EXPORT namespace afft
   /// @brief Size type
   using Size = ::afft_Size;
 
+  /// @brief Stride type
+  using Stride = ::afft_Stride;
+
   namespace fftw3
   {
     /// @brief FFTW3 library type

@@ -40,6 +40,9 @@ typedef uint8_t afft_Axis;
 /// @brief Size type
 typedef uint64_t afft_Size;
 
+/// @brief Stride type
+typedef size_t afft_Stride;
+
 /// @brief FFTW3 library type enumeration
 enum afft_fftw3_Library
 {

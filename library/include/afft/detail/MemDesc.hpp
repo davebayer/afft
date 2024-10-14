@@ -130,7 +130,7 @@ namespace afft::detail
             }
           }
 
-          makeStrides(mShapeRank, srcShape.data, mSrcStrides.data);
+          makeStrides(srcShape.data, mShapeRank, mSrcStrides.data);
         }
         else
         {
@@ -149,7 +149,7 @@ namespace afft::detail
             }
           }
 
-          makeStrides(mShapeRank, dstShape.data, mDstStrides.data);
+          makeStrides(dstShape.data, mShapeRank, mDstStrides.data);
         }
         else
         {
@@ -176,7 +176,7 @@ namespace afft::detail
        * @brief Get the source strides.
        * @return Source strides.
        */
-      [[nodiscard]] constexpr const Size* getSrcStrides() const noexcept
+      [[nodiscard]] constexpr const Stride* getSrcStrides() const noexcept
       {
         return mSrcStrides.data;
       }
@@ -185,7 +185,7 @@ namespace afft::detail
        * @brief Get the destination strides.
        * @return Destination strides.
        */
-      [[nodiscard]] constexpr const Size* getDstStrides() const noexcept
+      [[nodiscard]] constexpr const Stride* getDstStrides() const noexcept
       {
         return mDstStrides.data;
       }
@@ -238,11 +238,11 @@ namespace afft::detail
       }
 
     private:
-      std::size_t        mShapeRank{};            ///< Shape rank.
-      MaxDimBuffer<Size> mSrcStrides{};           ///< Source strides.
-      MaxDimBuffer<Size> mDstStrides{};           ///< Destination strides.
-      bool               mHasDefaultSrcStrides{}; ///< Has default source strides.
-      bool               mHasDefaultDstStrides{}; ///< Has default destination strides.
+      std::size_t          mShapeRank{};            ///< Shape rank.
+      MaxDimBuffer<Stride> mSrcStrides{};           ///< Source strides.
+      MaxDimBuffer<Stride> mDstStrides{};           ///< Destination strides.
+      bool                 mHasDefaultSrcStrides{}; ///< Has default source strides.
+      bool                 mHasDefaultDstStrides{}; ///< Has default destination strides.
   };
 
   /// @brief Distributed memory layout descriptor.
@@ -263,13 +263,13 @@ namespace afft::detail
                      const Axis*          srcDistribAxes,
                      const Size* const*   srcStarts,
                      const Size* const*   srcSizes,
-                     const Size* const*   srcStrides,
+                     const Stride* const* srcStrides,
                      const Axis*          srcAxesOrder,
                      const std::size_t    dstDistribAxesRank,
                      const Axis*          dstDistribAxes,
                      const Size* const*   dstStarts,
                      const Size* const*   dstSizes,
-                     const Size* const*   dstStrides,
+                     const Stride* const* dstStrides,
                      const Axis*          dstAxesOrder,
                      const TransformDesc& transformDesc,
                      const MpDesc&        ,
@@ -281,6 +281,7 @@ namespace afft::detail
         mSrcDistribAxesRank{srcDistribAxesRank},
         mDstDistribAxesRank{dstDistribAxesRank}
       {
+        // TODO: fix separate types for sizes and strides
         // const auto srcShape = transformDesc.getSrcShape();
         // const auto dstShape = transformDesc.getDstShape();
 
@@ -511,7 +512,7 @@ namespace afft::detail
        * @brief Get the source strides.
        * @return Source strides.
        */
-      [[nodiscard]] const Size* const* getSrcStrides() const noexcept
+      [[nodiscard]] const Stride* const* getSrcStrides() const noexcept
       {
         return mDataPtrs.get() + DataPos::srcStrides * mTargetCount;
       }
@@ -520,7 +521,7 @@ namespace afft::detail
        * @brief Get the source strides.
        * @return Source strides.
        */
-      [[nodiscard]] Size* const* getSrcStrides() noexcept
+      [[nodiscard]] Stride* const* getSrcStrides() noexcept
       {
         return mDataPtrs.get() + DataPos::srcStrides * mTargetCount;
       }
@@ -594,7 +595,7 @@ namespace afft::detail
        * @brief Get the destination strides.
        * @return Destination strides.
        */
-      [[nodiscard]] const Size* const* getDstStrides() const noexcept
+      [[nodiscard]] const Stride* const* getDstStrides() const noexcept
       {
         return mDataPtrs.get() + DataPos::dstStrides * mTargetCount;
       }
@@ -603,7 +604,7 @@ namespace afft::detail
        * @brief Get the destination strides.
        * @return Destination strides.
        */
-      [[nodiscard]] Size* const* getDstStrides() noexcept
+      [[nodiscard]] Stride* const* getDstStrides() noexcept
       {
         return mDataPtrs.get() + DataPos::dstStrides * mTargetCount;
       }

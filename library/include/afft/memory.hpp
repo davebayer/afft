@@ -79,27 +79,27 @@ AFFT_EXPORT namespace afft
   {
     Alignment     alignment{Alignment::defaultNew};          ///< alignment of the memory
     ComplexFormat complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    const Size*   srcStrides{};                              ///< Source strides (null for default or array of size shapeRank)
-    const Size*   dstStrides{};                              ///< Destination strides (null for default or array of size shapeRank)
+    const Stride* srcStrides{};                              ///< Source strides (null for default or array of size shapeRank)
+    const Stride* dstStrides{};                              ///< Destination strides (null for default or array of size shapeRank)
   };
 
   /// @brief Memory layout of the distributed transform
   struct DistributedMemoryLayout
   {
-    Alignment          alignment{Alignment::defaultNew};          ///< alignment of the memory
-    ComplexFormat      complexFormat{ComplexFormat::interleaved}; ///< complex number format
-    const Axis*        srcDistribAxes{};                          ///< axes along which the source data are distributed
-    std::size_t        srcDistribAxesRank{};                      ///< rank of the source distributed axes
-    const Axis*        srcAxesOrder{};                            ///< order of the source axes
-    const Size* const* srcStarts{};                               ///< starting indices of the source memory
-    const Size* const* srcSizes{};                                ///< sizes of the source memory
-    const Size* const* srcStrides{};                              ///< strides of the source memory
-    const Axis*        dstDistribAxes{};                          ///< axes along which the destination data are distributed
-    std::size_t        dstDistribAxesRank{};                      ///< rank of the destination distributed axes
-    const Axis*        dstAxesOrder{};                            ///< order of the destination axes
-    const Size* const* dstStarts{};                               ///< starting indices of the destination memory
-    const Size* const* dstSizes{};                                ///< sizes of the destination memory
-    const Size* const* dstStrides{};                              ///< strides of the destination memory
+    Alignment            alignment{Alignment::defaultNew};          ///< alignment of the memory
+    ComplexFormat        complexFormat{ComplexFormat::interleaved}; ///< complex number format
+    const Axis*          srcDistribAxes{};                          ///< axes along which the source data are distributed
+    std::size_t          srcDistribAxesRank{};                      ///< rank of the source distributed axes
+    const Axis*          srcAxesOrder{};                            ///< order of the source axes
+    const Size* const*   srcStarts{};                               ///< starting indices of the source memory
+    const Size* const*   srcSizes{};                                ///< sizes of the source memory
+    const Stride* const* srcStrides{};                              ///< strides of the source memory
+    const Axis*          dstDistribAxes{};                          ///< axes along which the destination data are distributed
+    std::size_t          dstDistribAxesRank{};                      ///< rank of the destination distributed axes
+    const Axis*          dstAxesOrder{};                            ///< order of the destination axes
+    const Size* const*   dstStarts{};                               ///< starting indices of the destination memory
+    const Size* const*   dstSizes{};                                ///< sizes of the destination memory
+    const Stride* const* dstStrides{};                              ///< strides of the destination memory
   };
 
   /// @brief Memory layout variant
@@ -530,16 +530,20 @@ AFFT_EXPORT namespace afft
 
   /**
    * @brief Make strides.
-   * @param shapeRank Shape rank
    * @param shape Shape
+   * @param shapeRank Shape rank
    * @param fastestAxisStride Stride of the fastest axis
    * @param strides Strides
    */
-  constexpr void makeStrides(const std::size_t shapeRank,
-                             const Size*       shape,
-                             Size*             strides,
-                             const Size        fastestAxisStride = 1)
+  template<typename StrideT = Stride, typename SizeT>
+  constexpr void makeStrides(const SizeT*      shape,
+                             const std::size_t shapeRank,
+                             StrideT*          strides,
+                             const StrideT     fastestAxisStride = 1)
   {
+    static_assert(std::is_integral_v<StrideT>, "StrideT must be an integral type");
+    static_assert(std::is_integral_v<SizeT>, "SizeT must be an integral type");
+
     if (shapeRank == 0)
     {
       throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
@@ -560,7 +564,7 @@ AFFT_EXPORT namespace afft
       throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
     }
 
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<SizeT>{}))
     {
       throw Exception{Error::invalidArgument, "shape must not contain zeros"};
     }
@@ -569,24 +573,29 @@ AFFT_EXPORT namespace afft
 
     for (std::size_t i = shapeRank - 1; i > 0; --i)
     {
-      strides[i - 1] = shape[i] * strides[i];
+      strides[i - 1] = static_cast<StrideT>(shape[i]) * strides[i];
     }
   }
 
   /**
    * @brief Make transposed strides.
-   * @param shapeRank Shape rank
    * @param shape Shape
+   * @param shapeRank Shape rank
    * @param orgAxesOrder Original axes order
    * @param strides Strides
    * @param fastestAxisStride Stride of the fastest axis
    */
-  inline void makeTransposedStrides(const std::size_t shapeRank,
-                                    const Size*       shape,
-                                    const Axis*       orgAxesOrder,
-                                    Size*             strides,
-                                    const Size        fastestAxisStride = 1)
+  template<typename StrideT = Stride, typename SizeT, typename AxisT>
+  inline void makeTransposedStrides(const SizeT*      shape,
+                                    const std::size_t shapeRank,
+                                    const AxisT*      orgAxesOrder,
+                                    SizeT*            strides,
+                                    const SizeT       fastestAxisStride = 1)
   {
+    static_assert(std::is_integral_v<StrideT>, "StrideT must be an integral type");
+    static_assert(std::is_integral_v<SizeT>, "SizeT must be an integral type");
+    static_assert(std::is_integral_v<AxisT>, "AxisT must be an integral type");
+
     if (shapeRank == 0)
     {
       throw Exception{Error::invalidArgument, "shape rank must be greater than zero"};
@@ -612,7 +621,7 @@ AFFT_EXPORT namespace afft
       throw Exception{Error::invalidArgument, "fastest axis stride must be greater than zero"};
     }
 
-    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<Size>{}))
+    if (detail::cxx::any_of(shape, shape + shapeRank, detail::IsZero<SizeT>{}))
     {
       throw Exception{Error::invalidArgument, "shape must not contain zeros"};
     }
@@ -641,7 +650,7 @@ AFFT_EXPORT namespace afft
 
     for (std::size_t i = shapeRank - 1; i > 0; --i)
     {
-      strides[orgAxesOrder[i - 1]] = shape[i] * strides[orgAxesOrder[i]];
+      strides[orgAxesOrder[i - 1]] = static_cast<StrideT>(shape[i]) * strides[orgAxesOrder[i]];
     }
   }
 } // namespace afft

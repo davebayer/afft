@@ -113,27 +113,27 @@ struct afft_CentralizedMemoryLayout
 {
   afft_Alignment     alignment;     ///< Memory alignment
   afft_ComplexFormat complexFormat; ///< Complex format
-  const afft_Size*   srcStrides;    ///< Source strides (null for default or array of size shapeRank)
-  const afft_Size*   dstStrides;    ///< Destination strides (null for default or array of size shapeRank)
+  const afft_Stride* srcStrides;    ///< Source strides (null for default or array of size shapeRank)
+  const afft_Stride* dstStrides;    ///< Destination strides (null for default or array of size shapeRank)
 };
 
 /// @brief Distributed memory layout structure
 struct afft_DistributedMemoryLayout
 {
-  afft_Alignment          alignment;          ///< Memory alignment
-  afft_ComplexFormat      complexFormat;      ///< Complex format
-  const afft_Axis*        srcDistribAxes;     ///< Source distribution axes (null for default or array of size srcDistribAxesRank)
-  size_t                  srcDistribAxesRank; ///< Source distributed axes rank
-  const afft_Axis*        srcAxesOrder;       ///< Source axes order (null for default or array of size shapeRank)
-  const afft_Size* const* srcStarts;          ///< Source starts (array of size targetCount)
-  const afft_Size* const* srcSizes;           ///< Source sizes (array of size targetCount)
-  const afft_Size* const* srcStrides;         ///< Source strides (array of size targetCount)
-  const afft_Axis*        dstDistribAxes;     ///< Destination distribution axes (null for default or array of size dstDistribAxesRank)
-  size_t                  dstDistribAxesRank; ///< Destination distributed axes rank
-  const afft_Axis*        dstAxesOrder;       ///< Destination axes order (null for default or array of size shapeRank)
-  const afft_Size* const* dstStarts;          ///< Destination starts (array of size targetCount)
-  const afft_Size* const* dstSizes;           ///< Destination sizes (array of size targetCount)
-  const afft_Size* const* dstStrides;         ///< Destination strides (array of size targetCount)
+  afft_Alignment            alignment;          ///< Memory alignment
+  afft_ComplexFormat        complexFormat;      ///< Complex format
+  const afft_Axis*          srcDistribAxes;     ///< Source distribution axes (null for default or array of size srcDistribAxesRank)
+  size_t                    srcDistribAxesRank; ///< Source distributed axes rank
+  const afft_Axis*          srcAxesOrder;       ///< Source axes order (null for default or array of size shapeRank)
+  const afft_Size* const*   srcStarts;          ///< Source starts (array of size targetCount)
+  const afft_Size* const*   srcSizes;           ///< Source sizes (array of size targetCount)
+  const afft_Stride* const* srcStrides;         ///< Source strides (array of size targetCount)
+  const afft_Axis*          dstDistribAxes;     ///< Destination distribution axes (null for default or array of size dstDistribAxesRank)
+  size_t                    dstDistribAxesRank; ///< Destination distributed axes rank
+  const afft_Axis*          dstAxesOrder;       ///< Destination axes order (null for default or array of size shapeRank)
+  const afft_Size* const*   dstStarts;          ///< Destination starts (array of size targetCount)
+  const afft_Size* const*   dstSizes;           ///< Destination sizes (array of size targetCount)
+  const afft_Stride* const* dstStrides;         ///< Destination strides (array of size targetCount)
 };
 
 /// @brief Memory layout parameters variant
@@ -184,8 +184,8 @@ afft_Alignment afft_alignmentOf(size_t count, ...);
  */
 afft_Error afft_makeStrides(const size_t       shapeRank,
                             const afft_Size*   shape,
-                            afft_Size*         strides,
-                            const afft_Size    fastestAxisStride,
+                            afft_Stride*       strides,
+                            const afft_Stride  fastestAxisStride,
                             afft_ErrorDetails* errDetails);
 
 /**
@@ -201,8 +201,8 @@ afft_Error afft_makeStrides(const size_t       shapeRank,
 afft_Error afft_makeTransposedStrides(const size_t       shapeRank,
                                       const afft_Size*   resultShape,
                                       const afft_Axis*   orgAxesOrder,
-                                      afft_Size*         strides,
-                                      const afft_Size    fastestAxisStride,
+                                      afft_Stride*       strides,
+                                      const afft_Stride  fastestAxisStride,
                                       afft_ErrorDetails* errDetails);
 
 #ifdef __cplusplus
