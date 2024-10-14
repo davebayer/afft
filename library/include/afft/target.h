@@ -87,7 +87,7 @@ struct afft_cpu_ExecutionParameters
 /// @brief CUDA parameters
 struct afft_cuda_Parameters
 {
-  size_t     deviceCount; ///< Device count
+  size_t     targetCount; ///< Target count
   const int* devices;     ///< Device ids
 };
 
@@ -95,7 +95,7 @@ struct afft_cuda_Parameters
 struct afft_cuda_ExecutionParameters
 {
   cudaStream_t stream;             ///< CUDA stream
-  void* const* externalWorskapces; ///< External workspace, if afft_Workspace_external is used
+  void* const* externalWorkspaces; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 
@@ -103,7 +103,7 @@ struct afft_cuda_ExecutionParameters
 /// @brief HIP parameters
 struct afft_hip_Parameters
 {
-  size_t     deviceCount; ///< Device count
+  size_t     targetCount; ///< Target count
   const int* devices;     ///< Device ids
 };
 
@@ -111,7 +111,7 @@ struct afft_hip_Parameters
 struct afft_hip_ExecutionParameters
 {
   hipStream_t  stream;             ///< HIP stream
-  void* const* externalWorskapces; ///< External workspace, if afft_Workspace_external is used
+  void* const* externalWorkspaces; ///< External workspace, if afft_Workspace_external is used
 };
 #endif
 
@@ -119,8 +119,8 @@ struct afft_hip_ExecutionParameters
 /// @brief OpenCL parameters
 struct afft_opencl_Parameters
 {
+  size_t              targetCount; ///< Target count
   cl_context          context;     ///< OpenCL context
-  size_t              deviceCount; ///< Device count
   const cl_device_id* devices;     ///< Device ids
 };
 

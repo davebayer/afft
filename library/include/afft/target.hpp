@@ -74,9 +74,6 @@ AFFT_EXPORT namespace afft
 
   namespace cuda
   {
-    /// @brief Represents the current cuda device. The current device is got when instantiating the Description object.
-    inline constexpr View<int> currentDevice{};
-
     /// @brief CUDA parameters
     struct Parameters;
 
@@ -86,9 +83,6 @@ AFFT_EXPORT namespace afft
 
   namespace hip
   {
-    /// @brief Represents the current hip device. The current device is got when instantiating the Description object.
-    inline constexpr View<int> currentDevice{};
-
     /// @brief HIP parameters
     struct Parameters;
 
@@ -116,7 +110,10 @@ AFFT_EXPORT namespace afft
 
 #ifdef AFFT_ENABLE_CPU
   /// @brief CPU parameters
-  struct cpu::Parameters : TargetConstant<Target::cpu> {};
+  struct cpu::Parameters : TargetConstant<Target::cpu>
+  {
+    static constexpr std::size_t targetCount{1}; ///< Target count
+  };
   
   /// @brief CPU execution parameters
   struct cpu::ExecutionParameters : TargetConstant<Target::cpu>
@@ -129,14 +126,15 @@ AFFT_EXPORT namespace afft
   /// @brief CUDA parameters
   struct cuda::Parameters : TargetConstant<Target::cuda>
   {
-    View<int> devices{currentDevice}; ///< CUDA devices
+    std::size_t targetCount{1}; ///< Target count
+    const int*  devices{};      ///< CUDA devices
   };
 
   /// @brief CUDA execution parameters
   struct cuda::ExecutionParameters : TargetConstant<Target::cuda>
   {
     cudaStream_t stream{0};            ///< CUDA stream
-    View<void*>  externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
+    void* const* externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 
@@ -144,14 +142,15 @@ AFFT_EXPORT namespace afft
   /// @brief HIP parameters
   struct hip::Parameters : TargetConstant<Target::hip>
   {
-    View<int> devices{currentDevice}; ///< HIP devices
+    std::size_t targetCount{1}; ///< Target count
+    const int*  devices{};      ///< HIP devices
   };
 
   /// @brief HIP execution parameters
   struct hip::ExecutionParameters : TargetConstant<Target::hip>
   {
-    hipStream_t stream{0};            ///< HIP stream
-    View<void*> externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
+    hipStream_t  stream{0};            ///< HIP stream
+    void* const* externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 
@@ -159,15 +158,16 @@ AFFT_EXPORT namespace afft
   /// @brief OpenCL parameters
   struct opencl::Parameters : TargetConstant<Target::opencl>
   {
-    cl_context         context{}; ///< OpenCL context
-    View<cl_device_id> devices{}; ///< OpenCL devices
+    std::size_t         targetCount{}; ///< Target count
+    cl_context          context{};     ///< OpenCL context
+    const cl_device_id* devices{};     ///< OpenCL devices
   };
 
   /// @brief OpenCL execution parameters
   struct opencl::ExecutionParameters : TargetConstant<Target::opencl>
   {
     cl_command_queue queue{};              ///< OpenCL command queue
-    View<cl_mem>     externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
+    const cl_mem*    externalWorkspaces{}; ///< External workspaces, if Workspace::external is used
   };
 #endif
 

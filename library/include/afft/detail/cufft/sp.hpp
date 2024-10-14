@@ -459,7 +459,7 @@ namespace afft::detail::cufft::sp
       {
       case Precision::f16:
         // compute capability 5.3 or higher
-        if (cuda::getComputeCapability(cudaDevices.front()) < cuda::ComputeCapability{5, 3})
+        if (cuda::getComputeCapability(*cudaDevices) < cuda::ComputeCapability{5, 3})
         {
           throw Exception{Error::cufft, "f16 precision requires compute capability 5.3 or higher"};
         }
@@ -503,7 +503,7 @@ namespace afft::detail::cufft::sp
         break;
       case Precision::bf16:
         // compute capability 8.0 or higher
-        if (cuda::getComputeCapability(cudaDevices.front()) < cuda::ComputeCapability{8, 0})
+        if (cuda::getComputeCapability(*cudaDevices) < cuda::ComputeCapability{8, 0})
         {
           throw Exception{Error::cufft, "bf16 precision requires compute capability 8.0 or higher"};
         }

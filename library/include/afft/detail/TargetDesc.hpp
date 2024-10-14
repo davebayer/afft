@@ -139,18 +139,9 @@ namespace afft::detail
        * @brief Constructor from CUDA devices.
        * @param[in] devices CUDA devices.
        */
-      CudaDesc(const View<int> devices)
-      : mTargetCount{devices.size()}
+      CudaDesc(const int* devices, const std::size_t targetCount)
       {
-        if (mTargetCount <= Devices::maxLocDevices)
-        {
-          std::copy(devices.begin(), devices.end(), mDevices.loc);
-        }
-        else
-        {
-          mDevices.ext = new int[mTargetCount];
-          std::copy(devices.begin(), devices.end(), mDevices.ext);
-        }
+        construct(devices, targetCount);
       }
 
       /**
@@ -158,7 +149,7 @@ namespace afft::detail
        * @param[in] other Other.
        */
       CudaDesc(const CudaDesc& other)
-      : CudaDesc{other.getDevices()}
+      : CudaDesc{other.getDevices(), other.getTargetCount()}
       {}
 
       /**
@@ -186,20 +177,7 @@ namespace afft::detail
         if (this != std::addressof(other))
         {
           destroy();
-
-          const auto otherDevices = other.getDevices();
-
-          mTargetCount = otherDevices.size();
-
-          if (mTargetCount <= Devices::maxLocDevices)
-          {
-            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.loc);
-          }
-          else
-          {
-            mDevices.ext = new int[mTargetCount];
-            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.ext);
-          }
+          construct(other.getDevices(), other.getTargetCount());
         }
 
         return *this;
@@ -245,9 +223,9 @@ namespace afft::detail
        * @brief Get the CUDA devices.
        * @return CUDA devices.
        */
-      [[nodiscard]] constexpr View<int> getDevices() const noexcept
+      [[nodiscard]] constexpr const int* getDevices() const noexcept
       {
-        return View<int>{(mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
+        return (mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext;
       }
 
       /**
@@ -258,10 +236,10 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const CudaDesc& lhs, const CudaDesc& rhs) noexcept
       {
-        const auto lhsDevices = lhs.getDevices();
-        const auto rhsDevices = rhs.getDevices();
-
-        return std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin(), rhsDevices.end());
+        return std::equal(lhs.getDevices(),
+                          lhs.getDevices() + lhs.getTargetCount(),
+                          rhs.getDevices(),
+                          rhs.getDevices() + rhs.getTargetCount());
       }
 
       /**
@@ -285,6 +263,26 @@ namespace afft::detail
         int  loc[maxLocDevices]; ///< Local devices
         int* ext;                ///< External devices
       };
+
+      /**
+       * @brief Construct the object.
+       * @param[in] devices CUDA devices.
+       * @param[in] targetCount Number of targets.
+       */
+      void construct(const int* devices, const std::size_t targetCount)
+      {
+        mTargetCount = targetCount;
+
+        if (mTargetCount <= Devices::maxLocDevices)
+        {
+          std::copy_n(devices, mTargetCount, mDevices.loc);
+        }
+        else
+        {
+          mDevices.ext = new int[mTargetCount];
+          std::copy_n(devices, mTargetCount, mDevices.ext);
+        }
+      }
 
       /// @brief Destroy the object.
       void destroy()
@@ -312,18 +310,9 @@ namespace afft::detail
        * @brief Constructor from HIP devices.
        * @param[in] devices HIP devices.
        */
-      HipDesc(const View<int> devices)
-      : mTargetCount{devices.size()}
+      HipDesc(const int* devices, const std::size_t targetCount)
       {
-        if (mTargetCount <= Devices::maxLocDevices)
-        {
-          std::copy(devices.begin(), devices.end(), mDevices.loc);
-        }
-        else
-        {
-          mDevices.ext = new int[mTargetCount];
-          std::copy(devices.begin(), devices.end(), mDevices.ext);
-        }
+        construct(devices, targetCount);
       }
 
       /**
@@ -331,7 +320,7 @@ namespace afft::detail
        * @param[in] other Other.
        */
       HipDesc(const HipDesc& other)
-      : HipDesc{other.getDevices()}
+      : HipDesc{other.getDevices(), other.getTargetCount()}
       {}
 
       /**
@@ -359,20 +348,7 @@ namespace afft::detail
         if (this != std::addressof(other))
         {
           destroy();
-
-          const auto otherDevices = other.getDevices();
-
-          mTargetCount = otherDevices.size();
-
-          if (mTargetCount <= Devices::maxLocDevices)
-          {
-            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.loc);
-          }
-          else
-          {
-            mDevices.ext = new int[mTargetCount];
-            std::copy(otherDevices.begin(), otherDevices.end(), mDevices.ext);
-          }
+          construct(other.getDevices(), other.getTargetCount());
         }
 
         return *this;
@@ -418,9 +394,9 @@ namespace afft::detail
        * @brief Get the HIP devices.
        * @return HIP devices.
        */
-      [[nodiscard]] constexpr View<int> getDevices() const noexcept
+      [[nodiscard]] constexpr const int* getDevices() const noexcept
       {
-        return View<int>{(mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext, mTargetCount};
+        return (mTargetCount <= Devices::maxLocDevices) ? mDevices.loc : mDevices.ext;
       }
 
       /**
@@ -431,10 +407,10 @@ namespace afft::detail
        */
       [[nodiscard]] friend bool operator==(const HipDesc& lhs, const HipDesc& rhs) noexcept
       {
-        const auto lhsDevices = lhs.getDevices();
-        const auto rhsDevices = rhs.getDevices();
-
-        return std::equal(lhsDevices.begin(), lhsDevices.end(), rhsDevices.begin(), rhsDevices.end());
+        return std::equal(lhs.getDevices(),
+                          lhs.getDevices() + lhs.getTargetCount(),
+                          rhs.getDevices(),
+                          rhs.getDevices() + rhs.getTargetCount());
       }
 
       /**
@@ -458,6 +434,26 @@ namespace afft::detail
         int  loc[maxLocDevices]; ///< Local devices
         int* ext;                ///< External devices
       };
+
+      /**
+       * @brief Construct the object.
+       * @param[in] devices HIP devices.
+       * @param[in] targetCount Number of targets.
+       */
+      void construct(const int* devices, const std::size_t targetCount)
+      {
+        mTargetCount = targetCount;
+
+        if (mTargetCount <= Devices::maxLocDevices)
+        {
+          std::copy_n(devices, mTargetCount, mDevices.loc);
+        }
+        else
+        {
+          mDevices.ext = new int[mTargetCount];
+          std::copy_n(devices, mTargetCount, mDevices.ext);
+        }
+      }
 
       /// @brief Destroy the object.
       void destroy()
@@ -648,7 +644,10 @@ namespace afft::detail
         else if constexpr (target == Target::cuda)
         {
 #       ifdef AFFT_ENABLE_CUDA
-          targetParams.devices = getTargetDesc<Target::cuda>().getDevices();
+          const auto& cudaDesc = getTargetDesc<Target::cuda>();
+
+          targetParams.devices     = cudaDesc.getDevices();
+          targetParams.targetCount = cudaDesc.getTargetCount();
 #       endif
         }
         else if constexpr (target == Target::hip)
@@ -700,16 +699,18 @@ namespace afft::detail
         else if constexpr (target == Target::cuda)
         {
 #       ifdef AFFT_ENABLE_CUDA
-          const auto cudaDevices = std::get<CudaDesc>(mTargetVariant).getDevices();
-          targetParams.deviceCount = cudaDevices.size();
-          targetParams.devices     = cudaDevices.data();
+          const auto& cudaDesc = std::get<CudaDesc>(mTargetVariant);
+
+          targetParams.targetCount = cudaDesc.getTargetCount();
+          targetParams.devices     = cudaDesc.getDevices();
 #       endif
         }
         else if constexpr (target == Target::hip)
         {
 #       ifdef AFFT_ENABLE_HIP
           const auto& hipDesc = std::get<HipDesc>(mTargetVariant);
-          targetParams.deviceCount = hipDesc.targetCount;
+
+          targetParams.targetCount = hipDesc.getTargetCount();
           targetParams.devices     = hipDesc.devices.get();
 #       endif
         }
@@ -717,8 +718,9 @@ namespace afft::detail
         {
 #       ifdef AFFT_ENABLE_OPENCL
           const auto& openclDesc = std::get<OpenclDesc>(mTargetVariant);
+
+          targetParams.targetCount = openclDesc.getTargetCount();
           targetParams.context     = openclDesc.context.get();
-          targetParams.deviceCount = openclDesc.targetCount;
           targetParams.devices     = openclDesc.devices.get();
 #       endif
         }
@@ -799,23 +801,30 @@ namespace afft::detail
        */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::cuda::Parameters& cudaParams)
       {
-        if (cudaParams.devices.empty())
+        if (cudaParams.targetCount == 0)
         {
-          return CudaDesc{{{cuda::getCurrentDevice()}}};
+          throw Exception{Error::invalidArgument, "no targets specified"};
         }
-        else
+
+        if (cudaParams.devices == nullptr)
         {
-          if (cudaParams.devices.data() == nullptr)
+          if (cudaParams.targetCount != 1)
           {
             throw Exception{Error::invalidArgument, "invalid CUDA devices"};
           }
 
-          if (!std::all_of(cudaParams.devices.begin(), cudaParams.devices.end(), cuda::isValidDevice))
+          const int device = cuda::getCurrentDevice();
+
+          return CudaDesc{std::addressof(device), 1};
+        }
+        else
+        {
+          if (!std::all_of(cudaParams.devices, cudaParams.devices + cudaParams.targetCount, cuda::isValidDevice))
           {
             throw Exception{Error::invalidArgument, "invalid CUDA device"};
           }
 
-          return CudaDesc{cudaParams.devices};
+          return CudaDesc{cudaParams.devices, cudaParams.targetCount};
         }
       }
 
@@ -826,24 +835,11 @@ namespace afft::detail
        */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_cuda_Parameters& cudaParams)
       {
-        if (cudaParams.deviceCount == 0)
-        {
-          return CudaDesc{{{cuda::getCurrentDevice()}}};
-        }
-        else
-        {
-          if (cudaParams.devices == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid CUDA devices"};
-          }
+        afft::cuda::Parameters cxxCudaParams{};
+        cxxCudaParams.targetCount = cudaParams.targetCount;
+        cxxCudaParams.devices     = cudaParams.devices;
 
-          if (!std::all_of(cudaParams.devices, cudaParams.devices + cudaParams.deviceCount, cuda::isValidDevice))
-          {
-            throw Exception{Error::invalidArgument, "invalid CUDA device"};
-          }
-
-          return CudaDesc{{cudaParams.devices, cudaParams.deviceCount}};
-        }
+        return makeTargetVariant(cxxCudaParams);
       }
 #   endif
 
@@ -855,23 +851,31 @@ namespace afft::detail
        */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft::hip::Parameters& hipParams)
       {
-        if (hipParams.devices.empty())
+        if (hipParams.targetCount == 0)
         {
-          return HipDesc{{{hip::getCurrentDevice()}}};
+          throw Exception{Error::invalidArgument, "no targets specified"};
         }
-        else
+
+        if (hipParams.devices == nullptr)
         {
-          if (hipParams.devices.data() == nullptr)
+          if (hipParams.targetCount != 1)
           {
             throw Exception{Error::invalidArgument, "invalid HIP devices"};
           }
 
-          if (!std::all_of(hipParams.devices.begin(), hipParams.devices.end(), hip::isValidDevice))
+          const int device = hip::getCurrentDevice();
+
+          return HipDesc{std::addressof(device), 1};
+        }
+        else
+        {
+          if (!std::all_of(hipParams.devices, hipParams.devices + hipParams.targetCount, hip::isValidDevice))
           {
             throw Exception{Error::invalidArgument, "invalid HIP device"};
           }
 
-          return HipDesc{hipParams.devices};
+          return HipDesc{hipParams.devices, hipParams.targetCount};
+        }
       }
 
       /**
@@ -881,24 +885,11 @@ namespace afft::detail
        */
       [[nodiscard]] static TargetVariant makeTargetVariant(const afft_hip_Parameters& hipParams)
       {
-        if (hipParams.deviceCount == 0)
-        {
-          return HipDesc{{{hip::getCurrentDevice()}}};
-        }
-        else
-        {
-          if (hipParams.devices == nullptr)
-          {
-            throw Exception{Error::invalidArgument, "invalid HIP devices"};
-          }
+        afft::hip::Parameters cxxHipParams{};
+        cxxHipParams.targetCount = hipParams.targetCount;
+        cxxHipParams.devices     = hipParams.devices;
 
-          if (!std::all_of(hipParams.devices, hipParams.devices + hipParams.deviceCount, hip::isValidDevice))
-          {
-            throw Exception{Error::invalidArgument, "invalid HIP device"};
-          }
-
-          return HipDesc{{hipParams.devices, hipParams.deviceCount}};
-        }
+        return makeTargetVariant(cxxHipParams);
       }
 #   endif
 
