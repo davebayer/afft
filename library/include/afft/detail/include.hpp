@@ -52,12 +52,6 @@
 # include <new>
 # include <numeric>
 # include <optional>
-# ifdef AFFT_CXX_HAS_SPAN
-#   include <span>
-# else
-#   define TCB_SPAN_NAMESPACE_NAME afft::thirdparty::span
-#   include <tcb/span.hpp>
-# endif
 # include <stdexcept>
 # ifdef AFFT_CXX_HAS_STD_FLOAT
 #   include <stdfloat>

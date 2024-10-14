@@ -195,27 +195,27 @@ namespace afft::detail::mkl::mpi
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return makeScalarView(mSrcElemCount);
+        return std::addressof(mSrcElemCount);
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return makeScalarView(mDstElemCount);
+        return std::addressof(mDstElemCount);
       }
 
       /**
        * @brief Get external workspace sizes. Only valid if the workspace is external.
        * @return External workspace sizes.
        */
-      [[nodiscard]] virtual View<std::size_t> getExternalWorkspaceSizes() const noexcept override
+      [[nodiscard]] virtual const std::size_t* getExternalWorkspaceSizes() const noexcept override
       {
-        return (getWorkspace() == Workspace::external) ? makeScalarView(mWorkspaceSize) : View<std::size_t>{};
+        return (getWorkspace() == Workspace::external) ? std::addressof(mWorkspaceSize) : nullptr;
       }
 
       /**
@@ -223,7 +223,7 @@ namespace afft::detail::mkl::mpi
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cpu::ExecutionParameters& execParams) override
       {
         if (getWorkspace() == Workspace::external)
         {

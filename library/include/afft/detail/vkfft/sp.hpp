@@ -111,27 +111,27 @@ namespace afft::detail::vkfft::sp
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return makeScalarView(mSrcElemCount);
+        return std::addressof(mSrcElemCount);
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return makeScalarView(mDstElemCount);
+        return std::addressof(mDstElemCount);
       }
 
       /**
        * @brief Get the workspace sizes
        * @return The workspace sizes
        */
-      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
+      [[nodiscard]] const std::size_t* getExternalWorkspaceSizes() const noexcept override
       {
-        return makeScalarView(mWorkspaceSize);
+        return std::addressof(mWorkspaceSize);
       }
 
     protected:
@@ -427,19 +427,19 @@ namespace afft::detail::vkfft::sp
        * @param dst The destination buffer
        * @param execParams The execution parameters
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cuda::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cuda::ExecutionParameters& execParams) override
       {
         VkFFTLaunchParams launchParams{};
 
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-          launchParams.inputBuffer = src.data();
-          launchParams.buffer      = dst.data();
+          launchParams.inputBuffer = src;
+          launchParams.buffer      = dst;
           break;
         case Direction::inverse:
-          launchParams.buffer       = src.data();
-          launchParams.outputBuffer = dst.data();
+          launchParams.buffer       = src;
+          launchParams.outputBuffer = dst;
           break;
         default:
           cxx::unreachable();
@@ -461,19 +461,19 @@ namespace afft::detail::vkfft::sp
        * @param dst The destination buffer
        * @param execParams The execution parameters
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::hip::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::hip::ExecutionParameters& execParams) override
       {
         VkFFTLaunchParams launchParams{};
 
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-          launchParams.inputBuffer = csrc.data();
-          launchParams.buffer      = cdst.data();
+          launchParams.inputBuffer = src;
+          launchParams.buffer      = dst;
           break;
         case Direction::backward:
-          launchParams.buffer       = src.data();
-          launchParams.outputBuffer = dst.data();
+          launchParams.buffer       = src;
+          launchParams.outputBuffer = dst;
           break;
         default:
           cxx::unreachable();
@@ -495,19 +495,19 @@ namespace afft::detail::vkfft::sp
        * @param dst The destination buffer
        * @param execParams The execution parameters
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::opencl::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::opencl::ExecutionParameters& execParams) override
       {
         VkFFTLaunchParams launchParams{};
 
         switch (mDesc.getDirection())
         {
         case Direction::forward:
-          launchParams.inputBuffer = reinterpret_cast<cl_mem*>(src.data());
-          launchParams.buffer      = reinterpret_cast<cl_mem*>(dst.data());
+          launchParams.inputBuffer = reinterpret_cast<const cl_mem*>(src);
+          launchParams.buffer      = reinterpret_cast<const cl_mem*>(dst);
           break;
         case Direction::backward:
-          launchParams.buffer       = reinterpret_cast<cl_mem*>(src.data());
-          launchParams.outputBuffer = reinterpret_cast<cl_mem*>(dst.data());
+          launchParams.buffer       = reinterpret_cast<const cl_mem*>(src);
+          launchParams.outputBuffer = reinterpret_cast<const cl_mem*>(dst);
           break;
         default:
           cxx::unreachable();

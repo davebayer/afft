@@ -277,7 +277,7 @@ namespace afft::detail::mkl::sp
 
         checkError(DftiCommitDescriptor(mDftiHandle.get()));
 
-        mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
+        mDesc.getRefElemCounts(mSrcElemCount.data(), mDstElemCount.data());
       }
 
       /// @brief Default destructor.
@@ -290,18 +290,18 @@ namespace afft::detail::mkl::sp
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return {mSrcElemCount.data(), mDesc.getSrcDstBufferCount().first};
+        return mSrcElemCount.data();
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return {mDstElemCount.data(), mDesc.getSrcDstBufferCount().second};
+        return mDstElemCount.data();
       }
 
       /**
@@ -309,7 +309,7 @@ namespace afft::detail::mkl::sp
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters&) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cpu::ExecutionParameters&) override
       {
         const auto computeFn = (mDesc.getDirection() == Direction::forward)
                                  ? DftiComputeForward : DftiComputeBackward;
@@ -469,18 +469,18 @@ namespace afft::detail::mkl::sp
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return {mSrcElemCount.data(), mDesc.getSrcDstBufferCount().first};
+        return mSrcElemCount.data();
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return {mDstElemCount.data(), mDesc.getSrcDstBufferCount().second};
+        return mDstElemCount.data();
       }
 
       /**
@@ -488,7 +488,7 @@ namespace afft::detail::mkl::sp
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::openmp::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::openmp::ExecutionParameters& execParams) override
       {
         const int dev = mDesc.getTargetDesc<Target::openmp>().device;
 

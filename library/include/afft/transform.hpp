@@ -77,9 +77,6 @@ AFFT_EXPORT namespace afft
     Precision destination{Precision::f32}; ///< destination precision
   };
 
-  /// @brief Named constant representing all axes (is empty view)
-  inline constexpr View<Axis> allAxes{};
-
 /**********************************************************************************************************************/
 // Discrete Fourier Transform (DFT)
 /**********************************************************************************************************************/

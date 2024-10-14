@@ -184,7 +184,7 @@ __device__ void normStoreCallback(void* dataOut, unsigned long long offset, Comp
                           cpp17Option.c_str(),
                           fastMathOption.c_str()};
 
-    if (!program.compile(options))
+    if (!program.compile(options, std::size(options)))
     {
       throw Exception{Error::cufft, "failed to compile the normalization callback"};
     }

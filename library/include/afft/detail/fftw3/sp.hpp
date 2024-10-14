@@ -87,7 +87,7 @@ namespace afft::detail::fftw3::sp::cpu
       {
         Parent::mIsDestructive = (Parent::mBackendParams.allowDestructive ||
                                   Parent::mDesc.getPlacement() == Placement::inPlace);
-        Parent::mDesc.getRefElemCounts(mSrcElemCount, mDstElemCount);
+        Parent::mDesc.getRefElemCounts(mSrcElemCount.data(), mDstElemCount.data());
 
         std::array<AlignedUniquePtr<R[]>, 2> src{};
         std::array<AlignedUniquePtr<R[]>, 2> dst{};
@@ -253,18 +253,18 @@ namespace afft::detail::fftw3::sp::cpu
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return {mSrcElemCount.data(), Parent::mDesc.getSrcDstBufferCount().first};
+        return mSrcElemCount.data();
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return {mDstElemCount.data(), Parent::mDesc.getSrcDstBufferCount().second};
+        return mDstElemCount.data();
       }
 
       /**
@@ -272,7 +272,7 @@ namespace afft::detail::fftw3::sp::cpu
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters&) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cpu::ExecutionParameters&) override
       {
         switch (Parent::mDesc.getTransform())
         {

@@ -91,13 +91,14 @@ namespace afft::detail
    * @tparam Fn Function type.
    * @param backendMask Backend mask.
    * @param backendOrder Backend order.
+   * @param backendOrderSize Backend order size.
    * @param fn Function to call for each backend.
    */
   template<typename Fn>
-  auto forEachBackend(BackendMask backendMask, View<Backend> backendOrder, Fn&& fn)
+  auto forEachBackend(BackendMask backendMask, const Backend* backendOrder, const std::size_t backendOrderSize, Fn&& fn)
     -> AFFT_RET_REQUIRES(void, AFFT_PARAM(std::is_invocable_v<Fn, Backend>))
   {
-    for (const Backend backend : backendOrder)
+    std::for_each_n(backendOrder, backendOrderSize, [&](const Backend backend)
     {
       if ((backendMask & makeBackendMask(backend)) != BackendMask::empty)
       {
@@ -105,7 +106,7 @@ namespace afft::detail
       }
 
       backendMask = backendMask & (~makeBackendMask(backend));
-    }
+    });
 
     if (backendMask != BackendMask::empty)
     {
@@ -285,9 +286,14 @@ namespace afft::detail
            const BackendParamsT&        backendParams,
            const FirstSelectParameters& selectParams)
   {
+    if (selectParams.orderSize != 0 && selectParams.order == nullptr)
+    {
+      throw Exception{Error::invalidArgument, "invalid backend order"};
+    }
+
     std::unique_ptr<afft::Plan> plan{};
 
-    forEachBackend(selectParams.mask, selectParams.order, [&](Backend backend)
+    forEachBackend(selectParams.mask, selectParams.order, selectParams.orderSize, [&](Backend backend)
     {
       if (!plan)
       {

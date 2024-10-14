@@ -31,7 +31,6 @@
 
 #include "common.hpp"
 #include "cxx.hpp"
-#include "../Span.hpp"
 
 namespace afft::detail
 {
@@ -112,34 +111,6 @@ namespace afft::detail
   constexpr void cast(SrcIt first, SrcIt last, DstIt dest, CastFnT&& fn = {})
   {
     std::transform(first, last, dest, std::forward<CastFnT>(fn));
-  }
-
-  /**
-   * @brief Casts a view of values to a buffer of a different type.
-   * @tparam DstT Type of the destination buffer.
-   * @tparam SrcT Type of the source view.
-   * @tparam size Size of the view and buffer.
-   * @tparam CastFnT Type of the casting function.
-   * @param view View of values to cast.
-   * @param fn Casting function.
-   * @return Buffer of casted values.
-   */
-  template<typename DstT,
-           typename SrcT,
-           std::size_t size,
-           typename CastFnT = StaticCaster<DstT>>
-  [[nodiscard]] constexpr auto cast(View<SrcT, size> view, CastFnT&& fn = {})
-    noexcept(std::is_nothrow_invocable_r_v<DstT, CastFnT, SrcT>)
-    -> AFFT_RET_REQUIRES(AFFT_PARAM(Buffer<DstT, size>),
-                         AFFT_PARAM(std::is_default_constructible_v<DstT> &&
-                                    size != dynamicExtent &&
-                                    std::is_invocable_r_v<DstT, CastFnT, SrcT>))
-  {
-    Buffer<DstT, size> buffer{};
-
-    cast(view.begin(), view.end(), buffer.data, std::forward<CastFnT>(fn));
-
-    return buffer;
   }
 
   /**

@@ -51,8 +51,8 @@ typedef struct afft_FirstSelectParameters afft_FirstSelectParameters;
 struct afft_FirstSelectParameters
 {
   afft_BackendMask    mask;      ///< Backend mask
-  size_t              orderSize; ///< Number of backends in the order
   const afft_Backend* order;     ///< Order of the backends
+  size_t              orderSize; ///< Number of backends in the order
 };
 
 /// @brief Select parameters for selecting best of all the backends supporting the transform

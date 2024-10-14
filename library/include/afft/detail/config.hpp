@@ -50,7 +50,6 @@
 
 // If C++ version is 20, try to include <version> header
 #if (AFFT_CXX_VERSION > 201703L) && __has_include(<version>)
-# define AFFT_CXX_HAS_VERSION
 # include <version>
 #endif
 
@@ -80,17 +79,12 @@
     std::enable_if_t<requiredExpr, retType>
 #endif
 
-// Check if C++20 <span> is supported
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_span) && (__cpp_lib_span >= 202002L)
-# define AFFT_CXX_HAS_SPAN
-#endif
-
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_format) && (__cpp_lib_format >= 201907L)
+#if defined(__cpp_lib_format) && (__cpp_lib_format >= 201907L)
 # define AFFT_CXX_HAS_FORMAT
 #endif
 
 // Check if C++23 `import std` is supported
-#if defined(AFFT_CXX_HAS_VERSION) && defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
+#if defined(__cpp_lib_modules) && (__cpp_lib_modules >= 202207L)
 # define AFFT_CXX_HAS_IMPORT_STD
 #endif
 

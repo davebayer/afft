@@ -29,8 +29,6 @@
 # include "detail/include.hpp"
 #endif
 
-#include "Span.hpp"
-
 #ifdef AFFT_ENABLE_CUDA
 # include "detail/cuda/cuda.hpp"
 #endif

@@ -229,37 +229,37 @@ namespace afft::detail::cufft::sp
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return makeScalarView(mSrcElemCount);
+        return std::addressof(mSrcElemCount);
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return makeScalarView(mDstElemCount);
+        return std::addressof(mDstElemCount);
       }
 
       /**
        * @brief Get the external workspace sizes
        * @return The workspace sizes
        */
-      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
+      [[nodiscard]] const std::size_t* getExternalWorkspaceSizes() const noexcept override
       {
-        return makeScalarView(mWorkspaceSize);
+        return std::addressof(mWorkspaceSize);
       }
 
     private:
       /**
        * @brief Implementation of the executeImpl method.
-       * @param src View of the source data pointers.
-       * @param dst View of the destination data pointers.
+       * @param src The source data pointers.
+       * @param dst The destination data pointers.
        * @param execParams The execution parameters.
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cuda::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cuda::ExecutionParameters& execParams) override
       {
         checkError(cufftSetStream(mHandle, execParams.stream));
 
@@ -268,7 +268,7 @@ namespace afft::detail::cufft::sp
         //   checkError(cufftSetWorkArea(mHandle, execParams.externalWorkspaces.front())); 
         // }
 
-        checkError(cufftXtExec(mHandle, src.front(), dst.front(), getDirection()));
+        checkError(cufftXtExec(mHandle, *src, *dst, getDirection()));
       }
 
       Handle      mHandle{};        ///< The cuFFT plan handle.
@@ -298,76 +298,109 @@ namespace afft::detail::cufft::sp
       {
         throw Exception(Error::cufft, "multi-GPU transforms are not yet supported");
 
-        const auto cudaDevices = Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices();
-        const auto targetCount = cudaDevices.size();
+        // const auto cudaDevices = Parent::mDesc.template getTargetDesc<Target::cuda>().getDevices();
+        // const auto targetCount = cudaDevices.size();
+        // const auto dftType     = Parent::mDesc.getTransformDesc<Transform::dft>().type;
 
-        checkError(cufftXtSetGPUs(mHandle, static_cast<int>(targetCount), const_cast<int*>(cudaDevices.data())));
+        // auto&      memDesc        = Parent::mDesc.template getMemDesc<MemoryLayout::distributed>();
+        // const auto srcDistribAxes = memDesc.getSrcDistribAxes();
+        // const auto dstDistribAxes = memDesc.getDstDistribAxes();
+        // const auto direction      = Parent::mDesc.getDirection();
 
-        // // if (desc.useExternalWorkspace())
-        // // {
-        // //   checkError(cufftSetAutoAllocation(mHandle, 0));
-        // // }
+        // switch (dftType)
+        // {
+        // case dft::Type::complexToComplex:
+        //   if (!memDesc.hasDefaultSrcDistribAxes())
+        //   {
+        //     throw Exception{Error::cufft, "only 1D distribution is supported"};
+        //   }
+        //   else
+        //   {
+        //     memDesc.setSrcDistribAxes({(direction == Direction::forward) ? {0} : {1}});
+        //     mSrcSubFormat = (direction == Direction::forward) ? CUFFT_XT_FORMAT_INPLACE : CUFFT_XT_FORMAT_INPLACE_SHUFFLED;
+        //   }
+        //   break;
+        // case dft::Type::realToComplex:
+        //   if (srcDistribAxes.size() > 1)
+        //   {
+        //     throw Exception{Error::cufft, "only 1D distribution is supported"};
+        //   }
+        //   break;
+        // case dft::Type::complexToReal:
+        //   if (dstDistribAxes.size() > 1)
+        //   {
+        //     throw Exception{Error::cufft, "only 1D distribution is supported"};
+        //   }
+        //   break;
+        // }
 
-        const auto precision          = Parent::mDesc.getPrecision().execution;
-        const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
+        // checkError(cufftXtSetGPUs(mHandle, static_cast<int>(targetCount), const_cast<int*>(cudaDevices.data())));
 
-        const auto shapeRank     = Parent::mDesc.getShapeRank();
-        const auto transformRank = Parent::mDesc.getTransformRank();
-        const auto howManyRank   = Parent::mDesc.getTransformHowManyRank();
-        const auto transformAxes = Parent::mDesc.getTransformAxes();
-        const auto srcShape      = Parent::mDesc.getSrcShape<SizeT>();
-        const auto dstShape      = Parent::mDesc.getDstShape<SizeT>();
+        // // // if (desc.useExternalWorkspace())
+        // // // {
+        // // //   checkError(cufftSetAutoAllocation(mHandle, 0));
+        // // // }
 
-        auto n = Parent::mDesc.template getTransformDimsAs<SizeT>();
+        // const auto precision          = Parent::mDesc.getPrecision().execution;
+        // const auto [srcCmpl, dstCmpl] = Parent::mDesc.getSrcDstComplexity();
 
-        SizeT batch{1};
-        SizeT srcDist{1};
-        SizeT dstDist{1};
+        // const auto shapeRank     = Parent::mDesc.getShapeRank();
+        // const auto transformRank = Parent::mDesc.getTransformRank();
+        // const auto howManyRank   = Parent::mDesc.getTransformHowManyRank();
+        // const auto transformAxes = Parent::mDesc.getTransformAxes();
+        // const auto srcShape      = Parent::mDesc.getSrcShape<SizeT>();
+        // const auto dstShape      = Parent::mDesc.getDstShape<SizeT>();
 
-        if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 1)
-        {
-          const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
+        // auto n = Parent::mDesc.template getTransformDimsAs<SizeT>();
 
-          batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
-          srcDist = std::accumulate(srcShape.data, srcShape.data + transformRank, SizeT{1}, std::multiplies<>{});
-          dstDist = std::accumulate(dstShape.data, dstShape.data + transformRank, SizeT{1}, std::multiplies<>{});
-        }
+        // SizeT batch{1};
+        // SizeT srcDist{1};
+        // SizeT dstDist{1};
 
-        checkError(cufftXtMakePlanMany(mHandle,
-                                       static_cast<int>(transformRank),
-                                       n.data,
-                                       nullptr,
-                                       1,
-                                       srcDist,
-                                       makeCudaDataType(precision, srcCmpl),
-                                       nullptr,
-                                       1,
-                                       dstDist,
-                                       makeCudaDataType(precision, dstCmpl),
-                                       batch,
-                                       mWorkspaceSizes.data(),
-                                       makeCudaDataType(precision, Complexity::complex)));
+        // if (const auto howManyRank = Parent::mDesc.getTransformHowManyRank(); howManyRank == 1)
+        // {
+        //   const auto howManyAxis = mDesc.getTransformHowManyAxes().front();
 
-        // // TODO: set the src and dst target counts
+        //   batch   = safeIntCast<SizeT>(Parent::mDesc.getShape()[howManyAxis]);
+        //   srcDist = std::accumulate(srcShape.data, srcShape.data + transformRank, SizeT{1}, std::multiplies<>{});
+        //   dstDist = std::accumulate(dstShape.data, dstShape.data + transformRank, SizeT{1}, std::multiplies<>{});
+        // }
+
+        // checkError(cufftXtMakePlanMany(mHandle,
+        //                                static_cast<int>(transformRank),
+        //                                n.data,
+        //                                nullptr,
+        //                                1,
+        //                                srcDist,
+        //                                makeCudaDataType(precision, srcCmpl),
+        //                                nullptr,
+        //                                1,
+        //                                dstDist,
+        //                                makeCudaDataType(precision, dstCmpl),
+        //                                batch,
+        //                                mWorkspaceSizes.data(),
+        //                                makeCudaDataType(precision, Complexity::complex)));
+
+        // // // TODO: set the src and dst target counts
     
-        const auto srcElemSizeOf = Parent::mDesc.sizeOfSrcElem();
-        const auto dstElemSizeOf = Parent::mDesc.sizeOfDstElem();
+        // const auto srcElemSizeOf = Parent::mDesc.sizeOfSrcElem();
+        // const auto dstElemSizeOf = Parent::mDesc.sizeOfDstElem();
 
-        mSrcDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
-        mSrcDesc.nGPUs   = static_cast<int>(targetCount);
-        std::copy_n(cudaDevices.begin(), targetCount, mSrcDesc.GPUs);
-        std::transform(mSrcElemCounts.begin(),
-                       mSrcElemCounts.begin() + targetCount,
-                       mSrcDesc.size,
-                       [&](auto elemCount){ return elemCount * srcElemSizeOf; });
+        // mSrcDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
+        // mSrcDesc.nGPUs   = static_cast<int>(targetCount);
+        // std::copy_n(cudaDevices.begin(), targetCount, mSrcDesc.GPUs);
+        // std::transform(mSrcElemCounts.begin(),
+        //                mSrcElemCounts.begin() + targetCount,
+        //                mSrcDesc.size,
+        //                [&](auto elemCount){ return elemCount * srcElemSizeOf; });
 
-        mDstDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
-        mDstDesc.nGPUs   = static_cast<int>(targetCount);
-        std::copy_n(cudaDevices.begin(), targetCount, mDstDesc.GPUs);
-        std::transform(mDstElemCounts.begin(),
-                       mDstElemCounts.begin() + targetCount,
-                       mDstDesc.size,
-                       [&](auto elemCount){ return elemCount * dstElemSizeOf; });
+        // mDstDesc.version = CUDA_XT_DESCRIPTOR_VERSION;
+        // mDstDesc.nGPUs   = static_cast<int>(targetCount);
+        // std::copy_n(cudaDevices.begin(), targetCount, mDstDesc.GPUs);
+        // std::transform(mDstElemCounts.begin(),
+        //                mDstElemCounts.begin() + targetCount,
+        //                mDstDesc.size,
+        //                [&](auto elemCount){ return elemCount * dstElemSizeOf; });
 
         // TODO: set the src and dst sub-formats
       }
@@ -382,37 +415,37 @@ namespace afft::detail::cufft::sp
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return {mSrcElemCounts.data(), Parent::mDesc.getTargetCount()};
+        return mSrcElemCounts.data();
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return {mDstElemCounts.data(), Parent::mDesc.getTargetCount()};
+        return mDstElemCounts.data();
       }
 
       /**
        * @brief Get the external workspace sizes
        * @return The workspace sizes
        */
-      [[nodiscard]] View<std::size_t> getExternalWorkspaceSizes() const noexcept override
+      [[nodiscard]] const std::size_t* getExternalWorkspaceSizes() const noexcept override
       {
-        return {mWorkspaceSizes.data(), Parent::mDesc.getTargetCount()};
+        return mWorkspaceSizes.data();
       }
 
     private:
       /**
        * @brief Implementation of the executeImpl method.
-       * @param src View of the source data pointers.
-       * @param dst View of the destination data pointers.
+       * @param src The source data pointers.
+       * @param dst The destination data pointers.
        * @param execParams The execution parameters.
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cuda::ExecutionParameters& execParams) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cuda::ExecutionParameters& execParams) override
       {
 #     if CUFFT_VERSION < 10400
         if (execParams.stream != cudaStream_t{0})
@@ -427,8 +460,10 @@ namespace afft::detail::cufft::sp
         //   checkError(cufftXtSetWorkArea(mHandle, execParams.externalWorkspaces.data()));
         // }
 
-        std::copy(src.begin(), src.end(), mSrcDesc.data);
-        std::copy(dst.begin(), dst.end(), mDstDesc.data);
+        const auto [srcBufferCount, dstBufferCount] = Parent::mDesc.getSrcDstBufferCount();
+
+        std::copy_n(src, srcBufferCount, mSrcDesc.data);
+        std::copy_n(dst, dstBufferCount, mDstDesc.data);
 
         cudaLibXtDesc srcLibDesc{};
         srcLibDesc.descriptor = &mSrcDesc;
@@ -592,70 +627,79 @@ namespace afft::detail::cufft::sp
     else if (targetCount > 1 && targetCount <= maxTargetCount)
     {
       // check if all devices have the same compute capability
-      const auto ccRef = cuda::getComputeCapability(cudaDevices.front());
-      if (std::any_of(std::next(cudaDevices.begin()),
-                      cudaDevices.end(),
-                      [&](auto device){ return cuda::getComputeCapability(device) != ccRef; }))
-      {
-        throw Exception{Error::cufft, "all devices must have the same compute capability"};
-      }
+      // const auto ccRef = cuda::getComputeCapability(cudaDevices.front());
+      // if (std::any_of(std::next(cudaDevices.begin()),
+      //                 cudaDevices.end(),
+      //                 [&](auto device){ return cuda::getComputeCapability(device) != ccRef; }))
+      // {
+      //   throw Exception{Error::cufft, "all devices must have the same compute capability"};
+      // }
 
-      // check if all devices support UVA
-      if (std::any_of(cudaDevices.begin(), cudaDevices.end(), [&](auto device){ return !cuda::hasUva(device); }))
-      {
-        throw Exception{Error::cufft, "all devices must support UVA"};
-      }
+      // // check if all devices support UVA
+      // if (std::any_of(cudaDevices.begin(), cudaDevices.end(), [&](auto device){ return !cuda::hasUva(device); }))
+      // {
+      //   throw Exception{Error::cufft, "all devices must support UVA"};
+      // }
 
-      // check if each transformed dimension is greater than 32
-      if (std::any_of(transformAxes.begin(), transformAxes.end(), [&](auto axis){ return shape[axis] < 32; }))
-      {
-        throw Exception{Error::cufft, "transformed dimensions must be less than 32"};
-      }
+      // // check if each transformed dimension is greater than 32
+      // if (std::any_of(transformAxes.begin(), transformAxes.end(), [&](auto axis){ return shape[axis] < 32; }))
+      // {
+      //   throw Exception{Error::cufft, "transformed dimensions must be less than 32"};
+      // }
 
-      // check if the fastest dimension is even for real data ffts
-      if (isRealDataDft && shape[transformAxes.back()] % 2 != 0)
-      {
-        throw Exception{Error::cufft, "the fastest dimension must be even for real data ffts"};
-      }
+      // // check if the fastest dimension is even for real data ffts
+      // if (isRealDataDft && shape[transformAxes.back()] % 2 != 0)
+      // {
+      //   throw Exception{Error::cufft, "the fastest dimension must be even for real data ffts"};
+      // }
 
-      // check if the precision is f32 or f64
-      switch (descImpl.getPrecision().execution)
-      {
-      case Precision::f32:
-      case Precision::f64:
-        break;
-      default:
-        throw Exception{Error::cufft, "unsupported precision"};
-      }
+      // // check if the precision is f32 or f64
+      // switch (descImpl.getPrecision().execution)
+      // {
+      // case Precision::f32:
+      // case Precision::f64:
+      //   break;
+      // default:
+      //   throw Exception{Error::cufft, "unsupported precision"};
+      // }
 
-      // check if the transform rank is 2 or 3
-      if (const auto rank = descImpl.getTransformRank(); rank != 2 && rank != 3)
-      {
-        throw Exception{Error::cufft, "only 2D and 3D transforms are supported"};
-      }
+      // // check if the transform rank is 2 or 3
+      // if (const auto rank = descImpl.getTransformRank(); rank != 2 && rank != 3)
+      // {
+      //   throw Exception{Error::cufft, "only 2D and 3D transforms are supported"};
+      // }
 
-      if (const auto howManyRank = descImpl.getTransformHowManyRank(); howManyRank == 0)
-      {
-        if (descImpl.getPlacement() != Placement::inPlace)
-        {
-          throw Exception{Error::cufft, "non-batched transforms must be in-place"};
-        }
+      // const auto& memLayout = descImpl.template getMemDesc<MemoryLayout::distributed>();
+      // const auto srcDistribAxes = memLayout.getSrcDistribAxes();
+      // const auto dstDistribAxes = memLayout.getDstDistribAxes();
 
-        // TODO: check if src and dst distrib axes are the same
-      }
-      else if (howManyRank == 1)
-      {
-        if (descImpl.getTransformHowManyAxes().front() != 0)
-        {
-          throw Exception{Error::cufft, "only the first axis can be omitted"};
-        }
+      // if (srcDistribAxes.size() > 1 || dstDistribAxes.size() > 1)
+      // {
+      //   throw Exception{Error::cufft, "only 1D distribution is supported"};
+      // }
 
-        // TODO: check if src and dst distrib axes are the same
-      }
-      else
-      {
-        throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
-      }
+      // if (const auto howManyRank = descImpl.getTransformHowManyRank(); howManyRank == 0)
+      // {
+      //   if (descImpl.getPlacement() != Placement::inPlace)
+      //   {
+      //     throw Exception{Error::cufft, "non-batched transforms must be in-place"};
+      //   }
+
+        
+      // }
+      // else if (howManyRank == 1)
+      // {
+      //   if (descImpl.getTransformHowManyAxes().front() != 0)
+      //   {
+      //     throw Exception{Error::cufft, "only the first axis can be omitted"};
+      //   }
+
+      //   // TODO: check if src and dst distrib axes are the same
+      // }
+      // else
+      // {
+      //   throw Exception{Error::cufft, "omitting more than one dimension is not supported"};
+      // }
 
       if (descImpl.getNormalization() != Normalization::none)
       {

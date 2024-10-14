@@ -242,14 +242,14 @@ namespace afft::detail::cuda::rtc
        * @param options The compilation options.
        * @return A tuple containing a boolean indicating if the compilation was successful and a string with the log.
        */
-      [[nodiscard]] bool compile(Span<const char*> options)
+      [[nodiscard]] bool compile(const char* const* options, std::size_t optionsSize)
       {
         if (std::exchange(mIsCompiled, true))
         {
           throw std::runtime_error{"The program is already compiled"};
         }
 
-        bool ok = isOk(nvrtcCompileProgram(mProgram.get(), static_cast<int>(options.size()), options.data()));
+        bool ok = isOk(nvrtcCompileProgram(mProgram.get(), static_cast<int>(optionsSize), options));
 
         std::size_t logSize{};
 

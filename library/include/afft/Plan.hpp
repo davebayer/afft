@@ -156,20 +156,20 @@ AFFT_EXPORT namespace afft
        *        than the transform size.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] virtual View<std::size_t> getSrcElemCounts() const noexcept = 0;
+      [[nodiscard]] virtual const std::size_t* getSrcElemCounts() const noexcept = 0;
 
       /**
        * @brief Get element count of the destination buffers. If workspace is enlargedBuffer, the element count may be
        *        larger than the transform size.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] virtual View<std::size_t> getDstElemCounts() const noexcept = 0;
+      [[nodiscard]] virtual const std::size_t* getDstElemCounts() const noexcept = 0;
 
       /**
        * @brief Get external workspace sizes. Only valid if the workspace is external.
        * @return External workspace sizes.
        */
-      [[nodiscard]] virtual View<std::size_t> getExternalWorkspaceSizes() const noexcept
+      [[nodiscard]] virtual const std::size_t* getExternalWorkspaceSizes() const noexcept
       {
         return {};
       }
@@ -188,7 +188,7 @@ AFFT_EXPORT namespace afft
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(makeScalarView(srcDst), makeScalarView(srcDst), execParams);
+        executeImpl1(std::addressof(srcDst), std::addressof(srcDst), execParams);
       }
 
       /**
@@ -199,7 +199,7 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcDstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<SrcDstT*> srcDst, const ExecParamsT execParams = {})
+      void execute(SrcDstT* const* srcDst, const ExecParamsT execParams = {})
       {
         static_assert(isKnownType<SrcDstT>, "unknown source/destination type");
         static_assert(!std::is_const_v<SrcDstT>, "source/destination type must be non-const");
@@ -225,7 +225,7 @@ AFFT_EXPORT namespace afft
         static_assert(!std::is_const_v<DstT>, "destination type must be non-const");
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(makeScalarView(src), makeScalarView(dst), execParams);
+        executeImpl1(std::addressof(src), std::addressof(dst), execParams);
       }
 
       /**
@@ -238,7 +238,7 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT = DefaultExecParams>
-      void execute(View<SrcT*> src, View<DstT*> dst, const ExecParamsT execParams = {})
+      void execute(SrcT* const* src, DstT* const* dst, const ExecParamsT execParams = {})
       {
         static_assert(isKnownType<SrcT>, "unknown source type");
         static_assert(isKnownType<DstT>, "unknown destination type");
@@ -260,7 +260,7 @@ AFFT_EXPORT namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(makeScalarView(src), makeScalarView(dst), execParams);
+        executeImpl1(std::addressof(src), std::addressof(dst), execParams);
       }
 
       /**
@@ -275,7 +275,7 @@ AFFT_EXPORT namespace afft
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
-        executeImpl1(makeScalarView(src), makeScalarView(dst), execParams);
+        executeImpl1(std::addressof(src), std::addressof(dst), execParams);
       }
 
       /**
@@ -286,7 +286,7 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<const void*> src, View<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(const void* const* src, void* const* dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -301,7 +301,7 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename ExecParamsT = DefaultExecParams>
-      void executeUnsafe(View<void*> src, View<void*> dst, const ExecParamsT& execParams = {})
+      void executeUnsafe(void* const* src, void* const* dst, const ExecParamsT& execParams = {})
       {
         static_assert(isKnownExecParams<ExecParamsT>, "invalid execution parameters type");
 
@@ -314,17 +314,17 @@ AFFT_EXPORT namespace afft
         executeUnsafe(srcDst, srcDst, execParams);
       }
 
-      void executeUnsafe(View<cl_mem> srcDst, const afft::opencl::ExecutionParameters& execParams = {})
+      void executeUnsafe(const cl_mem* srcDst, const afft::opencl::ExecutionParameters& execParams = {})
       {
         executeUnsafe(srcDst, srcDst, execParams);
       }
 
       void executeUnsafe(cl_mem src, cl_mem dst, const afft::opencl::ExecutionParameters& execParams = {})
       {
-        executeUnsafe(makeScalarView(src), makeScalarView(dst), execParams);
+        executeUnsafe(std::addressof(src), std::addressof(dst), execParams);
       }
 
-      void executeUnsafe(View<cl_mem> src, View<cl_mem> dst, const afft::opencl::ExecutionParameters& execParams = {})
+      void executeUnsafe(const cl_mem* src, const cl_mem* dst, const afft::opencl::ExecutionParameters& execParams = {})
       {
 
       }
@@ -350,8 +350,8 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                     src,
-                                      [[maybe_unused]] View<void*>                     dst,
+      virtual void executeBackendImpl([[maybe_unused]] void* const*                    src,
+                                      [[maybe_unused]] void* const*                    dst,
                                       [[maybe_unused]] const cpu::ExecutionParameters& execParams)
       {
         throw std::logic_error{"backend does not implement cpu execution"};
@@ -363,8 +363,8 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                            src,
-                                      [[maybe_unused]] View<void*>                            dst,
+      virtual void executeBackendImpl([[maybe_unused]] void* const*                           src,
+                                      [[maybe_unused]] void* const*                           dst,
                                       [[maybe_unused]] const afft::cuda::ExecutionParameters& execParams)
       {
         throw std::logic_error{"backend does not implement cuda execution"};
@@ -376,8 +376,8 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                           src,
-                                      [[maybe_unused]] View<void*>                           dst,
+      virtual void executeBackendImpl([[maybe_unused]] void* const*                          src,
+                                      [[maybe_unused]] void* const*                          dst,
                                       [[maybe_unused]] const afft::hip::ExecutionParameters& execParams)
       {
         throw std::logic_error{"backend does not implement hip execution"};
@@ -389,8 +389,8 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                              src,
-                                      [[maybe_unused]] View<void*>                              dst,
+      virtual void executeBackendImpl([[maybe_unused]] void* const*                             src,
+                                      [[maybe_unused]] void* const*                             dst,
                                       [[maybe_unused]] const afft::opencl::ExecutionParameters& execParams)
       {
         throw std::logic_error{"backend does not implement opencl execution"};
@@ -402,8 +402,8 @@ AFFT_EXPORT namespace afft
        * @param dst Destination buffers.
        * @param execParams Execution parameters.
        */
-      virtual void executeBackendImpl([[maybe_unused]] View<void*>                              src,
-                                      [[maybe_unused]] View<void*>                              dst,
+      virtual void executeBackendImpl([[maybe_unused]] void* const*                             src,
+                                      [[maybe_unused]] void* const*                             dst,
                                       [[maybe_unused]] const afft::openmp::ExecutionParameters& execParams)
       {
         throw std::logic_error{"backend does not implement openmp execution"};
@@ -475,26 +475,6 @@ AFFT_EXPORT namespace afft
       }
 
       /**
-       * @brief Check execution buffer count.
-       * @param srcCount Source buffer count.
-       * @param dstCount Destination buffer count.
-       */
-      void checkBufferCount(const std::size_t srcCount, const std::size_t dstCount) const
-      {
-        const auto targetCount = mDesc.getTargetCount();
-
-        if (srcCount != targetCount)
-        {
-          throw Exception{Error::invalidArgument, "invalid source buffer count"};
-        }
-
-        if (dstCount != targetCount)
-        {
-          throw Exception{Error::invalidArgument, "invalid destination buffer count"};
-        }
-      }
-
-      /**
        * @brief Check placement.
        * @param placement Placement.
        */
@@ -516,26 +496,27 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeImpl1(View<SrcT*> src, View<DstT*> dst, const ExecParamsT& execParams)
+      void executeImpl1(SrcT* const* src, DstT* const* dst, const ExecParamsT& execParams)
       {
         static_assert((std::is_void_v<SrcT> && std::is_void_v<DstT>) ||
                       (!std::is_void_v<SrcT> && !std::is_void_v<DstT>), "invalid source and destination types");
-
-        using NonConstSrcT = std::remove_const_t<SrcT>;
 
         if constexpr (std::is_const_v<SrcT>)
         {
           checkSrcIsPreserved();
         }
 
-        View<NonConstSrcT*> srcNonConst(const_cast<NonConstSrcT* const*>(src.data()), src.size());
-
-        checkBufferCount(src.size(), dst.size());
+        const auto [srcBufferCount, dstBufferCount] = mDesc.getSrcDstBufferCount();
         
-        const bool isInPlace = std::equal(src.begin(), src.end(), dst.begin(), [](const auto& s, const auto& d)
+        const bool isInPlace = std::equal(src,
+                                          src + srcBufferCount,
+                                          dst,
+                                          dst + dstBufferCount,
+                                          [](const auto& s, const auto& d)
         {
           return reinterpret_cast<detail::cxx::uintptr_t>(s) == reinterpret_cast<detail::cxx::uintptr_t>(d);
         });
+
         checkPlacement((isInPlace) ? Placement::inPlace : Placement::outOfPlace);
 
         if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
@@ -543,7 +524,7 @@ AFFT_EXPORT namespace afft
           checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
         }
 
-        executeImpl2(srcNonConst, dst, execParams);
+        executeImpl2(const_cast<std::remove_const_t<SrcT>* const*>(src), dst, execParams);
       }
 
       /**
@@ -556,22 +537,24 @@ AFFT_EXPORT namespace afft
        * @param execParams Execution parameters.
        */
       template<typename SrcT, typename DstT, typename ExecParamsT>
-      void executeImpl2(View<SrcT> src, View<DstT> dst, const ExecParamsT& execParams)
+      void executeImpl2(SrcT* const* src, DstT* const* dst, const ExecParamsT& execParams)
       {
         auto isNullPtr = [](const auto* ptr) { return ptr == nullptr; };
 
-        if (std::any_of(src.begin(), src.end(), isNullPtr))
+        const auto [srcBufferCount, dstBufferCount] = mDesc.getSrcDstBufferCount();
+
+        if (std::any_of(src, src + srcBufferCount, isNullPtr))
         {
           throw Exception{Error::invalidArgument, "a null pointer was passed as source buffer"};
         }
 
-        if (std::any_of(dst.begin(), dst.end(), isNullPtr))
+        if (std::any_of(dst, dst + dstBufferCount, isNullPtr))
         {
           throw Exception{Error::invalidArgument, "a null pointer was passed as destination buffer"};
         }
 
-        View<void*> srcVoid{reinterpret_cast<void* const*>(src.data()), src.size()};
-        View<void*> dstVoid{reinterpret_cast<void* const*>(dst.data()), dst.size()};
+        void* const* srcVoid = reinterpret_cast<void* const*>(src);
+        void* const* dstVoid = reinterpret_cast<void* const*>(dst);
 
         if constexpr (std::is_same_v<ExecParamsT, DefaultExecParams>)
         {

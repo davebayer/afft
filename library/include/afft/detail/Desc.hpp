@@ -176,22 +176,12 @@ namespace afft::detail
        * @param srcElemCounts The source element counts.
        * @param dstElemCounts The destination element counts.
        */
-      void getRefElemCounts(Span<std::size_t> srcElemCounts, Span<std::size_t> dstElemCounts) const
+      void getRefElemCounts(std::size_t* srcElemCounts, std::size_t* dstElemCounts) const
       {
         const auto [srcBufferCount, dstBufferCount] = getSrcDstBufferCount();
 
-        if (srcElemCounts.size() < srcBufferCount)
-        {
-          throw Exception{Error::internal, "srcElemCounts is too small"};
-        }
-
-        if (dstElemCounts.size() < dstBufferCount)
-        {
-          throw Exception{Error::internal, "dstElemCounts is too small"};
-        }
-
-        std::fill(srcElemCounts.begin(), srcElemCounts.end(), 0);
-        std::fill(dstElemCounts.begin(), dstElemCounts.end(), 0);
+        std::fill_n(srcElemCounts, srcBufferCount, 0);
+        std::fill_n(dstElemCounts, dstBufferCount, 0);
 
         const auto [srcComplexity, dstComplexity] = getSrcDstComplexity();
         const auto srcShape                       = getSrcShape();

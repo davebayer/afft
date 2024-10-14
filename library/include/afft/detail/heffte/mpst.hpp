@@ -91,9 +91,9 @@ namespace afft::detail::heffte::mpst
       /// @brief Inherit assignment operator.
       using Parent::operator=;
 
-      [[nodiscard]] View<std::size_t> getWorkspaceSize() const noexcept override
+      [[nodiscard]] const std::size_t* getWorkspaceSize() const noexcept override
       {
-        return View<std::size_t>{&mWorkspaceSize, 1};
+        return std::addressof(mWorkspaceSize);
       }
 
       /**
@@ -102,7 +102,7 @@ namespace afft::detail::heffte::mpst
        * @param dst The destination buffers.
        * @param execParams The execution parameters.
        */
-      auto executeBackendImpl(View<void*> src, View<void*> dst, const afft::mpst::cpu::ExecutionParameters& execParams) override
+      auto executeBackendImpl(void* const* src, void* const* dst, const afft::mpst::cpu::ExecutionParameters& execParams) override
         -> AFFT_RET_REQUIRES(void, AFFT_PARAM(HeffteBackend == ::heffte::backend::fftw || \
                                               HeffteBackend == ::heffte::backend::mkl))
       {

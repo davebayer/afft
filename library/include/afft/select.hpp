@@ -54,8 +54,9 @@ namespace afft
   /// @brief Select parameters for selecting first backend supporting the transform
   struct FirstSelectParameters : SelectStrategyConstant<SelectStrategy::first>
   {
-    BackendMask   mask{BackendMask::all}; ///< Backend mask
-    View<Backend> order{};                ///< Backend initialization order
+    BackendMask    mask{BackendMask::all}; ///< Backend mask
+    const Backend* order{};                ///< Backend initialization order
+    std::size_t    orderSize{};            ///< Backend initialization order size
   };
 
   /// @brief Select parameters for selecting best of all the backends supporting the transform

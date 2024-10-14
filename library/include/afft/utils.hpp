@@ -48,33 +48,7 @@ AFFT_EXPORT namespace afft
     {
       std::free(const_cast<std::remove_const_t<T>*>(ptr));
     }
-  };
-
-  /**
-   * @brief Make a scalar span
-   * @tparam T Type
-   * @param scalar Scalar
-   * @return Scalar span
-   */
-  template<typename T>
-  Span<T> makeScalarSpan(T& scalar) noexcept
-  {
-    return Span<T>{&scalar, 1};
-  }
-
-  /**
-   * @brief Make a scalar view
-   * @tparam T Type
-   * @param scalar Scalar
-   * @return Scalar view
-   */
-  template<typename T>
-  View<T> makeScalarView(const T& scalar) noexcept
-  {
-    return View<T>{&scalar, 1};
-  }
-
-  
+  };  
 
   /**
    * @brief Make a precision triad

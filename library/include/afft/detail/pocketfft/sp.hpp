@@ -120,7 +120,7 @@ namespace afft::detail::pocketfft::sp::cpu
           return safeIntCast<std::ptrdiff_t>(stride * sizeOfDstElem);
         });
 
-        mDesc.getRefElemCounts(makeScalarSpan(mSrcElemCount), makeScalarSpan(mDstElemCount));
+        mDesc.getRefElemCounts(std::addressof(mSrcElemCount), std::addressof(mDstElemCount));
       }
 
       /// @brief Default destructor
@@ -133,18 +133,18 @@ namespace afft::detail::pocketfft::sp::cpu
        * @brief Get element count of the source buffers.
        * @return Element count of the source buffers.
        */
-      [[nodiscard]] View<std::size_t> getSrcElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getSrcElemCounts() const noexcept override
       {
-        return makeScalarView(mSrcElemCount);
+        return std::addressof(mSrcElemCount);
       }
 
       /**
        * @brief Get element count of the destination buffers.
        * @return Element count of the destination buffers.
        */
-      [[nodiscard]] View<std::size_t> getDstElemCounts() const noexcept override
+      [[nodiscard]] const std::size_t* getDstElemCounts() const noexcept override
       {
-        return makeScalarView(mDstElemCount);
+        return std::addressof(mDstElemCount);
       }
 
       /**
@@ -152,18 +152,18 @@ namespace afft::detail::pocketfft::sp::cpu
        * @param src The source buffer
        * @param dst The destination buffer
        */
-      void executeBackendImpl(View<void*> src, View<void*> dst, const afft::cpu::ExecutionParameters&) override
+      void executeBackendImpl(void* const* src, void* const* dst, const afft::cpu::ExecutionParameters&) override
       {
         switch (mDesc.getTransform())
         {
         case Transform::dft:
-          execDft(src.front(), dst.front());
+          execDft(*src, *dst);
           break;
         case Transform::dht:
-          execDht(src.front(), dst.front());
+          execDht(*src, *dst);
           break;
         case Transform::dtt:
-          execDtt(src.front(), dst.front());
+          execDtt(*src, *dst);
           break;
         default:
           cxx::unreachable();

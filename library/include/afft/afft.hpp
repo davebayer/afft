@@ -56,7 +56,6 @@
 #include "Plan.hpp"
 #include "PlanCache.hpp"
 #include "select.hpp"
-#include "Span.hpp"
 #include "target.hpp"
 #include "transform.hpp"
 #include "type.hpp"
