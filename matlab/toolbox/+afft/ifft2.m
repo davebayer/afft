@@ -48,5 +48,50 @@ function X = ifft2(Y, varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
-  X = afft.internal.afft_matlab(uint32(2004), Y, varargin{:});
+  if afft.internal.isAccelerated
+    X = afft.internal.afft_matlab(uint32(2004), Y, varargin{:});
+    return;
+  end
+
+  if ~isfloat(Y)
+    error('Input array must be a floating-point array.');
+  end
+
+  if ~iscomplex(Y)
+    error('Input array must be a complex array.');
+  end
+
+  if hasSymmetricFlag && hasNonsymmetricFlag
+    error('Specify either ''symmetric'' or ''nonsymmetric'', but not both.');
+  elseif hasSymmetricFlag
+    symFlag = 'symmetric';
+  else
+    symFlag = 'nonsymmetric';
+  end
+
+  ip = inputParser;
+  addOptional(ip, 'm', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
+  addOptional(ip, 'n', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
+  addParameter(ip, 'normalization', 'none', @afft.internal.isNormalization);
+  addParameter(ip, 'threadLimit', 0, @afft.internal.isThreadLimit);
+  addParameter(ip, 'backend', [], @afft.internal.isBackend);
+  addParameter(ip, 'selectStrategy', [], @afft.internal.isSelectStrategy);
+
+  parse(ip, varargin{:});
+
+  if isempty(ip.Results.m) && isempty(ip.Results.n)
+    X = ifft2(Y, symFlag);
+  elseif ~isempty(ip.Results.m) && ~isempty(ip.Results.n)
+    X = ifft(Y, ip.Results.m, ip.Results.n, symFlag);
+  else
+    error('Either none or both of m and n must be specified.');
+  end
+
+  transformSize = size(X, 1) * size(X, 2);
+
+  if strcmp(ip.Results.normalization, 'none')
+    X = X * transformSize;
+  elseif strcmp(ip.Results.normalization, 'orthogonal')
+    X = X * sqrt(transformSize);
+  end
 end

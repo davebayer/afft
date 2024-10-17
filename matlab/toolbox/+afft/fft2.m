@@ -47,5 +47,38 @@ function Y = fft2(X, varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
-  Y = afft.internal.afft_matlab(uint32(2001), X, varargin{:});
+  if afft.internal.isAccelerated
+    Y = afft.internal.afft_matlab(uint32(2001), X, varargin{:});
+    return;
+  end
+
+  if ~isfloat(X)
+    error('Input array must be a floating-point array.');
+  end
+
+  ip = inputParser;
+  addOptional(ip, 'm', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
+  addOptional(ip, 'n', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
+  addParameter(ip, 'normalization', 'none', @afft.internal.isNormalization);
+  addParameter(ip, 'threadLimit', 0, @afft.internal.isThreadLimit);
+  addParameter(ip, 'backend', [], @afft.internal.isBackend);
+  addParameter(ip, 'selectStrategy', [], @afft.internal.isSelectStrategy);
+
+  parse(ip, varargin{:});
+
+  if isempty(ip.Results.m) && isempty(ip.Results.n)
+    Y = fft2(X);
+  elseif ~isempty(ip.Results.m) && ~isempty(ip.Results.n)
+    Y = fft(X, ip.Results.m, ip.Results.n);
+  else
+    error('Either none or both of m and n must be specified.');
+  end
+
+  transformSize = size(Y, 1) * size(Y, 2);
+
+  if strcmp(ip.Results.normalization, 'unitary')
+    Y = Y / transformSize;
+  elseif strcmp(ip.Results.normalization, 'orthogonal')
+    Y = Y / sqrt(transformSize);
+  end
 end

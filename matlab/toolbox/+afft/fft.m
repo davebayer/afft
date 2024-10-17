@@ -60,5 +60,32 @@ function Y = fft(X, varargin)
 % This file is part of the afft library. For more information, see the official <a href="matlab:
 % web('https://github.com/DejvBayer/afft.git')">GitHub</a>.
 
-  Y = afft.internal.afft_matlab(uint32(2000), X, varargin{:});
+  if afft.internal.isAccelerated
+    Y = afft.internal.afft_matlab(uint32(2000), X, varargin{:});
+    return;
+  end
+
+  if ~isfloat(X)
+    error('Input array must be a floating-point array.');
+  end
+
+  ip = inputParser;
+  addOptional(ip, 'n', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
+  addOptional(ip, 'dim', 1, @(x) (isnumeric(x) && isscalar(x) && isreal(x) && x > 0 && x == round(x)));
+  addParameter(ip, 'normalization', 'none', @afft.internal.isNormalization);
+  addParameter(ip, 'threadLimit', 0, @afft.internal.isThreadLimit);
+  addParameter(ip, 'backend', [], @afft.internal.isBackend);
+  addParameter(ip, 'selectStrategy', [], @afft.internal.isSelectStrategy);
+
+  parse(ip, varargin{:});
+
+  Y = fft(X, ip.Results.n, ip.Results.dim);
+
+  transformSize = size(Y, ip.Results.dim);
+
+  if strcmp(ip.Results.normalization, 'unitary')
+    Y = Y / transformSize;
+  elseif strcmp(ip.Results.normalization, 'orthogonal')
+    Y = Y / sqrt(transformSize);
+  end
 end
