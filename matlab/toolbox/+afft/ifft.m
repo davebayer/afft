@@ -81,7 +81,7 @@ function X = ifft(Y, varargin)
 
   ip = inputParser;
   addOptional(ip, 'n', [], @(x) isempty(x) || (isnumeric(x) && isscalar(x) && isreal(x) && x >= 0));
-  addOptional(ip, 'dim', 1, @(x) (isnumeric(x) && isscalar(x) && isreal(x) && x > 0 && x == round(x)));
+  addOptional(ip, 'dim', 1, @afft.internal.isDimension);
   addParameter(ip, 'normalization', 'none', @afft.internal.isNormalization);
   addParameter(ip, 'threadLimit', 0, @afft.internal.isThreadLimit);
   addParameter(ip, 'backend', [], @afft.internal.isBackend);
