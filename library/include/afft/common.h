@@ -34,6 +34,13 @@ extern "C"
 {
 #endif
 
+/// @brief Order type enumeration
+enum afft_Order
+{
+  afft_Order_rowMajor,    ///< Row-major order
+  afft_Order_columnMajor, ///< Column-major order
+};
+
 /// @brief Axis type
 typedef uint8_t afft_Axis;
 

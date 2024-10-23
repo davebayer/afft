@@ -34,6 +34,13 @@ AFFT_EXPORT namespace afft
   /// @brief Maximum number of dimensions
   inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
 
+  /// @brief Order type
+  enum class Order : std::underlying_type_t<::afft_Order>
+  {
+    rowMajor    = afft_Order_rowMajor,    ///< Row-major order
+    columnMajor = afft_Order_columnMajor, ///< Column-major order
+  };
+
   /// @brief Axis type
   using Axis = ::afft_Axis;
 
