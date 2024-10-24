@@ -568,6 +568,28 @@ namespace afft::detail
   template<typename T>
   inline constexpr bool isCSelectParameters = IsCSelectParameters<T>::value;
 
+  /**
+   * @brief Is the type a range.
+   * @tparam T The type.
+   */
+  template<typename T, typename = void>
+  struct IsRange : std::false_type {};
+
+  /// @brief Specialization for range.
+  template<typename T>
+  struct IsRange<T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+    : std::true_type {};
+
+  /// @brief Specialization for arrays.
+  template<typename T, std::size_t n>
+  struct IsRange<T[n], void> : std::true_type {};
+
+  /**
+   * @brief Check if the type is a range.
+   * @tparam T The type.
+   */
+  template<typename T>
+  inline constexpr bool isRange = IsRange<T>::value;
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_TYPE_TRAITS_HPP */
