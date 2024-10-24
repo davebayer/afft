@@ -308,8 +308,7 @@ namespace afft::detail
      * @return True if the pointer is null, false otherwise.
      */
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(T ptr) const noexcept
-      -> AFFT_RET_REQUIRES(bool, std::is_pointer_v<T>)
+    [[nodiscard]] constexpr bool operator()(T* ptr) const noexcept
     {
       return (ptr == nullptr);
     }
