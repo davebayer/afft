@@ -335,6 +335,72 @@ inline namespace cxx20
   {
     return cxx::find_if(first, last, p) == last;
   }
+
+  /**
+   * @brief Copies the elements from the range [first, last) to another range beginning at d_first. Taken from https://en.cppreference.com/w/cpp/algorithm/copy
+   * @tparam InputIt Iterator type.
+   * @tparam OutputIt Output iterator type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param d_first The beginning of the destination range.
+   * @return Iterator to the element in the destination range, one past the last element copied.
+   */
+  template<class InputIt, class OutputIt>
+  constexpr OutputIt copy(InputIt first, InputIt last, OutputIt d_first)
+  {
+    for (; first != last; ++first, (void)++d_first)
+    {
+      *d_first = *first;
+    }
+
+    return d_first;
+  }
+
+  /**
+   * @brief Copies the elements from the range [first, last) to another range beginning at d_first, but in reverse order. Taken from https://en.cppreference.com/w/cpp/algorithm/reverse_copy
+   * @tparam BidirIt Bidirectional iterator type.
+   * @tparam OutputIt Output iterator type.
+   * @param first The beginning of the range.
+   * @param last The end of the range.
+   * @param d_first The beginning of the destination range.
+   * @return Iterator to the element in the destination range, one past the last element copied.
+   */
+  template<class BidirIt, class OutputIt>
+  constexpr OutputIt reverse_copy(BidirIt first, BidirIt last, OutputIt d_first)
+  {
+    for (; first != last; (void)++d_first)
+    {
+      *d_first = *(--last);
+    }
+
+    return d_first;
+  }
+
+  /**
+   * @brief Copies the first count elements from the range beginning at first to the range beginning at result. Taken from https://en.cppreference.com/w/cpp/algorithm/copy_n
+   * @tparam InputIt Input iterator type.
+   * @tparam Size Size type.
+   * @tparam OutputIt Output iterator type.
+   * @param first The beginning of the range.
+   * @param count The number of elements to copy.
+   * @param result The beginning of the destination range.
+   * @return Iterator to the element in the destination range, one past the last element copied.
+   */
+  template<class InputIt, class Size, class OutputIt>
+  constexpr OutputIt copy_n(InputIt first, Size count, OutputIt result)
+  {
+    if (count > 0)
+    {
+      *result = *first;
+      ++result;
+      for (Size i = 1; i != count; ++i, ++result)
+      {
+        *result = *++first;
+      }
+    }
+  
+    return result;
+  }
 } // namespace cxx20
 
 // C++23 backport
