@@ -314,6 +314,20 @@ namespace afft::detail
       return (ptr == nullptr);
     }
   };
+
+  /**
+   * @brief Returns the absolute value of a signed number.
+   * @tparam T Signed type.
+   * @param value Value to get the absolute value of.
+   * @return Absolute value of the number.
+   */
+  template<typename T>
+  [[nodiscard]] constexpr T abs(T value)
+  {
+    static_assert(std::is_signed_v<T>, "abs() can only be used with signed types.");
+
+    return (value < T{}) ? -value : value;
+  }
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_UTILS_HPP */
