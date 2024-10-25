@@ -44,7 +44,7 @@ static afft_ErrorDetails errDetails;
  * @param[in] file  file name
  * @param[in] line  line number
  */
-static inline check_afft_error(afft_Error error, const char* file, int line)
+static inline void check_afft_error(afft_Error error, const char* file, int line)
 {
   if (error != afft_Error_success)
   {
