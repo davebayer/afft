@@ -627,7 +627,7 @@ AFFT_EXPORT namespace afft
 
     // Check if axes order is valid
     {
-      std::bitset<maxDimCount> seenAxes{};
+      std::bitset<maxRank> seenAxes{};
 
       for (std::size_t i{}; i < shapeRank; ++i)
       {

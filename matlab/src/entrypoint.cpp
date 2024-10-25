@@ -37,7 +37,7 @@ using namespace matlabw;
 enum class Call : std::uint32_t
 {
   // Toolbox management calls
-  maxDimCount = 0,
+  maxRank = 0,
   hasGpuSupport,
   hasBackend,
   hasCufftCallbacks,
@@ -125,8 +125,8 @@ void mex::Function::operator()(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> 
   switch (static_cast<Call>(rhs[0].getScalarAs<std::uint32_t>()))
   {
   // Toolbox management calls
-  case Call::maxDimCount:
-    maxDimCount(lhs, rhsSubspan);
+  case Call::maxRank:
+    maxRank(lhs, rhsSubspan);
     break;
   case Call::hasGpuSupport:
     hasGpuSupport(lhs, rhsSubspan);

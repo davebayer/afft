@@ -196,8 +196,8 @@ namespace afft::detail::mkl::sp
         }
 
         {
-          MKL_LONG srcStrides[maxDimCount + 1]{};
-          MKL_LONG dstStrides[maxDimCount + 1]{};
+          MKL_LONG srcStrides[maxRank + 1]{};
+          MKL_LONG dstStrides[maxRank + 1]{};
 
           std::size_t i{1};
 

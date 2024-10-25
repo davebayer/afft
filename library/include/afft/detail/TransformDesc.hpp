@@ -691,7 +691,7 @@ namespace afft::detail
         {
           throw Exception{Error::invalidArgument, "empty shape"};
         }
-        else if (shapeRank > maxDimCount)
+        else if (shapeRank > maxRank)
         {
           throw Exception{Error::invalidArgument, "too many shape dimensions"};
         }
@@ -735,7 +735,7 @@ namespace afft::detail
           throw Exception{Error::invalidArgument, "axes rank exceeds shape rank"};
         }
 
-        std::bitset<maxDimCount> seenAxes{};
+        std::bitset<maxRank> seenAxes{};
 
         if (transformAxes == nullptr)
         {

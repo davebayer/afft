@@ -149,7 +149,7 @@ class ShapeParser
 
       const std::size_t shapeRank = array.getSize();
 
-      if (shapeRank > afft::maxDimCount)
+      if (shapeRank > afft::maxRank)
       {
         throw mx::Exception("afft:planCreate:invalidArgument", "transform shape exceeds maximum dimension count");
       }
@@ -188,7 +188,7 @@ class ShapeParser
      */
     [[nodiscard]] afft::View<afft::Size> operator()(matlabw::mx::View<std::size_t> arrayShape)
     {
-      if (arrayShape.size() > afft::maxDimCount)
+      if (arrayShape.size() > afft::maxRank)
       {
         throw mx::Exception{"afft:planCreate:invalidArgument", "input array rank exceeds maximum dimension count"};
       }
@@ -202,7 +202,7 @@ class ShapeParser
     }
 
   private:
-    afft::Size mShapeStorage[afft::maxDimCount]; ///< Shape of the transform.
+    afft::Size mShapeStorage[afft::maxRank]; ///< Shape of the transform.
 };
 
 /// @brief Axes parser.
@@ -223,7 +223,7 @@ class AxesParser
 
       const std::size_t transformRank = array.getSize();
 
-      if (transformRank > afft::maxDimCount)
+      if (transformRank > afft::maxRank)
       {
         throw mx::Exception("afft:planCreate:invalidArgument", "transform axes exceeds maximum dimension count");
       }
@@ -256,7 +256,7 @@ class AxesParser
     }
 
   private:
-    afft::Axis mAxesStorage[afft::maxDimCount]; ///< Axes of the transform.
+    afft::Axis mAxesStorage[afft::maxRank]; ///< Axes of the transform.
 };
 
 /// @brief Normalization parser.
@@ -380,7 +380,7 @@ class DttTypesParser
 
       const std::size_t rank = array.getDimM();
 
-      if (rank > afft::maxDimCount)
+      if (rank > afft::maxRank)
       {
         throw mx::Exception("afft:planCreate:invalidArgument", "DTT types exceeds maximum dimension count");
       }
@@ -393,7 +393,7 @@ class DttTypesParser
 
       const std::u16string_view strView{mx::CharArrayCref{array}};
 
-      mDttTypesStorage[0] = parseSingleDttType(strView);
+      std::fill_n(mDttTypesStorage, afft::maxRank, parseSingleDttType(strView));
 
       return afft::View<afft::dtt::Type>{mDttTypesStorage, rank};
     }
@@ -469,7 +469,7 @@ class DttTypesParser
       }
     }
 
-    afft::dtt::Type mDttTypesStorage[afft::maxDimCount]; ///< DTT types of the transform.
+    afft::dtt::Type mDttTypesStorage[afft::maxRank]; ///< DTT types of the transform.
 };
 
 /// @brief Transform parameters parser.
@@ -573,7 +573,7 @@ class TransformParametersParser : private TransformParser,
     {
       if (!axesArray)
       {
-        return afft::allAxes;
+        return std::make_pair(nullptr, afft::maxRank);
       }
 
       return AxesParser::operator()(*axesArray);

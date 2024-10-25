@@ -65,18 +65,18 @@ namespace afft::detail
   };
 
   /**
-   * @brief MaxDimBuffer is a Buffer with a maximum number of elements defined by maxDimCount.
+   * @brief MaxDimBuffer is a Buffer with a maximum number of elements defined by maxRank.
    * @tparam T The type of the elements.
    */
   template<typename T>
-  using MaxDimBuffer = Buffer<T, maxDimCount>;
+  using MaxDimBuffer = Buffer<T, maxRank>;
 
   /**
-   * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxDimCount.
+   * @brief MaxDimArray is a std::array with a maximum number of elements defined by maxRank.
    * @tparam T The type of the elements.
    */
   template<typename T>
-  using MaxDimArray = std::array<T, maxDimCount>;
+  using MaxDimArray = std::array<T, maxRank>;
 } // namespace afft::detail
 
 #endif /* AFFT_DETAIL_COMMON_HPP */

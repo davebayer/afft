@@ -49,8 +49,8 @@ typedef uint8_t afft_Transform;
 typedef uint8_t afft_Direction;
 
 /// @brief Direction enumeration
-#define afft_Direction_forward (afft_Direction)0       ///< Forward
-#define afft_Direction_inverse (afft_Direction)1       ///< Inverse
+#define afft_Direction_forward  (afft_Direction)0      ///< Forward
+#define afft_Direction_inverse  (afft_Direction)1      ///< Inverse
 #define afft_Direction_backward afft_Direction_inverse ///< Alias for inverse
 
 /// @brief Normalization type

@@ -33,19 +33,19 @@ using namespace matlabw;
  * @param lhs Left-hand side array of size 1.
  * @param rhs Right-hand side array of size 0.
  */
-void maxDimCount(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
+void maxRank(mx::Span<mx::Array> lhs, mx::View<mx::ArrayCref> rhs)
 {
   if (rhs.size() != 0)
   {
-    throw mx::Exception{"afft:maxDimCount:invalidArgumentCount", "invalid argument count"};
+    throw mx::Exception{"afft:maxRank:invalidArgumentCount", "invalid argument count"};
   }
 
   if (lhs.size() > 1)
   {
-    throw mx::Exception{"afft:maxDimCount:invalidOutputCount", "invalid output count"};
+    throw mx::Exception{"afft:maxRank:invalidOutputCount", "invalid output count"};
   }
 
-  lhs[0] = mx::makeNumericScalar<std::uint64_t>(static_cast<std::uint64_t>(afft::maxDimCount));
+  lhs[0] = mx::makeNumericScalar<std::uint64_t>(static_cast<std::uint64_t>(afft::maxRank));
 }
 
 /**

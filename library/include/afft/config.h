@@ -32,12 +32,12 @@
 #endif
 
 // If max dimension count is not defined, use 4 as default
-#ifdef AFFT_MAX_DIM_COUNT
-# if AFFT_MAX_DIM_COUNT < 1
-#   error "AFFT_MAX_DIM_COUNT must be at least 1"
+#ifdef AFFT_MAX_RANK
+# if AFFT_MAX_RANK < 1
+#   error "AFFT_MAX_RANK must be at least 1"
 # endif
 #else
-# define AFFT_MAX_DIM_COUNT     4
+# define AFFT_MAX_RANK 4
 #endif
 
 // Check if AFFT_CUDA_ROOT_DIR is defined when CUDA is enabled

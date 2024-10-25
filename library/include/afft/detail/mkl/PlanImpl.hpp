@@ -99,7 +99,7 @@ namespace afft::detail::mkl
         const auto& cpuConfig = getConfig().getTargetConfig<Target::cpu>();
         Error::check(DftiSetValue(mHandle.get(), DFTI_THREAD_LIMIT, static_cast<MKL_LONG>(cpuConfig.threadLimit)));
 
-        std::array<Long, maxDimCount + 1> strides{};
+        std::array<Long, maxRank + 1> strides{};
         const auto srcStrides = getConfig().getTransformSrcStrides<Long>();
         std::copy(srcStrides.begin(), srcStrides.end(), std::next(strides.begin()));
         Error::check(DftiSetValue(mHandle.get(), DFTI_INPUT_STRIDES, strides.data()));

@@ -32,7 +32,7 @@
 AFFT_EXPORT namespace afft
 {
   /// @brief Maximum number of dimensions
-  inline constexpr std::size_t maxDimCount{AFFT_MAX_DIM_COUNT};
+  inline constexpr std::size_t maxRank{AFFT_MAX_RANK};
 
   /// @brief Order type
   enum class Order : std::underlying_type_t<::afft_Order>
