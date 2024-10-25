@@ -521,7 +521,7 @@ AFFT_EXPORT namespace afft
 
         if constexpr (!std::is_void_v<SrcT> && !std::is_void_v<DstT>)
         {
-          checkExecTypeProps(typePrecision<SrcT>, typeComplexity<SrcT>, typePrecision<DstT>, typeComplexity<DstT>);
+          checkExecTypeProps(precisionOf<SrcT>, complexityOf<SrcT>, precisionOf<DstT>, complexityOf<DstT>);
         }
 
         executeImpl2(const_cast<std::remove_const_t<SrcT>* const*>(src), dst, execParams);

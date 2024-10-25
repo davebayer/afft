@@ -60,9 +60,9 @@ AFFT_EXPORT namespace afft
   {
     static_assert(isKnownType<PrecT>, "Precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<PrecT>,
-                          /* .source      = */ typePrecision<PrecT>,
-                          /* .destination = */ typePrecision<PrecT>};
+    return PrecisionTriad{/* .execution   = */ precisionOf<PrecT>,
+                          /* .source      = */ precisionOf<PrecT>,
+                          /* .destination = */ precisionOf<PrecT>};
   }
 
   /**
@@ -77,9 +77,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<ExecT>, "Execution precision type must be a known type");
     static_assert(isKnownType<MemoryT>, "Memory precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>,
-                          /* .source      = */ typePrecision<MemoryT>,
-                          /* .destination = */ typePrecision<MemoryT>};
+    return PrecisionTriad{/* .execution   = */ precisionOf<ExecT>,
+                          /* .source      = */ precisionOf<MemoryT>,
+                          /* .destination = */ precisionOf<MemoryT>};
   }
 
   /**
@@ -96,9 +96,9 @@ AFFT_EXPORT namespace afft
     static_assert(isKnownType<SrcT>, "Source precision type must be a known type");
     static_assert(isKnownType<DstT>, "Destination precision type must be a known type");
 
-    return PrecisionTriad{/* .execution   = */ typePrecision<ExecT>,
-                          /* .source      = */ typePrecision<SrcT>,
-                          /* .destination = */ typePrecision<DstT>};
+    return PrecisionTriad{/* .execution   = */ precisionOf<ExecT>,
+                          /* .source      = */ precisionOf<SrcT>,
+                          /* .destination = */ precisionOf<DstT>};
   }
 } // namespace afft
 

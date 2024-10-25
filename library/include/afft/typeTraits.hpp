@@ -39,14 +39,14 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Precision typePrecision = detail::TypePropertiesHelper<std::remove_cv_t<T>>::precision;
+  inline constexpr Precision precisionOf = detail::TypePropertiesHelper<std::remove_cv_t<T>>::precision;
 
   /**
    * @brief Get the complexity of the type. There has to be a specialization of TypeProperties for the type.
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr Complexity typeComplexity = detail::TypePropertiesHelper<std::remove_cv_t<T>>::complexity;
+  inline constexpr Complexity complexityOf = detail::TypePropertiesHelper<std::remove_cv_t<T>>::complexity;
 
   /**
    * @brief Check if the type is a known type. There has to be a specialization of TypeProperties for the type.
@@ -60,7 +60,7 @@ AFFT_EXPORT namespace afft
    * @tparam T The type.
    */
   template<typename T>
-  inline constexpr bool isRealType = isKnownType<T> && typeComplexity<T> == Complexity::real;
+  inline constexpr bool isRealType = isKnownType<T> && complexityOf<T> == Complexity::real;
 
   /**
    * @brief TransformParameters type for given transform.
