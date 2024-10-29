@@ -40,10 +40,30 @@
 # define AFFT_MAX_RANK 4
 #endif
 
-// Check if AFFT_CUDA_ROOT_DIR is defined when CUDA is enabled
 #ifdef AFFT_ENABLE_CUDA
+  // Check if AFFT_CUDA_ROOT_DIR is defined when CUDA is enabled
 # ifndef AFFT_CUDA_ROOT_DIR
 #   error "AFFT_CUDA_ROOT_DIR must be defined"
+# endif
+
+  // Check if AFFT_CUDA_MAX_DEVICES is defined when CUDA is enabled
+# ifdef AFFT_CUDA_MAX_DEVICES
+#   if AFFT_CUDA_MAX_DEVICES < 1
+#     error "AFFT_CUDA_MAX_DEVICES must be at least 1"
+#   endif
+# else
+#   define AFFT_CUDA_MAX_DEVICES 16
+# endif
+#endif
+
+#ifdef AFFT_ENABLE_HIP
+  // Check if AFFT_HIP_MAX_DEVICES is defined when HIP is enabled
+# ifndef AFFT_HIP_MAX_DEVICES
+#   if AFFT_HIP_MAX_DEVICES < 1
+#     error "AFFT_HIP_MAX_DEVICES must be at least 1"
+#   endif
+# else
+#   define AFFT_HIP_MAX_DEVICES 16
 # endif
 #endif
 
