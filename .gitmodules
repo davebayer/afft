@@ -1,4 +1,0 @@
-# matlab submodules
-[submodule "matlab/3rdparty/mex-cpp-wrapper"]
-	path = matlab/3rdparty/mex-cpp-wrapper
-	url = https://github.com/DejvBayer/mex-cpp-wrapper.git
