@@ -37,11 +37,15 @@ function(add_examples mpBackend target)
     string(SUBSTRING ${EXAMPLE_EXT} 1 -1 EXAMPLE_EXT)
     string(FIND ${EXAMPLE_NAME} "_mod" USES_MODULE)
 
+    if(EXAMPLE_NAME MATCHES "^_")
+      continue()
+    endif()
+
     if(NOT (USES_MODULE EQUAL -1) AND NOT TARGET afft-module)
       continue()
     endif()
 
-    set(EXAMPLE_TARGET example-${mpBackend}-${target}-${EXAMPLE_NAME}-${EXAMPLE_EXT})
+    set(EXAMPLE_TARGET afft-example-${mpBackend}-${target}-${EXAMPLE_NAME}-${EXAMPLE_EXT})
     add_executable(${EXAMPLE_TARGET} ${EXAMPLE})
     set_target_properties(${EXAMPLE_TARGET}
       PROPERTIES
