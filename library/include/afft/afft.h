@@ -26,31 +26,31 @@
 #define AFFT_H
 
 // Include the version header.
-#include "afft-version.h"
+#include <afft/afft-version.h>
 
 // Include the config header.
-#include "detail/config.h"
+#include <afft/detail/config.h>
 
 // Include only once in the top-level header.
-#include "detail/include.h"
+#include <afft/detail/include.h>
 #define AFFT_TOP_LEVEL_INCLUDE
 
 // Include all public headers.
-#include "backend.h"
-#include "common.h"
-#include "Description.h"
-#include "error.h"
-#include "fftw3.h"
-#include "init.h"
-#include "memory.h"
-#include "mp.h"
-#include "Plan.h"
-// #include "PlanCache.h"
-#include "select.h"
-#include "target.h"
-#include "transform.h"
-#include "type.h"
-#include "utils.h"
-#include "version.h"
+#include <afft/backend.h>
+#include <afft/common.h>
+#include <afft/Description.h>
+#include <afft/error.h>
+#include <afft/fftw3.h>
+#include <afft/init.h>
+#include <afft/memory.h>
+#include <afft/mp.h>
+#include <afft/Plan.h>
+// #include <afft/PlanCache.h>
+#include <afft/select.h>
+#include <afft/target.h>
+#include <afft/transform.h>
+#include <afft/type.h>
+#include <afft/utils.h>
+#include <afft/version.h>
 
 #endif /* AFFT_H */

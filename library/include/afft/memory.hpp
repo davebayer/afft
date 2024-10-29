@@ -26,11 +26,13 @@
 #define AFFT_MEMORY_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "common.hpp"
-#include "detail/cxx.hpp"
+#include <afft/common.hpp>
+#include <afft/error.hpp>
+#include <afft/detail/cxx.hpp>
+#include <afft/detail/utils.hpp>
 
 AFFT_EXPORT namespace afft
 {

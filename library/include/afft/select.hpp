@@ -26,10 +26,10 @@
 #define AFFT_SELECT_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "backend.hpp"
+#include <afft/backend.hpp>
 
 namespace afft
 {

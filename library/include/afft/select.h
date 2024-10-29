@@ -26,10 +26,10 @@
 #define AFFT_SELECT_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "backend.h"
+#include <afft/backend.h>
 
 #ifdef __cplusplus
 extern "C"

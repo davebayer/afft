@@ -26,17 +26,17 @@
 #define AFFT_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "backend.hpp"
-#include "Description.hpp"
-#include "common.hpp"
-#include "memory.hpp"
-#include "target.hpp"
-#include "transform.hpp"
-#include "detail/Desc.hpp"
-#include "detail/validate.hpp"
+#include <afft/backend.hpp>
+#include <afft/Description.hpp>
+#include <afft/common.hpp>
+#include <afft/memory.hpp>
+#include <afft/target.hpp>
+#include <afft/transform.hpp>
+#include <afft/detail/Desc.hpp>
+#include <afft/detail/validate.hpp>
 
 AFFT_EXPORT namespace afft
 {

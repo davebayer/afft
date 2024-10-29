@@ -26,11 +26,11 @@
 #define AFFT_MP_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
 #ifdef AFFT_ENABLE_MPI
-# include "detail/mpi/mpi.hpp"
+# include <afft/detail/mpi/mpi.hpp>
 #endif
 
 AFFT_EXPORT namespace afft

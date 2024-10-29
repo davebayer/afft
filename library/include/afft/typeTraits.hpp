@@ -26,11 +26,11 @@
 #define AFFT_TYPE_TRAITS_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "detail/cxx.hpp"
-#include "detail/typeTraits.hpp"
+#include <afft/detail/cxx.hpp>
+#include <afft/detail/typeTraits.hpp>
 
 AFFT_EXPORT namespace afft
 {

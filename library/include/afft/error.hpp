@@ -26,7 +26,7 @@
 #define AFFT_ERROR_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
 AFFT_EXPORT namespace afft

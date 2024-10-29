@@ -26,17 +26,17 @@
 #define AFFT_FFTW3_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "error.hpp"
-#include "init.hpp"
-#include "type.hpp"
-#include "typeTraits.hpp"
-#include "utils.hpp"
-#include "detail/validate.hpp"
+#include <afft/error.hpp>
+#include <afft/init.hpp>
+#include <afft/type.hpp>
+#include <afft/typeTraits.hpp>
+#include <afft/utils.hpp>
+#include <afft/detail/validate.hpp>
 #ifdef AFFT_ENABLE_FFTW3
-# include "detail/fftw3/Lib.hpp"
+# include <afft/detail/fftw3/Lib.hpp>
 #endif
 
 AFFT_EXPORT namespace afft::fftw3

@@ -155,7 +155,7 @@
       // define CUDA_TOOLKIT_ROOT_DIR if using CUDA backend
 #     if AFFT_VKFFT_BACKEND == 1
 #       ifndef CUDA_TOOLKIT_ROOT_DIR
-#         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_ROOT_DIR
+#         define CUDA_TOOLKIT_ROOT_DIR AFFT_CUDA_TOOLKIT_ROOT_DIR
 #       endif
 #     endif
       // define VKFFT_MAX_FFT_DIMENSIONS based on the maximum number of dimensions

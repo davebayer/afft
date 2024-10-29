@@ -26,16 +26,16 @@
 #define AFFT_DESCRIPTION_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "backend.h"
-#include "common.h"
-#include "error.h"
-#include "memory.h"
-#include "mp.h"
-#include "target.h"
-#include "transform.h"
+#include <afft/backend.h>
+#include <afft/common.h>
+#include <afft/error.h>
+#include <afft/memory.h>
+#include <afft/mp.h>
+#include <afft/target.h>
+#include <afft/transform.h>
 
 #ifdef __cplusplus
 extern "C"

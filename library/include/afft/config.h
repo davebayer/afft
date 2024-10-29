@@ -25,10 +25,10 @@
 #ifndef AFFT_CONFIG_H
 #define AFFT_CONFIG_H
 
-#include "afft-version.h"
+#include <afft/afft-version.h>
 
 #ifndef AFFT_EXTERNAL_CONFIG
-# include "afft-config.h"
+# include <afft/afft-config.h>
 #endif
 
 // If max dimension count is not defined, use 4 as default
@@ -41,9 +41,9 @@
 #endif
 
 #ifdef AFFT_ENABLE_CUDA
-  // Check if AFFT_CUDA_ROOT_DIR is defined when CUDA is enabled
-# ifndef AFFT_CUDA_ROOT_DIR
-#   error "AFFT_CUDA_ROOT_DIR must be defined"
+  // Check if AFFT_CUDA_TOOLKIT_ROOT_DIR is defined when CUDA is enabled
+# ifndef AFFT_CUDA_TOOLKIT_ROOT_DIR
+#   error "AFFT_CUDA_TOOLKIT_ROOT_DIR must be defined"
 # endif
 
   // Check if AFFT_CUDA_MAX_DEVICES is defined when CUDA is enabled

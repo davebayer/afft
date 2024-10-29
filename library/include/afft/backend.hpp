@@ -26,13 +26,13 @@
 #define AFFT_BACKEND_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "common.hpp"
-#include "mp.hpp"
-#include "target.hpp"
-#include "detail/cxx.hpp"
+#include <afft/common.hpp>
+#include <afft/mp.hpp>
+#include <afft/target.hpp>
+#include <afft/detail/cxx.hpp>
 
 AFFT_EXPORT namespace afft
 {

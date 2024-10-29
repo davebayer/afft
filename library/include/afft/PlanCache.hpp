@@ -26,14 +26,14 @@
 #define AFFT_PLAN_CACHE_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "common.hpp"
-#include "Description.hpp"
-#include "error.hpp"
-#include "Plan.hpp"
-#include "detail/Desc.hpp"
+#include <afft/common.hpp>
+#include <afft/Description.hpp>
+#include <afft/error.hpp>
+#include <afft/Plan.hpp>
+#include <afft/detail/Desc.hpp>
 
 AFFT_EXPORT namespace afft
 {

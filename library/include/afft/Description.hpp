@@ -26,16 +26,16 @@
 #define AFFT_DESCRIPTION_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "backend.hpp"
-#include "common.hpp"
-#include "memory.hpp"
-#include "target.hpp"
-#include "transform.hpp"
-#include "typeTraits.hpp"
-#include "detail/Desc.hpp"
+#include <afft/backend.hpp>
+#include <afft/common.hpp>
+#include <afft/memory.hpp>
+#include <afft/target.hpp>
+#include <afft/transform.hpp>
+#include <afft/typeTraits.hpp>
+#include <afft/detail/Desc.hpp>
 
 AFFT_EXPORT namespace afft
 {

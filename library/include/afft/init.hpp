@@ -25,7 +25,7 @@
 #ifndef AFFT_INIT_HPP
 #define AFFT_INIT_HPP
 
-#include "detail/init.hpp"
+#include <afft/detail/init.hpp>
 
 AFFT_EXPORT namespace afft
 {

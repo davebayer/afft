@@ -26,11 +26,12 @@
 #define AFFT_TRANSFORM_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "common.hpp"
-#include "type.hpp"
+#include <afft/common.hpp>
+#include <afft/type.hpp>
+#include <afft/detail/transform.hpp>
 
 AFFT_EXPORT namespace afft
 {

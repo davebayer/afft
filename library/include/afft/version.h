@@ -26,10 +26,10 @@
 #define AFFT_VERSION_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "type.h"
+#include <afft/type.h>
 
 #ifdef __cplusplus
 extern "C"

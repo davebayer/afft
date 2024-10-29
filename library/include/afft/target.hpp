@@ -26,18 +26,20 @@
 #define AFFT_TARGET_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
 #ifdef AFFT_ENABLE_CUDA
-# include "detail/cuda/cuda.hpp"
+# include <afft/detail/cuda/cuda.hpp>
 #endif
 #ifdef AFFT_ENABLE_HIP
-# include "detail/hip/hip.hpp"
+# include <afft/detail/hip/hip.hpp>
 #endif
 #ifdef AFFT_ENABLE_OPENCL
-# include "detail/opencl/opencl.hpp"
+# include <afft/detail/opencl/opencl.hpp>
 #endif
+
+#include <afft/detail/target.hpp>
 
 AFFT_EXPORT namespace afft
 {

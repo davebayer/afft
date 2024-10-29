@@ -26,12 +26,12 @@
 #define AFFT_FFTW3_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "common.h"
-#include "error.h"
-#include "type.h"
+#include <afft/common.h>
+#include <afft/error.h>
+#include <afft/type.h>
 
 #ifdef __cplusplus
 extern "C"

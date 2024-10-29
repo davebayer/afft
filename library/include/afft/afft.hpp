@@ -26,10 +26,10 @@
 #define AFFT_AFFT_HPP
 
 // Include the version header.
-#include "afft-version.h"
+#include <afft/afft-version.h>
 
 // Include the config header.
-#include "detail/config.hpp"
+#include <afft/detail/config.hpp>
 
 // Check for C++17 or later.
 #if !(AFFT_CXX_VERSION > 201402L)
@@ -37,30 +37,30 @@
 #endif
 
 // Include only once in the top-level header.
-#include "detail/include.hpp"
+#include <afft/detail/include.hpp>
 #define AFFT_TOP_LEVEL_INCLUDE
 
 // Include all public headers.
-#include "backend.hpp"
-#include "common.hpp"
-#include "Description.hpp"
-#include "error.hpp"
-#include "fftw3.hpp"
+#include <afft/backend.hpp>
+#include <afft/common.hpp>
+#include <afft/Description.hpp>
+#include <afft/error.hpp>
+#include <afft/fftw3.hpp>
 #ifdef AFFT_CXX_HAS_FORMAT
-# include "formatters.hpp"
+# include <afft/formatters.hpp>
 #endif
-#include "init.hpp"
-#include "makePlan.hpp"
-#include "memory.hpp"
-#include "mp.hpp"
-#include "Plan.hpp"
-#include "PlanCache.hpp"
-#include "select.hpp"
-#include "target.hpp"
-#include "transform.hpp"
-#include "type.hpp"
-#include "typeTraits.hpp"
-#include "utils.hpp"
-#include "version.hpp"
+#include <afft/init.hpp>
+#include <afft/makePlan.hpp>
+#include <afft/memory.hpp>
+#include <afft/mp.hpp>
+#include <afft/Plan.hpp>
+#include <afft/PlanCache.hpp>
+#include <afft/select.hpp>
+#include <afft/target.hpp>
+#include <afft/transform.hpp>
+#include <afft/type.hpp>
+#include <afft/typeTraits.hpp>
+#include <afft/utils.hpp>
+#include <afft/version.hpp>
 
 #endif /* AFFT_AFFT_HPP */

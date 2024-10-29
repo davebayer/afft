@@ -26,11 +26,11 @@
 #define AFFT_VERSION_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "type.hpp"
-#include "detail/utils.hpp"
+#include <afft/type.hpp>
+#include <afft/detail/utils.hpp>
 
 AFFT_EXPORT namespace afft
 {

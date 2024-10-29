@@ -26,20 +26,20 @@
 #define AFFT_FORMATTERS_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "backend.hpp"
-#include "error.hpp"
-#include "memory.hpp"
-#include "mp.hpp"
-#include "target.hpp"
-#include "transform.hpp"
-#include "type.hpp"
-#include "version.hpp"
-#include "detail/cxx.hpp"
-#include "detail/formatters.hpp"
-#include "detail/validate.hpp"
+#include <afft/backend.hpp>
+#include <afft/error.hpp>
+#include <afft/memory.hpp>
+#include <afft/mp.hpp>
+#include <afft/target.hpp>
+#include <afft/transform.hpp>
+#include <afft/type.hpp>
+#include <afft/version.hpp>
+#include <afft/detail/cxx.hpp>
+#include <afft/detail/formatters.hpp>
+#include <afft/detail/validate.hpp>
 
 /**********************************************************************************************************************/
 // Backend

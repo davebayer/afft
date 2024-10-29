@@ -26,15 +26,15 @@
 #define AFFT_MAKE_PLAN_HPP
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.hpp"
+# include <afft/detail/include.hpp>
 #endif
 
-#include "Description.hpp"
-#include "init.hpp"
-#include "memory.hpp"
-#include "Plan.hpp"
-#include "select.hpp"
-#include "detail/makePlan.hpp"
+#include <afft/Description.hpp>
+#include <afft/init.hpp>
+#include <afft/memory.hpp>
+#include <afft/Plan.hpp>
+#include <afft/select.hpp>
+#include <afft/detail/makePlan.hpp>
 
 AFFT_EXPORT namespace afft
 {

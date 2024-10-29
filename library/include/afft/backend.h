@@ -26,10 +26,10 @@
 #define AFFT_BACKEND_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "common.h"
+#include <afft/common.h>
 
 #ifdef __cplusplus
 extern "C"

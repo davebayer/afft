@@ -26,12 +26,12 @@
 #define AFFT_PLAN_CACHE_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
-#include "common.h"
-#include "error.h"
-#include "Plan.h"
+#include <afft/common.h>
+#include <afft/error.h>
+#include <afft/Plan.h>
 
 #ifdef __cplusplus
 extern "C"

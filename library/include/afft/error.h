@@ -26,7 +26,7 @@
 #define AFFT_ERROR_H
 
 #ifndef AFFT_TOP_LEVEL_INCLUDE
-# include "detail/include.h"
+# include <afft/detail/include.h>
 #endif
 
 #ifdef __cplusplus
