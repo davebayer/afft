@@ -29,6 +29,13 @@
 # include "detail/include.h"
 #endif
 
+#include "error.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /// @brief Target type
 typedef uint8_t afft_Target;
 
@@ -173,5 +180,9 @@ struct afft_TargetParametersVariant
     char                   _dummy; ///< Dummy member to ensure that the union is not empty
   };
 };
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AFFT_TARGET_H */
