@@ -48,13 +48,11 @@ AFFT_EXPORT namespace afft
    * @return The plan.
    */
   template<typename BackendParamsT, typename SelectParamsT = DefaultSelectParameters>
-  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&    desc,
-                                               const BackendParamsT& backendParams,
-                                               const SelectParamsT&  selectParams = {})
+  [[nodiscard]] auto makePlan(const Description&    desc,
+                              const BackendParamsT& backendParams,
+                              const SelectParamsT&  selectParams = {})
+    -> AFFT_RET_REQUIRES(std::unique_ptr<Plan>, isBackendParameters<BackendParamsT> && isSelectParameters<SelectParamsT>)
   {
-    static_assert(isBackendParameters<BackendParamsT>, "invalid backend parameters");
-    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
-
     if (backendParams.mpBackend != desc.getMpBackend() || backendParams.target != desc.getTarget())
     {
       throw Exception{Error::invalidArgument, "invalid backend parameters"};
@@ -71,11 +69,10 @@ AFFT_EXPORT namespace afft
    * @return The plan.
    */
   template<typename SelectParamsT = DefaultSelectParameters>
-  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&   desc,
-                                               const SelectParamsT& selectParams = {})
+  [[nodiscard]] auto makePlan(const Description&   desc,
+                              const SelectParamsT& selectParams = {})
+    -> AFFT_RET_REQUIRES(std::unique_ptr<Plan>, isSelectParameters<SelectParamsT>)
   {
-    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
-
     return detail::makePlanWithDefaultBackendParameters(desc, selectParams);
   }
 
@@ -88,12 +85,11 @@ AFFT_EXPORT namespace afft
    * @return The plan.
    */
   template<typename SelectParamsT = DefaultSelectParameters>
-  [[nodiscard]] std::unique_ptr<Plan> makePlan(const Description&              desc,
-                                               const BackendParametersVariant& backendParamsVariant,
-                                               const SelectParamsT&            selectParams = {})
+  [[nodiscard]] auto makePlan(const Description&              desc,
+                              const BackendParametersVariant& backendParamsVariant,
+                              const SelectParamsT&            selectParams = {})
+    -> AFFT_RET_REQUIRES(std::unique_ptr<Plan>, isSelectParameters<SelectParamsT>)
   {
-    static_assert(isSelectParameters<SelectParamsT>, "invalid select parameters");
-
     return std::visit([&](const auto& backendParams)
     {
       if constexpr (std::is_same_v<std::decay_t<decltype(backendParams)>, std::monostate>)

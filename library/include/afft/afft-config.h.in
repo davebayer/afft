@@ -37,7 +37,7 @@
 
 #cmakedefine AFFT_ENABLE_CUDA
 #ifdef AFFT_ENABLE_CUDA
-# cmakedefine AFFT_CUDA_ROOT_DIR "@AFFT_CUDA_ROOT_DIR@"
+# cmakedefine AFFT_CUDA_TOOLKIT_ROOT_DIR "@AFFT_CUDA_TOOLKIT_ROOT_DIR@"
 #endif
 
 #cmakedefine AFFT_ENABLE_HIP
